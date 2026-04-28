@@ -10,7 +10,7 @@ Obiettivo: mantenere modifiche coerenti, sicure, testate e facilmente revisionab
 
 1. Istruzioni di sistema/developer ricevute nella sessione corrente.
 2. Questo file `AGENTS.md`.
-3. Documentazione progetto, quando presente.
+3. Documentazione di progetto, quando presente.
 4. Assunzioni dell'agente.
 
 In caso di conflitto, seguire sempre il livello più alto.
@@ -34,9 +34,9 @@ In caso di conflitto, seguire sempre il livello più alto.
 
 ## Lingua e testi del prodotto
 
-- Lavora con il proprietario del progetto in italiano di default.
-- La UI del prodotto/tool deve essere scritta in italiano, salvo funzionalità che richiedano esplicitamente un'altra lingua.
-- Copy utente, label, messaggi di validazione, stati vuoti, errori, meta tag e documentazione destinata agli utenti finali devono essere in italiano quando vengono creati o modificati.
+- Usa l'italiano come lingua predefinita con il proprietario del progetto.
+- La UI del prodotto o tool deve essere scritta in italiano, salvo funzionalità che richiedano esplicitamente un'altra lingua.
+- Testi utente, label, messaggi di validazione, stati vuoti, errori, meta tag e documentazione destinata agli utenti finali devono essere in italiano quando vengono creati o modificati.
 - Per superfici utente italiane, usa `lang="it"` nell'HTML o aggiorna il valore esistente quando tocchi il root layout.
 - Mantieni gli identificatori nel codice in inglese quando questo è più coerente con le convenzioni di librerie e framework esistenti.
 
@@ -79,7 +79,7 @@ In caso di conflitto, seguire sempre il livello più alto.
 - Controlla che gli aggiornamenti alle dipendenze non disallineino `package.json` e `package-lock.json`.
 - Segnala problemi di sicurezza nella gestione degli input utente, HTML generato, link, form e modifiche alle dipendenze.
 
-## Definizione di done
+## Definizione di completamento
 
 Una modifica è pronta se:
 

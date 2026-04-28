@@ -11,10 +11,10 @@ export function DefaultErrorComponent({ error, reset }: { error: Error; reset: (
           <TriangleAlert className="h-8 w-8 text-destructive" aria-hidden="true" />
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-foreground">
-          Qualcosa e' andato storto
+          Qualcosa è andato storto
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Si e' verificato un errore imprevisto. Riprova.
+          Si è verificato un errore imprevisto. Riprova.
         </p>
         {import.meta.env.DEV && error.message && (
           <pre className="mt-4 max-h-40 overflow-auto rounded-md bg-muted p-3 text-left font-mono text-xs text-destructive">
