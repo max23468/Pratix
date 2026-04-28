@@ -1,29 +1,29 @@
 # AGENTS.md
 
-## Repository Expectations
+## Aspettative Sul Repository
 
-- This is a Lovable-generated TanStack Start/Vite React app.
-- Use `npm` for dependency installation because the repository includes `package-lock.json`.
-- Do not manually duplicate plugins already provided by `@lovable.dev/vite-tanstack-config` in `vite.config.ts`.
-- Keep changes focused and avoid unrelated formatting churn.
+- Questa e' un'app React TanStack Start/Vite generata con Lovable.
+- Usa `npm` per installare le dipendenze perche' il repository include `package-lock.json`.
+- Non duplicare manualmente in `vite.config.ts` i plugin gia' forniti da `@lovable.dev/vite-tanstack-config`.
+- Mantieni le modifiche focalizzate ed evita cambi di formattazione non collegati al task.
 
-## Language And Product Copy
+## Lingua E Testi Del Prodotto
 
-- Work with the project owner in Italian by default.
-- The product/tool UI must be written in Italian unless a specific feature explicitly requires another language.
-- User-facing copy, labels, validation messages, empty states, and documentation intended for end users should be in Italian.
-- Keep code identifiers in English when that better matches existing library and framework conventions.
+- Lavora con il proprietario del progetto in italiano di default.
+- La UI del prodotto/tool deve essere scritta in italiano, salvo funzionalita' che richiedano esplicitamente un'altra lingua.
+- Copy utente, label, messaggi di validazione, stati vuoti e documentazione destinata agli utenti finali devono essere in italiano.
+- Mantieni gli identificatori nel codice in inglese quando questo e' piu' coerente con le convenzioni di librerie e framework esistenti.
 
 ## Setup
 
-- Install dependencies with `npm ci`.
-- Use `npm run build` as the primary validation command.
-- Use `npm run lint` when changes touch TypeScript, React, routing, or shared UI components.
-- Use `npm audit --audit-level=moderate` after dependency changes.
+- Installa le dipendenze con `npm ci`.
+- Usa `npm run build` come comando principale di validazione.
+- Usa `npm run lint` quando le modifiche toccano TypeScript, React, routing o componenti UI condivisi.
+- Usa `npm audit --audit-level=moderate` dopo modifiche alle dipendenze.
 
-## Review Guidelines
+## Linee Guida Per La Review
 
-- Check for broken routing in `src/routes`.
-- Check that UI changes remain responsive on mobile and desktop.
-- Check that dependency updates do not drift `package.json` and `package-lock.json` out of sync.
-- Flag security issues in user input handling, generated HTML, links, forms, and dependency changes.
+- Controlla che il routing in `src/routes` non sia rotto.
+- Controlla che le modifiche UI restino responsive su mobile e desktop.
+- Controlla che gli aggiornamenti alle dipendenze non disallineino `package.json` e `package-lock.json`.
+- Segnala problemi di sicurezza nella gestione degli input utente, HTML generato, link, form e modifiche alle dipendenze.
