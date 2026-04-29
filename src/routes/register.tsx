@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { Scale } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -61,15 +61,12 @@ function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-sm">
-        <Link to="/" className="mb-8 flex items-center justify-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Scale className="h-5 w-5" />
-          </div>
-          <span className="text-lg font-semibold tracking-tight">Pratix</span>
+        <Link to="/" className="mb-8 flex items-center justify-center" aria-label="Pratix">
+          <Logo form="lockup" size={24} />
         </Link>
 
-        <div className="rounded-xl border bg-card p-6 shadow-sm">
-          <h1 className="text-xl font-semibold text-foreground">Crea il tuo account</h1>
+        <div className="rounded-xl border border-border bg-card p-6 shadow-elevated">
+          <h1 className="font-display text-2xl font-semibold text-foreground">Crea il tuo account</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Bastano pochi secondi per iniziare.
           </p>

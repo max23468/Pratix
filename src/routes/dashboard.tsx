@@ -161,11 +161,13 @@ function DashboardContent() {
           icon={TrendingUp}
           label="Incassato (mese)"
           value={isLoading ? "—" : formatCurrency(data?.collectedMonth ?? 0)}
+          tone="gold"
         />
         <StatCard
           icon={TrendingUp}
           label={`Fatturato ${new Date().getFullYear()}`}
           value={isLoading ? "—" : formatCurrency(data?.revenueYear ?? 0)}
+          tone="gold"
         />
       </div>
 
@@ -247,24 +249,31 @@ function StatCard({
   value,
   tone = "default",
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   label: string;
   value: string;
-  tone?: "default" | "danger";
+  tone?: "default" | "danger" | "gold";
 }) {
   const iconCls =
     tone === "danger"
       ? "bg-destructive/10 text-destructive"
-      : "bg-accent text-accent-foreground";
+      : tone === "gold"
+        ? "bg-brand-gold/10 text-brand-gold"
+        : "bg-primary/5 text-primary";
+  const valueCls = tone === "danger" ? "text-destructive" : "text-foreground";
   return (
-    <Card>
+    <Card className="border-border/70 shadow-soft">
       <CardContent className="flex items-center gap-3 p-4">
         <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${iconCls}`}>
-          <Icon className="h-5 w-5" />
+          <Icon className="h-5 w-5" strokeWidth={1.6} />
         </div>
         <div className="min-w-0">
           <p className="truncate text-xs font-medium text-muted-foreground">{label}</p>
-          <p className="truncate text-lg font-semibold text-foreground">{value}</p>
+          <p
+            className={`font-display tabular truncate text-xl font-semibold tracking-tight ${valueCls}`}
+          >
+            {value}
+          </p>
         </div>
       </CardContent>
     </Card>

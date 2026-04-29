@@ -11,8 +11,10 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Pagina non trovata</h2>
+        <p className="font-display text-[120px] font-semibold leading-none text-primary">404</p>
+        <h1 className="font-display mt-4 text-2xl font-semibold text-foreground">
+          Pagina non trovata
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           La pagina che stai cercando non esiste o è stata spostata.
         </p>
@@ -34,6 +36,7 @@ export const Route = createRootRoute({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "theme-color", content: "#1F2D4D" },
       { title: "Pratix — Gestionale per avvocati freelance" },
       {
         name: "description",
@@ -47,8 +50,20 @@ export const Route = createRootRoute({
         content: "Gestisci pratiche, scadenze, rimborsi spese e fatturazione in un unico posto.",
       },
       { property: "og:type", content: "website" },
+      { property: "og:locale", content: "it_IT" },
+      { name: "twitter:card", content: "summary_large_image" },
     ],
-    links: [{ rel: "stylesheet", href: appCss }],
+    links: [
+      { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+      { rel: "apple-touch-icon", href: "/favicon.svg" },
+      { rel: "preconnect", href: "https://fonts.googleapis.com" },
+      { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
+      {
+        rel: "stylesheet",
+        href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Inter+Tight:wght@500;600;700&family=JetBrains+Mono:wght@400;500&display=swap",
+      },
+      { rel: "stylesheet", href: appCss },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
