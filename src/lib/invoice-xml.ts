@@ -98,7 +98,7 @@ export function buildInvoiceXml(data: InvoiceXmlData): XmlBuildResult {
   }
 
   const cedenteName =
-    data.profile.business_name || data.profile.full_name || "Studio Legale";
+    data.profile.business_name || data.profile.full_name || "Avvocato";
 
   // Cessionario
   const isCompany = data.client.kind === "company" && !!data.client.business_name;
