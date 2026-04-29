@@ -99,6 +99,23 @@ export function DeadlineDialog({ caseId, trigger, allowCasePicker = false }: Pro
           <DialogTitle>Nuova scadenza</DialogTitle>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">
+          {allowCasePicker && !caseId && (
+            <div className="space-y-2">
+              <Label htmlFor="case">Pratica</Label>
+              <Select value={selectedCaseId} onValueChange={setSelectedCaseId}>
+                <SelectTrigger id="case">
+                  <SelectValue placeholder="Seleziona una pratica" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(cases ?? []).map((c) => (
+                    <SelectItem key={c.id} value={c.id}>
+                      {c.case_number} · {c.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="space-y-2">
             <Label htmlFor="desc">Descrizione</Label>
             <Input
