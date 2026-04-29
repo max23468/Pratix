@@ -121,6 +121,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅ | `docs/glossario.md` | Termini legali e fiscali italiani |
 | ✅ | Memoria di progetto sincronizzata | `mem://index.md` + `mem://design/brand` + `mem://process/roadmap` |
 | ✅ | **Versioning + Changelog + pagina Novità** | `src/lib/version.ts` + parser `CHANGELOG.md` + route `/novita` autenticata + campanella in topbar. ADR-0008 e guida `docs/guides/versioning-e-release.md` |
+| ✅ | **Categorie changelog ridisegnate** | Tre sezioni standard `Novità` / `Correzioni` / `Sotto il cofano`. La pagina `/novita` mette in evidenza le Novità, mantiene compatte le Correzioni e collassa le voci tecniche. Compatibile con voci storiche (Aggiunto/Modificato/Sicurezza) |
 | ⬜ | Test minimi su funzioni critiche | XML FatturaPA, calcoli IVA/ritenuta, cassa forense |
 | ⬜ | Linter pulito su tutto il repo | `npm run lint` |
 | ⬜ | `npm audit --audit-level=moderate` periodico | |
