@@ -2,27 +2,28 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
-import { ComingSoon } from "@/components/coming-soon";
 import { Button } from "@/components/ui/button";
+import { InvoiceForm } from "@/components/invoice-form";
 
 export const Route = createFileRoute("/fatture/nuova")({
-  component: () => (
+  component: NewInvoicePage,
+});
+
+function NewInvoicePage() {
+  return (
     <AppLayout>
       <PageHeader
         title="Nuova fattura"
-        description="Compila i dati per generare una nuova fattura."
+        description="Compila righe, parametri fiscali e crea la fattura. Il numero verrà assegnato automaticamente."
         actions={
-          <Link to="/fatture">
-            <Button size="sm" variant="outline">
-              <ArrowLeft className="mr-1 h-4 w-4" /> Torna all'elenco
-            </Button>
-          </Link>
+          <Button asChild variant="outline">
+            <Link to="/fatture">
+              <ArrowLeft className="mr-2 h-4 w-4" /> Torna alle fatture
+            </Link>
+          </Button>
         }
       />
-      <ComingSoon
-        title="Form fattura in arrivo"
-        description="Il form di creazione fattura, con righe, calcoli automatici ed export XML, sarà disponibile a breve."
-      />
+      <InvoiceForm />
     </AppLayout>
-  ),
-});
+  );
+}

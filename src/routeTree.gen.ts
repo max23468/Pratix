@@ -21,6 +21,7 @@ import { Route as ClientiIndexRouteImport } from './routes/clienti.index'
 import { Route as PraticheNuovaRouteImport } from './routes/pratiche.nuova'
 import { Route as PraticheCaseIdRouteImport } from './routes/pratiche.$caseId'
 import { Route as FattureNuovaRouteImport } from './routes/fatture.nuova'
+import { Route as FattureInvoiceIdRouteImport } from './routes/fatture.$invoiceId'
 import { Route as ClientiNuovoRouteImport } from './routes/clienti.nuovo'
 import { Route as ClientiClientIdRouteImport } from './routes/clienti.$clientId'
 
@@ -84,6 +85,11 @@ const FattureNuovaRoute = FattureNuovaRouteImport.update({
   path: '/fatture/nuova',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FattureInvoiceIdRoute = FattureInvoiceIdRouteImport.update({
+  id: '/fatture/$invoiceId',
+  path: '/fatture/$invoiceId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClientiNuovoRoute = ClientiNuovoRouteImport.update({
   id: '/clienti/nuovo',
   path: '/clienti/nuovo',
@@ -104,6 +110,7 @@ export interface FileRoutesByFullPath {
   '/spese': typeof SpeseRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
+  '/fatture/$invoiceId': typeof FattureInvoiceIdRoute
   '/fatture/nuova': typeof FattureNuovaRoute
   '/pratiche/$caseId': typeof PraticheCaseIdRoute
   '/pratiche/nuova': typeof PraticheNuovaRoute
@@ -120,6 +127,7 @@ export interface FileRoutesByTo {
   '/spese': typeof SpeseRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
+  '/fatture/$invoiceId': typeof FattureInvoiceIdRoute
   '/fatture/nuova': typeof FattureNuovaRoute
   '/pratiche/$caseId': typeof PraticheCaseIdRoute
   '/pratiche/nuova': typeof PraticheNuovaRoute
@@ -137,6 +145,7 @@ export interface FileRoutesById {
   '/spese': typeof SpeseRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
+  '/fatture/$invoiceId': typeof FattureInvoiceIdRoute
   '/fatture/nuova': typeof FattureNuovaRoute
   '/pratiche/$caseId': typeof PraticheCaseIdRoute
   '/pratiche/nuova': typeof PraticheNuovaRoute
@@ -155,6 +164,7 @@ export interface FileRouteTypes {
     | '/spese'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
+    | '/fatture/$invoiceId'
     | '/fatture/nuova'
     | '/pratiche/$caseId'
     | '/pratiche/nuova'
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/spese'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
+    | '/fatture/$invoiceId'
     | '/fatture/nuova'
     | '/pratiche/$caseId'
     | '/pratiche/nuova'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/spese'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
+    | '/fatture/$invoiceId'
     | '/fatture/nuova'
     | '/pratiche/$caseId'
     | '/pratiche/nuova'
@@ -204,6 +216,7 @@ export interface RootRouteChildren {
   SpeseRoute: typeof SpeseRoute
   ClientiClientIdRoute: typeof ClientiClientIdRoute
   ClientiNuovoRoute: typeof ClientiNuovoRoute
+  FattureInvoiceIdRoute: typeof FattureInvoiceIdRoute
   FattureNuovaRoute: typeof FattureNuovaRoute
   PraticheCaseIdRoute: typeof PraticheCaseIdRoute
   PraticheNuovaRoute: typeof PraticheNuovaRoute
@@ -298,6 +311,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FattureNuovaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fatture/$invoiceId': {
+      id: '/fatture/$invoiceId'
+      path: '/fatture/$invoiceId'
+      fullPath: '/fatture/$invoiceId'
+      preLoaderRoute: typeof FattureInvoiceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/clienti/nuovo': {
       id: '/clienti/nuovo'
       path: '/clienti/nuovo'
@@ -324,6 +344,7 @@ const rootRouteChildren: RootRouteChildren = {
   SpeseRoute: SpeseRoute,
   ClientiClientIdRoute: ClientiClientIdRoute,
   ClientiNuovoRoute: ClientiNuovoRoute,
+  FattureInvoiceIdRoute: FattureInvoiceIdRoute,
   FattureNuovaRoute: FattureNuovaRoute,
   PraticheCaseIdRoute: PraticheCaseIdRoute,
   PraticheNuovaRoute: PraticheNuovaRoute,
