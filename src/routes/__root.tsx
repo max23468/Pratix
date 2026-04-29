@@ -11,8 +11,10 @@ function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Pagina non trovata</h2>
+        <p className="font-display text-[120px] font-semibold leading-none text-primary">404</p>
+        <h1 className="font-display mt-4 text-2xl font-semibold text-foreground">
+          Pagina non trovata
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">
           La pagina che stai cercando non esiste o è stata spostata.
         </p>
