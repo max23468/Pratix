@@ -138,10 +138,16 @@ function DashboardContent() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard icon={Briefcase} label="Pratiche attive" value={isLoading ? "—" : String(data?.activeCases ?? 0)} />
+        <StatCard icon={Users} label="Clienti" value={isLoading ? "—" : String(data?.totalClients ?? 0)} />
         <StatCard
           icon={AlertCircle}
           label="Scadenze (14gg)"
           value={isLoading ? "—" : String(data?.deadlines.length ?? 0)}
+        />
+        <StatCard
+          icon={Wallet}
+          label="Bozze"
+          value={isLoading ? "—" : `${data?.draftCount ?? 0} · ${formatCurrency(data?.draftTotal ?? 0)}`}
         />
         <StatCard
           icon={Receipt}
@@ -157,11 +163,6 @@ function DashboardContent() {
               : `${data?.overdueCount ?? 0} · ${formatCurrency(data?.overdueTotal ?? 0)}`
           }
           tone={data && data.overdueCount > 0 ? "danger" : "default"}
-        />
-        <StatCard
-          icon={Wallet}
-          label="Bozze"
-          value={isLoading ? "—" : `${data?.draftCount ?? 0} · ${formatCurrency(data?.draftTotal ?? 0)}`}
         />
         <StatCard
           icon={TrendingUp}
