@@ -221,15 +221,18 @@ function Wordmark({
         lineHeight: 1,
         letterSpacing: "-0.035em",
         fontWeight: 600,
-        display: "inline-flex",
-        alignItems: "baseline",
+        fontStyle: "normal",
+        whiteSpace: "nowrap",
       }}
     >
       Prati
       <span
         style={{
-          color: direction === "px" || direction === "seal" ? c.gold : c.primary,
-          fontStyle: direction === "px" || direction === "seal" ? "italic" : "normal",
+          color:
+            direction === "px" || direction === "seal" ? c.gold : c.primary,
+          // Stesso font, niente italic: evita il fallback che introduce spazio extra.
+          fontStyle: "normal",
+          marginLeft: "-0.02em",
         }}
       >
         x
