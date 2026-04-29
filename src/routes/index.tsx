@@ -35,9 +35,9 @@ function Landing() {
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/60 bg-background/80 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
           <Link to="/" aria-label="Pratix">
-            <Logo form="lockup" size={22} />
+            <Logo form="lockup" size={30} />
           </Link>
           <div className="flex items-center gap-1">
             <ThemeToggle />
@@ -54,13 +54,20 @@ function Landing() {
       </header>
 
       <main>
-        <section className="relative mx-auto max-w-6xl px-6 py-24 lg:py-32">
+        <section className="relative mx-auto max-w-6xl px-6 py-20 lg:py-28">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-soft">
+            <Link
+              to="/"
+              aria-label="Pratix"
+              className="mx-auto inline-flex items-center justify-center"
+            >
+              <Logo form="mark" size={88} />
+            </Link>
+            <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-soft">
               <span className="h-1.5 w-1.5 rounded-full bg-brand-gold" />
               Per avvocati freelance
             </div>
-            <h1 className="font-display mt-7 text-6xl font-semibold tracking-tight text-foreground sm:text-7xl lg:text-[88px] lg:leading-[0.98]">
+            <h1 className="font-display mt-6 text-6xl font-semibold tracking-tight text-foreground sm:text-7xl lg:text-[88px] lg:leading-[0.98]">
               Tutto<span className="text-brand-gold">.</span>
               <br />
               torna<span className="text-brand-gold">.</span>
@@ -147,7 +154,7 @@ function Landing() {
       <footer className="border-t border-border/60">
         <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <Logo form="wordmark" size={16} tone="navy" />
+            <Logo form="wordmark" size={18} tone="navy" />
             <span className="hidden text-muted-foreground/70 sm:inline">·</span>
             <span className="hidden italic sm:inline">Tutto torna.</span>
           </div>

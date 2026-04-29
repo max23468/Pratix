@@ -52,7 +52,7 @@ function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-sm">
         <Link to="/" className="mb-8 flex items-center justify-center" aria-label="Pratix">
-          <Logo form="lockup" size={24} />
+          <Logo form="lockup" size={30} />
         </Link>
 
         <div className="rounded-xl border border-border bg-card p-6 shadow-elevated">
