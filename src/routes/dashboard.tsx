@@ -130,14 +130,34 @@ function DashboardContent() {
           value={isLoading ? "—" : String(data?.deadlines.length ?? 0)}
         />
         <StatCard
-          icon={Wallet}
-          label="Fatture in bozza"
-          value={isLoading ? "—" : `${data?.draftCount ?? 0} · ${formatCurrency(data?.draftTotal ?? 0)}`}
-        />
-        <StatCard
           icon={Receipt}
           label="Da incassare"
           value={isLoading ? "—" : formatCurrency(data?.unpaid ?? 0)}
+        />
+        <StatCard
+          icon={AlertTriangle}
+          label="Fatture scadute"
+          value={
+            isLoading
+              ? "—"
+              : `${data?.overdueCount ?? 0} · ${formatCurrency(data?.overdueTotal ?? 0)}`
+          }
+          tone={data && data.overdueCount > 0 ? "danger" : "default"}
+        />
+        <StatCard
+          icon={Wallet}
+          label="Bozze"
+          value={isLoading ? "—" : `${data?.draftCount ?? 0} · ${formatCurrency(data?.draftTotal ?? 0)}`}
+        />
+        <StatCard
+          icon={TrendingUp}
+          label="Incassato (mese)"
+          value={isLoading ? "—" : formatCurrency(data?.collectedMonth ?? 0)}
+        />
+        <StatCard
+          icon={TrendingUp}
+          label={`Fatturato ${new Date().getFullYear()}`}
+          value={isLoading ? "—" : formatCurrency(data?.revenueYear ?? 0)}
         />
       </div>
 
