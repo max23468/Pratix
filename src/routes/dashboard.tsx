@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Briefcase, Receipt, Wallet, AlertCircle, Plus } from "lucide-react";
+import { Briefcase, Receipt, Wallet, AlertCircle, Plus, TrendingUp, AlertTriangle } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
