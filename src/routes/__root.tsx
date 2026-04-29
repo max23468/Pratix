@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth-context";
 import { queryClient } from "@/lib/query-client";
+import { ThemeProvider, NO_FLASH_SCRIPT } from "@/lib/theme-context";
 
 import appCss from "../styles.css?url";
 
