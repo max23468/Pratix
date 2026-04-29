@@ -12,6 +12,22 @@ export const Route = createFileRoute("/")({
       throw redirect({ to: "/dashboard" });
     }
   },
+  head: () => ({
+    meta: [
+      { title: "Pratix — Tutto torna." },
+      {
+        name: "description",
+        content:
+          "Pratix è il gestionale per avvocati freelance. Pratiche, scadenze, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
+      },
+      { property: "og:title", content: "Pratix — Tutto torna." },
+      {
+        property: "og:description",
+        content:
+          "Il gestionale per avvocati freelance. Ogni pratica al suo posto, ogni conto che torna.",
+      },
+    ],
+  }),
   component: Landing,
 });
 
@@ -44,14 +60,15 @@ function Landing() {
               <span className="h-1.5 w-1.5 rounded-full bg-brand-gold" />
               Per avvocati freelance
             </div>
-            <h1 className="font-display mt-7 text-5xl font-semibold tracking-tight text-foreground sm:text-6xl lg:text-[68px] lg:leading-[1.05]">
-              Lo studio legale,
+            <h1 className="font-display mt-7 text-6xl font-semibold tracking-tight text-foreground sm:text-7xl lg:text-[88px] lg:leading-[0.98]">
+              Tutto<span className="text-brand-gold">.</span>
               <br />
-              <span className="text-brand-gold">in ordine.</span>
+              torna<span className="text-brand-gold">.</span>
             </h1>
-            <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Pratix tiene insieme pratiche, scadenze, rimborsi spese e fatturazione
-              elettronica in un unico gestionale, pensato per chi lavora da solo.
+            <p className="mx-auto mt-7 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+              Pratix è il gestionale per avvocati freelance. Pratiche,
+              scadenze, spese e fatturazione elettronica: ogni cosa al suo posto,
+              ogni conto che torna.
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link to="/register">
@@ -129,7 +146,11 @@ function Landing() {
 
       <footer className="border-t border-border/60">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 py-6 text-xs text-muted-foreground sm:flex-row">
-          <Logo form="wordmark" size={16} tone="navy" />
+          <div className="flex items-center gap-3">
+            <Logo form="wordmark" size={16} tone="navy" />
+            <span className="hidden text-muted-foreground/70 sm:inline">·</span>
+            <span className="hidden italic sm:inline">Tutto torna.</span>
+          </div>
           <span>© {new Date().getFullYear()} Pratix · Pensato in Italia</span>
         </div>
       </footer>

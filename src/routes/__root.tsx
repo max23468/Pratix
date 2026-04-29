@@ -38,17 +38,18 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#1F2D4D" },
-      { title: "Pratix — Gestionale per avvocati freelance" },
+      { title: "Pratix — Tutto torna." },
       {
         name: "description",
         content:
-          "Pratix è il gestionale semplice per avvocati freelance: pratiche, scadenze, rimborsi spese e fatturazione elettronica.",
+          "Pratix è il gestionale per avvocati freelance. Pratiche, scadenze, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
       },
       { name: "author", content: "Pratix" },
-      { property: "og:title", content: "Pratix — Gestionale per avvocati freelance" },
+      { property: "og:title", content: "Pratix — Tutto torna." },
       {
         property: "og:description",
-        content: "Gestisci pratiche, scadenze, rimborsi spese e fatturazione in un unico posto.",
+        content:
+          "Il gestionale per avvocati freelance. Ogni pratica al suo posto, ogni conto che torna.",
       },
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "it_IT" },

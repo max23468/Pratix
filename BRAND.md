@@ -9,6 +9,24 @@ Identità visiva e linee guida operative per Pratix, gestionale per avvocati fre
 - **Promessa**: "Tutto sotto controllo, niente fronzoli."
 - **Pubblico**: avvocato/avvocata freelance, 28-55 anni, attento ai dettagli, alla forma e alla riservatezza.
 
+## 1.bis Tagline
+
+**Tagline ufficiale: _Tutto torna._**
+
+Doppio senso intenzionale:
+1. **Letterale, da gestionale** — "tornare" in contabilità significa quadrare. I conti tornano, le ritenute tornano, le scadenze tornano. Rassicurazione asciutta sull'esattezza.
+2. **Emotivo** — "tutto torna" è la frase che si dice quando le cose, dopo la confusione, trovano un senso. Il sollievo del controllo.
+3. **Chiusura del cerchio** — ogni pratica si apre e si chiude, ogni fattura si emette e si incassa, ogni scadenza si fissa e si rispetta. Pratix fa tornare ogni cerchio al suo punto.
+
+**Uso**:
+- Sempre con il punto fermo: `Tutto torna.`
+- Mai tradurre. È intraducibile per costruzione: il valore è proprio nella polisemia italiana di "tornare".
+- Si usa **da sola** in copertine, hero, OG image, social. **In coppia col logo** in footer e firme: `Pratix — Tutto torna.`
+- Mai abbreviare in "Tt." o usare emoji. Mai esclamativo.
+
+**Quando NON usarla**: dentro l'app autenticata (UI di lavoro), nei messaggi di errore, nei CTA. È un asset di marca, non microcopy.
+
+
 ## 2. Sistema cromatico
 
 Tutti i token vivono in `src/styles.css` come variabili CSS in `oklch`, con varianti light e dark.
