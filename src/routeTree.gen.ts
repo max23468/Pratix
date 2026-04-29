@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SpeseRouteImport } from './routes/spese'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImpostazioniRouteImport } from './routes/impostazioni'
@@ -23,6 +24,11 @@ import { Route as FattureNuovaRouteImport } from './routes/fatture.nuova'
 import { Route as ClientiNuovoRouteImport } from './routes/clienti.nuovo'
 import { Route as ClientiClientIdRouteImport } from './routes/clienti.$clientId'
 
+const SpeseRoute = SpeseRouteImport.update({
+  id: '/spese',
+  path: '/spese',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
@@ -95,6 +101,7 @@ export interface FileRoutesByFullPath {
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/spese': typeof SpeseRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
   '/fatture/nuova': typeof FattureNuovaRoute
@@ -110,6 +117,7 @@ export interface FileRoutesByTo {
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/spese': typeof SpeseRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
   '/fatture/nuova': typeof FattureNuovaRoute
@@ -126,6 +134,7 @@ export interface FileRoutesById {
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/spese': typeof SpeseRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
   '/fatture/nuova': typeof FattureNuovaRoute
@@ -143,6 +152,7 @@ export interface FileRouteTypes {
     | '/impostazioni'
     | '/login'
     | '/register'
+    | '/spese'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
     | '/fatture/nuova'
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/impostazioni'
     | '/login'
     | '/register'
+    | '/spese'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
     | '/fatture/nuova'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/impostazioni'
     | '/login'
     | '/register'
+    | '/spese'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
     | '/fatture/nuova'
@@ -189,6 +201,7 @@ export interface RootRouteChildren {
   ImpostazioniRoute: typeof ImpostazioniRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  SpeseRoute: typeof SpeseRoute
   ClientiClientIdRoute: typeof ClientiClientIdRoute
   ClientiNuovoRoute: typeof ClientiNuovoRoute
   FattureNuovaRoute: typeof FattureNuovaRoute
@@ -201,6 +214,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/spese': {
+      id: '/spese'
+      path: '/spese'
+      fullPath: '/spese'
+      preLoaderRoute: typeof SpeseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
@@ -301,6 +321,7 @@ const rootRouteChildren: RootRouteChildren = {
   ImpostazioniRoute: ImpostazioniRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  SpeseRoute: SpeseRoute,
   ClientiClientIdRoute: ClientiClientIdRoute,
   ClientiNuovoRoute: ClientiNuovoRoute,
   FattureNuovaRoute: FattureNuovaRoute,
