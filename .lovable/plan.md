@@ -1,87 +1,75 @@
-# Pratix — Piano MVP
+## Modulo Fatturazione - Piano di implementazione
 
-Gestionale web per avvocati freelance, single-user con login, estetica moderna e minimale. Quattro aree funzionali: anagrafica clienti, pratiche, rimborsi spese, fatturazione (PDF + XML FatturaPA).
+Implemento il modulo completo Fatturazione con calcoli fiscali italiani, generazione PDF e XML FatturaPA 1.2.2.
 
-> **Nota su fatturazione elettronica**: la trasmissione effettiva al SdI richiede un intermediario accreditato (Aruba, Fattura24, ecc.), firma digitale e conservazione sostitutiva decennale a norma — fuori scopo MVP. Pratix genererà il **file XML conforme al tracciato FatturaPA 1.2.2** scaricabile, pronto da trasmettere tramite il tuo intermediario di fiducia, più PDF di cortesia. L'integrazione diretta con un provider potrà essere aggiunta in v2.
+### 1. Logica di calcolo (`src/lib/invoice-calc.ts`)
 
-## Esperienza utente
+Funzione `computeInvoice(lines, options)` che calcola:
+- **Imponibile compensi** (somma righe `fee` + `expense_taxable`)
+- **Cassa Forense** = imponibile × 4% (configurabile da profilo)
+- **Imponibile IVA** = imponibile + cassa
+- **IVA** = imponibile IVA × 22% (configurabile)
+- **Ritenuta d'acconto** = imponibile × 20% (se `apply_withholding` e regime ordinario)
+- **Spese Art. 15** (anticipazioni escluse IVA, escluse ritenuta)
+- **Bollo** = €2,00 se Art. 15 > €77,47 oppure se regime forfettario con totale > €77,47
+- **Totale documento** e **Netto a pagare**
 
-### Onboarding
-- Login (email + password) e registrazione tramite Lovable Cloud.
-- Al primo accesso: wizard breve per i **dati dello studio** (ragione sociale, P.IVA, codice fiscale, indirizzo, REA, cassa previdenziale, regime fiscale, IBAN, numerazione fatture iniziale, logo). Questi dati alimentano l'intestazione di ogni fattura e l'XML SdI.
+### 2. Numerazione automatica
+Server function `getNextInvoiceNumber` che legge `profiles.invoice_year` / `invoice_next_number` / `invoice_number_prefix` e incrementa atomicamente all'emissione.
 
-### Dashboard
-- Riepilogo a colpo d'occhio: pratiche attive, scadenze imminenti (prossimi 14 giorni), importi da fatturare, fatture non incassate.
-- Lista delle ultime pratiche aggiornate.
-- Pulsanti rapidi: Nuova pratica, Nuova fattura, Nuovo cliente.
+### 3. Form fattura (`src/components/invoice-form.tsx`)
+- Selezione cliente (con autocomplete) e pratica opzionale
+- Data emissione, scadenza, stato
+- Righe dinamiche con tipo (`fee`, `expense_taxable`, `expense_art15`)
+- Possibilità di importare spese pendenti dalla pratica selezionata
+- Pannello laterale con riepilogo calcoli live (cassa, IVA, ritenuta, bollo, totale, netto)
+- Toggle ritenuta, override aliquote per la singola fattura
 
-### Clienti
-- Elenco con ricerca e filtro (privato/azienda).
-- Scheda cliente: anagrafica completa (nome/ragione sociale, CF, P.IVA, indirizzo, PEC, **codice destinatario SdI** a 7 caratteri, contatti) e cronologia pratiche/fatture collegate.
-- PEC e codice destinatario obbligatori per i clienti che riceveranno fattura elettronica.
+### 4. Pagine
+- `src/routes/fatture.index.tsx`: lista con filtri stato/anno/cliente, badge colorati, totali periodo
+- `src/routes/fatture.nuova.tsx`: form creazione (riusa `invoice-form`)
+- `src/routes/fatture.$invoiceId.tsx`: dettaglio + modifica + azioni (segna pagata, duplica, elimina, scarica PDF, scarica XML)
 
-### Pratiche
-- Elenco con filtri per stato (Aperta, In corso, Sospesa, Chiusa, Archiviata), cliente, materia (civile, penale, lavoro, famiglia, ecc.).
-- Scheda pratica:
-  - Dati base: numero pratica (auto), titolo, cliente, controparte, materia, autorità giudiziaria, R.G., data apertura.
-  - **Stato** modificabile con timeline degli stati passati.
-  - **Scadenze** (data + descrizione) con evidenza imminenti/scadute.
-  - **Note** in formato testo libero.
-  - **Tariffe pattuite** (forfait o a ore, eventuale acconto).
-  - Tab "Spese" e "Fatture" collegate.
+### 5. Generazione PDF (`src/lib/invoice-pdf.ts`)
+Client-side con `jspdf` + `jspdf-autotable`:
+- Intestazione studio (da `profiles`: ragione sociale, P.IVA, CF, indirizzo, IBAN, ordine)
+- Dati cliente
+- Tabella righe
+- Riepilogo fiscale
+- Coordinate bancarie e note
 
-### Rimborsi spese
-- All'interno della pratica, tab "Spese": voce con data, categoria (contributo unificato, marche da bollo, copie, trasferte, CTU, altro), descrizione, importo, flag "imponibile / anticipazione ex art. 15" (le anticipazioni in nome e per conto del cliente sono escluse da IVA).
-- Riepilogo totale spese per pratica con indicatore "da fatturare / fatturate".
+### 6. Generazione XML FatturaPA 1.2.2
+Server function `generateInvoiceXml` in `src/server/invoices.functions.ts`:
+- Compone `FatturaElettronica` v1.2.2 con namespace corretti
+- Header: `DatiTrasmissione` (CodiceDestinatario o `0000000` + PEC), `CedentePrestatore`, `CessionarioCommittente`
+- Body: `DatiGenerali` (TD06 parcella), `DatiBeniServizi` con righe e `DatiCassaPrevidenziale`, `DatiRitenuta`, `DatiBollo`, `DatiPagamento`
+- Validazione campi obbligatori (P.IVA cliente o CF, SDI/PEC)
+- Restituisce XML come string per download
 
-### Fatturazione
-- Elenco fatture con stato (Bozza, Emessa, Pagata, Insoluta) e filtri per anno/cliente.
-- **Creazione fattura** partendo da una pratica: precompila cliente, importa onorari pattuiti e spese non ancora fatturate (selezionabili).
-- Calcoli automatici secondo prassi forense italiana:
-  - Imponibile onorari
-  - **Cassa Forense 4%** (configurabile) sull'imponibile
-  - **IVA 22%** su (imponibile + cassa)
-  - **Ritenuta d'acconto 20%** sull'imponibile (configurabile, escludibile per regime forfettario)
-  - Anticipazioni ex art. 15 fuori campo IVA
-  - Bollo 2 € se importo non soggetto a IVA > 77,47 €
-  - Totale documento e netto a pagare
-- Numerazione automatica progressiva annuale.
-- **Esportazione PDF** professionale con logo, dati studio, righe, riepilogo IVA, IBAN.
-- **Esportazione XML FatturaPA 1.2.2** conforme al tracciato SdI, pronto per la trasmissione tramite intermediario. Esplicitato in UI che Pratix non trasmette al SdI.
-- Marcatura manuale "Pagata" con data incasso.
+Nome file: `IT{piva}_{progressivo}.xml`
 
-### Stile
-Sfondo bianco, ampi spazi, tipografia sans-serif pulita (Inter), accenti in blu/indaco sobrio, bordi sottili, ombre leggere. Sidebar di navigazione fissa a sinistra (Dashboard, Clienti, Pratiche, Fatture, Impostazioni). Tabelle dense ma leggibili, stati colorati con badge tenui.
+### 7. Navigazione
+Aggiorno `app-sidebar.tsx` (la voce Fatture esiste già, attivo le sottovoci) e rimuovo i `coming-soon` placeholder.
 
-## Architettura tecnica
+### Dettagli tecnici
+- Tutte le mutation passano da `useMutation` di TanStack Query con invalidazione cache
+- Stati fattura: `draft`, `issued`, `paid`, `cancelled` con transizioni controllate
+- Validazione form con `zod` + `react-hook-form` (già presenti)
+- I totali calcolati vengono persistiti su `invoices` (campi già presenti) per coerenza con la lista
+- Trigger DB per `updated_at` già attivo
 
-- **Stack**: TanStack Start + React + Tailwind + shadcn/ui (già presenti).
-- **Backend**: Lovable Cloud (Supabase) per auth (email/password) e database.
-- **Routing**: route file separate sotto `src/routes/_authenticated/` per le pagine protette (dashboard, clienti, pratiche, fatture, impostazioni); `/login`, `/register` pubbliche.
-- **Schema DB principali** (tutte con RLS scoping su `auth.uid()`):
-  - `profiles` (1:1 con `auth.users`) → dati studio
-  - `clients` → anagrafica
-  - `cases` (pratiche) + `case_status_history` + `case_deadlines`
-  - `expenses` → spese per pratica
-  - `invoices` + `invoice_lines`
-- **Generazione PDF**: lato client con `jspdf` per evitare vincoli del runtime serverless.
-- **Generazione XML FatturaPA**: server function TanStack che produce XML 1.2.2 (testata, cedente/prestatore, cessionario/committente, dati generali documento, dettaglio linee, riepilogo IVA), restituito come download.
-- Validazione input con Zod sia lato client che server.
+### File da creare
+- `src/lib/invoice-calc.ts`
+- `src/lib/invoice-pdf.ts`
+- `src/lib/invoice-xml.ts` (helper puro, importato dal server)
+- `src/server/invoices.functions.ts`
+- `src/components/invoice-form.tsx`
+- `src/components/invoice-line-row.tsx`
+- `src/components/invoice-summary.tsx`
+- `src/routes/fatture.$invoiceId.tsx`
 
-## Fuori scopo (v2)
-- Trasmissione effettiva al SdI e ricezione notifiche.
-- Conservazione sostitutiva a norma decennale.
-- Multi-utente / studio condiviso.
-- Calendario integrato e notifiche scadenze via email.
-- Time tracking a ore.
-- Riconciliazione bancaria automatica.
+### File da modificare
+- `src/routes/fatture.index.tsx` (sostituisce coming-soon)
+- `src/routes/fatture.nuova.tsx` (sostituisce coming-soon)
 
-## Approccio di consegna
-1. Setup Lovable Cloud + auth + schema DB + RLS + wizard dati studio.
-2. CRUD clienti e pratiche con stato e scadenze.
-3. Spese collegate alle pratiche.
-4. Fatturazione: creazione, calcoli, PDF.
-5. Export XML FatturaPA.
-6. Dashboard riepilogativa.
-
-Confermi di procedere con questo perimetro? Se sì, passo in modalità build e parto dal punto 1.
+Confermi per procedere?
