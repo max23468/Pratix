@@ -6,7 +6,6 @@ import {
   Receipt,
   Wallet,
   Settings,
-  Scale,
   LogOut,
   CalendarClock,
 } from "lucide-react";
@@ -21,6 +20,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { Logo } from "@/components/brand/logo";
 import { useAuth } from "@/lib/auth-context";
 
 const items = [
