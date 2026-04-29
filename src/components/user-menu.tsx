@@ -47,7 +47,7 @@ export function UserMenu() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link to="/account" search={{}} hash="">
+          <Link to="/account">
             <KeyRound className="mr-2 h-4 w-4" />
             Cambia password
           </Link>
