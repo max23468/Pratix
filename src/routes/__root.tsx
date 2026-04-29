@@ -38,14 +38,14 @@ export const Route = createRootRoute({
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "theme-color", content: "#1F2D4D" },
-      { title: "Pratix — Tutto torna." },
+      { title: "Pratix · Tutto torna." },
       {
         name: "description",
         content:
           "Pratix è il gestionale per avvocati freelance. Pratiche, scadenze, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
       },
       { name: "author", content: "Pratix" },
-      { property: "og:title", content: "Pratix — Tutto torna." },
+      { property: "og:title", content: "Pratix · Tutto torna." },
       {
         property: "og:description",
         content:
@@ -59,7 +59,7 @@ export const Route = createRootRoute({
       { property: "og:image:height", content: "640" },
       { property: "og:image:alt", content: "Pratix — Tutto torna." },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Pratix — Tutto torna." },
+      { name: "twitter:title", content: "Pratix · Tutto torna." },
       {
         name: "twitter:description",
         content:
