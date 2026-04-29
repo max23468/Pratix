@@ -33,6 +33,14 @@ import {
 import { formatDate } from "@/lib/format";
 
 export const Route = createFileRoute("/pratiche/")({
+  head: () => ({
+    meta: [
+      { title: "Pratiche — Pratix" },
+      { name: "description", content: "Tutte le pratiche del tuo studio." },
+      { property: "og:title", content: "Pratiche — Pratix" },
+      { property: "og:description", content: "Tutte le pratiche del tuo studio." },
+    ],
+  }),
   component: () => (
     <AppLayout>
       <PraticheList />

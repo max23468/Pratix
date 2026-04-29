@@ -127,7 +127,7 @@ export function ExpenseDialog({ caseId, trigger, onSaved }: Props) {
                   {(cases ?? []).map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.case_number} · {c.title}
-                      {/* @ts-ignore nested join */}
+                      
                       {c.clients ? ` — ${clientDisplayName(c.clients)}` : ""}
                     </SelectItem>
                   ))}

@@ -9,6 +9,14 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/register")({
+  head: () => ({
+    meta: [
+      { title: "Registrati — Pratix" },
+      { name: "description", content: "Crea un account Pratix gratis." },
+      { property: "og:title", content: "Registrati — Pratix" },
+      { property: "og:description", content: "Crea un account Pratix gratis." },
+    ],
+  }),
   component: RegisterPage,
 });
 

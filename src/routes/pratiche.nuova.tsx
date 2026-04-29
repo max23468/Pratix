@@ -6,6 +6,14 @@ import { CaseForm } from "@/components/case-form";
 import { Button } from "@/components/ui/button";
 
 export const Route = createFileRoute("/pratiche/nuova")({
+  head: () => ({
+    meta: [
+      { title: "Nuova pratica — Pratix" },
+      { name: "description", content: "Apri una nuova pratica." },
+      { property: "og:title", content: "Nuova pratica — Pratix" },
+      { property: "og:description", content: "Apri una nuova pratica." },
+    ],
+  }),
   component: () => (
     <AppLayout>
       <NewCase />

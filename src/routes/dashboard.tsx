@@ -12,6 +12,14 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import { caseStatusLabels, caseStatusVariant, clientDisplayName } from "@/lib/labels";
 
 export const Route = createFileRoute("/dashboard")({
+  head: () => ({
+    meta: [
+      { title: "Dashboard — Pratix" },
+      { name: "description", content: "Una visione d'insieme del tuo studio." },
+      { property: "og:title", content: "Dashboard — Pratix" },
+      { property: "og:description", content: "Una visione d'insieme del tuo studio." },
+    ],
+  }),
   component: () => (
     <AppLayout>
       <DashboardContent />
@@ -176,7 +184,7 @@ function DashboardContent() {
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{d.description}</p>
                         <p className="truncate text-xs text-muted-foreground">
-                          {/* @ts-ignore nested join typing */}
+                          
                           {d.cases?.title ?? "—"}
                         </p>
                       </div>
@@ -210,7 +218,7 @@ function DashboardContent() {
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{c.title}</p>
                         <p className="truncate text-xs text-muted-foreground">
-                          {c.case_number} · {/* @ts-ignore nested join typing */}
+                          {c.case_number} · 
                           {c.clients ? clientDisplayName(c.clients) : "—"}
                         </p>
                       </div>

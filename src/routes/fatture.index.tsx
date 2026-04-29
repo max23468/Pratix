@@ -33,6 +33,14 @@ import {
 import { formatCurrency, formatDate } from "@/lib/format";
 
 export const Route = createFileRoute("/fatture/")({
+  head: () => ({
+    meta: [
+      { title: "Fatture — Pratix" },
+      { name: "description", content: "Elenco fatture emesse." },
+      { property: "og:title", content: "Fatture — Pratix" },
+      { property: "og:description", content: "Elenco fatture emesse." },
+    ],
+  }),
   component: InvoicesIndex,
 });
 
@@ -189,33 +197,40 @@ function InvoicesIndex() {
                     </TableCell>
                   </TableRow>
                 )}
-                {filtered.map((i) => (
-                  <TableRow key={i.id} className="cursor-pointer">
-                    <TableCell>
-                      <Link
-                        to="/fatture/$invoiceId"
-                        params={{ invoiceId: i.id }}
-                        className="font-medium hover:underline"
-                      >
-                        {i.number}/{i.year}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{formatDate(i.issue_date)}</TableCell>
-                    <TableCell>{clientDisplayName(i.client as any)}</TableCell>
-                    <TableCell>{formatDate(i.due_date)}</TableCell>
-                    <TableCell>
-                      <Badge variant={invoiceStatusVariant[i.status] || "outline"}>
-                        {invoiceStatusLabels[i.status] || i.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(Number(i.total_amount))}
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatCurrency(Number(i.net_to_pay))}
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {filtered.map((i) => {
+                  const today = new Date().toISOString().slice(0, 10);
+                  const isOverdue =
+                    i.status === "issued" && i.due_date && i.due_date < today;
+                  return (
+                    <TableRow key={i.id} className="cursor-pointer">
+                      <TableCell>
+                        <Link
+                          to="/fatture/$invoiceId"
+                          params={{ invoiceId: i.id }}
+                          className="font-medium hover:underline"
+                        >
+                          {i.number}/{i.year}
+                        </Link>
+                      </TableCell>
+                      <TableCell>{formatDate(i.issue_date)}</TableCell>
+                      <TableCell>{clientDisplayName(i.client as any)}</TableCell>
+                      <TableCell className={isOverdue ? "font-medium text-destructive" : ""}>
+                        {formatDate(i.due_date)}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={isOverdue ? "destructive" : invoiceStatusVariant[i.status] || "outline"}>
+                          {isOverdue ? "Scaduta" : invoiceStatusLabels[i.status] || i.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(Number(i.total_amount))}
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        {formatCurrency(Number(i.net_to_pay))}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </div>

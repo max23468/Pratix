@@ -29,6 +29,14 @@ import {
 } from "@/lib/labels";
 
 export const Route = createFileRoute("/pratiche/$caseId")({
+  head: () => ({
+    meta: [
+      { title: "Pratica — Pratix" },
+      { name: "description", content: "Dettaglio pratica con scadenze e spese." },
+      { property: "og:title", content: "Pratica — Pratix" },
+      { property: "og:description", content: "Dettaglio pratica con scadenze e spese." },
+    ],
+  }),
   component: () => (
     <AppLayout>
       <CaseDetail />
