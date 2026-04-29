@@ -62,7 +62,7 @@ function ClientiList() {
     <>
       <PageHeader
         title="Clienti"
-        description="Anagrafica dei tuoi assistiti."
+        description="Anagrafica dei tuoi clienti."
         actions={
           <Link to="/clienti/nuovo">
             <Button size="sm">
