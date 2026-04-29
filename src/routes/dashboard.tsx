@@ -237,15 +237,21 @@ function StatCard({
   icon: Icon,
   label,
   value,
+  tone = "default",
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
+  tone?: "default" | "danger";
 }) {
+  const iconCls =
+    tone === "danger"
+      ? "bg-destructive/10 text-destructive"
+      : "bg-accent text-accent-foreground";
   return (
     <Card>
       <CardContent className="flex items-center gap-3 p-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${iconCls}`}>
           <Icon className="h-5 w-5" />
         </div>
         <div className="min-w-0">
