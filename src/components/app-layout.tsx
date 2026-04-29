@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
@@ -56,7 +56,13 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <SidebarTrigger />
             <Separator orientation="vertical" className="mx-1 h-5" />
             <span className="text-sm font-medium text-muted-foreground">
+            <Link
+              to="/dashboard"
+              className="truncate rounded-sm text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              aria-label="Vai alla dashboard"
+            >
               {profile?.business_name || profile?.full_name || "La mia professione"}
+            </Link>
             </span>
             <div className="ml-auto flex items-center gap-1">
               <ChangelogBell />
