@@ -2,6 +2,7 @@ import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 import { FileText, Receipt, Wallet, ShieldCheck, ArrowRight, CalendarClock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/logo";
+import { ThemeToggle } from "@/components/theme-toggle";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
