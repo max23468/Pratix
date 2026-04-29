@@ -73,21 +73,21 @@ function MarkPx({ tone, size }: { tone: LogoTone; size: number }) {
   const tileFill = isMono
     ? "transparent"
     : isInverse
-      ? "var(--color-primary-foreground)"
-      : "var(--color-primary)";
+      ? "var(--color-brand-cream)"
+      : "var(--color-brand-navy)";
 
   const borderStroke = isMono
     ? "currentColor"
     : isInverse
-      ? "var(--color-primary)"
+      ? "var(--color-brand-navy)"
       : c.gold;
   const borderOpacity = isMono ? 1 : isInverse ? 0.35 : 0.55;
 
   const glyphColor = isMono
     ? "currentColor"
     : isInverse
-      ? "var(--color-primary)"
-      : "var(--color-primary-foreground)";
+      ? "var(--color-brand-navy)"
+      : "var(--color-brand-cream)";
 
   return (
     <svg
