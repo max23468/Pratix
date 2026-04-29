@@ -42,6 +42,8 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-brand-gold: var(--brand-gold);
   --color-brand-gold-foreground: var(--brand-gold-foreground);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-cream: var(--brand-cream);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
@@ -100,6 +102,9 @@
   /* Brand gold — usato per CTA, KPI, focus, dettagli logo */
   --brand-gold: oklch(0.68 0.11 75);
   --brand-gold-foreground: oklch(0.20 0.04 80);
+  /* Token brand FISSI: identici in chiaro/scuro per il logo e gli asset di marca */
+  --brand-navy: oklch(0.30 0.07 255);
+  --brand-cream: oklch(0.985 0.004 80);
 
   --destructive: oklch(0.50 0.18 28);
   --destructive-foreground: oklch(0.985 0.004 80);
@@ -178,6 +183,9 @@
 
   --brand-gold: oklch(0.78 0.12 78);
   --brand-gold-foreground: oklch(0.18 0.04 260);
+  /* Brand fissi: NON cambiano in dark, mantengono l'identità del logo */
+  --brand-navy: oklch(0.30 0.07 255);
+  --brand-cream: oklch(0.985 0.004 80);
 
   --destructive: oklch(0.62 0.18 28);
   --destructive-foreground: oklch(0.985 0.004 80);

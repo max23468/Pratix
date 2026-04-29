@@ -39,7 +39,7 @@ export const BRAND_DIRECTION: LogoDirection = "px";
 function toneColors(tone: LogoTone) {
   if (tone === "inverse") {
     return {
-      primary: "var(--color-primary-foreground)",
+      primary: "var(--color-brand-cream)",
       gold: "var(--color-brand-gold)",
       onGold: "var(--color-brand-gold-foreground)",
     };
@@ -52,7 +52,7 @@ function toneColors(tone: LogoTone) {
     };
   }
   return {
-    primary: "var(--color-primary)",
+    primary: "var(--color-brand-navy)",
     gold: "var(--color-brand-gold)",
     onGold: "var(--color-brand-gold-foreground)",
   };
@@ -73,21 +73,21 @@ function MarkPx({ tone, size }: { tone: LogoTone; size: number }) {
   const tileFill = isMono
     ? "transparent"
     : isInverse
-      ? "var(--color-primary-foreground)"
-      : "var(--color-primary)";
+      ? "var(--color-brand-cream)"
+      : "var(--color-brand-navy)";
 
   const borderStroke = isMono
     ? "currentColor"
     : isInverse
-      ? "var(--color-primary)"
+      ? "var(--color-brand-navy)"
       : c.gold;
   const borderOpacity = isMono ? 1 : isInverse ? 0.35 : 0.55;
 
   const glyphColor = isMono
     ? "currentColor"
     : isInverse
-      ? "var(--color-primary)"
-      : "var(--color-primary-foreground)";
+      ? "var(--color-brand-navy)"
+      : "var(--color-brand-cream)";
 
   return (
     <svg
@@ -212,11 +212,19 @@ function Wordmark({
   const c = toneColors(tone);
   // size = altezza glifo desiderata; calcoliamo font-size proporzionale
   const fontSize = Math.round(size * 0.95);
+  // Il wordmark "navy" si adatta al tema: navy in light, panna in dark.
+  // "inverse" forza panna su fondi scuri brandizzati. "mono" usa currentColor.
+  const wordColor =
+    tone === "mono"
+      ? "currentColor"
+      : tone === "inverse"
+        ? "var(--color-brand-cream)"
+        : "var(--color-foreground)";
   return (
     <span
       className="font-display"
       style={{
-        color: c.primary,
+        color: wordColor,
         fontSize,
         lineHeight: 1,
         letterSpacing: "-0.035em",
@@ -229,7 +237,7 @@ function Wordmark({
       <span
         style={{
           color:
-            direction === "px" || direction === "seal" ? c.gold : c.primary,
+            direction === "px" || direction === "seal" ? c.gold : wordColor,
           // Stesso font, niente italic: evita il fallback che introduce spazio extra.
           fontStyle: "normal",
           marginLeft: "-0.02em",
