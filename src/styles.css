@@ -199,6 +199,13 @@
   --brand-navy: oklch(0.22 0.04 260);
   --brand-cream: oklch(0.985 0.004 80);
 
+  /* Logo adattivo in dark: tile panna + glifo inchiostro per leggibilità sul fondo scuro */
+  --logo-tile: var(--brand-cream);
+  --logo-glyph: var(--brand-navy);
+  --logo-border: var(--brand-navy);
+  --logo-border-opacity: 0.30;
+  --logo-wordmark: var(--brand-cream);
+
   --destructive: oklch(0.62 0.18 28);
   --destructive-foreground: oklch(0.985 0.004 80);
 
