@@ -46,8 +46,9 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ⬜ | Mockup/screenshot di prodotto | Dashboard, fattura, pratica |
 | ⬜ | Pricing | Decidere modello: free/trial/pro, mensile/annuale |
 | ⬜ | FAQ | Domande tipiche: regime forfettario, FatturaPA, sicurezza dati |
-| ⬜ | Footer completo | Privacy, Termini, Contatti, partita IVA del titolare |
-| ⬜ | Meta + og:image dedicati alla landing | Title <60, desc <160, immagine social |
+| ✅ | Footer con Privacy e Termini | Pagine `/privacy` e `/termini` linkate |
+| ✅ | Meta + og:image dedicati alla landing | og + twitter cards in root, immagine `/og-image.jpg` |
+| ⬜ | Footer completo con contatti e P.IVA | Da aggiungere quando definiti gli estremi del titolare |
 
 ## 3. Esperienza prodotto (UI autenticata)
 
@@ -82,7 +83,9 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | Stato | Voce | Note |
 |---|---|---|
 | ✅ | Registrazione + login | Email/password |
-| ⬜ | Recupero password | Flow completo con email |
+| ✅ | Recupero password | Pagine `/recupera-password` + `/reimposta-password`, email Supabase di default |
+| ✅ | Messaggi auth generici (no user enumeration) | Login e registrazione |
+| ⬜ | Email auth personalizzate (brand) | Richiede dominio email custom |
 | ⬜ | Cambio email | Con conferma sul nuovo indirizzo |
 | ⬜ | Eliminazione account | Soft + hard delete con conferma |
 | ⬜ | Esportazione dati personali | JSON/CSV per GDPR |
@@ -94,7 +97,8 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | Stato | Voce | Note |
 |---|---|---|
 | ✅ | `lang="it"` su root | |
-| ⬜ | Meta unici per ogni route pubblica | Title, description, og |
+| ✅ | Meta unici per route pubbliche | Landing, login, registrazione, recupero, privacy, termini |
+| ✅ | og:image globale + Twitter card | `/og-image.jpg` |
 | ⬜ | `sitemap.xml` + `robots.txt` | |
 | ⬜ | JSON-LD `Organization` / `SoftwareApplication` | |
 | ⬜ | Pubblicazione | Tramite Lovable |

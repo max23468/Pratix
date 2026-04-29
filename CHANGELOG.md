@@ -9,9 +9,17 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 ### Aggiunto
 - Documentazione strutturata: `README.md`, `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `LICENSE`.
 - Cartella `docs/` con guide tematiche (`architettura`, `database`, `fatturazione`, `tema-e-design`, `tono-di-voce`, `deploy`), memoria di progetto esplicitata in markdown, decision log (ADR) e glossario di dominio.
+- **Recupero password**: pagina `/recupera-password` (richiesta link via email) e pagina `/reimposta-password` (impostazione nuova password dopo il link), con messaggi generici per evitare user enumeration.
+- Link "Password dimenticata?" nella pagina di login.
+- **Pagine legali**: `/privacy` e `/termini` con contenuti placeholder professionali in attesa di revisione legale.
+- Footer della landing con link a Privacy e Termini.
+- **Open Graph + Twitter Card**: `og:image` 1216×640 brandizzata (panna, navy, oro), `og:site_name`, `twitter:title`, `twitter:description`, `twitter:image`.
 
 ### Modificato
 - Memoria di progetto sincronizzata con i nuovi mirror in `docs/memory/`.
+
+### Sicurezza
+- **Fix info leak in registrazione**: il messaggio di errore è ora generico ("Registrazione non riuscita. Riprova o accedi se hai già un account.") al posto del messaggio Supabase grezzo, prevenendo l'enumerazione degli utenti registrati.
 
 ---
 

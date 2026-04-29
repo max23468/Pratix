@@ -9,9 +9,13 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TerminiRouteImport } from './routes/termini'
 import { Route as SpeseRouteImport } from './routes/spese'
 import { Route as ScadenzeRouteImport } from './routes/scadenze'
+import { Route as ReimpostaPasswordRouteImport } from './routes/reimposta-password'
 import { Route as RegisterRouteImport } from './routes/register'
+import { Route as RecuperaPasswordRouteImport } from './routes/recupera-password'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImpostazioniRouteImport } from './routes/impostazioni'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -26,6 +30,11 @@ import { Route as FattureInvoiceIdRouteImport } from './routes/fatture.$invoiceI
 import { Route as ClientiNuovoRouteImport } from './routes/clienti.nuovo'
 import { Route as ClientiClientIdRouteImport } from './routes/clienti.$clientId'
 
+const TerminiRoute = TerminiRouteImport.update({
+  id: '/termini',
+  path: '/termini',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SpeseRoute = SpeseRouteImport.update({
   id: '/spese',
   path: '/spese',
@@ -36,9 +45,24 @@ const ScadenzeRoute = ScadenzeRouteImport.update({
   path: '/scadenze',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReimpostaPasswordRoute = ReimpostaPasswordRouteImport.update({
+  id: '/reimposta-password',
+  path: '/reimposta-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
   path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecuperaPasswordRoute = RecuperaPasswordRouteImport.update({
+  id: '/recupera-password',
+  path: '/recupera-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -112,9 +136,13 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
+  '/recupera-password': typeof RecuperaPasswordRoute
   '/register': typeof RegisterRoute
+  '/reimposta-password': typeof ReimpostaPasswordRoute
   '/scadenze': typeof ScadenzeRoute
   '/spese': typeof SpeseRoute
+  '/termini': typeof TerminiRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
   '/fatture/$invoiceId': typeof FattureInvoiceIdRoute
@@ -130,9 +158,13 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
+  '/recupera-password': typeof RecuperaPasswordRoute
   '/register': typeof RegisterRoute
+  '/reimposta-password': typeof ReimpostaPasswordRoute
   '/scadenze': typeof ScadenzeRoute
   '/spese': typeof SpeseRoute
+  '/termini': typeof TerminiRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
   '/fatture/$invoiceId': typeof FattureInvoiceIdRoute
@@ -149,9 +181,13 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
+  '/privacy': typeof PrivacyRoute
+  '/recupera-password': typeof RecuperaPasswordRoute
   '/register': typeof RegisterRoute
+  '/reimposta-password': typeof ReimpostaPasswordRoute
   '/scadenze': typeof ScadenzeRoute
   '/spese': typeof SpeseRoute
+  '/termini': typeof TerminiRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
   '/fatture/$invoiceId': typeof FattureInvoiceIdRoute
@@ -169,9 +205,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/impostazioni'
     | '/login'
+    | '/privacy'
+    | '/recupera-password'
     | '/register'
+    | '/reimposta-password'
     | '/scadenze'
     | '/spese'
+    | '/termini'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
     | '/fatture/$invoiceId'
@@ -187,9 +227,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/impostazioni'
     | '/login'
+    | '/privacy'
+    | '/recupera-password'
     | '/register'
+    | '/reimposta-password'
     | '/scadenze'
     | '/spese'
+    | '/termini'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
     | '/fatture/$invoiceId'
@@ -205,9 +249,13 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/impostazioni'
     | '/login'
+    | '/privacy'
+    | '/recupera-password'
     | '/register'
+    | '/reimposta-password'
     | '/scadenze'
     | '/spese'
+    | '/termini'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
     | '/fatture/$invoiceId'
@@ -224,9 +272,13 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   ImpostazioniRoute: typeof ImpostazioniRoute
   LoginRoute: typeof LoginRoute
+  PrivacyRoute: typeof PrivacyRoute
+  RecuperaPasswordRoute: typeof RecuperaPasswordRoute
   RegisterRoute: typeof RegisterRoute
+  ReimpostaPasswordRoute: typeof ReimpostaPasswordRoute
   ScadenzeRoute: typeof ScadenzeRoute
   SpeseRoute: typeof SpeseRoute
+  TerminiRoute: typeof TerminiRoute
   ClientiClientIdRoute: typeof ClientiClientIdRoute
   ClientiNuovoRoute: typeof ClientiNuovoRoute
   FattureInvoiceIdRoute: typeof FattureInvoiceIdRoute
@@ -240,6 +292,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/termini': {
+      id: '/termini'
+      path: '/termini'
+      fullPath: '/termini'
+      preLoaderRoute: typeof TerminiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/spese': {
       id: '/spese'
       path: '/spese'
@@ -254,11 +313,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScadenzeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reimposta-password': {
+      id: '/reimposta-password'
+      path: '/reimposta-password'
+      fullPath: '/reimposta-password'
+      preLoaderRoute: typeof ReimpostaPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/register': {
       id: '/register'
       path: '/register'
       fullPath: '/register'
       preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recupera-password': {
+      id: '/recupera-password'
+      path: '/recupera-password'
+      fullPath: '/recupera-password'
+      preLoaderRoute: typeof RecuperaPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -360,9 +440,13 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   ImpostazioniRoute: ImpostazioniRoute,
   LoginRoute: LoginRoute,
+  PrivacyRoute: PrivacyRoute,
+  RecuperaPasswordRoute: RecuperaPasswordRoute,
   RegisterRoute: RegisterRoute,
+  ReimpostaPasswordRoute: ReimpostaPasswordRoute,
   ScadenzeRoute: ScadenzeRoute,
   SpeseRoute: SpeseRoute,
+  TerminiRoute: TerminiRoute,
   ClientiClientIdRoute: ClientiClientIdRoute,
   ClientiNuovoRoute: ClientiNuovoRoute,
   FattureInvoiceIdRoute: FattureInvoiceIdRoute,

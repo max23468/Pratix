@@ -51,7 +51,8 @@ function RegisterPage() {
     });
     setSubmitting(false);
     if (error) {
-      toast.error(error.message ?? "Registrazione non riuscita");
+      // Messaggio generico per evitare user enumeration: non riveliamo se l'email è già registrata
+      toast.error("Registrazione non riuscita. Riprova o accedi se hai già un account.");
       return;
     }
     toast.success("Account creato. Procedi con la configurazione della tua attività.");

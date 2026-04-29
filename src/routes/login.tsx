@@ -86,6 +86,14 @@ function LoginPage() {
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting ? "Accesso in corso…" : "Accedi"}
             </Button>
+            <div className="text-center">
+              <Link
+                to="/recupera-password"
+                className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+              >
+                Password dimenticata?
+              </Link>
+            </div>
           </form>
         </div>
 

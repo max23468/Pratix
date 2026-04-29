@@ -145,13 +145,23 @@ function Landing() {
       </main>
 
       <footer className="border-t border-border/60">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 px-6 py-6 text-xs text-muted-foreground sm:flex-row">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <Logo form="wordmark" size={16} tone="navy" />
             <span className="hidden text-muted-foreground/70 sm:inline">·</span>
             <span className="hidden italic sm:inline">Tutto torna.</span>
           </div>
-          <span>© {new Date().getFullYear()} Pratix · Pensato in Italia</span>
+          <nav aria-label="Documenti legali" className="flex flex-wrap items-center gap-4">
+            <Link to="/privacy" className="hover:text-foreground hover:underline">
+              Privacy
+            </Link>
+            <Link to="/termini" className="hover:text-foreground hover:underline">
+              Termini
+            </Link>
+            <span className="text-muted-foreground/70">
+              © {new Date().getFullYear()} Pratix · Pensato in Italia
+            </span>
+          </nav>
         </div>
       </footer>
     </div>
