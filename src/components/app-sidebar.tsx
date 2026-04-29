@@ -8,6 +8,7 @@ import {
   Settings,
   Scale,
   LogOut,
+  CalendarClock,
 } from "lucide-react";
 import {
   Sidebar,

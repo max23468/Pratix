@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SpeseRouteImport } from './routes/spese'
+import { Route as ScadenzeRouteImport } from './routes/scadenze'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImpostazioniRouteImport } from './routes/impostazioni'
@@ -28,6 +29,11 @@ import { Route as ClientiClientIdRouteImport } from './routes/clienti.$clientId'
 const SpeseRoute = SpeseRouteImport.update({
   id: '/spese',
   path: '/spese',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ScadenzeRoute = ScadenzeRouteImport.update({
+  id: '/scadenze',
+  path: '/scadenze',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegisterRoute = RegisterRouteImport.update({
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/scadenze': typeof ScadenzeRoute
   '/spese': typeof SpeseRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/scadenze': typeof ScadenzeRoute
   '/spese': typeof SpeseRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/scadenze': typeof ScadenzeRoute
   '/spese': typeof SpeseRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/impostazioni'
     | '/login'
     | '/register'
+    | '/scadenze'
     | '/spese'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/impostazioni'
     | '/login'
     | '/register'
+    | '/scadenze'
     | '/spese'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/impostazioni'
     | '/login'
     | '/register'
+    | '/scadenze'
     | '/spese'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
@@ -213,6 +225,7 @@ export interface RootRouteChildren {
   ImpostazioniRoute: typeof ImpostazioniRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  ScadenzeRoute: typeof ScadenzeRoute
   SpeseRoute: typeof SpeseRoute
   ClientiClientIdRoute: typeof ClientiClientIdRoute
   ClientiNuovoRoute: typeof ClientiNuovoRoute
@@ -232,6 +245,13 @@ declare module '@tanstack/react-router' {
       path: '/spese'
       fullPath: '/spese'
       preLoaderRoute: typeof SpeseRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/scadenze': {
+      id: '/scadenze'
+      path: '/scadenze'
+      fullPath: '/scadenze'
+      preLoaderRoute: typeof ScadenzeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/register': {
@@ -341,6 +361,7 @@ const rootRouteChildren: RootRouteChildren = {
   ImpostazioniRoute: ImpostazioniRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  ScadenzeRoute: ScadenzeRoute,
   SpeseRoute: SpeseRoute,
   ClientiClientIdRoute: ClientiClientIdRoute,
   ClientiNuovoRoute: ClientiNuovoRoute,
