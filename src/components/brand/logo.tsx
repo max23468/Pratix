@@ -228,8 +228,8 @@ function Wordmark({
       Prati
       <span
         style={{
-          color: direction === "px" ? c.gold : c.primary,
-          fontStyle: direction === "seal" ? "italic" : "normal",
+          color: direction === "px" || direction === "seal" ? c.gold : c.primary,
+          fontStyle: direction === "px" || direction === "seal" ? "italic" : "normal",
         }}
       >
         x
