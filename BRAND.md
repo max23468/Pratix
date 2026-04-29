@@ -31,27 +31,37 @@ Doppio senso intenzionale:
 
 Tutti i token vivono in `src/styles.css` come variabili CSS in `oklch`, con varianti light e dark.
 
+> **Nota nomi**: i token storici `--brand-navy` e `--brand-gold` sono mantenuti
+> per compatibilità ma ora veicolano rispettivamente **inchiostro profondo** e
+> **terracotta**. La scelta è documentata in [`docs/decisions/0007-palette-inchiostro-terracotta.md`](./docs/decisions/0007-palette-inchiostro-terracotta.md).
+
 | Ruolo | Token | Light | Dark |
 |---|---|---|---|
-| Primario (Navy inchiostro) | `--primary` | `oklch(0.30 0.07 255)` ≈ `#1F2D4D` | `#F4F1EA` (chiaro su scuro) |
-| Brand gold (accento) | `--brand-gold` | `oklch(0.68 0.11 75)` ≈ `#B8893C` | `oklch(0.78 0.12 78)` |
-| Sfondo | `--background` | panna `oklch(0.985 0.004 80)` | navy profondo `oklch(0.16 0.04 260)` |
-| Card | `--card` | bianco caldo | navy 20% |
-| Border | `--border` | `oklch(0.91 0.008 80)` | bianco 10% |
+| Primario (Inchiostro) | `--primary` | `oklch(0.22 0.04 260)` | `oklch(0.94 0.006 80)` (chiaro su scuro) |
+| Brand gold = **Terracotta** (accento) | `--brand-gold` | `oklch(0.62 0.15 35)` | `oklch(0.70 0.15 38)` |
+| Sfondo | `--background` | panna `oklch(0.985 0.004 80)` | grigio caldo `oklch(0.18 0.010 60)` |
+| Card | `--card` | bianco caldo | grigio caldo medio |
+| Border | `--border` | `oklch(0.91 0.008 60)` | bianco 10% |
 | Success | `--success` | verde bosco | verde bosco chiaro |
-| Warning | `--warning` | ambra (≠ gold) | ambra chiaro |
+| Warning | `--warning` | ambra calda (≠ terracotta) | ambra chiaro |
 | Destructive | `--destructive` | rosso mattone | rosso mattone vivido |
-| Info | `--info` | blu cielo desaturato | blu cielo |
+| Info | `--info` | blu desaturato | blu chiaro |
 
 **Regole**:
 
 - Mai usare colori hardcoded nei componenti. Sempre token (`bg-primary`, `text-brand-gold`, ecc.).
-- L'oro brunito è un accento, non un primario. Usalo per: CTA secondarie premium, KPI di valore (incassato, fatturato), focus ring, badge "premium", micro-dettagli del logo.
-- Lo sfondo è panna leggerissima, non bianco puro.
-- In dark mode il navy diventa lo sfondo: il primario "si inverte" in panna, l'oro resta oro (più luminoso).
+- La terracotta è un accento, non un primario. Usala per: CTA secondarie premium, KPI di valore (incassato, fatturato), focus ring, badge "premium", micro-dettagli del logo.
+- Lo sfondo light è panna leggerissima, mai bianco puro. Lo sfondo dark è un grigio caldo neutro con hue 60 (calda) per armonizzare con la terracotta.
+- In dark il primario diventa chiaro (la gerarchia si inverte) ma il senso resta: testo principale alto contrasto, terracotta come accento.
 
-**Gradients**: `--gradient-hero` (navy→navy scuro), `--gradient-accent` (gold→gold caldo).
-**Shadows**: `--shadow-soft`, `--shadow-elevated`, `--shadow-elegant` (navy), `--shadow-gold`.
+**Token logo adattivi** (gestiscono la variante chiara/scura del marchio):
+`--logo-tile`, `--logo-glyph`, `--logo-border`, `--logo-border-opacity`,
+`--logo-wordmark`. Cambiano automaticamente fra light e dark in modo che il
+logo resti leggibile (tile inchiostro su panna in light, tile panna su scuro
+in dark).
+
+**Gradients**: `--gradient-hero` (inchiostro→inchiostro più profondo), `--gradient-accent` (terracotta→terracotta calda).
+**Shadows**: `--shadow-soft`, `--shadow-elevated`, `--shadow-elegant` (inchiostro), `--shadow-gold` (terracotta).
 
 ## 3. Tipografia
 
@@ -96,14 +106,14 @@ Componente: `src/components/brand/logo.tsx` → `<Logo />`.
 
 **Toni** (prop `tone`):
 
-- `navy` (default): primario su fondi chiari.
-- `inverse`: bianco caldo su fondi scuri.
-- `mono`: monocromatico in `currentColor`.
+- `navy` (default): **adattivo al tema**. In light = tile inchiostro + glifo panna + dettaglio terracotta. In dark = tile panna + glifo inchiostro + dettaglio terracotta. Funziona ovunque senza pensarci.
+- `inverse`: forza tile panna (utile su fondi scuri brandizzati arbitrari, es. immagini).
+- `mono`: monocromatico in `currentColor` (stampa, watermark).
 
 **Esempi**:
 
 ```tsx
-<Logo />                              // lockup navy 28px
+<Logo />                              // lockup adattivo 28px
 <Logo form="mark" size={40} />        // solo simbolo
 <Logo form="wordmark" tone="inverse" />
 <Logo direction="seal" form="lockup" /> // per intestazione fattura PDF
