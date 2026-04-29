@@ -247,7 +247,7 @@ function StatCard({
   value,
   tone = "default",
 }: {
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   label: string;
   value: string;
   tone?: "default" | "danger" | "gold";
