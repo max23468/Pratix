@@ -23,6 +23,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { useTheme, type ThemeMode } from "@/lib/theme-context";
 import { taxRegimeLabels } from "@/lib/labels";
+import { APP_VERSION, BUILD_DATE } from "@/lib/version";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/impostazioni")({
   head: () => ({
