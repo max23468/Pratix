@@ -150,7 +150,7 @@ function InvoiceDetailPage() {
       <PageHeader
         title={`Fattura ${data.invoice.number}/${data.invoice.year}`}
         description="Modifica dati, scarica PDF di cortesia o XML SdI."
-        action={
+        actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline">
               <Link to="/fatture">
