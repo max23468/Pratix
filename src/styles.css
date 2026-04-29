@@ -102,6 +102,9 @@
   /* Brand gold — usato per CTA, KPI, focus, dettagli logo */
   --brand-gold: oklch(0.68 0.11 75);
   --brand-gold-foreground: oklch(0.20 0.04 80);
+  /* Token brand FISSI: identici in chiaro/scuro per il logo e gli asset di marca */
+  --brand-navy: oklch(0.30 0.07 255);
+  --brand-cream: oklch(0.985 0.004 80);
 
   --destructive: oklch(0.50 0.18 28);
   --destructive-foreground: oklch(0.985 0.004 80);
