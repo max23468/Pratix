@@ -54,7 +54,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <SidebarTrigger />
             <Separator orientation="vertical" className="mx-1 h-5" />
             <span className="text-sm font-medium text-muted-foreground">
-              {profile?.business_name || profile?.full_name || "Il mio studio"}
+              {profile?.business_name || profile?.full_name || "La mia attività"}
             </span>
           </header>
           <main className="flex-1 overflow-x-hidden">

@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 
 /**
- * Wizard mostrato al primo accesso: raccoglie i dati essenziali dello studio
+ * Wizard mostrato al primo accesso: raccoglie i dati essenziali dell'attività
  * (anagrafici, fiscali, IBAN). Tutto modificabile in seguito da Impostazioni.
  */
 export function OnboardingDialog() {
@@ -86,7 +86,7 @@ export function OnboardingDialog() {
         <DialogHeader>
           <DialogTitle>Benvenuto in Pratix</DialogTitle>
           <DialogDescription>
-            Configura il tuo studio in tre brevi passaggi. Potrai modificare tutto in seguito.
+            Configura la tua attività in tre brevi passaggi. Potrai modificare tutto in seguito.
           </DialogDescription>
         </DialogHeader>
 
@@ -102,8 +102,8 @@ export function OnboardingDialog() {
           {step === 1 && (
             <div className="space-y-3">
               <div className="space-y-2">
-                <Label htmlFor="bn">Ragione sociale / Nome studio</Label>
-                <Input id="bn" value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Studio Legale Rossi" />
+                <Label htmlFor="bn">Ragione sociale / Denominazione</Label>
+                <Input id="bn" value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Es. Avv. Mario Rossi" />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-2">

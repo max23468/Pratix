@@ -7,9 +7,9 @@ export const Route = createFileRoute("/clienti/nuovo")({
   head: () => ({
     meta: [
       { title: "Nuovo cliente — Pratix" },
-      { name: "description", content: "Aggiungi un nuovo cliente al tuo studio." },
+      { name: "description", content: "Aggiungi un nuovo cliente alla tua rubrica." },
       { property: "og:title", content: "Nuovo cliente — Pratix" },
-      { property: "og:description", content: "Aggiungi un nuovo cliente al tuo studio." },
+      { property: "og:description", content: "Aggiungi un nuovo cliente alla tua rubrica." },
     ],
   }),
   component: () => (

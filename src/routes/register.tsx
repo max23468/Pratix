@@ -54,7 +54,7 @@ function RegisterPage() {
       toast.error(error.message ?? "Registrazione non riuscita");
       return;
     }
-    toast.success("Account creato. Procedi con la configurazione del tuo studio.");
+    toast.success("Account creato. Procedi con la configurazione della tua attività.");
     navigate({ to: "/dashboard" });
   };
 
