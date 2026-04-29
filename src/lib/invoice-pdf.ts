@@ -80,7 +80,7 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  const studioLines: string[] = [];
+  const headerLines: string[] = [];
   if (data.profile.address_street) {
     const addr = [
       data.profile.address_street,
@@ -90,16 +90,16 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
     ]
       .filter(Boolean)
       .join(" — ");
-    studioLines.push(addr);
+    headerLines.push(addr);
   }
-  if (data.profile.vat_number) studioLines.push(`P.IVA: ${data.profile.vat_number}`);
-  if (data.profile.tax_code) studioLines.push(`C.F.: ${data.profile.tax_code}`);
+  if (data.profile.vat_number) headerLines.push(`P.IVA: ${data.profile.vat_number}`);
+  if (data.profile.tax_code) headerLines.push(`C.F.: ${data.profile.tax_code}`);
   if (data.profile.bar_association)
-    studioLines.push(`Iscritto all'Ordine degli Avvocati di ${data.profile.bar_association}`);
-  if (data.profile.email) studioLines.push(`Email: ${data.profile.email}`);
-  if (data.profile.pec) studioLines.push(`PEC: ${data.profile.pec}`);
-  if (data.profile.phone) studioLines.push(`Tel: ${data.profile.phone}`);
-  studioLines.forEach((l) => {
+    headerLines.push(`Iscritto all'Ordine degli Avvocati di ${data.profile.bar_association}`);
+  if (data.profile.email) headerLines.push(`Email: ${data.profile.email}`);
+  if (data.profile.pec) headerLines.push(`PEC: ${data.profile.pec}`);
+  if (data.profile.phone) headerLines.push(`Tel: ${data.profile.phone}`);
+  headerLines.forEach((l) => {
     doc.text(l, MARGIN, y);
     y += 4;
   });
