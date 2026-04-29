@@ -27,6 +27,7 @@ const items = [
   { title: "Dashboard", url: "/dashboard" as const, icon: LayoutDashboard },
   { title: "Clienti", url: "/clienti" as const, icon: Users },
   { title: "Pratiche", url: "/pratiche" as const, icon: Briefcase },
+  { title: "Scadenze", url: "/scadenze" as const, icon: CalendarClock },
   { title: "Spese", url: "/spese" as const, icon: Wallet },
   { title: "Fatture", url: "/fatture" as const, icon: Receipt },
   { title: "Impostazioni", url: "/impostazioni" as const, icon: Settings },
