@@ -70,12 +70,12 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
   const pageWidth = doc.internal.pageSize.getWidth();
   let y = MARGIN;
 
-  // Intestazione studio
+  // Intestazione professionista
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
-  const studioName =
-    data.profile.business_name || data.profile.full_name || "Studio Legale";
-  doc.text(studioName, MARGIN, y);
+  const headerName =
+    data.profile.business_name || data.profile.full_name || "Avvocato";
+  doc.text(headerName, MARGIN, y);
   y += 6;
 
   doc.setFont("helvetica", "normal");
