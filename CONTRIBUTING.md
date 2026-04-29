@@ -1,0 +1,76 @@
+# Come contribuire a Pratix
+
+> Il repository è attualmente **privato**. Questo documento è predisposto per quando il progetto si aprirà a collaboratori esterni.
+
+## Prima di iniziare
+
+Leggi nell'ordine:
+
+1. [`README.md`](./README.md) — panoramica e mappa
+2. [`AGENTS.md`](./AGENTS.md) — regole operative obbligatorie
+3. [`BRAND.md`](./BRAND.md) — identità di marca
+4. [`ROADMAP.md`](./ROADMAP.md) — cosa è in lavorazione
+5. [`docs/guides/`](./docs/guides/) — guide tematiche
+6. [`docs/decisions/`](./docs/decisions/) — perché abbiamo scelto cosa
+
+## Setup locale
+
+```bash
+npm ci
+npm run dev
+```
+
+## Convenzioni
+
+### Lingua
+- **UI in italiano** (`lang="it"`), tono "tu" professionale.
+- **Identificatori in inglese** quando coerente con framework e librerie.
+- **Glossario obbligatorio**: Pratica/Cliente/Scadenza/Spese/Fattura. Vietata la parola "studio".
+
+### Codice
+- Componenti piccoli, riusabili, in `src/components/`.
+- Hook in `src/hooks/`.
+- Solo token semantici da `src/styles.css`, mai hex inline.
+- Mai modificare: `src/integrations/supabase/client.ts`, `src/integrations/supabase/types.ts`, `src/routeTree.gen.ts`, `.env`.
+
+### Commit
+Conventional Commits coerenti con l'impatto reale:
+
+- `feat:` nuova funzionalità
+- `fix:` correzione di bug
+- `docs:` solo documentazione
+- `refactor:` rifattorizzazione senza cambio comportamento
+- `chore:` manutenzione (deps, config)
+- `test:` aggiunta o modifica di test
+
+Esempio: `feat(fatture): aggiunge esportazione massiva XML per periodo`.
+
+### Pull request
+
+Mantieni le PR atomiche e descrittive. Includi:
+
+- cosa cambia e perché,
+- aree toccate (frontend, backend, docs),
+- verifiche eseguite (`npm run build`, `npm run lint`, eventuali test),
+- rischi residui o limitazioni note.
+
+### Verifiche prima del merge
+
+```bash
+npm run build
+npm run lint
+npm audit --audit-level=moderate   # se hai toccato dipendenze
+```
+
+### Documentazione
+
+Se la tua modifica cambia comportamento utente, comandi, configurazione o decisioni di prodotto:
+
+- aggiorna [`ROADMAP.md`](./ROADMAP.md) (stato della voce),
+- aggiungi una entry in [`CHANGELOG.md`](./CHANGELOG.md) sotto `[Non rilasciato]`,
+- se è una decisione architetturale, crea un nuovo ADR in [`docs/decisions/`](./docs/decisions/) seguendo il template,
+- se cambia una regola di brand o tono, aggiorna `BRAND.md` e i mirror in `docs/memory/`.
+
+## Sicurezza
+
+Per segnalare vulnerabilità vedi [`SECURITY.md`](./SECURITY.md). Non aprire issue pubbliche per problemi di sicurezza.
