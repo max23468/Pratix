@@ -27,10 +27,13 @@ function DashboardContent() {
     enabled: !!userId,
     queryKey: ["dashboard", userId],
     queryFn: async () => {
-      const today = new Date().toISOString().slice(0, 10);
-      const in14 = new Date();
+      const now = new Date();
+      const today = now.toISOString().slice(0, 10);
+      const in14 = new Date(now);
       in14.setDate(in14.getDate() + 14);
       const horizon = in14.toISOString().slice(0, 10);
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+      const yearStart = new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 10);
 
       const [casesRes, deadlinesRes, invoicesRes, recentCasesRes] = await Promise.all([
         supabase
@@ -46,7 +49,7 @@ function DashboardContent() {
           .limit(8),
         supabase
           .from("invoices")
-          .select("id, status, total_amount, net_to_pay, issue_date, number, year"),
+          .select("id, status, total_amount, net_to_pay, issue_date, due_date, paid_at, number, year"),
         supabase
           .from("cases")
           .select("id, case_number, title, status, updated_at, client_id, clients(kind, first_name, last_name, business_name)")
@@ -64,15 +67,29 @@ function DashboardContent() {
       const unpaid = invoices
         .filter((i) => i.status === "issued" || i.status === "overdue")
         .reduce((sum, i) => sum + Number(i.net_to_pay ?? 0), 0);
+      const overdue = invoices.filter(
+        (i) => (i.status === "issued" || i.status === "overdue") && i.due_date && i.due_date < today,
+      );
+      const overdueTotal = overdue.reduce((sum, i) => sum + Number(i.net_to_pay ?? 0), 0);
       const drafts = invoices.filter((i) => i.status === "draft");
       const draftTotal = drafts.reduce((sum, i) => sum + Number(i.total_amount ?? 0), 0);
+      const collectedMonth = invoices
+        .filter((i) => i.status === "paid" && i.paid_at && i.paid_at >= monthStart)
+        .reduce((sum, i) => sum + Number(i.total_amount ?? 0), 0);
+      const revenueYear = invoices
+        .filter((i) => i.status !== "draft" && i.issue_date >= yearStart)
+        .reduce((sum, i) => sum + Number(i.total_amount ?? 0), 0);
 
       return {
         activeCases,
         deadlines: deadlinesRes.data ?? [],
         unpaid,
+        overdueCount: overdue.length,
+        overdueTotal,
         draftCount: drafts.length,
         draftTotal,
+        collectedMonth,
+        revenueYear,
         recentCases: recentCasesRes.data ?? [],
         today,
       };
