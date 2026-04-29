@@ -16,8 +16,8 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 |---|---|---|
 | ✅ | Nome prodotto: **Pratix** | Gestionale per avvocati freelance |
 | ✅ | Tagline ufficiale: **"Tutto torna."** | Triplo senso: contabile, narrativo, ordine. Fuori dalla UI autenticata |
-| ✅ | Palette navy + oro brunito + panna | Token semantici in `src/styles.css`, mai hex inline |
-| ✅ | Token brand FISSI cross-tema | `--color-brand-navy/cream/gold` per logo e asset di marca |
+| ✅ | Palette inchiostro + terracotta + panna | Token semantici in `src/styles.css`, mai hex inline. Differenziazione da Fineco/banche (ADR-0007). I nomi token `--brand-navy/gold` sono alias storici |
+| ✅ | Logo adattivo cross-tema | Tone `navy` cambia tile/glifo fra light e dark via token `--logo-*` |
 | ✅ | Tipografia: Inter Tight + Inter + JetBrains Mono | Numeri tabular-nums, display weight max 600 |
 | ✅ | Logo unificato `<Logo>` + favicon SVG | Direzione default `px`, mai SVG inline |
 | ✅ | Tono di voce "tu" professionale | No emoji UI, no esclamativi multipli |
