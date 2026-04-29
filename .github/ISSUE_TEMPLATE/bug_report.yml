@@ -1,0 +1,70 @@
+name: Segnalazione bug
+description: Qualcosa non funziona come dovrebbe in Pratix.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Grazie per la segnalazione. Compila i campi sotto: più dettagli ci dai, più veloce è la diagnosi.
+        Non includere dati personali di clienti, importi reali di fatture o contenuti di pratiche.
+
+  - type: textarea
+    id: cosa-succede
+    attributes:
+      label: Cosa succede
+      description: Descrivi il problema in una o due frasi.
+      placeholder: Quando salvo una fattura nuova, il totale resta a 0.
+    validations:
+      required: true
+
+  - type: textarea
+    id: come-riprodurre
+    attributes:
+      label: Come riprodurlo
+      description: Passi minimi per vedere il bug.
+      placeholder: |
+        1. Vai su Fatture → Nuova
+        2. Aggiungi una riga di onorario da 100€
+        3. Premi Salva
+        4. Il totale resta 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: cosa-mi-aspettavo
+    attributes:
+      label: Cosa ti aspettavi
+      placeholder: Il totale dovrebbe mostrare 100€ + cassa + IVA.
+    validations:
+      required: true
+
+  - type: input
+    id: versione
+    attributes:
+      label: Versione di Pratix
+      description: La trovi nel footer di Impostazioni (es. "v0.3.0").
+      placeholder: v0.3.0
+
+  - type: dropdown
+    id: dispositivo
+    attributes:
+      label: Dispositivo
+      options:
+        - Desktop
+        - Tablet
+        - Smartphone
+    validations:
+      required: true
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser
+      placeholder: Safari 18, Chrome 130, Firefox 132…
+
+  - type: textarea
+    id: note
+    attributes:
+      label: Note aggiuntive
+      description: Screenshot, log della console, qualunque cosa utile (oscurando dati sensibili).

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Domanda generica
+    url: https://github.com/
+    about: Per domande non legate a un bug o a una nuova funzionalità, apri una discussione.
