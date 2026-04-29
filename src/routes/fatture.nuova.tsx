@@ -15,7 +15,7 @@ function NewInvoicePage() {
       <PageHeader
         title="Nuova fattura"
         description="Compila righe, parametri fiscali e crea la fattura. Il numero verrà assegnato automaticamente."
-        action={
+        actions={
           <Button asChild variant="outline">
             <Link to="/fatture">
               <ArrowLeft className="mr-2 h-4 w-4" /> Torna alle fatture

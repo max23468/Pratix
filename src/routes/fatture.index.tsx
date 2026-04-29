@@ -91,7 +91,7 @@ function InvoicesIndex() {
       <PageHeader
         title="Fatture"
         description="Emetti, traccia e scarica le fatture in PDF e XML SdI."
-        action={
+        actions={
           <Button asChild>
             <Link to="/fatture/nuova">
               <Plus className="mr-2 h-4 w-4" /> Nuova fattura
