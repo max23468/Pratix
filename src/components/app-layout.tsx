@@ -1,0 +1,68 @@
+import { useEffect, useState, type ReactNode } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
+import { AppSidebar } from "@/components/app-sidebar";
+import { useAuth } from "@/lib/auth-context";
+import { supabase } from "@/integrations/supabase/client";
+import { OnboardingDialog } from "@/components/onboarding-dialog";
+
+export function AppLayout({ children }: { children: ReactNode }) {
+  const { session, loading } = useAuth();
+  const navigate = useNavigate();
+  const [hydrated, setHydrated] = useState(false);
+
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!loading && hydrated && !session) {
+      navigate({ to: "/login" });
+    }
+  }, [loading, hydrated, session, navigate]);
+
+  const { data: profile } = useQuery({
+    enabled: !!session,
+    queryKey: ["profile", session?.user.id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", session!.user.id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  if (loading || !hydrated || !session) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-sm text-muted-foreground">Caricamento…</div>
+      </div>
+    );
+  }
+
+  return (
+    <SidebarProvider>
+      <div className="flex min-h-screen w-full bg-background">
+        <AppSidebar />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur">
+            <SidebarTrigger />
+            <Separator orientation="vertical" className="mx-1 h-5" />
+            <span className="text-sm font-medium text-muted-foreground">
+              {profile?.business_name || profile?.full_name || "Il mio studio"}
+            </span>
+          </header>
+          <main className="flex-1 overflow-x-hidden">
+            <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
+          </main>
+        </div>
+      </div>
+      {profile && !profile.onboarding_completed && <OnboardingDialog />}
+    </SidebarProvider>
+  );
+}
