@@ -105,10 +105,17 @@
   /* Brand gold (alias storico) — ora veicola TERRACOTTA: CTA, KPI, focus, dettagli logo */
   --brand-gold: oklch(0.62 0.15 35);
   --brand-gold-foreground: oklch(0.985 0.004 80);
-  /* Token brand FISSI per il logo: identici in chiaro/scuro */
+  /* Token brand FISSI: il valore non dipende dal tema (riferimento estetico) */
   /* `--brand-navy` ora veicola INCHIOSTRO (alias storico mantenuto) */
   --brand-navy: oklch(0.22 0.04 260);
   --brand-cream: oklch(0.985 0.004 80);
+
+  /* Token LOGO adattivi: tile/glyph/bordo cambiano tra light e dark per leggibilità */
+  --logo-tile: var(--brand-navy);
+  --logo-glyph: var(--brand-cream);
+  --logo-border: var(--brand-gold);
+  --logo-border-opacity: 0.55;
+  --logo-wordmark: var(--foreground);
 
   --destructive: oklch(0.50 0.18 28);
   --destructive-foreground: oklch(0.985 0.004 80);
