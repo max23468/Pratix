@@ -1,0 +1,50 @@
+name: Proposta funzionalità
+description: Suggerisci un miglioramento o una nuova funzionalità.
+title: "[idea] "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Grazie per l'idea. Pratix è pensato per avvocati freelance: descrivi il bisogno
+        prima della soluzione, così possiamo valutare alternative.
+
+  - type: textarea
+    id: problema
+    attributes:
+      label: Quale problema risolve
+      description: Cosa stai cercando di fare oggi che è scomodo, lento, impossibile?
+      placeholder: Quando emetto una parcella, devo riscrivere ogni volta gli stessi articoli di legge.
+    validations:
+      required: true
+
+  - type: textarea
+    id: soluzione
+    attributes:
+      label: Soluzione proposta
+      description: Come immagini la funzionalità.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternative
+    attributes:
+      label: Alternative valutate
+      description: Hai pensato ad altri modi per risolvere lo stesso problema?
+
+  - type: dropdown
+    id: priorita
+    attributes:
+      label: Quanto è urgente per te
+      options:
+        - "Bloccante: senza, non posso usare Pratix per il mio lavoro"
+        - "Importante: lo uso comunque ma è scomodo"
+        - "Nice to have: comodità in più"
+    validations:
+      required: true
+
+  - type: textarea
+    id: contesto
+    attributes:
+      label: Contesto
+      description: Tipo di studio, frequenza d'uso, qualunque dettaglio aiuti a capire la priorità.

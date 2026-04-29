@@ -1,0 +1,31 @@
+# Dependabot — aggiornamenti dipendenze settimanali, raggruppati per ridurre rumore.
+# Documentazione: https://docs.github.com/code-security/dependabot/dependabot-version-updates
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "07:00"
+      timezone: Europe/Rome
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+    commit-message:
+      prefix: chore
+      include: scope
+    groups:
+      # Aggiornamenti minor/patch raggruppati in un unico PR per non frammentare la review.
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - minor
+          - patch
+      # Le major restano singole: vanno valutate caso per caso (breaking changes).
+    ignore:
+      # routeTree.gen.ts è generato; non c'è motivo di forzare upgrade del plugin
+      # se non manualmente quando aggiorniamo lo stack TanStack.
+      - dependency-name: "@tanstack/router-plugin"
+        update-types:
+          - version-update:semver-major

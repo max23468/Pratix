@@ -6,6 +6,11 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Sotto il cofano
+- **Schema baseline su GitHub**: aggiunto `supabase/schema.sql`, fotografia leggibile dello stato del database (tabelle, enum, trigger, indici, policy RLS) alla versione 0.3.0. Serve come riferimento per chi legge il repo senza accesso a Lovable Cloud.
+- **Modello dati documentato**: nuovo `docs/data-model.md` con descrizione narrativa di tabelle, relazioni e RLS, e `docs/guides/migrations.md` con il flusso operativo per applicare migrations via Lovable Cloud.
+- **Templates issue/PR e Dependabot**: aggiunti `.github/ISSUE_TEMPLATE/` (bug, idea), `PULL_REQUEST_TEMPLATE.md`, `dependabot.yml` (npm settimanale, minor/patch raggruppati). Niente GitHub Actions per il momento.
+
 ## [0.3.0] — 2026-04-29
 
 ### Novità
