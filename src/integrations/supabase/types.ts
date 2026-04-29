@@ -468,6 +468,7 @@ export type Database = {
           invoice_next_number: number
           invoice_number_prefix: string | null
           invoice_year: number
+          last_seen_changelog_version: string | null
           logo_url: string | null
           onboarding_completed: boolean
           pec: string | null
@@ -499,6 +500,7 @@ export type Database = {
           invoice_next_number?: number
           invoice_number_prefix?: string | null
           invoice_year?: number
+          last_seen_changelog_version?: string | null
           logo_url?: string | null
           onboarding_completed?: boolean
           pec?: string | null
@@ -530,6 +532,7 @@ export type Database = {
           invoice_next_number?: number
           invoice_number_prefix?: string | null
           invoice_year?: number
+          last_seen_changelog_version?: string | null
           logo_url?: string | null
           onboarding_completed?: boolean
           pec?: string | null

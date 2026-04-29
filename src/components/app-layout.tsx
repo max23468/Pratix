@@ -7,6 +7,7 @@ import { AppSidebar } from "@/components/app-sidebar";
 import { useAuth } from "@/lib/auth-context";
 import { supabase } from "@/integrations/supabase/client";
 import { OnboardingDialog } from "@/components/onboarding-dialog";
+import { ChangelogBell } from "@/components/changelog-bell";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
@@ -56,6 +57,9 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <span className="text-sm font-medium text-muted-foreground">
               {profile?.business_name || profile?.full_name || "La mia attività"}
             </span>
+            <div className="ml-auto flex items-center">
+              <ChangelogBell />
+            </div>
           </header>
           <main className="flex-1 overflow-x-hidden">
             <div className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 lg:px-8">{children}</div>
