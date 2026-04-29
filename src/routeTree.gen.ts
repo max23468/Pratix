@@ -13,6 +13,9 @@ import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ClientiIndexRouteImport } from './routes/clienti.index'
+import { Route as ClientiNuovoRouteImport } from './routes/clienti.nuovo'
+import { Route as ClientiClientIdRouteImport } from './routes/clienti.$clientId'
 
 const RegisterRoute = RegisterRouteImport.update({
   id: '/register',
@@ -34,18 +37,39 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ClientiIndexRoute = ClientiIndexRouteImport.update({
+  id: '/clienti/',
+  path: '/clienti/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientiNuovoRoute = ClientiNuovoRouteImport.update({
+  id: '/clienti/nuovo',
+  path: '/clienti/nuovo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ClientiClientIdRoute = ClientiClientIdRouteImport.update({
+  id: '/clienti/$clientId',
+  path: '/clienti/$clientId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/clienti/$clientId': typeof ClientiClientIdRoute
+  '/clienti/nuovo': typeof ClientiNuovoRoute
+  '/clienti/': typeof ClientiIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/clienti/$clientId': typeof ClientiClientIdRoute
+  '/clienti/nuovo': typeof ClientiNuovoRoute
+  '/clienti': typeof ClientiIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +77,38 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
+  '/clienti/$clientId': typeof ClientiClientIdRoute
+  '/clienti/nuovo': typeof ClientiNuovoRoute
+  '/clienti/': typeof ClientiIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/login' | '/register'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/register'
+    | '/clienti/$clientId'
+    | '/clienti/nuovo'
+    | '/clienti/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/login' | '/register'
-  id: '__root__' | '/' | '/dashboard' | '/login' | '/register'
+  to:
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/register'
+    | '/clienti/$clientId'
+    | '/clienti/nuovo'
+    | '/clienti'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/register'
+    | '/clienti/$clientId'
+    | '/clienti/nuovo'
+    | '/clienti/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +116,9 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  ClientiClientIdRoute: typeof ClientiClientIdRoute
+  ClientiNuovoRoute: typeof ClientiNuovoRoute
+  ClientiIndexRoute: typeof ClientiIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +151,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/clienti/': {
+      id: '/clienti/'
+      path: '/clienti'
+      fullPath: '/clienti/'
+      preLoaderRoute: typeof ClientiIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clienti/nuovo': {
+      id: '/clienti/nuovo'
+      path: '/clienti/nuovo'
+      fullPath: '/clienti/nuovo'
+      preLoaderRoute: typeof ClientiNuovoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/clienti/$clientId': {
+      id: '/clienti/$clientId'
+      path: '/clienti/$clientId'
+      fullPath: '/clienti/$clientId'
+      preLoaderRoute: typeof ClientiClientIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +180,9 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  ClientiClientIdRoute: ClientiClientIdRoute,
+  ClientiNuovoRoute: ClientiNuovoRoute,
+  ClientiIndexRoute: ClientiIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

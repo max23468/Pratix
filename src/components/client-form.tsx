@@ -82,6 +82,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
 
       const payload = {
         ...form,
+        kind: form.kind as "individual" | "company",
         user_id: user.id,
         // pulizia campi vuoti
         first_name: form.first_name?.trim() || null,
