@@ -21,10 +21,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { useTheme, type ThemeMode } from "@/lib/theme-context";
 import { taxRegimeLabels } from "@/lib/labels";
-import { APP_VERSION, BUILD_DATE } from "@/lib/version";
-import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/impostazioni")({
   head: () => ({
@@ -175,7 +172,7 @@ function SettingsPage() {
     <AppLayout>
       <PageHeader
         title="Impostazioni"
-        description="I tuoi dati professionali, regime fiscale, IBAN e parametri di fatturazione."
+        description="I dati della tua attività professionale, fiscalità, IBAN e numerazione. Per profilo, accesso e tema vai ad Account."
         actions={
           <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || isLoading}>
             <Save className="mr-2 h-4 w-4" />
@@ -190,7 +187,6 @@ function SettingsPage() {
           <TabsTrigger value="fiscale">Fiscale</TabsTrigger>
           <TabsTrigger value="pagamenti">Pagamenti</TabsTrigger>
           <TabsTrigger value="numerazione">Numerazione</TabsTrigger>
-          <TabsTrigger value="aspetto">Aspetto</TabsTrigger>
         </TabsList>
 
         <TabsContent value="attivita" className="space-y-4">
