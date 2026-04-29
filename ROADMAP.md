@@ -101,8 +101,9 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅ | og:image globale + Twitter card | `/og-image.jpg` |
 | ⬜ | `sitemap.xml` + `robots.txt` | |
 | ⬜ | JSON-LD `Organization` / `SoftwareApplication` | |
-| ⬜ | Pubblicazione | Tramite Lovable |
-| ⬜ | Dominio custom | Da scegliere |
+| ✅ | Pubblicazione | `https://pratix-legal.lovable.app` |
+| ⬜ | Dominio custom | Da scegliere (es. `pratix.it`) |
+| ⬜ | Project icon + Social preview nelle Project Settings di Lovable | Asset pronti: `public/app-icon-512.png`, `public/og-image.jpg` |
 
 ## 7. Qualità e processo
 
