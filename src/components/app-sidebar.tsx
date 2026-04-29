@@ -45,8 +45,8 @@ export function AppSidebar() {
     <Sidebar collapsible="icon">
       <SidebarHeader>
         <Link to="/dashboard" className="flex items-center px-2 py-2">
-          <Logo form="lockup" size={22} className="group-data-[collapsible=icon]:hidden" />
-          <Logo form="mark" size={28} className="hidden group-data-[collapsible=icon]:inline-flex" />
+          <Logo form="lockup" size={28} className="group-data-[collapsible=icon]:hidden" />
+          <Logo form="mark" size={32} className="hidden group-data-[collapsible=icon]:inline-flex" />
         </Link>
       </SidebarHeader>
 
