@@ -23,7 +23,8 @@ function Landing() {
           <Link to="/" aria-label="Pratix">
             <Logo form="lockup" size={22} />
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <ThemeToggle />
             <Link to="/login">
               <Button variant="ghost" size="sm">
                 Accedi
