@@ -72,8 +72,10 @@ function DashboardContent() {
       if (deadlinesRes.error) throw deadlinesRes.error;
       if (invoicesRes.error) throw invoicesRes.error;
       if (recentCasesRes.error) throw recentCasesRes.error;
+      if (clientsRes.error) throw clientsRes.error;
 
       const activeCases = casesRes.count ?? casesRes.data?.length ?? 0;
+      const totalClients = clientsRes.count ?? 0;
       const invoices = invoicesRes.data ?? [];
       const unpaid = invoices
         .filter((i) => i.status === "issued" || i.status === "overdue")
@@ -93,6 +95,7 @@ function DashboardContent() {
 
       return {
         activeCases,
+        totalClients,
         deadlines: deadlinesRes.data ?? [],
         unpaid,
         overdueCount: overdue.length,
