@@ -212,11 +212,19 @@ function Wordmark({
   const c = toneColors(tone);
   // size = altezza glifo desiderata; calcoliamo font-size proporzionale
   const fontSize = Math.round(size * 0.95);
+  // Il wordmark "navy" si adatta al tema: navy in light, panna in dark.
+  // "inverse" forza panna su fondi scuri brandizzati. "mono" usa currentColor.
+  const wordColor =
+    tone === "mono"
+      ? "currentColor"
+      : tone === "inverse"
+        ? "var(--color-brand-cream)"
+        : "var(--color-foreground)";
   return (
     <span
       className="font-display"
       style={{
-        color: c.primary,
+        color: wordColor,
         fontSize,
         lineHeight: 1,
         letterSpacing: "-0.035em",
@@ -229,7 +237,7 @@ function Wordmark({
       <span
         style={{
           color:
-            direction === "px" || direction === "seal" ? c.gold : c.primary,
+            direction === "px" || direction === "seal" ? c.gold : wordColor,
           // Stesso font, niente italic: evita il fallback che introduce spazio extra.
           fontStyle: "normal",
           marginLeft: "-0.02em",
