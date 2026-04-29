@@ -172,7 +172,7 @@ function SettingsPage() {
     <AppLayout>
       <PageHeader
         title="Impostazioni"
-        description="I dati della tua attività professionale, fiscalità, IBAN e numerazione. Per profilo, accesso e tema vai ad Account."
+        description="I tuoi dati professionali, fiscalità, IBAN e numerazione. Per profilo, accesso e tema vai ad Account."
         actions={
           <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || isLoading}>
             <Save className="mr-2 h-4 w-4" />
@@ -181,15 +181,15 @@ function SettingsPage() {
         }
       />
 
-      <Tabs defaultValue="attivita" className="space-y-4">
+      <Tabs defaultValue="professione" className="space-y-4">
         <TabsList className="flex flex-wrap">
-          <TabsTrigger value="attivita">Attività</TabsTrigger>
+          <TabsTrigger value="professione">Professione</TabsTrigger>
           <TabsTrigger value="fiscale">Fiscale</TabsTrigger>
           <TabsTrigger value="pagamenti">Pagamenti</TabsTrigger>
           <TabsTrigger value="numerazione">Numerazione</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="attivita" className="space-y-4">
+        <TabsContent value="professione" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Anagrafica</CardTitle>

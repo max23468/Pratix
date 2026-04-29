@@ -55,7 +55,7 @@ function RegisterPage() {
       toast.error("Registrazione non riuscita. Riprova o accedi se hai già un account.");
       return;
     }
-    toast.success("Account creato. Procedi con la configurazione della tua attività.");
+    toast.success("Account creato. Procedi con la configurazione della tua professione.");
     navigate({ to: "/dashboard" });
   };
 

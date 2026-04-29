@@ -93,6 +93,6 @@ netto_a_pagare     = totale_documento
 
 ## Errori frequenti
 
-- **"Partita IVA mancante"**: configurare in Impostazioni → Attività.
+- **"Partita IVA mancante"**: configurare in Impostazioni → Professione.
 - **Codice destinatario sbagliato**: usare `0000000` se assente, mai stringa vuota.
 - **Cliente persona fisica con ritenuta**: non si applica ritenuta, è errore.

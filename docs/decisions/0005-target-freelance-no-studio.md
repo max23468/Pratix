@@ -20,19 +20,21 @@ Sostituzioni canoniche:
 
 | Vecchio | Nuovo |
 |---|---|
-| "il tuo studio" | "la tua attività", "la tua attività professionale" |
-| "dati dello studio" | "i tuoi dati", "i tuoi dati professionali" |
-| "Tab: Studio" | "Tab: Attività" |
+| "il tuo studio" | "la tua professione" |
+| "dati dello studio" | "i tuoi dati professionali", "i tuoi dati" |
+| "Tab: Studio" | "Tab: Professione" |
 | "Ragione sociale / Studio" | "Ragione sociale / Denominazione" |
 | Fallback fattura "Studio Legale" | "Avvocato" |
 
-L'unico contesto ammesso è **dentro nomi liberi inseriti dall'utente** (es. `business_name = "Studio Legale Rossi & Partners"`): il software non li riscrive.
+> **Nota (2026-04-29)**: la parola **"attività"** — usata in una prima versione di questo ADR come sostituto di "studio" — è anch'essa stata **dismessa** perché ambigua in italiano (significa sia "impresa" sia "azione/task", e in Pratix indica già le voci di lavoro fatturabili). Il termine canonico è ora **"professione"** / "i tuoi dati professionali". "Attività" resta lecita solo come sostantivo comune ("le attività compiute tramite l'account") nei testi legali, mai come label di prodotto.
+
+L'unico contesto ammesso per "studio" è **dentro nomi liberi inseriti dall'utente** (es. `business_name = "Studio Legale Rossi & Partners"`): il software non li riscrive.
 
 ## Conseguenze
 
 - ✅ Posizionamento chiaro e differenziante: "Pratix è per il freelance".
 - ✅ Tono coerente in tutto il prodotto.
-- ✅ Nessuna ambiguità: "attività", "i tuoi dati" funzionano sia per il forfettario sia per l'ordinario.
+- ✅ Nessuna ambiguità: "professione", "i tuoi dati professionali" funzionano sia per il forfettario sia per l'ordinario, e non collidono con "attività" intesa come task.
 - ⚠️ Se in futuro vorremo entrare nel segmento studi associati, dovremo ripensare lessico, ruoli, permessi e questo ADR andrà sostituito.
 - ⚠️ I revisori (umani o agenti) devono memorizzare la regola: ogni nuova stringa va controllata.
 

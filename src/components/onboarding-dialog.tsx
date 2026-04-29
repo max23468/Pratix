@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 
 /**
- * Wizard mostrato al primo accesso: raccoglie i dati essenziali dell'attività
+ * Wizard mostrato al primo accesso: raccoglie i dati essenziali della professione
  * (anagrafici, fiscali, IBAN). Tutto modificabile in seguito da Impostazioni.
  */
 export function OnboardingDialog() {
@@ -86,7 +86,7 @@ export function OnboardingDialog() {
         <DialogHeader>
           <DialogTitle>Benvenuto in Pratix</DialogTitle>
           <DialogDescription>
-            Configura la tua attività in tre brevi passaggi. Potrai modificare tutto in seguito.
+            Configura la tua professione in tre brevi passaggi. Potrai modificare tutto in seguito.
           </DialogDescription>
         </DialogHeader>
 

@@ -11,7 +11,7 @@ Termini legali, fiscali e di prodotto usati in Pratix. Pensato per chi lavora al
 | **Scadenza** | Adempimento legato a una pratica con data limite. Sostituisce "deadline". | |
 | **Spese** | Costi sostenuti per conto del cliente, anticipi inclusi. Sostituisce "costi". | |
 | **Fattura** | Documento fiscale emesso al cliente. In Pratix sempre **parcella** (TD06). | |
-| **Attività** | Termine generico per riferirsi al lavoro del professionista. Mai "studio". | |
+| **Professione** | Termine generico per riferirsi al lavoro del professionista. Mai "studio". Preferito a "attività", che è ambigua (indica anche le voci di lavoro fatturabili). | |
 
 ## Fatturazione elettronica
 

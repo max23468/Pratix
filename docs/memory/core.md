@@ -59,7 +59,7 @@ Da usare per logo e asset di marca che non devono invertirsi col tema.
 ❌ Caso · Assistito · Deadline · Costi
 
 **VIETATA** la parola **"studio"** (target è avvocato freelance, non studio associato).
-Usa: *attività*, *tua attività professionale*, *i tuoi dati*, *rubrica*, oppure giri di parole.
+Usa: *professione*, *la tua professione*, *i tuoi dati professionali*, *rubrica*, oppure giri di parole. **"Attività"** è sconsigliata come label di prodotto perché ambigua (in Pratix indica anche le voci di lavoro fatturabili); resta lecita solo come sostantivo comune nei testi legali.
 Fallback intestazione fattura: **"Avvocato"**.
 
 ## Processo

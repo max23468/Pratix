@@ -56,7 +56,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <SidebarTrigger />
             <Separator orientation="vertical" className="mx-1 h-5" />
             <span className="text-sm font-medium text-muted-foreground">
-              {profile?.business_name || profile?.full_name || "La mia attività"}
+              {profile?.business_name || profile?.full_name || "La mia professione"}
             </span>
             <div className="ml-auto flex items-center gap-1">
               <ChangelogBell />
