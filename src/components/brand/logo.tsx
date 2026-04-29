@@ -64,24 +64,66 @@ function toneColors(tone: LogoTone) {
 
 function MarkPx({ tone, size }: { tone: LogoTone; size: number }) {
   const c = toneColors(tone);
+  // Default (navy): tile navy + cornice oro sottile + glifo panna, x oro corsiva.
+  // Inverse: tile panna + cornice navy sottile + glifo navy, x oro corsiva.
+  // Mono: nessun riempimento, solo cornice e glifo in currentColor.
+  const isMono = tone === "mono";
+  const isInverse = tone === "inverse";
+
+  const tileFill = isMono
+    ? "transparent"
+    : isInverse
+      ? "var(--color-primary-foreground)"
+      : "var(--color-primary)";
+
+  const borderStroke = isMono
+    ? "currentColor"
+    : isInverse
+      ? "var(--color-primary)"
+      : c.gold;
+  const borderOpacity = isMono ? 1 : isInverse ? 0.35 : 0.55;
+
+  const glyphColor = isMono
+    ? "currentColor"
+    : isInverse
+      ? "var(--color-primary)"
+      : "var(--color-primary-foreground)";
+
   return (
     <svg
-      viewBox="0 0 40 40"
+      viewBox="0 0 48 48"
       width={size}
       height={size}
       xmlns="http://www.w3.org/2000/svg"
       aria-hidden="true"
     >
-      <rect width="40" height="40" rx="9" fill={c.primary} />
-      {/* P */}
-      <path
-        d="M11.5 11.5h7.6c3.4 0 5.7 2.1 5.7 5.2 0 3.1-2.3 5.2-5.7 5.2h-3.9v6.6h-3.7V11.5Zm7.3 7.6c1.4 0 2.3-.9 2.3-2.4 0-1.5-.9-2.4-2.3-2.4h-3.6v4.8h3.6Z"
-        fill={tone === "mono" ? "transparent" : "var(--color-primary-foreground)"}
-        stroke={tone === "mono" ? "currentColor" : "none"}
-        strokeWidth={tone === "mono" ? 1.5 : 0}
+      <rect width="48" height="48" rx="12" fill={tileFill} />
+      <rect
+        x="0.75"
+        y="0.75"
+        width="46.5"
+        height="46.5"
+        rx="11.25"
+        fill="none"
+        stroke={borderStroke}
+        strokeWidth="1.5"
+        opacity={borderOpacity}
       />
-      {/* Trattino oro che taglia la P, evoca la x del wordmark */}
-      <rect x="22" y="22.5" width="8" height="2.4" rx="1.2" fill={c.gold} />
+      <text
+        x="24"
+        y="33"
+        textAnchor="middle"
+        fontFamily="'Inter Tight', Georgia, serif"
+        fontSize="26"
+        fontWeight={500}
+        letterSpacing="-1"
+        fill={glyphColor}
+      >
+        P
+        <tspan fill={isMono ? "currentColor" : c.gold} fontStyle="italic">
+          x
+        </tspan>
+      </text>
     </svg>
   );
 }
