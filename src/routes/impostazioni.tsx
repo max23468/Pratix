@@ -136,8 +136,10 @@ function SettingsPage() {
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Utente non autenticato");
+      const { notes: _notes, ...rest } = form;
+      void _notes;
       const payload = {
-        ...form,
+        ...rest,
         // forfettario: forziamo coerenza dei flag fiscali
         ...(form.tax_regime === "forfettario"
           ? { apply_withholding: false }
