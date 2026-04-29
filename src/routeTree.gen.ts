@@ -16,6 +16,7 @@ import { Route as ReimpostaPasswordRouteImport } from './routes/reimposta-passwo
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as RecuperaPasswordRouteImport } from './routes/recupera-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as NovitaRouteImport } from './routes/novita'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImpostazioniRouteImport } from './routes/impostazioni'
 import { Route as DashboardRouteImport } from './routes/dashboard'
@@ -63,6 +64,11 @@ const RecuperaPasswordRoute = RecuperaPasswordRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NovitaRoute = NovitaRouteImport.update({
+  id: '/novita',
+  path: '/novita',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LoginRoute = LoginRouteImport.update({
@@ -136,6 +142,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof DashboardRoute
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
+  '/novita': typeof NovitaRoute
   '/privacy': typeof PrivacyRoute
   '/recupera-password': typeof RecuperaPasswordRoute
   '/register': typeof RegisterRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof DashboardRoute
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
+  '/novita': typeof NovitaRoute
   '/privacy': typeof PrivacyRoute
   '/recupera-password': typeof RecuperaPasswordRoute
   '/register': typeof RegisterRoute
@@ -181,6 +189,7 @@ export interface FileRoutesById {
   '/dashboard': typeof DashboardRoute
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
+  '/novita': typeof NovitaRoute
   '/privacy': typeof PrivacyRoute
   '/recupera-password': typeof RecuperaPasswordRoute
   '/register': typeof RegisterRoute
@@ -205,6 +214,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/impostazioni'
     | '/login'
+    | '/novita'
     | '/privacy'
     | '/recupera-password'
     | '/register'
@@ -227,6 +237,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/impostazioni'
     | '/login'
+    | '/novita'
     | '/privacy'
     | '/recupera-password'
     | '/register'
@@ -249,6 +260,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/impostazioni'
     | '/login'
+    | '/novita'
     | '/privacy'
     | '/recupera-password'
     | '/register'
@@ -272,6 +284,7 @@ export interface RootRouteChildren {
   DashboardRoute: typeof DashboardRoute
   ImpostazioniRoute: typeof ImpostazioniRoute
   LoginRoute: typeof LoginRoute
+  NovitaRoute: typeof NovitaRoute
   PrivacyRoute: typeof PrivacyRoute
   RecuperaPasswordRoute: typeof RecuperaPasswordRoute
   RegisterRoute: typeof RegisterRoute
@@ -339,6 +352,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/novita': {
+      id: '/novita'
+      path: '/novita'
+      fullPath: '/novita'
+      preLoaderRoute: typeof NovitaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -440,6 +460,7 @@ const rootRouteChildren: RootRouteChildren = {
   DashboardRoute: DashboardRoute,
   ImpostazioniRoute: ImpostazioniRoute,
   LoginRoute: LoginRoute,
+  NovitaRoute: NovitaRoute,
   PrivacyRoute: PrivacyRoute,
   RecuperaPasswordRoute: RecuperaPasswordRoute,
   RegisterRoute: RegisterRoute,
