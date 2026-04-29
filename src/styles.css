@@ -5,9 +5,12 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Pratix design system — Navy inchiostro + Oro brunito.
- * Professionale moderno: gravitas legale, esecuzione contemporanea.
+ * Pratix design system — Inchiostro profondo + Terracotta.
+ * Vibe editoriale legale italiano (codici, toghe), lontano dai canoni fintech.
  * Tutti i colori in oklch, mappati come token semantici.
+ *
+ * Nota nomi: i token `--brand-navy` e `--brand-gold` sono mantenuti per
+ * compatibilità ma ora veicolano rispettivamente *inchiostro* e *terracotta*.
  */
 
 @theme inline {
@@ -76,35 +79,43 @@
 
   /* Neutri caldi: sfondo panna leggerissima, non bianco puro */
   --background: oklch(0.985 0.004 80);
-  --foreground: oklch(0.22 0.04 255);
+  --foreground: oklch(0.22 0.04 260);
 
   --card: oklch(1 0.002 80);
-  --card-foreground: oklch(0.22 0.04 255);
+  --card-foreground: oklch(0.22 0.04 260);
 
   --popover: oklch(1 0.002 80);
-  --popover-foreground: oklch(0.22 0.04 255);
+  --popover-foreground: oklch(0.22 0.04 260);
 
-  /* Primario — Navy inchiostro */
-  --primary: oklch(0.30 0.07 255);
+  /* Primario — Inchiostro profondo (editoriale legale) */
+  --primary: oklch(0.22 0.04 260);
   --primary-foreground: oklch(0.985 0.004 80);
 
   /* Secondario — neutro caldo per superfici e pillole soft */
-  --secondary: oklch(0.955 0.008 80);
-  --secondary-foreground: oklch(0.30 0.07 255);
+  --secondary: oklch(0.955 0.008 60);
+  --secondary-foreground: oklch(0.22 0.04 260);
 
-  --muted: oklch(0.955 0.008 80);
-  --muted-foreground: oklch(0.50 0.02 255);
+  --muted: oklch(0.955 0.008 60);
+  --muted-foreground: oklch(0.50 0.02 260);
 
-  /* Accent (semantico shadcn) — pillola navy chiarissima per hover/selected */
-  --accent: oklch(0.945 0.015 255);
-  --accent-foreground: oklch(0.30 0.07 255);
+  /* Accent (semantico shadcn) — pillola inchiostro chiarissima per hover/selected */
+  --accent: oklch(0.945 0.012 260);
+  --accent-foreground: oklch(0.22 0.04 260);
 
-  /* Brand gold — usato per CTA, KPI, focus, dettagli logo */
-  --brand-gold: oklch(0.68 0.11 75);
-  --brand-gold-foreground: oklch(0.20 0.04 80);
-  /* Token brand FISSI: identici in chiaro/scuro per il logo e gli asset di marca */
-  --brand-navy: oklch(0.30 0.07 255);
+  /* Brand gold (alias storico) — ora veicola TERRACOTTA: CTA, KPI, focus, dettagli logo */
+  --brand-gold: oklch(0.62 0.15 35);
+  --brand-gold-foreground: oklch(0.985 0.004 80);
+  /* Token brand FISSI: il valore non dipende dal tema (riferimento estetico) */
+  /* `--brand-navy` ora veicola INCHIOSTRO (alias storico mantenuto) */
+  --brand-navy: oklch(0.22 0.04 260);
   --brand-cream: oklch(0.985 0.004 80);
+
+  /* Token LOGO adattivi: tile/glyph/bordo cambiano tra light e dark per leggibilità */
+  --logo-tile: var(--brand-navy);
+  --logo-glyph: var(--brand-cream);
+  --logo-border: var(--brand-gold);
+  --logo-border-opacity: 0.55;
+  --logo-wordmark: var(--foreground);
 
   --destructive: oklch(0.50 0.18 28);
   --destructive-foreground: oklch(0.985 0.004 80);
@@ -112,127 +123,135 @@
   --success: oklch(0.52 0.10 155);
   --success-foreground: oklch(0.985 0.004 80);
 
-  --warning: oklch(0.75 0.14 80);
-  --warning-foreground: oklch(0.22 0.04 255);
+  --warning: oklch(0.72 0.13 70);
+  --warning-foreground: oklch(0.22 0.04 260);
 
-  --info: oklch(0.62 0.10 235);
+  --info: oklch(0.55 0.08 240);
   --info-foreground: oklch(0.985 0.004 80);
 
-  --border: oklch(0.91 0.008 80);
-  --input: oklch(0.91 0.008 80);
-  --ring: oklch(0.68 0.11 75);
+  --border: oklch(0.91 0.008 60);
+  --input: oklch(0.91 0.008 60);
+  --ring: oklch(0.62 0.15 35);
 
-  --chart-1: oklch(0.30 0.07 255);
-  --chart-2: oklch(0.68 0.11 75);
+  --chart-1: oklch(0.22 0.04 260);
+  --chart-2: oklch(0.62 0.15 35);
   --chart-3: oklch(0.52 0.10 155);
-  --chart-4: oklch(0.62 0.10 235);
-  --chart-5: oklch(0.50 0.18 28);
+  --chart-4: oklch(0.55 0.08 240);
+  --chart-5: oklch(0.45 0.12 15);
 
-  --sidebar: oklch(0.97 0.006 80);
-  --sidebar-foreground: oklch(0.30 0.05 255);
-  --sidebar-primary: oklch(0.30 0.07 255);
+  --sidebar: oklch(0.97 0.006 60);
+  --sidebar-foreground: oklch(0.22 0.04 260);
+  --sidebar-primary: oklch(0.22 0.04 260);
   --sidebar-primary-foreground: oklch(0.985 0.004 80);
-  --sidebar-accent: oklch(0.93 0.015 255);
-  --sidebar-accent-foreground: oklch(0.30 0.07 255);
-  --sidebar-border: oklch(0.91 0.008 80);
-  --sidebar-ring: oklch(0.68 0.11 75);
+  --sidebar-accent: oklch(0.93 0.012 260);
+  --sidebar-accent-foreground: oklch(0.22 0.04 260);
+  --sidebar-border: oklch(0.91 0.008 60);
+  --sidebar-ring: oklch(0.62 0.15 35);
 
   /* Gradients */
   --gradient-hero: linear-gradient(
     135deg,
-    oklch(0.30 0.07 255) 0%,
-    oklch(0.22 0.06 260) 100%
+    oklch(0.22 0.04 260) 0%,
+    oklch(0.16 0.03 265) 100%
   );
   --gradient-accent: linear-gradient(
     135deg,
-    oklch(0.72 0.11 75) 0%,
-    oklch(0.62 0.12 65) 100%
+    oklch(0.66 0.15 38) 0%,
+    oklch(0.56 0.16 28) 100%
   );
 
   /* Shadows */
-  --shadow-soft: 0 1px 2px 0 oklch(0.22 0.04 255 / 0.04),
-    0 1px 3px 0 oklch(0.22 0.04 255 / 0.06);
-  --shadow-elevated: 0 4px 12px -2px oklch(0.22 0.04 255 / 0.08),
-    0 2px 6px -1px oklch(0.22 0.04 255 / 0.05);
-  --shadow-elegant: 0 20px 40px -12px oklch(0.30 0.07 255 / 0.18);
-  --shadow-gold: 0 8px 24px -8px oklch(0.68 0.11 75 / 0.35);
+  --shadow-soft: 0 1px 2px 0 oklch(0.22 0.04 260 / 0.04),
+    0 1px 3px 0 oklch(0.22 0.04 260 / 0.06);
+  --shadow-elevated: 0 4px 12px -2px oklch(0.22 0.04 260 / 0.08),
+    0 2px 6px -1px oklch(0.22 0.04 260 / 0.05);
+  --shadow-elegant: 0 20px 40px -12px oklch(0.22 0.04 260 / 0.20);
+  --shadow-gold: 0 8px 24px -8px oklch(0.62 0.15 35 / 0.35);
 }
 
 .dark {
-  /* Background = grigio caldo neutro, riposante per gli occhi (croma bassa, hue spostata verso il neutro) */
-  --background: oklch(0.18 0.012 250);
+  /* Background = grigio caldo neutro, riposante per gli occhi (croma bassa) */
+  --background: oklch(0.18 0.010 60);
   --foreground: oklch(0.94 0.006 80);
 
-  --card: oklch(0.22 0.014 250);
+  --card: oklch(0.22 0.012 60);
   --card-foreground: oklch(0.94 0.006 80);
 
-  --popover: oklch(0.22 0.014 250);
+  --popover: oklch(0.22 0.012 60);
   --popover-foreground: oklch(0.94 0.006 80);
 
   --primary: oklch(0.94 0.006 80);
-  --primary-foreground: oklch(0.22 0.014 250);
+  --primary-foreground: oklch(0.22 0.012 60);
 
-  --secondary: oklch(0.28 0.014 250);
+  --secondary: oklch(0.28 0.012 60);
   --secondary-foreground: oklch(0.94 0.006 80);
 
-  --muted: oklch(0.28 0.014 250);
-  --muted-foreground: oklch(0.70 0.015 80);
+  --muted: oklch(0.28 0.012 60);
+  --muted-foreground: oklch(0.70 0.012 80);
 
-  --accent: oklch(0.32 0.018 250);
+  --accent: oklch(0.32 0.014 60);
   --accent-foreground: oklch(0.94 0.006 80);
 
-  --brand-gold: oklch(0.78 0.12 78);
-  --brand-gold-foreground: oklch(0.20 0.014 250);
-  /* Brand fissi: NON cambiano in dark, mantengono l'identità del logo */
-  --brand-navy: oklch(0.30 0.07 255);
+  /* Terracotta più luminosa in dark per contrasto su fondo scuro */
+  --brand-gold: oklch(0.70 0.15 38);
+  --brand-gold-foreground: oklch(0.20 0.012 60);
+  /* Brand fissi (identità logo). `--brand-navy` ora = inchiostro */
+  --brand-navy: oklch(0.22 0.04 260);
   --brand-cream: oklch(0.985 0.004 80);
+
+  /* Logo adattivo in dark: tile panna + glifo inchiostro per leggibilità sul fondo scuro */
+  --logo-tile: var(--brand-cream);
+  --logo-glyph: var(--brand-navy);
+  --logo-border: var(--brand-navy);
+  --logo-border-opacity: 0.30;
+  --logo-wordmark: var(--brand-cream);
 
   --destructive: oklch(0.62 0.18 28);
   --destructive-foreground: oklch(0.985 0.004 80);
 
   --success: oklch(0.65 0.12 155);
-  --success-foreground: oklch(0.20 0.014 250);
+  --success-foreground: oklch(0.20 0.012 60);
 
-  --warning: oklch(0.80 0.14 80);
-  --warning-foreground: oklch(0.20 0.014 250);
+  --warning: oklch(0.78 0.13 70);
+  --warning-foreground: oklch(0.20 0.012 60);
 
-  --info: oklch(0.70 0.10 235);
-  --info-foreground: oklch(0.20 0.014 250);
+  --info: oklch(0.66 0.10 240);
+  --info-foreground: oklch(0.20 0.012 60);
 
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.78 0.12 78);
+  --ring: oklch(0.70 0.15 38);
 
-  --chart-1: oklch(0.78 0.12 78);
-  --chart-2: oklch(0.70 0.10 235);
+  --chart-1: oklch(0.70 0.15 38);
+  --chart-2: oklch(0.66 0.10 240);
   --chart-3: oklch(0.65 0.12 155);
-  --chart-4: oklch(0.80 0.14 80);
-  --chart-5: oklch(0.62 0.18 28);
+  --chart-4: oklch(0.78 0.13 70);
+  --chart-5: oklch(0.55 0.16 15);
 
-  --sidebar: oklch(0.20 0.014 250);
+  --sidebar: oklch(0.20 0.012 60);
   --sidebar-foreground: oklch(0.94 0.006 80);
-  --sidebar-primary: oklch(0.78 0.12 78);
-  --sidebar-primary-foreground: oklch(0.20 0.014 250);
-  --sidebar-accent: oklch(0.28 0.014 250);
+  --sidebar-primary: oklch(0.70 0.15 38);
+  --sidebar-primary-foreground: oklch(0.20 0.012 60);
+  --sidebar-accent: oklch(0.28 0.012 60);
   --sidebar-accent-foreground: oklch(0.94 0.006 80);
   --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.78 0.12 78);
+  --sidebar-ring: oklch(0.70 0.15 38);
 
   --gradient-hero: linear-gradient(
     135deg,
-    oklch(0.22 0.014 250) 0%,
-    oklch(0.16 0.012 250) 100%
+    oklch(0.22 0.012 60) 0%,
+    oklch(0.16 0.010 60) 100%
   );
   --gradient-accent: linear-gradient(
     135deg,
-    oklch(0.82 0.12 78) 0%,
-    oklch(0.72 0.13 68) 100%
+    oklch(0.72 0.15 40) 0%,
+    oklch(0.60 0.16 28) 100%
   );
 
   --shadow-soft: 0 1px 2px 0 rgb(0 0 0 / 0.25);
   --shadow-elevated: 0 4px 12px -2px rgb(0 0 0 / 0.35);
   --shadow-elegant: 0 20px 40px -12px rgb(0 0 0 / 0.55);
-  --shadow-gold: 0 8px 24px -8px oklch(0.78 0.12 78 / 0.45);
+  --shadow-gold: 0 8px 24px -8px oklch(0.70 0.15 38 / 0.45);
 }
 
 @layer base {

@@ -1,24 +1,14 @@
-# Memoria — Brand
+# Brand Pratix — sintesi rapida
 
-> Mirror di `mem://design/brand`. Per il riferimento completo e operativo vedi [`../../BRAND.md`](../../BRAND.md).
+Mirror leggibile della memoria `mem://design/brand`. Per il riferimento operativo completo vedi [`BRAND.md`](../../BRAND.md) in root.
 
-## Sintesi (sempre in contesto)
+Punti chiave non negoziabili:
 
-Pratix è un gestionale per **avvocati freelance italiani**. La marca è **professionale moderna**, asciutta, mai burocratica.
-
-- **Tagline ufficiale**: "Tutto torna." (vedi [ADR 0004](../decisions/0004-tagline-tutto-torna.md))
-- **Palette**: navy + oro brunito su panna (light) o grigio caldo neutro (dark)
-- **Tipografia**: Inter Tight (display) + Inter (UI) + JetBrains Mono (numeri/monospace)
-- **Logo**: sempre `<Logo>`, mai SVG inline
-- **Tono**: "tu" professionale, no emoji UI, no esclamativi multipli
-
-## Glossario di prodotto
-
-✅ **Pratica** · **Cliente** · **Scadenza** · **Spese** · **Fattura** · **Attività**
-❌ Caso · Assistito · Deadline · Costi · **Studio**
-
-Il divieto sulla parola **"studio"** è esplicito: il target è il freelance singolo, non lo studio associato. Vedi [ADR 0005](../decisions/0005-target-freelance-no-studio.md).
-
-## Riferimento completo
-
-Tutto il dettaglio operativo (palette estesa, regole di accessibilità, esempi di componenti, do/don't di copy) vive in [`BRAND.md`](../../BRAND.md). Aggiornare prima `BRAND.md`, poi questo mirror se cambia la sintesi.
+- **Inchiostro `oklch(0.22 0.04 260)`** primario, **terracotta `oklch(0.62 0.15 35)`** accento (vibe editoriale legale italiano, NON fintech). Decisione registrata in [ADR-0007](../decisions/0007-palette-inchiostro-terracotta.md): differenziazione da Fineco e dal territorio bancario.
+- Sfondo light panna `oklch(0.985 0.004 80)`, mai bianco puro. Sfondo dark grigio caldo `oklch(0.18 0.010 60)` (hue calda per armonizzare con terracotta).
+- I token `--brand-navy` e `--brand-gold` sono mantenuti come alias storici ma ora veicolano rispettivamente inchiostro e terracotta. Documentato in `src/styles.css` e `BRAND.md`.
+- Display: Inter Tight 600, mai >600. Body: Inter. Mono: JetBrains Mono. Tutti via Google Fonts in `__root.tsx`.
+- Componente `<Logo>` (direction px/bar/seal · form mark/wordmark/lockup · tone navy/inverse/mono). Mai SVG inline. Tone `navy` è **adattivo**: tile inchiostro/glifo panna in light, tile panna/glifo inchiostro in dark, gestito dai token `--logo-tile`, `--logo-glyph`, `--logo-border`, `--logo-border-opacity`, `--logo-wordmark`.
+- Button: variante `gold` per CTA premium (terracotta), `default` per primarie inchiostro.
+- Tono: tu professionale neutro, niente emoji, niente esclamativi, glossario fisso (Pratica/Cliente/Scadenza/Spese/Fattura).
+- Tabular-nums automatico su `.num`, `.tabular`, `.font-mono`, `td.text-right`.
