@@ -43,7 +43,7 @@ function DashboardContent() {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
       const yearStart = new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 10);
 
-      const [casesRes, deadlinesRes, invoicesRes, recentCasesRes] = await Promise.all([
+      const [casesRes, deadlinesRes, invoicesRes, recentCasesRes, clientsRes] = await Promise.all([
         supabase
           .from("cases")
           .select("id, status", { count: "exact" })
@@ -63,6 +63,9 @@ function DashboardContent() {
           .select("id, case_number, title, status, updated_at, client_id, clients(kind, first_name, last_name, business_name)")
           .order("updated_at", { ascending: false })
           .limit(5),
+        supabase
+          .from("clients")
+          .select("id", { count: "exact", head: true }),
       ]);
 
       if (casesRes.error) throw casesRes.error;
