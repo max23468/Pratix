@@ -168,6 +168,20 @@ Pratix tiene molta documentazione "viva": va aggiornata insieme alle modifiche.
 - **`BRAND.md`** — quando cambia un elemento di brand (palette, tipografia, logo, tono).
 - **`docs/glossario.md`** — quando si introduce o vieta un termine.
 
+#### Mappa rapida: tipo di modifica → file da toccare
+
+| Tipo di modifica | File da aggiornare (oltre al codice) |
+|---|---|
+| Nuova feature utente-visibile | `CHANGELOG.md` (Novità), `ROADMAP.md`, bump MINOR in `version.ts` al rilascio |
+| Bugfix / correzione UI | `CHANGELOG.md` (Correzioni), bump PATCH al rilascio |
+| Refactor o asset interno | `CHANGELOG.md` (Sotto il cofano), nessun bump richiesto |
+| Decisione "per sempre" (architettura, brand, processo) | nuovo ADR in `docs/decisions/` + `ROADMAP.md` + memoria |
+| Cambio modello dati (tabelle, RLS, trigger) | migrazione SQL + `docs/data-model.md` + `supabase/schema.sql` + `CHANGELOG.md` |
+| Cambio brand (palette, tipografia, logo, tono) | `BRAND.md` + `src/styles.css` + memoria + `CHANGELOG.md` |
+| Nuovo o vietato termine di prodotto | `docs/glossario.md` + memoria + (se cambia label UI) `CHANGELOG.md` |
+| Nuova guida operativa | `docs/guides/<nome>.md` + link da `AGENTS.md` o `README.md` se rilevante |
+| Cambio regola di processo per agenti | `mem://` + mirror in `docs/memory/` + (se utile) `AGENTS.md` |
+
 ### Memoria di progetto
 
 - Fonte di verità: `mem://` (visibile agli agenti).
