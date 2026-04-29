@@ -184,7 +184,7 @@ function DashboardContent() {
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{d.description}</p>
                         <p className="truncate text-xs text-muted-foreground">
-                          {/* @ts-ignore nested join typing */}
+                          
                           {d.cases?.title ?? "—"}
                         </p>
                       </div>
@@ -218,7 +218,7 @@ function DashboardContent() {
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{c.title}</p>
                         <p className="truncate text-xs text-muted-foreground">
-                          {c.case_number} · {/* @ts-ignore nested join typing */}
+                          {c.case_number} · 
                           {c.clients ? clientDisplayName(c.clients) : "—"}
                         </p>
                       </div>
