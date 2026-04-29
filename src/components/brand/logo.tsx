@@ -39,7 +39,7 @@ export const BRAND_DIRECTION: LogoDirection = "px";
 function toneColors(tone: LogoTone) {
   if (tone === "inverse") {
     return {
-      primary: "var(--color-primary-foreground)",
+      primary: "var(--color-brand-cream)",
       gold: "var(--color-brand-gold)",
       onGold: "var(--color-brand-gold-foreground)",
     };
@@ -52,7 +52,7 @@ function toneColors(tone: LogoTone) {
     };
   }
   return {
-    primary: "var(--color-primary)",
+    primary: "var(--color-brand-navy)",
     gold: "var(--color-brand-gold)",
     onGold: "var(--color-brand-gold-foreground)",
   };
