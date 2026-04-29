@@ -44,14 +44,15 @@ function Landing() {
               <span className="h-1.5 w-1.5 rounded-full bg-brand-gold" />
               Per avvocati freelance
             </div>
-            <h1 className="font-display mt-7 text-5xl font-semibold tracking-tight text-foreground sm:text-6xl lg:text-[68px] lg:leading-[1.05]">
-              Lo studio legale,
+            <h1 className="font-display mt-7 text-6xl font-semibold tracking-tight text-foreground sm:text-7xl lg:text-[88px] lg:leading-[0.98]">
+              Tutto<span className="text-brand-gold">.</span>
               <br />
-              <span className="text-brand-gold">in ordine.</span>
+              torna<span className="text-brand-gold">.</span>
             </h1>
-            <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Pratix tiene insieme pratiche, scadenze, rimborsi spese e fatturazione
-              elettronica in un unico gestionale, pensato per chi lavora da solo.
+            <p className="mx-auto mt-7 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
+              Pratix è il gestionale per avvocati freelance. Pratiche,
+              scadenze, spese e fatturazione elettronica: ogni cosa al suo posto,
+              ogni conto che torna.
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link to="/register">
