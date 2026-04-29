@@ -67,4 +67,5 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.2.0]: #020--2026-04-29
 [0.1.0]: #010--2026-04-29
