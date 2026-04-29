@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { Scale } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
