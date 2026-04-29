@@ -117,9 +117,10 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅ | `SECURITY.md` + `CONTRIBUTING.md` + `LICENSE` | Predisposti per repo pubblico |
 | ✅ | Cartella `docs/` con guide tematiche | architettura, database, fatturazione, tema, tono di voce, deploy |
 | ✅ | `docs/memory/` mirror di `mem://` | core, brand, roadmap |
-| ✅ | `docs/decisions/` con 6 ADR | Stack, backend, FatturaPA, tagline, target freelance, tema |
+| ✅ | `docs/decisions/` con 8 ADR | Stack, backend, FatturaPA, tagline, target freelance, tema, palette, versioning |
 | ✅ | `docs/glossario.md` | Termini legali e fiscali italiani |
 | ✅ | Memoria di progetto sincronizzata | `mem://index.md` + `mem://design/brand` + `mem://process/roadmap` |
+| ✅ | **Versioning + Changelog + pagina Novità** | `src/lib/version.ts` + parser `CHANGELOG.md` + route `/novita` autenticata + campanella in topbar. ADR-0008 e guida `docs/guides/versioning-e-release.md` |
 | ⬜ | Test minimi su funzioni critiche | XML FatturaPA, calcoli IVA/ritenuta, cassa forense |
 | ⬜ | Linter pulito su tutto il repo | `npm run lint` |
 | ⬜ | `npm audit --audit-level=moderate` periodico | |
