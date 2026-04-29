@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Briefcase, Receipt, Wallet, AlertCircle, Plus, TrendingUp, AlertTriangle } from "lucide-react";
+import { Briefcase, Receipt, Wallet, AlertCircle, Plus, TrendingUp, AlertTriangle, Users } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,7 +43,7 @@ function DashboardContent() {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
       const yearStart = new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 10);
 
-      const [casesRes, deadlinesRes, invoicesRes, recentCasesRes] = await Promise.all([
+      const [casesRes, deadlinesRes, invoicesRes, recentCasesRes, clientsRes] = await Promise.all([
         supabase
           .from("cases")
           .select("id, status", { count: "exact" })
@@ -63,14 +63,19 @@ function DashboardContent() {
           .select("id, case_number, title, status, updated_at, client_id, clients(kind, first_name, last_name, business_name)")
           .order("updated_at", { ascending: false })
           .limit(5),
+        supabase
+          .from("clients")
+          .select("id", { count: "exact", head: true }),
       ]);
 
       if (casesRes.error) throw casesRes.error;
       if (deadlinesRes.error) throw deadlinesRes.error;
       if (invoicesRes.error) throw invoicesRes.error;
       if (recentCasesRes.error) throw recentCasesRes.error;
+      if (clientsRes.error) throw clientsRes.error;
 
       const activeCases = casesRes.count ?? casesRes.data?.length ?? 0;
+      const totalClients = clientsRes.count ?? 0;
       const invoices = invoicesRes.data ?? [];
       const unpaid = invoices
         .filter((i) => i.status === "issued" || i.status === "overdue")
@@ -90,6 +95,7 @@ function DashboardContent() {
 
       return {
         activeCases,
+        totalClients,
         deadlines: deadlinesRes.data ?? [],
         unpaid,
         overdueCount: overdue.length,
@@ -132,10 +138,16 @@ function DashboardContent() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard icon={Briefcase} label="Pratiche attive" value={isLoading ? "—" : String(data?.activeCases ?? 0)} />
+        <StatCard icon={Users} label="Clienti" value={isLoading ? "—" : String(data?.totalClients ?? 0)} />
         <StatCard
           icon={AlertCircle}
           label="Scadenze (14gg)"
           value={isLoading ? "—" : String(data?.deadlines.length ?? 0)}
+        />
+        <StatCard
+          icon={Wallet}
+          label="Bozze"
+          value={isLoading ? "—" : `${data?.draftCount ?? 0} · ${formatCurrency(data?.draftTotal ?? 0)}`}
         />
         <StatCard
           icon={Receipt}
@@ -151,11 +163,6 @@ function DashboardContent() {
               : `${data?.overdueCount ?? 0} · ${formatCurrency(data?.overdueTotal ?? 0)}`
           }
           tone={data && data.overdueCount > 0 ? "danger" : "default"}
-        />
-        <StatCard
-          icon={Wallet}
-          label="Bozze"
-          value={isLoading ? "—" : `${data?.draftCount ?? 0} · ${formatCurrency(data?.draftTotal ?? 0)}`}
         />
         <StatCard
           icon={TrendingUp}
