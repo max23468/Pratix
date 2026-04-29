@@ -29,20 +29,40 @@ type Props = {
   allowCasePicker?: boolean;
 };
 
-export function DeadlineDialog({ caseId, trigger }: Props) {
+export function DeadlineDialog({ caseId, trigger, allowCasePicker = false }: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState(new Date().toISOString().slice(0, 10));
+  const [selectedCaseId, setSelectedCaseId] = useState<string>(caseId ?? "");
+
+  useEffect(() => {
+    if (caseId) setSelectedCaseId(caseId);
+  }, [caseId]);
+
+  const { data: cases } = useQuery({
+    enabled: open && allowCasePicker,
+    queryKey: ["cases-picker"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cases")
+        .select("id, case_number, title")
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
 
   const save = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Sessione non valida");
       if (!description.trim()) throw new Error("Inserisci una descrizione");
+      const targetCaseId = caseId ?? selectedCaseId;
+      if (!targetCaseId) throw new Error("Seleziona una pratica");
       const { error } = await supabase.from("case_deadlines").insert({
         user_id: user.id,
-        case_id: caseId,
+        case_id: targetCaseId,
         description: description.trim(),
         due_date: dueDate,
       });
@@ -50,7 +70,8 @@ export function DeadlineDialog({ caseId, trigger }: Props) {
     },
     onSuccess: () => {
       toast.success("Scadenza creata");
-      qc.invalidateQueries({ queryKey: ["case-deadlines", caseId] });
+      qc.invalidateQueries({ queryKey: ["case-deadlines"] });
+      qc.invalidateQueries({ queryKey: ["deadlines-global"] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       setOpen(false);
       setDescription("");
