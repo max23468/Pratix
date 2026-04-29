@@ -64,30 +64,34 @@ function toneColors(tone: LogoTone) {
 
 function MarkPx({ tone, size }: { tone: LogoTone; size: number }) {
   const c = toneColors(tone);
-  // Default (navy): tile navy + cornice oro sottile + glifo panna, x oro corsiva.
-  // Inverse: tile panna + cornice navy sottile + glifo navy, x oro corsiva.
-  // Mono: nessun riempimento, solo cornice e glifo in currentColor.
   const isMono = tone === "mono";
   const isInverse = tone === "inverse";
 
+  // Default ("navy"): usa i token --logo-* che sono adattivi al tema.
+  // Inverse: forza tile panna + glifo inchiostro (per fondi scuri brandizzati).
+  // Mono: solo cornice e glifo in currentColor.
   const tileFill = isMono
     ? "transparent"
     : isInverse
       ? "var(--color-brand-cream)"
-      : "var(--color-brand-navy)";
+      : "var(--logo-tile)";
 
   const borderStroke = isMono
     ? "currentColor"
     : isInverse
       ? "var(--color-brand-navy)"
-      : c.gold;
-  const borderOpacity = isMono ? 1 : isInverse ? 0.35 : 0.55;
+      : "var(--logo-border)";
+  const borderOpacity = isMono
+    ? 1
+    : isInverse
+      ? 0.35
+      : "var(--logo-border-opacity)";
 
   const glyphColor = isMono
     ? "currentColor"
     : isInverse
       ? "var(--color-brand-navy)"
-      : "var(--color-brand-cream)";
+      : "var(--logo-glyph)";
 
   return (
     <svg
@@ -107,7 +111,7 @@ function MarkPx({ tone, size }: { tone: LogoTone; size: number }) {
         fill="none"
         stroke={borderStroke}
         strokeWidth="1.5"
-        opacity={borderOpacity}
+        opacity={borderOpacity as number | string}
       />
       <text
         x="24"
