@@ -56,6 +56,38 @@ Modificare uno di questi file rompe build, sync o tipi:
 
 - Mantieni le modifiche focalizzate ed evita refactor, rinominazioni massive o cambi di formattazione non collegati al task.
 
+## Errori comuni da evitare
+
+Pattern che si ripetono e fanno perdere tempo. Evitali a monte:
+
+- **Router**: usa `@tanstack/react-router`, **mai** `react-router-dom`. Niente `<BrowserRouter>`, niente `useNavigate` da react-router.
+- **Routing file-based**: niente `src/pages/`, niente `src/routes/_app/`, niente `app/layout.tsx`. Le route sono file piatti in `src/routes/` con naming dot-separated (`settings.profile.tsx` → `/settings/profile`). Il layout root è sempre `src/routes/__root.tsx`.
+- **Link interni**: usa `<Link to="/path">` da `@tanstack/react-router`, mai `<a href>` per navigazione interna (rompe SSR e prefetch).
+- **Colori**: mai `bg-white`, `text-black`, hex inline o `style={{ color: '#...' }}`. Solo token semantici (`bg-background`, `text-foreground`, `border-border`, `bg-primary`…). Se manca un token, aggiungilo in `src/styles.css`.
+- **Logo**: mai SVG inline o `<img src="/logo.svg">`. Solo `<Logo />` da `src/components/brand/logo.tsx`.
+- **Tema**: non leggere `localStorage` direttamente per il tema. Usa `useTheme()` da `src/lib/theme-context.tsx`.
+- **Versione**: non hardcodare la versione in UI o documenti. Importa `APP_VERSION` da `src/lib/version.ts`.
+- **Supabase**: non creare nuovi client, non importare `@supabase/supabase-js` direttamente. Sempre `import { supabase } from "@/integrations/supabase/client"`.
+- **Tabelle**: ogni nuova tabella user-owned ha `user_id uuid not null`, RLS abilitata, 4 policy basate su `auth.uid() = user_id`. Niente CHECK constraint con `now()` (non immutabile): usa trigger di validazione.
+
+## Server functions vs route API
+
+Due meccanismi diversi, scopi diversi:
+
+- **`createServerFn`** in `src/server/*.functions.ts` — RPC tipato chiamato dal client React. Usa per logica di business, query DB con service role, integrazioni server-side richiamate dalla UI. Il body del file viene strippato dal bundle client.
+- **Server routes** in `src/routes/api/**` — endpoint HTTP raw. Usa per webhook esterni, cron, callback OAuth, endpoint pubblici letti da terzi. Per endpoint pubblici di terzi metti in `src/routes/api/public/**` e **valida sempre la firma/HMAC** prima di processare.
+
+Helper "server-only" (accesso DB, secret) vivono in `src/server/*.server.ts` e sono importati solo da `*.functions.ts` o da route API, mai dai componenti.
+
+`process.env.X` va letto **dentro** `.handler()`, non al top-level del modulo.
+
+## Gestione segreti
+
+- Segreti runtime (es. `LOVABLE_API_KEY`, chiavi terze parti) vanno aggiunti tramite il tool secrets di Lovable Cloud, **non** scritti in `.env` né committati.
+- Il file `.env` è gestito da Lovable Cloud e contiene solo `VITE_SUPABASE_*` (chiavi pubbliche per design).
+- Prima di scrivere codice che usa una chiave, verifica con il tool `fetch_secrets` se è già configurata. Se manca, chiedi all'utente di aggiungerla via `add_secret`.
+- Mai stampare segreti in log, errori o risposte chat. Per verificarne la presenza usa `test -n "$VAR"`, mai `echo $VAR`.
+
 ## Sync GitHub ↔ Lovable
 
 Il repo GitHub e il progetto Lovable sono in **sync bidirezionale in tempo reale**.
@@ -135,6 +167,20 @@ Pratix tiene molta documentazione "viva": va aggiornata insieme alle modifiche.
 - **`docs/data-model.md`** + **`supabase/schema.sql`** — quando cambia il modello dati.
 - **`BRAND.md`** — quando cambia un elemento di brand (palette, tipografia, logo, tono).
 - **`docs/glossario.md`** — quando si introduce o vieta un termine.
+
+#### Mappa rapida: tipo di modifica → file da toccare
+
+| Tipo di modifica | File da aggiornare (oltre al codice) |
+|---|---|
+| Nuova feature utente-visibile | `CHANGELOG.md` (Novità), `ROADMAP.md`, bump MINOR in `version.ts` al rilascio |
+| Bugfix / correzione UI | `CHANGELOG.md` (Correzioni), bump PATCH al rilascio |
+| Refactor o asset interno | `CHANGELOG.md` (Sotto il cofano), nessun bump richiesto |
+| Decisione "per sempre" (architettura, brand, processo) | nuovo ADR in `docs/decisions/` + `ROADMAP.md` + memoria |
+| Cambio modello dati (tabelle, RLS, trigger) | migrazione SQL + `docs/data-model.md` + `supabase/schema.sql` + `CHANGELOG.md` |
+| Cambio brand (palette, tipografia, logo, tono) | `BRAND.md` + `src/styles.css` + memoria + `CHANGELOG.md` |
+| Nuovo o vietato termine di prodotto | `docs/glossario.md` + memoria + (se cambia label UI) `CHANGELOG.md` |
+| Nuova guida operativa | `docs/guides/<nome>.md` + link da `AGENTS.md` o `README.md` se rilevante |
+| Cambio regola di processo per agenti | `mem://` + mirror in `docs/memory/` + (se utile) `AGENTS.md` |
 
 ### Memoria di progetto
 
