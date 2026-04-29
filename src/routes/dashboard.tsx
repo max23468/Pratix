@@ -161,11 +161,13 @@ function DashboardContent() {
           icon={TrendingUp}
           label="Incassato (mese)"
           value={isLoading ? "—" : formatCurrency(data?.collectedMonth ?? 0)}
+          tone="gold"
         />
         <StatCard
           icon={TrendingUp}
           label={`Fatturato ${new Date().getFullYear()}`}
           value={isLoading ? "—" : formatCurrency(data?.revenueYear ?? 0)}
+          tone="gold"
         />
       </div>
 
