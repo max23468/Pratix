@@ -188,6 +188,7 @@ function SettingsPage() {
           <TabsTrigger value="fiscale">Fiscale</TabsTrigger>
           <TabsTrigger value="pagamenti">Pagamenti</TabsTrigger>
           <TabsTrigger value="numerazione">Numerazione</TabsTrigger>
+          <TabsTrigger value="aspetto">Aspetto</TabsTrigger>
         </TabsList>
 
         <TabsContent value="studio" className="space-y-4">
