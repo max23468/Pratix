@@ -11,9 +11,15 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ImpostazioniRouteImport } from './routes/impostazioni'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PraticheIndexRouteImport } from './routes/pratiche.index'
+import { Route as FattureIndexRouteImport } from './routes/fatture.index'
 import { Route as ClientiIndexRouteImport } from './routes/clienti.index'
+import { Route as PraticheNuovaRouteImport } from './routes/pratiche.nuova'
+import { Route as PraticheCaseIdRouteImport } from './routes/pratiche.$caseId'
+import { Route as FattureNuovaRouteImport } from './routes/fatture.nuova'
 import { Route as ClientiNuovoRouteImport } from './routes/clienti.nuovo'
 import { Route as ClientiClientIdRouteImport } from './routes/clienti.$clientId'
 
@@ -27,6 +33,11 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ImpostazioniRoute = ImpostazioniRouteImport.update({
+  id: '/impostazioni',
+  path: '/impostazioni',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -37,9 +48,34 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PraticheIndexRoute = PraticheIndexRouteImport.update({
+  id: '/pratiche/',
+  path: '/pratiche/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FattureIndexRoute = FattureIndexRouteImport.update({
+  id: '/fatture/',
+  path: '/fatture/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClientiIndexRoute = ClientiIndexRouteImport.update({
   id: '/clienti/',
   path: '/clienti/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PraticheNuovaRoute = PraticheNuovaRouteImport.update({
+  id: '/pratiche/nuova',
+  path: '/pratiche/nuova',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PraticheCaseIdRoute = PraticheCaseIdRouteImport.update({
+  id: '/pratiche/$caseId',
+  path: '/pratiche/$caseId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FattureNuovaRoute = FattureNuovaRouteImport.update({
+  id: '/fatture/nuova',
+  path: '/fatture/nuova',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientiNuovoRoute = ClientiNuovoRouteImport.update({
@@ -56,69 +92,111 @@ const ClientiClientIdRoute = ClientiClientIdRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
+  '/fatture/nuova': typeof FattureNuovaRoute
+  '/pratiche/$caseId': typeof PraticheCaseIdRoute
+  '/pratiche/nuova': typeof PraticheNuovaRoute
   '/clienti/': typeof ClientiIndexRoute
+  '/fatture/': typeof FattureIndexRoute
+  '/pratiche/': typeof PraticheIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
+  '/fatture/nuova': typeof FattureNuovaRoute
+  '/pratiche/$caseId': typeof PraticheCaseIdRoute
+  '/pratiche/nuova': typeof PraticheNuovaRoute
   '/clienti': typeof ClientiIndexRoute
+  '/fatture': typeof FattureIndexRoute
+  '/pratiche': typeof PraticheIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/dashboard': typeof DashboardRoute
+  '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
+  '/fatture/nuova': typeof FattureNuovaRoute
+  '/pratiche/$caseId': typeof PraticheCaseIdRoute
+  '/pratiche/nuova': typeof PraticheNuovaRoute
   '/clienti/': typeof ClientiIndexRoute
+  '/fatture/': typeof FattureIndexRoute
+  '/pratiche/': typeof PraticheIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/dashboard'
+    | '/impostazioni'
     | '/login'
     | '/register'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
+    | '/fatture/nuova'
+    | '/pratiche/$caseId'
+    | '/pratiche/nuova'
     | '/clienti/'
+    | '/fatture/'
+    | '/pratiche/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/dashboard'
+    | '/impostazioni'
     | '/login'
     | '/register'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
+    | '/fatture/nuova'
+    | '/pratiche/$caseId'
+    | '/pratiche/nuova'
     | '/clienti'
+    | '/fatture'
+    | '/pratiche'
   id:
     | '__root__'
     | '/'
     | '/dashboard'
+    | '/impostazioni'
     | '/login'
     | '/register'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
+    | '/fatture/nuova'
+    | '/pratiche/$caseId'
+    | '/pratiche/nuova'
     | '/clienti/'
+    | '/fatture/'
+    | '/pratiche/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   DashboardRoute: typeof DashboardRoute
+  ImpostazioniRoute: typeof ImpostazioniRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   ClientiClientIdRoute: typeof ClientiClientIdRoute
   ClientiNuovoRoute: typeof ClientiNuovoRoute
+  FattureNuovaRoute: typeof FattureNuovaRoute
+  PraticheCaseIdRoute: typeof PraticheCaseIdRoute
+  PraticheNuovaRoute: typeof PraticheNuovaRoute
   ClientiIndexRoute: typeof ClientiIndexRoute
+  FattureIndexRoute: typeof FattureIndexRoute
+  PraticheIndexRoute: typeof PraticheIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -137,6 +215,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/impostazioni': {
+      id: '/impostazioni'
+      path: '/impostazioni'
+      fullPath: '/impostazioni'
+      preLoaderRoute: typeof ImpostazioniRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
@@ -151,11 +236,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/pratiche/': {
+      id: '/pratiche/'
+      path: '/pratiche'
+      fullPath: '/pratiche/'
+      preLoaderRoute: typeof PraticheIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fatture/': {
+      id: '/fatture/'
+      path: '/fatture'
+      fullPath: '/fatture/'
+      preLoaderRoute: typeof FattureIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/clienti/': {
       id: '/clienti/'
       path: '/clienti'
       fullPath: '/clienti/'
       preLoaderRoute: typeof ClientiIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pratiche/nuova': {
+      id: '/pratiche/nuova'
+      path: '/pratiche/nuova'
+      fullPath: '/pratiche/nuova'
+      preLoaderRoute: typeof PraticheNuovaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pratiche/$caseId': {
+      id: '/pratiche/$caseId'
+      path: '/pratiche/$caseId'
+      fullPath: '/pratiche/$caseId'
+      preLoaderRoute: typeof PraticheCaseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fatture/nuova': {
+      id: '/fatture/nuova'
+      path: '/fatture/nuova'
+      fullPath: '/fatture/nuova'
+      preLoaderRoute: typeof FattureNuovaRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/clienti/nuovo': {
@@ -178,12 +298,27 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   DashboardRoute: DashboardRoute,
+  ImpostazioniRoute: ImpostazioniRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   ClientiClientIdRoute: ClientiClientIdRoute,
   ClientiNuovoRoute: ClientiNuovoRoute,
+  FattureNuovaRoute: FattureNuovaRoute,
+  PraticheCaseIdRoute: PraticheCaseIdRoute,
+  PraticheNuovaRoute: PraticheNuovaRoute,
   ClientiIndexRoute: ClientiIndexRoute,
+  FattureIndexRoute: FattureIndexRoute,
+  PraticheIndexRoute: PraticheIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}
