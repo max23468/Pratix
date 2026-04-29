@@ -12,6 +12,22 @@ export const Route = createFileRoute("/")({
       throw redirect({ to: "/dashboard" });
     }
   },
+  head: () => ({
+    meta: [
+      { title: "Pratix — Tutto torna." },
+      {
+        name: "description",
+        content:
+          "Pratix è il gestionale per avvocati freelance. Pratiche, scadenze, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
+      },
+      { property: "og:title", content: "Pratix — Tutto torna." },
+      {
+        property: "og:description",
+        content:
+          "Il gestionale per avvocati freelance. Ogni pratica al suo posto, ogni conto che torna.",
+      },
+    ],
+  }),
   component: Landing,
 });
 
