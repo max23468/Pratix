@@ -53,7 +53,19 @@ export const Route = createRootRoute({
       },
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "it_IT" },
+      { property: "og:site_name", content: "Pratix" },
+      { property: "og:image", content: "/og-image.jpg" },
+      { property: "og:image:width", content: "1216" },
+      { property: "og:image:height", content: "640" },
+      { property: "og:image:alt", content: "Pratix — Tutto torna." },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "Pratix — Tutto torna." },
+      {
+        name: "twitter:description",
+        content:
+          "Il gestionale per avvocati freelance. Ogni pratica al suo posto, ogni conto che torna.",
+      },
+      { name: "twitter:image", content: "/og-image.jpg" },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
