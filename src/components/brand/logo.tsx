@@ -12,8 +12,10 @@
  *  - "lockup"   simbolo + wordmark (default).
  *
  * Toni:
- *  - "navy"    primario su fondi chiari (default).
- *  - "inverse" bianco caldo su fondi scuri.
+ *  - "navy"    primario adattivo: tile inchiostro+glifo panna in light,
+ *              tile panna+glifo inchiostro in dark (default).
+ *              Nota: "navy" è alias storico, il colore è inchiostro profondo.
+ *  - "inverse" forza tile panna su fondi scuri brandizzati.
  *  - "mono"    tutto monocromatico in currentColor.
  */
 
