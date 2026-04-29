@@ -536,7 +536,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
                     <Input
                       value={l.description}
                       onChange={(e) => updateLine(idx, { description: e.target.value })}
-                      placeholder="Es. Studio della pratica e redazione atto"
+                      placeholder="Es. Esame della pratica e redazione atto"
                     />
                   </div>
                   <div className="space-y-1">

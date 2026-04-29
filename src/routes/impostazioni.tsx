@@ -28,9 +28,9 @@ export const Route = createFileRoute("/impostazioni")({
   head: () => ({
     meta: [
       { title: "Impostazioni — Pratix" },
-      { name: "description", content: "Configura dati studio, fiscali e numerazione." },
+      { name: "description", content: "Configura i tuoi dati professionali, fiscali e di numerazione." },
       { property: "og:title", content: "Impostazioni — Pratix" },
-      { property: "og:description", content: "Configura dati studio, fiscali e numerazione." },
+      { property: "og:description", content: "Configura i tuoi dati professionali, fiscali e di numerazione." },
     ],
   }),
   component: SettingsPage,
@@ -173,7 +173,7 @@ function SettingsPage() {
     <AppLayout>
       <PageHeader
         title="Impostazioni"
-        description="Dati dello studio, regime fiscale, IBAN e parametri di fatturazione."
+        description="I tuoi dati professionali, regime fiscale, IBAN e parametri di fatturazione."
         actions={
           <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || isLoading}>
             <Save className="mr-2 h-4 w-4" />
@@ -182,22 +182,22 @@ function SettingsPage() {
         }
       />
 
-      <Tabs defaultValue="studio" className="space-y-4">
+      <Tabs defaultValue="attivita" className="space-y-4">
         <TabsList className="flex flex-wrap">
-          <TabsTrigger value="studio">Studio</TabsTrigger>
+          <TabsTrigger value="attivita">Attività</TabsTrigger>
           <TabsTrigger value="fiscale">Fiscale</TabsTrigger>
           <TabsTrigger value="pagamenti">Pagamenti</TabsTrigger>
           <TabsTrigger value="numerazione">Numerazione</TabsTrigger>
           <TabsTrigger value="aspetto">Aspetto</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="studio" className="space-y-4">
+        <TabsContent value="attivita" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Anagrafica</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
-              <Field label="Ragione sociale / Studio" value={form.business_name} onChange={(v) => set("business_name", v)} placeholder="Es. Studio Legale Rossi" />
+              <Field label="Ragione sociale / Denominazione" value={form.business_name} onChange={(v) => set("business_name", v)} placeholder="Es. Avv. Mario Rossi" />
               <Field label="Nome e cognome titolare" value={form.full_name} onChange={(v) => set("full_name", v)} />
               <Field label="Partita IVA *" value={form.vat_number} onChange={(v) => set("vat_number", v)} placeholder="11 cifre" />
               <Field label="Codice Fiscale" value={form.tax_code} onChange={(v) => set("tax_code", v)} />

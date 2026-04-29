@@ -15,9 +15,9 @@ export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard — Pratix" },
-      { name: "description", content: "Una visione d'insieme del tuo studio." },
+      { name: "description", content: "Una visione d'insieme della tua attività." },
       { property: "og:title", content: "Dashboard — Pratix" },
-      { property: "og:description", content: "Una visione d'insieme del tuo studio." },
+      { property: "og:description", content: "Una visione d'insieme della tua attività." },
     ],
   }),
   component: () => (
@@ -114,7 +114,7 @@ function DashboardContent() {
     <>
       <PageHeader
         title="Dashboard"
-        description="Una visione d'insieme del tuo studio."
+        description="Una visione d'insieme della tua attività."
         actions={
           <>
             <Link to="/pratiche/nuova">

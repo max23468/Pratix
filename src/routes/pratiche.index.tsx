@@ -36,9 +36,9 @@ export const Route = createFileRoute("/pratiche/")({
   head: () => ({
     meta: [
       { title: "Pratiche — Pratix" },
-      { name: "description", content: "Tutte le pratiche del tuo studio." },
+      { name: "description", content: "Tutte le tue pratiche in un unico posto." },
       { property: "og:title", content: "Pratiche — Pratix" },
-      { property: "og:description", content: "Tutte le pratiche del tuo studio." },
+      { property: "og:description", content: "Tutte le tue pratiche in un unico posto." },
     ],
   }),
   component: () => (
@@ -87,7 +87,7 @@ function PraticheList() {
     <>
       <PageHeader
         title="Pratiche"
-        description="Tutte le pratiche del tuo studio."
+        description="Tutte le tue pratiche in un unico posto."
         actions={
           <Link to="/pratiche/nuova">
             <Button size="sm">

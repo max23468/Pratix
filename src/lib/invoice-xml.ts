@@ -94,11 +94,11 @@ export function buildInvoiceXml(data: InvoiceXmlData): XmlBuildResult {
   const isForfettario = data.profile.tax_regime === "forfettario";
   const cedentePiva = (data.profile.vat_number || "").replace(/\D/g, "");
   if (!cedentePiva) {
-    throw new Error("Partita IVA dello studio mancante: configurala in Impostazioni.");
+    throw new Error("Partita IVA mancante: configurala in Impostazioni.");
   }
 
   const cedenteName =
-    data.profile.business_name || data.profile.full_name || "Studio Legale";
+    data.profile.business_name || data.profile.full_name || "Avvocato";
 
   // Cessionario
   const isCompany = data.client.kind === "company" && !!data.client.business_name;

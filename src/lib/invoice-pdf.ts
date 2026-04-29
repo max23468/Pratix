@@ -70,17 +70,17 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
   const pageWidth = doc.internal.pageSize.getWidth();
   let y = MARGIN;
 
-  // Intestazione studio
+  // Intestazione professionista
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
-  const studioName =
-    data.profile.business_name || data.profile.full_name || "Studio Legale";
-  doc.text(studioName, MARGIN, y);
+  const headerName =
+    data.profile.business_name || data.profile.full_name || "Avvocato";
+  doc.text(headerName, MARGIN, y);
   y += 6;
 
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
-  const studioLines: string[] = [];
+  const headerLines: string[] = [];
   if (data.profile.address_street) {
     const addr = [
       data.profile.address_street,
@@ -90,16 +90,16 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
     ]
       .filter(Boolean)
       .join(" — ");
-    studioLines.push(addr);
+    headerLines.push(addr);
   }
-  if (data.profile.vat_number) studioLines.push(`P.IVA: ${data.profile.vat_number}`);
-  if (data.profile.tax_code) studioLines.push(`C.F.: ${data.profile.tax_code}`);
+  if (data.profile.vat_number) headerLines.push(`P.IVA: ${data.profile.vat_number}`);
+  if (data.profile.tax_code) headerLines.push(`C.F.: ${data.profile.tax_code}`);
   if (data.profile.bar_association)
-    studioLines.push(`Iscritto all'Ordine degli Avvocati di ${data.profile.bar_association}`);
-  if (data.profile.email) studioLines.push(`Email: ${data.profile.email}`);
-  if (data.profile.pec) studioLines.push(`PEC: ${data.profile.pec}`);
-  if (data.profile.phone) studioLines.push(`Tel: ${data.profile.phone}`);
-  studioLines.forEach((l) => {
+    headerLines.push(`Iscritto all'Ordine degli Avvocati di ${data.profile.bar_association}`);
+  if (data.profile.email) headerLines.push(`Email: ${data.profile.email}`);
+  if (data.profile.pec) headerLines.push(`PEC: ${data.profile.pec}`);
+  if (data.profile.phone) headerLines.push(`Tel: ${data.profile.phone}`);
+  headerLines.forEach((l) => {
     doc.text(l, MARGIN, y);
     y += 4;
   });
