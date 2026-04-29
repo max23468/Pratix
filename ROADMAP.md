@@ -85,6 +85,8 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅ | Registrazione + login | Email/password |
 | ✅ | Recupero password | Pagine `/recupera-password` + `/reimposta-password`, email Supabase di default |
 | ✅ | Messaggi auth generici (no user enumeration) | Login e registrazione |
+| ✅ | Area Account separata da Impostazioni | `/account` con tab Profilo / Accesso e sicurezza / Aspetto / Notifiche, accesso da menu utente in topbar |
+| ✅ | Cambio password in-app | Riautenticazione con password attuale + `auth.updateUser` |
 | ⬜ | Email auth personalizzate (brand) | Richiede dominio email custom |
 | ⬜ | Cambio email | Con conferma sul nuovo indirizzo |
 | ⬜ | Eliminazione account | Soft + hard delete con conferma |

@@ -21,10 +21,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { useTheme, type ThemeMode } from "@/lib/theme-context";
 import { taxRegimeLabels } from "@/lib/labels";
-import { APP_VERSION, BUILD_DATE } from "@/lib/version";
-import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/impostazioni")({
   head: () => ({
@@ -175,7 +172,7 @@ function SettingsPage() {
     <AppLayout>
       <PageHeader
         title="Impostazioni"
-        description="I tuoi dati professionali, regime fiscale, IBAN e parametri di fatturazione."
+        description="I dati della tua attività professionale, fiscalità, IBAN e numerazione. Per profilo, accesso e tema vai ad Account."
         actions={
           <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || isLoading}>
             <Save className="mr-2 h-4 w-4" />
@@ -190,7 +187,6 @@ function SettingsPage() {
           <TabsTrigger value="fiscale">Fiscale</TabsTrigger>
           <TabsTrigger value="pagamenti">Pagamenti</TabsTrigger>
           <TabsTrigger value="numerazione">Numerazione</TabsTrigger>
-          <TabsTrigger value="aspetto">Aspetto</TabsTrigger>
         </TabsList>
 
         <TabsContent value="attivita" className="space-y-4">
@@ -327,66 +323,11 @@ function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
-        <TabsContent value="aspetto" className="space-y-4">
-          <AppearanceCard />
-        </TabsContent>
       </Tabs>
-
-      <div className="mt-8 flex flex-col gap-1 border-t pt-4 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <span>
-          Pratix <span className="font-mono">v{APP_VERSION}</span>
-          <span className="mx-1.5">·</span>
-          build {BUILD_DATE}
-        </span>
-        <Link to="/novita" className="underline-offset-2 hover:underline">
-          Cosa è cambiato
-        </Link>
-      </div>
     </AppLayout>
   );
 }
 
-function AppearanceCard() {
-  const { mode, setMode, resolved } = useTheme();
-  const options: { value: ThemeMode; label: string; description: string }[] = [
-    { value: "light", label: "Chiaro", description: "Sfondo panna, navy come primario." },
-    { value: "dark", label: "Scuro", description: "Navy profondo, oro come accento." },
-    { value: "system", label: "Sistema", description: "Segue le preferenze del tuo dispositivo." },
-  ];
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Tema</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div className="grid gap-3 sm:grid-cols-3">
-          {options.map((opt) => {
-            const active = mode === opt.value;
-            return (
-              <button
-                key={opt.value}
-                type="button"
-                onClick={() => setMode(opt.value)}
-                className={`text-left rounded-lg border p-4 transition-colors ${
-                  active
-                    ? "border-primary bg-accent"
-                    : "border-border hover:border-primary/40"
-                }`}
-              >
-                <p className="font-display text-sm font-semibold text-foreground">{opt.label}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{opt.description}</p>
-              </button>
-            );
-          })}
-        </div>
-        <p className="text-xs text-muted-foreground">
-          Tema attivo: <strong className="text-foreground">{resolved === "dark" ? "Scuro" : "Chiaro"}</strong>
-          {mode === "system" ? " (da sistema)" : ""}.
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
 
 function Field({
   label,
