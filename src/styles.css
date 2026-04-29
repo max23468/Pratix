@@ -42,6 +42,8 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-brand-gold: var(--brand-gold);
   --color-brand-gold-foreground: var(--brand-gold-foreground);
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-cream: var(--brand-cream);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-success: var(--success);
