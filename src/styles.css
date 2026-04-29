@@ -183,6 +183,9 @@
 
   --brand-gold: oklch(0.78 0.12 78);
   --brand-gold-foreground: oklch(0.18 0.04 260);
+  /* Brand fissi: NON cambiano in dark, mantengono l'identità del logo */
+  --brand-navy: oklch(0.30 0.07 255);
+  --brand-cream: oklch(0.985 0.004 80);
 
   --destructive: oklch(0.62 0.18 28);
   --destructive-foreground: oklch(0.985 0.004 80);
