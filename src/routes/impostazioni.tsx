@@ -28,7 +28,7 @@ export const Route = createFileRoute("/impostazioni")({
   head: () => ({
     meta: [
       { title: "Impostazioni — Pratix" },
-      { name: "description", content: "Configura dati studio, fiscali e numerazione." },
+      { name: "description", content: "Configura i tuoi dati professionali, fiscali e di numerazione." },
       { property: "og:title", content: "Impostazioni — Pratix" },
       { property: "og:description", content: "Configura dati studio, fiscali e numerazione." },
     ],
