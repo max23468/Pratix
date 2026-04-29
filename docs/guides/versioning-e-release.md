@@ -48,17 +48,27 @@ Bump per **fix e miglioramenti che non cambiano funzionalità**. Esempi:
 
 ## Cosa scrivere nel changelog
 
-Formato [Keep a Changelog](https://keepachangelog.com/it/1.1.0/), sempre in
-**italiano** e dal punto di vista dell'utente (non commit-style).
+Formato adattato da [Keep a Changelog](https://keepachangelog.com/it/1.1.0/),
+sempre in **italiano** e dal punto di vista dell'utente (non commit-style).
 
-Sezioni standard, in quest'ordine quando presenti:
+### Tre categorie, in quest'ordine
 
-- **Aggiunto** — nuove funzionalità
-- **Modificato** — cambiamenti a funzionalità esistenti
-- **Deprecato** — funzionalità che verranno rimosse
-- **Rimosso** — funzionalità rimosse
-- **Risolto** — bugfix
-- **Sicurezza** — fix legati a sicurezza/privacy
+Pratix usa **tre sezioni** invece delle classiche sei. La pagina `/novita`
+le mostra con gerarchia visiva diversa, quindi scegliere bene la categoria
+è importante quanto scrivere bene la voce.
+
+- **`### Novità`** — funzionalità o miglioramenti che l'utente vede e usa
+  (nuova pagina, nuovo campo, redesign visibile, miglior copy in un punto
+  importante). In `/novita` sono **in evidenza** con icona terracotta.
+- **`### Correzioni`** — bugfix, fix di sicurezza, fix di copy minori,
+  correzioni di glossario. In `/novita` sono **compatte ma visibili**.
+- **`### Sotto il cofano`** — refactor, asset rigenerati, migrazioni
+  invisibili, dipendenze aggiornate, modifiche a build/deploy/processo.
+  In `/novita` sono **collassate** in un blocco "mostra/nascondi" per non
+  affollare la lettura.
+
+> Se sei indubbio fra Novità e Sotto il cofano, chiediti: **un avvocato che
+> apre Pratix domani se ne accorge?** Se sì → Novità. Se no → Sotto il cofano.
 
 ### Stile delle voci
 
@@ -74,15 +84,17 @@ Sezioni standard, in quest'ordine quando presenti:
 ```md
 ## [0.3.0] — 2026-05-15
 
-### Aggiunto
+### Novità
 - **Esportazione XML** delle fatture in formato FatturaPA TD06.
 - Filtro per stato in elenco Pratiche.
 
-### Modificato
-- La numerazione delle fatture ora ricomincia da 1 a inizio anno solare.
+### Correzioni
+- Il logo non veniva incluso nel PDF della fattura.
+- Glossario: rimossa la parola "studio" dall'onboarding.
 
-### Risolto
-- Risolto un caso in cui il logo non veniva incluso nel PDF della fattura.
+### Sotto il cofano
+- Asset social rigenerati con la nuova palette.
+- Aggiornamento dipendenze interne (TanStack Router).
 ```
 
 ### Esempio da evitare
@@ -92,6 +104,13 @@ Sezioni standard, in quest'ordine quando presenti:
 - fix PR #42
 - refactor invoice-pdf.ts
 ```
+
+### Compatibilità con voci storiche
+
+Le versioni `0.1.0` e `0.2.0` usano ancora i vecchi nomi di sezione
+(`Aggiunto` / `Modificato` / `Sicurezza`). La pagina `/novita` li riconosce
+e li mappa automaticamente: `Aggiunto` → Novità, `Modificato` e `Sicurezza`
+→ Correzioni. Non serve riscrivere lo storico.
 
 ## Workflow consigliato durante lo sviluppo
 
