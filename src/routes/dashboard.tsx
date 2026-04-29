@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Briefcase, Receipt, Wallet, AlertCircle, Plus } from "lucide-react";
+import { Briefcase, Receipt, Wallet, AlertCircle, Plus, TrendingUp, AlertTriangle } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,10 +27,13 @@ function DashboardContent() {
     enabled: !!userId,
     queryKey: ["dashboard", userId],
     queryFn: async () => {
-      const today = new Date().toISOString().slice(0, 10);
-      const in14 = new Date();
+      const now = new Date();
+      const today = now.toISOString().slice(0, 10);
+      const in14 = new Date(now);
       in14.setDate(in14.getDate() + 14);
       const horizon = in14.toISOString().slice(0, 10);
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
+      const yearStart = new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 10);
 
       const [casesRes, deadlinesRes, invoicesRes, recentCasesRes] = await Promise.all([
         supabase
@@ -46,7 +49,7 @@ function DashboardContent() {
           .limit(8),
         supabase
           .from("invoices")
-          .select("id, status, total_amount, net_to_pay, issue_date, number, year"),
+          .select("id, status, total_amount, net_to_pay, issue_date, due_date, paid_at, number, year"),
         supabase
           .from("cases")
           .select("id, case_number, title, status, updated_at, client_id, clients(kind, first_name, last_name, business_name)")
@@ -64,15 +67,29 @@ function DashboardContent() {
       const unpaid = invoices
         .filter((i) => i.status === "issued" || i.status === "overdue")
         .reduce((sum, i) => sum + Number(i.net_to_pay ?? 0), 0);
+      const overdue = invoices.filter(
+        (i) => (i.status === "issued" || i.status === "overdue") && i.due_date && i.due_date < today,
+      );
+      const overdueTotal = overdue.reduce((sum, i) => sum + Number(i.net_to_pay ?? 0), 0);
       const drafts = invoices.filter((i) => i.status === "draft");
       const draftTotal = drafts.reduce((sum, i) => sum + Number(i.total_amount ?? 0), 0);
+      const collectedMonth = invoices
+        .filter((i) => i.status === "paid" && i.paid_at && i.paid_at >= monthStart)
+        .reduce((sum, i) => sum + Number(i.total_amount ?? 0), 0);
+      const revenueYear = invoices
+        .filter((i) => i.status !== "draft" && i.issue_date >= yearStart)
+        .reduce((sum, i) => sum + Number(i.total_amount ?? 0), 0);
 
       return {
         activeCases,
         deadlines: deadlinesRes.data ?? [],
         unpaid,
+        overdueCount: overdue.length,
+        overdueTotal,
         draftCount: drafts.length,
         draftTotal,
+        collectedMonth,
+        revenueYear,
         recentCases: recentCasesRes.data ?? [],
         today,
       };
@@ -113,14 +130,34 @@ function DashboardContent() {
           value={isLoading ? "—" : String(data?.deadlines.length ?? 0)}
         />
         <StatCard
-          icon={Wallet}
-          label="Fatture in bozza"
-          value={isLoading ? "—" : `${data?.draftCount ?? 0} · ${formatCurrency(data?.draftTotal ?? 0)}`}
-        />
-        <StatCard
           icon={Receipt}
           label="Da incassare"
           value={isLoading ? "—" : formatCurrency(data?.unpaid ?? 0)}
+        />
+        <StatCard
+          icon={AlertTriangle}
+          label="Fatture scadute"
+          value={
+            isLoading
+              ? "—"
+              : `${data?.overdueCount ?? 0} · ${formatCurrency(data?.overdueTotal ?? 0)}`
+          }
+          tone={data && data.overdueCount > 0 ? "danger" : "default"}
+        />
+        <StatCard
+          icon={Wallet}
+          label="Bozze"
+          value={isLoading ? "—" : `${data?.draftCount ?? 0} · ${formatCurrency(data?.draftTotal ?? 0)}`}
+        />
+        <StatCard
+          icon={TrendingUp}
+          label="Incassato (mese)"
+          value={isLoading ? "—" : formatCurrency(data?.collectedMonth ?? 0)}
+        />
+        <StatCard
+          icon={TrendingUp}
+          label={`Fatturato ${new Date().getFullYear()}`}
+          value={isLoading ? "—" : formatCurrency(data?.revenueYear ?? 0)}
         />
       </div>
 
@@ -200,15 +237,21 @@ function StatCard({
   icon: Icon,
   label,
   value,
+  tone = "default",
 }: {
   icon: React.ComponentType<{ className?: string }>;
   label: string;
   value: string;
+  tone?: "default" | "danger";
 }) {
+  const iconCls =
+    tone === "danger"
+      ? "bg-destructive/10 text-destructive"
+      : "bg-accent text-accent-foreground";
   return (
     <Card>
       <CardContent className="flex items-center gap-3 p-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent text-accent-foreground">
+        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${iconCls}`}>
           <Icon className="h-5 w-5" />
         </div>
         <div className="min-w-0">
