@@ -23,6 +23,14 @@ import { downloadInvoicePdf } from "@/lib/invoice-pdf";
 import { generateInvoiceXmlFn } from "@/server/invoices.functions";
 
 export const Route = createFileRoute("/fatture/$invoiceId")({
+  head: () => ({
+    meta: [
+      { title: "Fattura — Pratix" },
+      { name: "description", content: "Dettaglio fattura, PDF e XML SdI." },
+      { property: "og:title", content: "Fattura — Pratix" },
+      { property: "og:description", content: "Dettaglio fattura, PDF e XML SdI." },
+    ],
+  }),
   component: InvoiceDetailPage,
 });
 

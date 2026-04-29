@@ -24,6 +24,14 @@ import { useAuth } from "@/lib/auth-context";
 import { taxRegimeLabels } from "@/lib/labels";
 
 export const Route = createFileRoute("/impostazioni")({
+  head: () => ({
+    meta: [
+      { title: "Impostazioni — Pratix" },
+      { name: "description", content: "Configura dati studio, fiscali e numerazione." },
+      { property: "og:title", content: "Impostazioni — Pratix" },
+      { property: "og:description", content: "Configura dati studio, fiscali e numerazione." },
+    ],
+  }),
   component: SettingsPage,
 });
 

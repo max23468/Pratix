@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/button";
 import { InvoiceForm } from "@/components/invoice-form";
 
 export const Route = createFileRoute("/fatture/nuova")({
+  head: () => ({
+    meta: [
+      { title: "Nuova fattura — Pratix" },
+      { name: "description", content: "Crea una nuova fattura." },
+      { property: "og:title", content: "Nuova fattura — Pratix" },
+      { property: "og:description", content: "Crea una nuova fattura." },
+    ],
+  }),
   component: NewInvoicePage,
 });
 

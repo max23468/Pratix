@@ -12,6 +12,14 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import { caseStatusLabels, caseStatusVariant, clientDisplayName } from "@/lib/labels";
 
 export const Route = createFileRoute("/dashboard")({
+  head: () => ({
+    meta: [
+      { title: "Dashboard — Pratix" },
+      { name: "description", content: "Una visione d'insieme del tuo studio." },
+      { property: "og:title", content: "Dashboard — Pratix" },
+      { property: "og:description", content: "Una visione d'insieme del tuo studio." },
+    ],
+  }),
   component: () => (
     <AppLayout>
       <DashboardContent />

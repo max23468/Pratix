@@ -33,6 +33,14 @@ import {
 import { formatCurrency, formatDate } from "@/lib/format";
 
 export const Route = createFileRoute("/fatture/")({
+  head: () => ({
+    meta: [
+      { title: "Fatture — Pratix" },
+      { name: "description", content: "Elenco fatture emesse." },
+      { property: "og:title", content: "Fatture — Pratix" },
+      { property: "og:description", content: "Elenco fatture emesse." },
+    ],
+  }),
   component: InvoicesIndex,
 });
 
