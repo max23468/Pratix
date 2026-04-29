@@ -55,12 +55,8 @@ function Landing() {
 
       <main>
         <section className="relative mx-auto max-w-6xl px-6 py-20 lg:py-28">
-          <div className="mx-auto max-w-3xl text-center">
-            <Link
-              to="/"
-              aria-label="Pratix"
-              className="mx-auto inline-flex items-center justify-center"
-            >
+          <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
+            <Link to="/" aria-label="Pratix" className="inline-flex">
               <Logo form="mark" size={88} />
             </Link>
             <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-soft">
