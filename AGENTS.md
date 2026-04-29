@@ -10,35 +10,87 @@ Obiettivo: mantenere modifiche coerenti, sicure, testate e facilmente revisionab
 
 1. Istruzioni di sistema/developer ricevute nella sessione corrente.
 2. Questo file `AGENTS.md`.
-3. Documentazione di progetto, quando presente.
-4. Assunzioni dell'agente.
+3. Memoria di progetto (`mem://index.md` per gli agenti, `docs/memory/` come mirror leggibile per chi legge il repo).
+4. Documentazione di progetto in `docs/` (guide, ADR, glossario).
+5. Assunzioni dell'agente.
 
 In caso di conflitto, seguire sempre il livello più alto.
 
+## Cos'è Pratix
+
+**Pratix** è un gestionale per **avvocati freelance** (singolo professionista, non studio associato). Tagline ufficiale: **"Tutto torna."** — sempre col punto, mai dentro la UI autenticata.
+
+Stack:
+- **Frontend**: React + TanStack Start v1 (Vite 7), routing **file-based** in `src/routes/`, server functions in `src/server/*.functions.ts`.
+- **Backend**: **Lovable Cloud** (Supabase managed). Database PostgreSQL con RLS sempre attiva, auth email/password, storage non ancora usato.
+- **UI**: Tailwind v4 (token in `src/styles.css`, mai hex inline), shadcn/Radix in `src/components/ui`, icone `lucide-react`.
+- **Lingua**: italiano, `lang="it"`.
+
+Per dettagli: [`docs/guides/architettura.md`](./docs/guides/architettura.md), [`docs/data-model.md`](./docs/data-model.md), [`BRAND.md`](./BRAND.md).
+
 ## Aspettative sul repository
 
-- Questa è un'app React TanStack Start/Vite generata con Lovable.
-- Usa `npm` per installare e gestire le dipendenze perché il repository include `package-lock.json`.
-- Mantieni `package.json` e `package-lock.json` allineati quando tocchi le dipendenze.
-- Non duplicare manualmente in `vite.config.ts` i plugin già forniti da `@lovable.dev/vite-tanstack-config`.
-- Non modificare manualmente `src/routeTree.gen.ts`: è generato da TanStack Router e può essere sovrascritto.
+### Package manager
+
+- **Lockfile autoritativo**: `package-lock.json`. Va sempre allineato a `package.json`.
+- **Collaboratori umani in locale**: usate `npm` (`npm ci`, `npm install`, `npm run …`). Il repo è progettato attorno a npm.
+- **Agenti Lovable in sandbox**: usate `bun` (`bun add`, `bunx`). La sandbox legge comunque `package-lock.json` come sorgente di verità.
+- **Mai committare** `bun.lockb` o lockfile alternativi: solo `package-lock.json`.
+
+### File generati o gestiti automaticamente — NON modificare a mano
+
+Modificare uno di questi file rompe build, sync o tipi:
+
+- `src/routeTree.gen.ts` — generato dal plugin TanStack Router.
+- `src/integrations/supabase/client.ts` — generato da Lovable Cloud.
+- `src/integrations/supabase/types.ts` — generato dallo schema Supabase.
+- `.env` — gestito da Lovable Cloud (contiene `VITE_SUPABASE_*`).
+- `supabase/config.toml` — i campi project-level sono gestiti da Lovable Cloud. Si possono aggiungere blocchi function-specific solo se serve.
+
+### Configurazione build
+
+- Non duplicare in `vite.config.ts` i plugin già forniti da `@lovable.dev/vite-tanstack-config`.
+- Non aggiungere `ssr.external` o `resolve.external` per l'env Worker SSR: causa hard build failure.
+
+### Disciplina di scope
+
 - Mantieni le modifiche focalizzate ed evita refactor, rinominazioni massive o cambi di formattazione non collegati al task.
+
+## Sync GitHub ↔ Lovable
+
+Il repo GitHub e il progetto Lovable sono in **sync bidirezionale in tempo reale**.
+
+- Una push su GitHub si propaga in pochi secondi al progetto Lovable e viceversa.
+- Non assumere che lo stato locale sia autoritativo: chi lavora in locale dovrebbe `git pull` prima di iniziare e prima di pushare.
+- Se trovi modifiche estranee al tuo task (committate da Lovable o da un altro collaboratore), **non revertirle**: ignorale o lavora attorno.
+- Stato runtime (dati DB, secret, file Storage) **non** vive su GitHub: solo il codice. Vedi [`docs/guides/database.md`](./docs/guides/database.md) per export dati.
 
 ## Prima di intervenire
 
 - Controlla rapidamente lo stato del repo con `git status --short`.
-- Prima di proporre architetture o refactor, leggi il codice, i test e i file di configurazione pertinenti.
+- Prima di proporre architetture o refactor, leggi codice, test e file di configurazione pertinenti.
 - Per modifiche a routing o pagine, controlla i file vicini in `src/routes` e verifica che il routing non venga rotto.
+- Per modifiche al modello dati, leggi prima [`docs/data-model.md`](./docs/data-model.md) e [`supabase/schema.sql`](./supabase/schema.sql).
 - Non sovrascrivere o revertire modifiche non tue: ignorale se sono estranee al task, oppure lavora attorno a esse.
 - Se la richiesta è ambigua su scope, comportamento atteso, rischio o tradeoff, chiedi chiarimento prima di procedere. Procedi con un'assunzione dichiarata solo per dettagli marginali che non cambiano il risultato sostanziale.
 
 ## Lingua e testi del prodotto
 
 - Usa l'italiano come lingua predefinita con il proprietario del progetto.
-- La UI del prodotto o tool deve essere scritta in italiano, salvo funzionalità che richiedano esplicitamente un'altra lingua.
+- La UI del prodotto deve essere scritta in italiano, salvo funzionalità che richiedano esplicitamente un'altra lingua.
 - Testi utente, label, messaggi di validazione, stati vuoti, errori, meta tag e documentazione destinata agli utenti finali devono essere in italiano quando vengono creati o modificati.
 - Per superfici utente italiane, usa `lang="it"` nell'HTML o aggiorna il valore esistente quando tocchi il root layout.
 - Mantieni gli identificatori nel codice in inglese quando questo è più coerente con le convenzioni di librerie e framework esistenti.
+- **Tono di voce**: "tu" professionale neutro. No emoji nella UI, no esclamativi multipli, no "Oops". Frasi brevi, stato del sistema. Vedi [`docs/guides/tono-di-voce.md`](./docs/guides/tono-di-voce.md).
+
+### Glossario di prodotto
+
+Vincoli di terminologia (vedi [`docs/glossario.md`](./docs/glossario.md)):
+
+- **Usa**: Pratica, Cliente, Scadenza, Spese, Fattura, Professione.
+- **Vietato**: Caso, Assistito, Deadline, Costi.
+- **Vietata** la parola **"studio"**: il target è l'avvocato freelance, non lo studio associato.
+- **Vietata** la parola **"attività"** come label di prodotto: è ambigua (significa sia "impresa" sia "azione/task" e in Pratix indica già le voci di lavoro fatturabili). Usa "professione" / "i tuoi dati professionali". Resta lecita solo come sostantivo comune nei testi legali (es. "le attività compiute tramite l'account").
 
 ## Qualità UI React
 
@@ -47,17 +99,22 @@ In caso di conflitto, seguire sempre il livello più alto.
 - Mantieni le UI responsive su mobile e desktop, con testi che non escano dai contenitori e controlli che restino utilizzabili.
 - Preferisci componenti piccoli, leggibili e coerenti con il design system esistente.
 - Non introdurre nuove dipendenze UI o librerie di stato senza motivazione esplicita e impatto chiaro.
+- **Solo token semantici per i colori** (`bg-primary`, `text-foreground`, `border-border`…). Mai hex inline o classi tipo `bg-white`. La palette vive in `src/styles.css` (oklch). Vedi [`BRAND.md`](./BRAND.md).
+- **Logo**: solo `<Logo>` da `src/components/brand/logo.tsx`. Mai SVG inline.
 
 ## Sicurezza e dati
 
 - Non committare segreti, token, credenziali, file `.env` reali o dati personali.
+- Le chiavi pubbliche (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`) sono per design pubbliche e già committate.
+- I segreti runtime (es. `SUPABASE_SERVICE_ROLE_KEY`, `LOVABLE_API_KEY`) vivono in Lovable Cloud, mai nel repo.
 - Valida e tratta con cautela input utente, form, link esterni, HTML generato e contenuto renderizzato dinamicamente.
-- Evita leak di dati sensibili in log, errori, trace, screenshot o fixture.
+- Evita leak di dati sensibili in log, errori, trace, screenshot o fixture. In particolare: niente nomi clienti reali, importi reali di fatture, dati personali in screenshot di issue o PR.
 - Per modifiche alle dipendenze, valuta il rischio di supply chain e usa `npm audit --audit-level=moderate`.
+- **RLS sempre attiva**: ogni nuova tabella user-owned ha 4 policy (select/insert/update/delete) basate su `auth.uid() = user_id`. Mai disabilitare RLS.
 
 ## Setup e verifica
 
-- Installa le dipendenze con `npm ci`.
+- Installa le dipendenze con `npm ci` (locale) o lascia che la sandbox usi `bun` automaticamente.
 - Usa `npm run build` come comando principale di validazione.
 - Usa `npm run lint` quando le modifiche toccano TypeScript, React, routing, componenti UI condivisi o configurazione correlata.
 - Usa `npm audit --audit-level=moderate` dopo modifiche alle dipendenze.
@@ -65,18 +122,49 @@ In caso di conflitto, seguire sempre il livello più alto.
 - Per modifiche solo documentali, non serve inventare test applicativi: rileggi il documento e verifica la coerenza delle istruzioni.
 - Non inventare risultati di test o comandi non eseguiti. Se un controllo non può essere eseguito, dichiaralo esplicitamente con motivo e rischio residuo.
 
-## Documentazione, commit e PR
+## Documentazione, memoria, glossario
 
-- Aggiorna documentazione o note operative quando cambiano comportamento utente, comandi, env var, deploy, configurazione o policy di sviluppo.
-- Non aggiungere workflow GitHub, policy di deploy o flussi di release non presenti senza richiesta esplicita.
-- Quando crei commit, mantienili atomici e usa Conventional Commit coerenti con l'impatto reale (`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`).
-- Nelle PR o nei riepiloghi finali, riporta in modo concreto cosa è cambiato, dove, eventuali rischi residui e verifiche rilevanti. Evita footer rituali se non aggiungono valore.
+Pratix tiene molta documentazione "viva": va aggiornata insieme alle modifiche.
+
+### Cosa aggiornare e quando
+
+- **`ROADMAP.md`** — *ogni* decisione di prodotto, brand o tecnica condivisa in chat deve confluire qui. Aggiorna lo stato (✅ 🟡 ⬜ 💤) quando una voce cambia.
+- **`CHANGELOG.md`** — voci sotto `[Non rilasciato]` per ogni modifica utente-visibile. Tre categorie: `Novità` (in evidenza), `Correzioni` (bugfix/sicurezza), `Sotto il cofano` (refactor/asset/migrazioni invisibili).
+- **`docs/decisions/`** — un nuovo ADR per ogni decisione "per sempre" (architettura, brand strutturale, vincoli di processo). Numerazione progressiva.
+- **`docs/guides/`** — guide operative per aree tematiche (architettura, database, fatturazione, tema, tono di voce, deploy, migrations, versioning).
+- **`docs/data-model.md`** + **`supabase/schema.sql`** — quando cambia il modello dati.
+- **`BRAND.md`** — quando cambia un elemento di brand (palette, tipografia, logo, tono).
+- **`docs/glossario.md`** — quando si introduce o vieta un termine.
+
+### Memoria di progetto
+
+- Fonte di verità: `mem://` (visibile agli agenti).
+- Mirror leggibile in `docs/memory/` (per umani che leggono il repo).
+- Quando una regola cambia: aggiorna `mem://` **e** il mirror corrispondente.
+
+### Versioning e rilascio
+
+Pratix usa **SemVer convenzionale** adattato a SaaS hostato (vedi [`docs/decisions/0008-versioning-e-changelog.md`](./docs/decisions/0008-versioning-e-changelog.md)).
+
+- **Single source of truth**: `src/lib/version.ts` (`APP_VERSION` + `BUILD_DATE`).
+- **Bump**: MAJOR = breaking utente, MINOR = nuova feature, PATCH = bugfix/UI/contenuti.
+- **Rilasciare** = bump `version.ts` + rinomina `[Non rilasciato]` → `[X.Y.Z] — YYYY-MM-DD` in `CHANGELOG.md` + Publish dall'editor Lovable.
+- Procedura completa: [`docs/guides/versioning-e-release.md`](./docs/guides/versioning-e-release.md).
+
+## Commit e PR
+
+- Quando crei commit, mantienili atomici e usa **Conventional Commit** coerenti con l'impatto reale (`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`, `style:`).
+- Non aggiungere workflow GitHub Actions, policy di deploy o flussi di release non presenti senza richiesta esplicita. Pratix vive su Lovable: il "rilascio" è premere Publish.
+- Nelle PR usa il template in `.github/PULL_REQUEST_TEMPLATE.md`. Riporta in modo concreto cosa è cambiato, dove, eventuali rischi residui e verifiche rilevanti. Evita footer rituali se non aggiungono valore.
 
 ## Linee guida per la review
 
 - Controlla che il routing in `src/routes` non sia rotto.
-- Controlla che le modifiche UI restino responsive su mobile e desktop.
+- Controlla che le modifiche UI restino responsive su mobile e desktop, in **entrambi i temi** (chiaro e scuro).
 - Controlla che gli aggiornamenti alle dipendenze non disallineino `package.json` e `package-lock.json`.
+- Verifica che i nuovi colori usino token semantici, non hex inline.
+- Verifica che il glossario di prodotto sia rispettato (no "studio", no "attività" come label, no "Caso/Assistito/Deadline/Costi").
+- Verifica che le nuove tabelle abbiano RLS attiva e 4 policy per `user_id`.
 - Segnala problemi di sicurezza nella gestione degli input utente, HTML generato, link, form e modifiche alle dipendenze.
 
 ## Definizione di completamento
@@ -84,8 +172,9 @@ In caso di conflitto, seguire sempre il livello più alto.
 Una modifica è pronta se:
 
 - risolve la richiesta senza regressioni evidenti;
-- mantiene coerenza con architettura, stack e convenzioni esistenti;
+- mantiene coerenza con architettura, stack, glossario e convenzioni esistenti;
 - non rompe routing, build o UI responsive nelle aree toccate;
+- rispetta RLS e principi di sicurezza se ha toccato il DB;
 - include verifiche eseguite o limiti noti quando rilevanti;
-- aggiorna documentazione solo quando serve davvero;
+- aggiorna `ROADMAP.md`, `CHANGELOG.md`, ADR, `docs/` e memoria solo quando serve davvero;
 - non lascia file temporanei, dati sensibili o modifiche non correlate.
