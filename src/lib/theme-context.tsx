@@ -45,7 +45,8 @@ function applyTheme(resolved: "light" | "dark") {
   // theme-color per la chrome di iOS / Android
   const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
   if (meta) {
-    meta.content = resolved === "dark" ? "#0E1530" : "#1F2D4D";
+    // Inchiostro su dark, panna su light — coerente con la palette brand.
+    meta.content = resolved === "dark" ? "#1a1f33" : "#fbf8f1";
   }
 }
 
