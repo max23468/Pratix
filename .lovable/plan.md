@@ -1,178 +1,94 @@
-# Branding Pratix — Identità completa
+## Il problema
 
-## 1. Posizionamento e personalità
+Oggi `/impostazioni` mescola due cose molto diverse:
 
-**Pratix** è il gestionale per avvocati freelance italiani che vogliono uno strumento moderno, ordinato e affidabile, senza l'austerità degli applicativi legali tradizionali e senza la freddezza dei SaaS generici.
+1. **Chi sei come persona/utente Pratix** — email di login, password, nome, tema preferito, sessione.
+2. **Come fatturi** — partita IVA, regime fiscale, aliquote, IBAN, numerazione, sede dell'attività.
 
-- **Personalità**: professionale moderno — fiducioso, contemporaneo, ordinato.
-- **Promessa**: "Tutto sotto controllo, niente fronzoli."
-- **Riferimenti visivi**: Linear, Notion, Stripe, ma con un tocco di gravitas legale (navy + oro).
+L'utente che vuole "cambiare la password" o "vedere con che email è loggato" non dovrebbe scorrere 5 tab fiscali. E viceversa: chi imposta le aliquote IVA non si aspetta di trovarci la sicurezza dell'account.
 
-## 2. Sistema cromatico
+La nuova area /account sarà implementata vicino alla campanella e non in sidebar.
 
-Tutti i token in `oklch` su `src/styles.css`, con varianti light e dark.
+## La proposta: due aree distinte
 
-**Primario — Navy inchiostro**
-- `--primary` ≈ `oklch(0.30 0.07 255)` (≈ #1F2D4D)
-- `--primary-foreground` bianco caldo
-- `--primary-hover` leggermente più chiaro
+### `/account` — "Io come utente Pratix"
 
-**Accento — Oro brunito**
-- `--accent` ≈ `oklch(0.68 0.11 75)` (≈ #B8893C)
-- usato per: CTA secondarie, KPI rilevanti, focus ring, badge "premium", micro-dettagli logo
+Contesto **personale e di accesso**. Cosa contiene:
 
-**Neutri caldi (off-white invece di bianco puro)**
-- `--background` ≈ `oklch(0.985 0.003 80)` (panna leggerissima)
-- `--card` bianco con tinta crema impercettibile
-- `--muted` / `--muted-foreground` grigi caldi
-- `--border` grigio caldo, basso contrasto
+- **Identità**: nome titolare (`full_name`), email di contatto personale, foto/avatar (futuro)
+- **Accesso**: email di login (read-only, da Supabase Auth), cambio password, ultimo accesso, sessioni attive (futuro)
+- **Aspetto**: tema chiaro/scuro/sistema (oggi è in Impostazioni → Aspetto, ma è una preferenza personale, non dell'attività)
+- **Notifiche** (placeholder per il futuro: campanella changelog, email)
+- **Zona pericolosa**: logout da tutti i dispositivi, esportazione dati, eliminazione account (placeholder)
 
-**Stati semantici** (calibrati per coesistere con navy + oro)
-- `--success` verde bosco desaturato
-- `--warning` ambra (distinto dall'accento oro)
-- `--destructive` rosso mattone, non puro
-- `--info` blu cielo desaturato
+### `/impostazioni` — "La mia attività professionale"
 
-**Dark mode**: navy diventa il background, accento oro mantiene la stessa hue ma più luminoso. Non un semplice "invert".
+Contesto **business/configurazione**. Resta tutto il resto:
 
-**Gradients e shadows** (token dedicati)
-- `--gradient-hero`: navy → navy più scuro (per landing/hero)
-- `--gradient-accent`: oro → oro caldo (per badge premium)
-- `--shadow-elegant`: ombra navy con bassa opacità per card elevate
-- `--shadow-soft`: ombra neutra per UI quotidiana
+- **Attività**: ragione sociale, P.IVA, CF, ordine, PEC, telefono dell'attività, sede
+- **Fiscale**: regime, aliquote di default
+- **Pagamenti**: banca, IBAN
+- **Numerazione**: prefisso, anno, prossimo numero
 
-## 3. Tipografia
+Rinomina mentale: Impostazioni = "configurazione del gestionale", Account = "il tuo profilo Pratix".
 
-**Display** — Inter Display (titoli, hero, KPI grandi)
-**UI/Body** — Inter (tutto il resto)
-**Mono** — JetBrains Mono (numeri fattura, importi tabellari, codici)
+## Perché questa separazione
 
-Caricamento via Google Fonts nel `__root.tsx` con `display=swap`. Inter Display è ottimizzato per dimensioni grandi (≥24px), Inter per il resto.
+- **Convenzione SaaS consolidata**: praticamente ogni gestionale (Notion, Linear, Stripe, Fatture in Cloud) separa "Account/Profile" personale da "Workspace/Settings" di configurazione. Gli utenti si aspettano questa divisione.
+- **Coerenza col target**: l'avvocato freelance è sia *utente* che *attività*, ma sono comunque due cappelli diversi. Cambiare password ≠ cambiare aliquota IVA.
+- **Zero conflitti dati**: tutti i campi vivono già nella stessa tabella `profiles`, semplicemente li dividiamo per **superficie UI**, non per schema. Nessuna migrazione DB.
+- **Estensibilità futura**: l'area Account è il posto naturale per 2FA, sessioni, esportazione GDPR, billing del piano Pratix (quando ci sarà).
 
-**Scala tipografica** (token in `styles.css`)
-- Display XL: 48-64px, tracking stretto, weight 600 (hero landing)
-- Display L: 32-40px, weight 600 (titoli pagina importanti)
-- H1: 24-28px, weight 600
-- H2: 20px, weight 600
-- H3: 16-18px, weight 600
-- Body: 14-15px, weight 400
-- Small: 13px, weight 400-500
-- Mono importi: tabular-nums attivo
+## Navigazione
 
-**Regole d'uso**
-- Numeri (importi, KPI, date) sempre con `font-variant-numeric: tabular-nums`
-- Tracking leggermente negativo sui display (-0.02em)
-- Mai usare weight 700+ per i titoli display (resta elegante)
+Sidebar (in basso, sopra "Esci"):
 
-## 4. Logo
+```
+…voci principali…
+─────────────────
+⚙  Impostazioni      → /impostazioni
+👤 Account           → /account
+↗  Esci
+```
 
-Sviluppo **3 direzioni** come SVG inline (componente `<Logo />` con varianti `mark`, `wordmark`, `lockup`):
+Entrambe in fondo, raggruppate visivamente. Icona `User` da lucide per Account, mantiene `Settings` per Impostazioni.
 
-**A. Monogramma "Px" geometrico**
-- Lettere costruite su una griglia, con la "x" che taglia la "P" creando una piccola lega/serif d'oro.
-- Funziona come favicon, app icon e accanto al wordmark.
+In più, aggiungiamo nel **dropdown utente in topbar** (se/quando lo introdurremo) link diretti ad Account → questa è la destinazione "naturale" cliccando sul proprio nome.
 
-**B. Monogramma "P" con barra orizzontale**
-- "P" sans con una barra orizzontale dorata che richiama la riga di un documento/atto.
-- Più sobrio, molto scalabile.
+## Cosa cambia in pratica
 
-**C. Sigillo circolare**
-- Cerchio navy con "P" centrata, piccolo dettaglio oro a richiamo della ceralacca/sigillo.
-- Più "istituzionale", buono per documenti PDF generati (intestazione fattura).
+1. **Nuova route** `src/routes/account.tsx` con tab interne:
+  - `Profilo` (nome, email contatto)
+  - `Accesso e sicurezza` (email login read-only, cambio password)
+  - `Aspetto` (sposto qui la card tema da Impostazioni)
+  - `Notifiche` (placeholder con coming-soon, oppure on/off campanella se vogliamo subito)
+2. **Modifico `/impostazioni**`: rimuovo la tab "Aspetto" (va in Account). Le altre 4 tab restano: Attività, Fiscale, Pagamenti, Numerazione. Aggiorno description del PageHeader: "I dati della tua attività professionale, fiscalità, IBAN e numerazione".
+3. **Cambio password**: implemento via `supabase.auth.updateUser({ password })` con conferma. Non serve la flow di reset, l'utente è già autenticato.
+4. **Sidebar** (`src/components/app-sidebar.tsx`): aggiungo voce Account con icona `User`, posizionata accanto a Impostazioni.
+5. **Footer versione + link "Cosa è cambiato"**: oggi è in fondo a Impostazioni. Lo sposto in **Account → Profilo** (contesto utente personale, ha più senso lì che tra le aliquote IVA).
+6. **Rotta `/reimposta-password**`: resta com'è, è il flow non-autenticato per chi ha dimenticato la password.
+7. **Documentazione**:
+  - Aggiorno `ROADMAP.md` (sezione Account)
+  - Nota in `mem://process/roadmap` mirror
+  - Voce in `CHANGELOG.md` sotto `[Non rilasciato]` → `### Novità`: "Nuova area Account separata da Impostazioni: profilo, accesso, sicurezza e aspetto in un posto solo."
 
-**Wordmark**: "Pratix" in Inter Display 600, tracking -0.03em, eventuale dettaglio oro su un glifo (es. punto sulla "i" o taglio sulla "x").
+## Cosa NON faccio (per non sovraccaricare)
 
-**Implementazione**
-- Componente `src/components/brand/logo.tsx` con prop `variant` (`mark` | `wordmark` | `lockup`) e `tone` (`navy` | `mono` | `inverse`).
-- Favicon SVG + PNG fallback in `public/`.
-- Apple touch icon, OG image template.
+- Niente avatar/upload foto (placeholder visivo, implementazione poi)
+- Niente 2FA (placeholder, dipende da config Supabase)
+- Niente sessioni attive multiple (richiede policy lato Supabase)
+- Niente eliminazione account (operazione delicata, ADR a parte quando deciderai)
+- Niente migrazione DB (lo schema attuale è già adatto)
 
-Tutte e 3 le direzioni vengono prodotte; l'utente sceglie dalla preview e si imposta come default.
+## Dettagli tecnici
 
-## 5. Iconografia e illustrazione
+- File nuovo: `src/routes/account.tsx` (pattern come `impostazioni.tsx`: query `profiles`, mutation update, tab shadcn)
+- Cambio password: form con `current_password` (riautenticazione via `signInWithPassword`) + `new_password` + conferma, poi `auth.updateUser`
+- Email di login: letta da `useAuth().user.email`, mostrata read-only con nota "Per cambiarla contatta il supporto" (cambio email Supabase richiede conferma via mail, lo facciamo in una iterazione futura)
+- Sposto il componente `AppearanceCard` da `impostazioni.tsx` a un nuovo `src/components/appearance-card.tsx` riutilizzabile
+- Rimozione tab `aspetto` da impostazioni.tsx
+- Aggiunta voce sidebar con icona `User` da lucide-react
 
-- **Icone**: Lucide React (già in uso), stroke 1.5, mai colorate — solo `currentColor`.
-- **Illustrazioni**: nessuna illustrazione character-based. Si usano composizioni geometriche (linee, rettangoli, circles) navy + oro per stati vuoti e onboarding.
-- **Empty states**: piccola composizione geometrica + frase breve + CTA.
+## Domanda aperta
 
-## 6. Tono di voce — Tu professionale, neutro
-
-**Principi**
-- "Tu", mai "Lei". Mai "Vi".
-- Frasi brevi, verbi all'indicativo o imperativo gentile.
-- Niente emoji nella UI di prodotto. Niente esclamativi multipli.
-- Numeri sempre con separatore migliaia italiano e simbolo €.
-- Date in formato italiano esteso o breve coerente (es. `12 mag 2026` o `12/05/2026`).
-
-**Esempi di micro-copy**
-- Login: "Accedi" / "Email" / "Password" / "Hai dimenticato la password?"
-- Empty state pratiche: "Nessuna pratica ancora. Apri la prima per iniziare."
-- Conferma azione distruttiva: "Eliminare questa pratica? L'azione non può essere annullata."
-- Toast successo: "Fattura emessa." (non "Fattura emessa con successo!")
-- Errore: "Non è stato possibile salvare. Riprova." (non "Oops!")
-- Loading: "Caricamento…" (non "Sto caricando i tuoi dati…")
-
-**Glossario operativo** (file `BRAND.md` con i termini canonici)
-- Pratica (non "Caso", non "Fascicolo")
-- Cliente (non "Assistito" nella UI, anche se tecnicamente corretto)
-- Fattura, Fattura elettronica, XML SdI
-- Scadenza (non "Deadline")
-- Spese (non "Costi")
-- Bozza, Emessa, Pagata, Scaduta, Annullata
-
-## 7. Componenti UI da rivedere
-
-Mantengo l'architettura shadcn esistente. Aggiorno varianti e token, niente refactor strutturali.
-
-- **Button**: varianti `default` (navy), `accent` (oro), `outline`, `ghost`, `destructive`. Hover/focus con focus-ring oro.
-- **Badge**: varianti per stati pratiche e fatture, palette ricalibrata (es. "Pagata" verde bosco, "Scaduta" rosso mattone, "Bozza" neutro).
-- **Card**: bordo ultra-sottile, shadow-soft, padding coerente.
-- **Input/Select**: focus ring oro brunito su navy, niente blu di sistema.
-- **Sidebar**: tinta navy molto scura in dark, off-white in light. Logo coerente con stato `collapsed`.
-- **Tabelle**: zebra leggerissima, header weight 500, importi mono allineati a destra.
-- **Toaster (sonner)**: già `richColors`, ricalibrato sui token nuovi.
-
-## 8. Pagine "vetrina" da allineare
-
-Aggiornamento estetico (non strutturale) delle pagine già esistenti:
-
-- **Landing `/`**: hero con Display XL, accento oro su una parola chiave, feature grid ricomposta con nuove icone e palette.
-- **Login / Register**: card centrata su background panna, logo `lockup` in alto.
-- **Dashboard**: KPI con numeri Inter Display + tabular-nums, accenti oro sui valori chiave.
-- **Fattura PDF**: intestazione con logo (variante `sigillo` o `lockup`), navy + oro sui totali, layout già esistente solo restylizzato.
-
-## 9. Asset di brand
-
-- **Favicon**: SVG + 32/180 PNG.
-- **OG image**: template 1200×630 con logo, claim, gradiente navy.
-- **Email auth** (futuro): predispongo i token CSS per i template, non scaffold ora.
-- **`BRAND.md`** in root: palette, scala tipografica, regole logo, glossario, do/don't di tono.
-
-## 10. Dettagli tecnici
-
-- Tutti i colori in `src/styles.css` come variabili CSS (oklch), light + dark.
-- Nessun colore hardcoded nei componenti — solo classi Tailwind che puntano ai token.
-- Font caricati via `<link>` in `__root.tsx` con preconnect a Google Fonts.
-- `tabular-nums` applicato globalmente su `<td>` numerici e classi `.num`.
-- Componente `<Logo />` riutilizzabile, niente SVG sparsi nel codice.
-- Aggiornamento `index.html` (se presente) o head root con favicon, theme-color (navy), apple-touch-icon.
-
-## 11. Cosa NON è in questo piano
-
-- Refactor architetturale di routing o feature.
-- Nuove funzionalità di prodotto.
-- Animazioni complesse (framer-motion): solo transizioni CSS sobrie. Si può aggiungere in un passo successivo se vuoi un layer di motion design.
-- Sistema completo di marketing (sito multi-pagina, blog, ecc.). La landing attuale viene allineata, non riscritta.
-
-## 12. Output finale
-
-Al termine avrai:
-- Design system aggiornato (token, font, ombre, gradient).
-- Componente `<Logo />` con 3 varianti scelte tu.
-- Tutte le pagine esistenti riallineate al nuovo brand.
-- Favicon + OG image base.
-- File `BRAND.md` come riferimento per copy e identità.
-
----
-
-Confermi così, o vuoi modificare/aggiungere qualcosa (es. una direzione logo specifica, un dettaglio cromatico, includere fin da subito le animazioni)?
+Per l'icona Account in sidebar preferisci `User` (silhouette) o `CircleUser` (più "avatar-like")? Vado con `User` se non specifichi.
