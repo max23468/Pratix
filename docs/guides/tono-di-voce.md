@@ -20,7 +20,7 @@
 | Scadenza | Deadline |
 | Spese | Costi |
 | Fattura, Parcella | Conto |
-| Attività, tua attività professionale, i tuoi dati | **Studio** |
+| Professione, la tua professione, i tuoi dati professionali | **Studio**, "attività" come label |
 | Salva, Annulla, Elimina | Conferma, Procedi, Cancella |
 
 > **"Studio" è vietata.** Il target è il freelance singolo. Vedi [ADR 0005](../decisions/0005-target-freelance-no-studio.md).
@@ -48,7 +48,7 @@
 - ❌ "Yay! Tutto pronto ✨"
 
 ### Onboarding
-- ✅ "Configura la tua attività in tre brevi passaggi. Potrai modificare tutto in seguito."
+- ✅ "Configura la tua professione in tre brevi passaggi. Potrai modificare tutto in seguito."
 - ❌ "Bentornato!! Configuriamo insieme il tuo studio 🚀"
 
 ### Microcopy bottoni
