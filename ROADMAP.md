@@ -125,7 +125,8 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅ | **Versioning + Changelog + pagina Novità** | `src/lib/version.ts` + parser `CHANGELOG.md` + route `/novita` autenticata + campanella in topbar. ADR-0008 e guida `docs/guides/versioning-e-release.md` |
 | ✅ | **Categorie changelog ridisegnate** | Tre sezioni standard `Novità` / `Correzioni` / `Sotto il cofano`. La pagina `/novita` mette in evidenza le Novità, mantiene compatte le Correzioni e collassa le voci tecniche. Compatibile con voci storiche (Aggiunto/Modificato/Sicurezza) |
 | ✅ | **Schema DB su GitHub** | `supabase/schema.sql` baseline + `docs/data-model.md` narrativo + `docs/guides/migrations.md` per il flusso operativo |
-| ✅ | **Templates GitHub + Dependabot** | `.github/ISSUE_TEMPLATE/` (bug, idea), `PULL_REQUEST_TEMPLATE.md`, `dependabot.yml` (npm settimanale, minor/patch raggruppati). No GitHub Actions per ora (CI gira via Lovable + hook locale `.githooks/pre-push`) |
+| ✅ | **Templates GitHub + Dependabot** | `.github/ISSUE_TEMPLATE/` (bug, idea), `PULL_REQUEST_TEMPLATE.md`, `dependabot.yml` (npm settimanale, minor/patch raggruppati; GitHub Actions mensile) |
+| ✅ | **CI GitHub Actions minimale** | `.github/workflows/quality.yml` su PR verso `main` e avvio manuale: `npm ci`, `npm run build`; skip per modifiche solo documentali |
 | ⬜ | Test minimi su funzioni critiche | XML FatturaPA, calcoli IVA/ritenuta, cassa forense |
 | ⬜ | Linter pulito su tutto il repo | `npm run lint` |
 | ⬜ | `npm audit --audit-level=moderate` periodico | |
