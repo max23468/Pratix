@@ -1,7 +1,9 @@
 # Migrations Supabase — guida operativa
 
 Questa guida spiega come Pratix tiene traccia delle migrations del database
-quando lavoriamo via Lovable Cloud.
+quando lavoriamo via Lovable Cloud. Il target aggiornato è spostare il backend
+su Supabase di proprietà del progetto: vedi
+[`uscita-lovable.md`](./uscita-lovable.md).
 
 ## Stato attuale
 

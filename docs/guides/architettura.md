@@ -5,7 +5,8 @@
 - **Framework**: TanStack Start v1 (full-stack React 19)
 - **Build**: Vite 7
 - **Routing**: file-based in `src/routes/`, route tree auto-generato
-- **Backend**: Lovable Cloud (Supabase) — Postgres, Auth, Storage, Edge Functions
+- **Backend attuale**: Lovable Cloud (Supabase) — Postgres, Auth, Storage, Edge Functions
+- **Backend target**: Supabase di proprieta del progetto, fuori da Lovable
 - **Styling**: Tailwind v4 con `@import` in `src/styles.css`
 - **UI**: shadcn/ui + Radix + lucide-react
 - **State server**: TanStack Query

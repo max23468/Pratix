@@ -16,6 +16,12 @@ dist-ssr
 .nitro
 *.local
 
+# Local migration exports (PII/secrets; never commit)
+pratix-migration/
+migration-exports/
+profile_user.json
+*.dump
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars

@@ -1,6 +1,8 @@
 # Guida — Database e sicurezza dati
 
-Backend gestito da Lovable Cloud (Supabase). Postgres + Auth + Storage + Realtime.
+Backend attuale gestito da Lovable Cloud (Supabase), con migrazione pianificata
+verso Supabase di proprietà del progetto. Postgres + Auth + Storage + Realtime.
+Vedi anche [`uscita-lovable.md`](./uscita-lovable.md).
 
 ## Principi non negoziabili
 

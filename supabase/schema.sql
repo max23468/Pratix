@@ -2,7 +2,8 @@
 -- Pratix — Schema baseline
 -- =============================================================================
 -- Generato: 2026-04-29 (versione app 0.3.0)
--- Sorgente:  introspezione del database Lovable Cloud (Supabase) di produzione.
+-- Sorgente:  introspezione del database Lovable Cloud (Supabase) di produzione,
+--            integrata con il trigger auth richiesto per migrare fuori da Lovable.
 --
 -- Cosa è questo file
 -- ------------------
@@ -14,7 +15,8 @@
 -- ----------
 -- - Non è eseguito automaticamente su Supabase: le migrations vere si
 --   applicano via tool Lovable e sono storicizzate in `supabase/migrations/`.
--- - Non contiene oggetti gestiti da Supabase (auth.*, storage.*, realtime.*).
+-- - Non contiene oggetti gestiti da Supabase (storage.*, realtime.*). Include
+--   solo il trigger su auth.users necessario a creare profiles alla signup.
 -- - Non contiene dati: per esportare dati usa Cloud → Database → Tables.
 --
 -- Convenzioni
@@ -23,7 +25,7 @@
 -- - Ogni tabella user-owned ha colonna `user_id uuid` + 4 policy RLS
 --   (select/insert/update/delete) su `auth.uid() = user_id`.
 -- - `profiles.id` coincide con `auth.users.id` (riempita dal trigger
---   `handle_new_user` su `auth.users`, non visibile in questo file).
+--   `on_auth_user_created` su `auth.users`).
 -- =============================================================================
 
 
@@ -65,7 +67,7 @@ CREATE TYPE public.tax_regime AS ENUM ('ordinario', 'forfettario');
 -- ============================================================================
 
 -- Riempie `profiles` quando un nuovo utente si registra in `auth.users`.
--- Trigger associato: `on_auth_user_created` su auth.users (gestito da Supabase).
+-- Trigger associato: `on_auth_user_created` su auth.users.
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -309,6 +311,11 @@ CREATE TRIGGER invoices_set_updated_at        BEFORE UPDATE ON public.invoices  
 CREATE TRIGGER cases_log_status_change
   AFTER INSERT OR UPDATE ON public.cases
   FOR EACH ROW EXECUTE FUNCTION public.log_case_status_change();
+
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 
 -- ============================================================================

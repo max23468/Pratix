@@ -20,6 +20,24 @@ npm ci
 npm run dev
 ```
 
+## Workflow operativo
+
+GitHub è la fonte primaria del codice. Il repository remoto attuale è
+`https://github.com/max23468/Pratix.git`.
+
+Flusso consigliato:
+
+1. Sincronizza `main` prima di iniziare.
+2. Lavora su branch breve, preferibilmente `codex/<nome-task>` per lavoro
+   guidato da Codex.
+3. Mantieni le modifiche atomiche.
+4. Esegui le verifiche pertinenti.
+5. Apri PR o mergea solo dopo review dei file toccati.
+
+Durante la migrazione fuori da Lovable, non usare Lovable e Codex in parallelo
+sulla stessa area. Lovable è trattato come ambiente da svuotare e spegnere, non
+come fonte primaria di nuove modifiche.
+
 ## Convenzioni
 
 ### Lingua
@@ -61,6 +79,9 @@ npm run build
 npm run lint
 npm audit --audit-level=moderate   # se hai toccato dipendenze
 ```
+
+Per modifiche al backend, alla pubblicazione o alla migrazione fuori da Lovable,
+consulta anche [`docs/guides/uscita-lovable.md`](./docs/guides/uscita-lovable.md).
 
 ### Documentazione
 

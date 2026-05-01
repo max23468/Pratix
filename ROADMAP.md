@@ -103,9 +103,13 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅ | og:image globale + Twitter card | `/og-image.jpg` |
 | ⬜ | `sitemap.xml` + `robots.txt` | |
 | ⬜ | JSON-LD `Organization` / `SoftwareApplication` | |
-| ✅ | Pubblicazione | `https://pratix-legal.lovable.app` |
-| ⬜ | Dominio custom | Da scegliere (es. `pratix.it`) |
-| ⬜ | Project icon + Social preview nelle Project Settings di Lovable | Asset pronti: `public/app-icon-512.png`, `public/og-image.jpg` |
+| ✅ | Pubblicazione storica | `https://pratix-legal.lovable.app` finché Lovable non viene spento |
+| 🟡 | Uscita completa da Lovable | ADR-0009 + guida `docs/guides/uscita-lovable.md` |
+| 🟡 | Pubblicazione tramite Vercel | Usare dominio gratuito `*.vercel.app`; dominio proprietario rimandato |
+| ⬜ | Migrazione backend fuori da Lovable Cloud | Target: Supabase di proprietà del progetto, con export/import dati e auth |
+| ⬜ | Bonifica riferimenti Lovable | Al termine `rg -i "lovable\|@lovable\\.dev" .` deve restituire zero risultati nel working tree |
+| 💤 | Dominio proprietario futuro | Eventuale dominio tipo `pratix.it` |
+| 💤 | Project icon + Social preview nelle Project Settings di Lovable | Storico finché Lovable resta accessibile |
 
 ## 7. Qualità e processo
 
@@ -119,13 +123,14 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅ | `SECURITY.md` + `CONTRIBUTING.md` + `LICENSE` | Predisposti per repo pubblico |
 | ✅ | Cartella `docs/` con guide tematiche | architettura, database, fatturazione, tema, tono di voce, deploy |
 | ✅ | `docs/memory/` mirror di `mem://` | core, brand, roadmap |
-| ✅ | `docs/decisions/` con 8 ADR | Stack, backend, FatturaPA, tagline, target freelance, tema, palette, versioning |
+| ✅ | `docs/decisions/` con 9 ADR | Stack, backend storico, FatturaPA, tagline, target freelance, tema, palette, versioning, uscita Lovable |
 | ✅ | `docs/glossario.md` | Termini legali e fiscali italiani |
 | ✅ | Memoria di progetto sincronizzata | `mem://index.md` + `mem://design/brand` + `mem://process/roadmap` |
 | ✅ | **Versioning + Changelog + pagina Novità** | `src/lib/version.ts` + parser `CHANGELOG.md` + route `/novita` autenticata + campanella in topbar. ADR-0008 e guida `docs/guides/versioning-e-release.md` |
 | ✅ | **Categorie changelog ridisegnate** | Tre sezioni standard `Novità` / `Correzioni` / `Sotto il cofano`. La pagina `/novita` mette in evidenza le Novità, mantiene compatte le Correzioni e collassa le voci tecniche. Compatibile con voci storiche (Aggiunto/Modificato/Sicurezza) |
 | ✅ | **Schema DB su GitHub** | `supabase/schema.sql` baseline + `docs/data-model.md` narrativo + `docs/guides/migrations.md` per il flusso operativo |
 | ✅ | **Templates GitHub + Dependabot** | `.github/ISSUE_TEMPLATE/` (bug, idea), `PULL_REQUEST_TEMPLATE.md`, `dependabot.yml` (npm settimanale, minor/patch raggruppati). No GitHub Actions per ora (CI gira via Lovable + hook locale `.githooks/pre-push`) |
+| 🟡 | **Guida uscita Lovable** | Piano completo per backend Supabase di proprietà, deploy Vercel e cutover |
 | ⬜ | Test minimi su funzioni critiche | XML FatturaPA, calcoli IVA/ritenuta, cassa forense |
 | ⬜ | Linter pulito su tutto il repo | `npm run lint` |
 | ⬜ | `npm audit --audit-level=moderate` periodico | |
@@ -138,6 +143,6 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 2. **Empty states + microcopy review** sull'app autenticata → percezione di cura.
 3. **Recupero password + esportazione dati** → blocchi minimi prima di pubblicare.
 4. **Audit contrasto/accessibilità** in entrambi i temi.
-5. **Pubblicazione su dominio custom**.
+5. **Migrazione fuori da Lovable**: backend proprietario + pubblicazione Vercel.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.

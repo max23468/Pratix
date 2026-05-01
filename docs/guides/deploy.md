@@ -1,5 +1,9 @@
 # Guida — Deploy e pubblicazione
 
+> Questa guida descrive lo stato storico Lovable. Il target aggiornato è
+> l'uscita completa da Lovable con pubblicazione tramite DuckDNS: vedi
+> [`uscita-lovable.md`](./uscita-lovable.md).
+
 ## Modello
 
 Pratix è ospitato su **Lovable**, runtime Cloudflare Worker (con `nodejs_compat`). Il backend (Lovable Cloud / Supabase) è già attivo.

@@ -55,8 +55,11 @@ Link a issue, PR, documenti, conversazioni rilevanti.
 | # | Titolo | Stato |
 |---|---|---|
 | [0001](./0001-stack-tanstack-start.md) | Stack frontend: TanStack Start | Accettato |
-| [0002](./0002-lovable-cloud-supabase.md) | Backend: Lovable Cloud (Supabase) | Accettato |
+| [0002](./0002-lovable-cloud-supabase.md) | Backend: Lovable Cloud (Supabase) | Sostituito come target da ADR 0009 |
 | [0003](./0003-fatturapa-td06-parcella.md) | FatturaPA: tipo documento TD06 (Parcella) | Accettato |
 | [0004](./0004-tagline-tutto-torna.md) | Tagline ufficiale: "Tutto torna." | Accettato |
 | [0005](./0005-target-freelance-no-studio.md) | Target esplicito freelance: vietata la parola "studio" | Accettato |
 | [0006](./0006-tema-auto-piu-override.md) | Tema: auto + override manuale, dark mode rilassante | Accettato |
+| [0007](./0007-palette-inchiostro-terracotta.md) | Palette inchiostro + terracotta | Accettato |
+| [0008](./0008-versioning-e-changelog.md) | Versioning e changelog | Accettato |
+| [0009](./0009-uscita-completa-da-lovable.md) | Uscita completa da Lovable | Accettato |
