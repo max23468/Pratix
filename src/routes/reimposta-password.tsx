@@ -37,6 +37,20 @@ const schema = z
     path: ["confirm"],
   });
 
+function getPasswordUpdateErrorMessage(message?: string) {
+  const normalized = message?.toLowerCase() ?? "";
+
+  if (
+    normalized.includes("different") ||
+    normalized.includes("same password") ||
+    normalized.includes("new password")
+  ) {
+    return "La nuova password deve essere diversa da quella attuale.";
+  }
+
+  return "Impossibile aggiornare la password. Richiedi un nuovo link di recupero.";
+}
+
 function ResetPasswordPage() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
@@ -92,9 +106,7 @@ function ResetPasswordPage() {
     });
     setSubmitting(false);
     if (error) {
-      toast.error(
-        "Impossibile aggiornare la password. Richiedi un nuovo link di recupero.",
-      );
+      toast.error(getPasswordUpdateErrorMessage(error.message));
       return;
     }
     toast.success("Password aggiornata. Accedi con le nuove credenziali.");
