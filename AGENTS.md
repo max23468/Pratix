@@ -171,9 +171,10 @@ Vincoli di terminologia (vedi [`docs/glossario.md`](./docs/glossario.md)):
 - Installa le dipendenze con `npm ci`.
 - Usa `npm run build` come comando principale di validazione.
 - Usa `npm run lint` quando le modifiche toccano TypeScript, React, routing, componenti UI condivisi o configurazione correlata.
+- Usa `npm run format:changed:check` quando tocchi file formattabili; se fallisce, esegui `npm run format:changed` e ricommitta.
 - Usa `npm audit --audit-level=moderate` dopo modifiche alle dipendenze.
 - Usa `npm run ci:local` come gate completo quando la modifica è abbastanza ampia da giustificarlo.
-- Prima del push usa `npm run prepush:guard` oppure lascia lavorare `.githooks/pre-push`: esegue solo i controlli necessari al diff e li mette in cache per la stessa fingerprint, evitando di ripetere build/lint/audit già validati dallo stesso guard.
+- Prima del push usa `npm run prepush:guard` oppure lascia lavorare `.githooks/pre-push`: esegue solo i controlli necessari al diff e li mette in cache per la stessa fingerprint, evitando di ripetere format/build/lint/audit già validati dallo stesso guard.
 - Se hai appena eseguito controlli equivalenti manualmente sullo stesso diff, puoi usare `PRATIX_SKIP_PREPUSH=1 git push`, ma solo dichiarando il motivo nel riepilogo operativo.
 - Per modifiche solo documentali, non serve inventare test applicativi: rileggi il documento e verifica la coerenza delle istruzioni.
 - Non inventare risultati di test o comandi non eseguiti. Se un controllo non può essere eseguito, dichiaralo esplicitamente con motivo e rischio residuo.
