@@ -7,6 +7,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 ## [Non rilasciato]
 
 ### Correzioni
+- **Termini allineati al glossario**: la pagina Termini usa "professione" al posto dei riferimenti generici ad attività o studio professionale.
 - **Separatori title standardizzati**: i titoli pagina e i meta tag usano `·` al posto del trattino lungo (`Dashboard · Pratix`), lasciando `Pratix · Tutto torna.` solo alla home pubblica.
 - **Recupero password più chiaro**: se la nuova password coincide con quella precedente, la pagina ora mostra un messaggio specifico invece di chiedere un nuovo link di recupero.
 
