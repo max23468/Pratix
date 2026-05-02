@@ -3,10 +3,12 @@ import { useState, type FormEvent } from "react";
 import { Logo } from "@/components/brand/logo";
 import { z } from "zod";
 import { toast } from "sonner";
+import { TurnstileChallenge } from "@/components/security/turnstile-challenge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { isTurnstileEnabled } from "@/lib/turnstile";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -27,8 +29,11 @@ const schema = z.object({
 
 function LoginPage() {
   const navigate = useNavigate();
+  const captchaEnabled = isTurnstileEnabled();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaResetSignal, setCaptchaResetSignal] = useState(0);
   const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: FormEvent) => {
@@ -38,9 +43,18 @@ function LoginPage() {
       toast.error(parsed.error.issues[0]?.message ?? "Dati non validi");
       return;
     }
+    if (captchaEnabled && !captchaToken) {
+      toast.error("Completa la verifica di sicurezza.");
+      return;
+    }
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword(parsed.data);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: parsed.data.email,
+      password: parsed.data.password,
+      ...(captchaToken ? { options: { captchaToken } } : {}),
+    });
     setSubmitting(false);
+    setCaptchaResetSignal((current) => current + 1);
     if (error) {
       toast.error("Credenziali non valide");
       return;
@@ -83,6 +97,11 @@ function LoginPage() {
                 required
               />
             </div>
+            <TurnstileChallenge
+              action="login"
+              onTokenChange={setCaptchaToken}
+              resetSignal={captchaResetSignal}
+            />
             <Button type="submit" className="w-full" disabled={submitting}>
               {submitting ? "Accesso in corso…" : "Accedi"}
             </Button>

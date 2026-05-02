@@ -1,5 +1,7 @@
 import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth-context";
@@ -55,7 +57,11 @@ export const Route = createRootRoute({
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "it_IT" },
       { property: "og:site_name", content: "Pratix" },
-      { property: "og:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/gLsIYnhnwdgvDO7hJ37c2yvGWXu2/social-images/social-1777502938853-og-image.webp" },
+      {
+        property: "og:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/gLsIYnhnwdgvDO7hJ37c2yvGWXu2/social-images/social-1777502938853-og-image.webp",
+      },
       { property: "og:image:width", content: "1216" },
       { property: "og:image:height", content: "640" },
       { property: "og:image:alt", content: "Pratix" },
@@ -66,10 +72,26 @@ export const Route = createRootRoute({
         content:
           "Il gestionale per avvocati freelance. Ogni pratica al suo posto, ogni conto che torna.",
       },
-      { name: "twitter:image", content: "https://storage.googleapis.com/gpt-engineer-file-uploads/gLsIYnhnwdgvDO7hJ37c2yvGWXu2/social-images/social-1777502938853-og-image.webp" },
-      { name: "description", content: "Pratix è il gestionale per avvocati freelance. Pratiche, scadenze, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna." },
-      { property: "og:description", content: "Pratix è il gestionale per avvocati freelance. Pratiche, scadenze, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna." },
-      { name: "twitter:description", content: "Pratix è il gestionale per avvocati freelance. Pratiche, scadenze, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna." },
+      {
+        name: "twitter:image",
+        content:
+          "https://storage.googleapis.com/gpt-engineer-file-uploads/gLsIYnhnwdgvDO7hJ37c2yvGWXu2/social-images/social-1777502938853-og-image.webp",
+      },
+      {
+        name: "description",
+        content:
+          "Pratix è il gestionale per avvocati freelance. Pratiche, scadenze, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
+      },
+      {
+        property: "og:description",
+        content:
+          "Pratix è il gestionale per avvocati freelance. Pratiche, scadenze, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
+      },
+      {
+        name: "twitter:description",
+        content:
+          "Pratix è il gestionale per avvocati freelance. Pratiche, scadenze, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
+      },
     ],
     links: [
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
@@ -111,6 +133,8 @@ function RootComponent() {
           <TooltipProvider delayDuration={200}>
             <Outlet />
             <Toaster richColors position="top-right" />
+            <Analytics />
+            <SpeedInsights />
           </TooltipProvider>
         </AuthProvider>
       </QueryClientProvider>

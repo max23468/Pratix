@@ -93,6 +93,54 @@ Non automatizzare `supabase db push` da GitHub Actions finché Pratix usa un sol
 progetto Supabase. Il deploy del database resta manuale e intenzionale: il
 workflow CI deve verificare, non cambiare la produzione.
 
+## Supabase Auth
+
+Impostazioni operative desiderate nel dashboard Supabase:
+
+- Registrazione aperta: `Allow new users to sign up` attivo.
+- Conferma email attiva per le nuove registrazioni.
+- Secure Email Change non attivo per scelta di prodotto attuale.
+- Policy password standard: minimo applicativo 8 caratteri; non rafforzare i
+  requisiti Supabase finché il percorso resta volutamente leggero.
+- Anonymous sign-ins disattivati.
+- Rate limits Auth rivisti e lasciati su valori prudenti per il piano gratuito.
+- Redirect URL produzione:
+  - `https://pratix.vercel.app/dashboard`
+  - `https://pratix.vercel.app/reimposta-password`
+
+La UI gestisce sia registrazione con sessione immediata sia registrazione con
+email da confermare. Il cambio password in-app richiede già la password attuale
+prima di chiamare Supabase.
+
+### CAPTCHA
+
+Supabase Auth supporta CAPTCHA su registrazione, login e recupero password.
+Pratix è predisposto per Cloudflare Turnstile:
+
+1. Crea il widget Turnstile per `pratix.vercel.app` e per gli eventuali domini preview.
+2. Inserisci la secret key in Supabase Auth → Bot and Abuse Protection.
+3. Aggiungi `VITE_TURNSTILE_SITE_KEY` in Vercel Production e Preview.
+4. Ridistribuisci: i form pubblici mostreranno la verifica solo quando la site key è presente.
+
+Non salvare la secret key Turnstile in GitHub o nei file `.env` tracciati.
+
+### Email Auth
+
+Per produzione conviene configurare Custom SMTP in Supabase, così conferme e
+recuperi password non dipendono dal servizio email di default.
+
+Template italiani consigliati:
+
+- Confirm signup: oggetto `Conferma il tuo account Pratix`; testo breve con
+  link di conferma e nota "Se non hai richiesto tu la registrazione, ignora
+  questa email."
+- Reset password: oggetto `Reimposta la password di Pratix`; testo breve con
+  link valido per il tempo impostato in Supabase.
+- Change email: mantenere testo neutro e conferma sul nuovo indirizzo quando la
+  funzione verrà attivata.
+
+Non inserire dati personali, importi o riferimenti a clienti nei template Auth.
+
 ## Realtime
 
 Per attivare realtime su una tabella:

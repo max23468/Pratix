@@ -8,12 +8,17 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ### Correzioni
 
+- **Registrazione compatibile con conferma email**: se Supabase richiede la conferma dell'indirizzo, la pagina Registrati mostra lo stato corretto invece di mandare subito in dashboard.
 - **Termini allineati al glossario**: la pagina Termini usa "professione" al posto dei riferimenti generici ad attività o studio professionale.
 - **Separatori title standardizzati**: i titoli pagina e i meta tag usano `·` al posto del trattino lungo (`Dashboard · Pratix`), lasciando `Pratix · Tutto torna.` solo alla home pubblica.
 - **Recupero password più chiaro**: se la nuova password coincide con quella precedente, la pagina ora mostra un messaggio specifico invece di chiedere un nuovo link di recupero.
 
 ### Sotto il cofano
 
+- **Analytics e performance Vercel**: aggiunti Web Analytics e Speed Insights ufficiali nel root React, attivabili dal dashboard Vercel.
+- **CAPTCHA Supabase predisposto**: login, registrazione e recupero password inviano il token Cloudflare Turnstile quando `VITE_TURNSTILE_SITE_KEY` è configurata.
+- **Cron Vercel giornaliero**: aggiunto `/api/cron/daily` con protezione `CRON_SECRET` e schedule giornaliera in `vercel.json`.
+- **Checklist Auth Supabase free**: documentate registrazione aperta, conferma email, anonymous sign-ins disattivati, rate limit, Custom SMTP e template italiani.
 - **Quality gate GitHub leggero**: aggiunto workflow Actions su PR e avvio manuale con build, lint sui sorgenti modificati e audit mirato.
 - **Dependabot esteso alle Actions**: gli aggiornamenti GitHub Actions sono ora controllati settimanalmente e raggruppati per ridurre rumore.
 - **Comandi Supabase operativi**: aggiunti script npm per advisors, dry-run delle migration e rigenerazione types senza automatizzare deploy DB.

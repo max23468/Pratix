@@ -35,11 +35,15 @@ Configurare in Vercel Project Settings → Environment Variables:
 - `VITE_SUPABASE_URL` — client e server, Production e Preview.
 - `VITE_SUPABASE_PUBLISHABLE_KEY` — client e server, Production e Preview.
 - `VITE_SUPABASE_PROJECT_ID` — client e server, Production e Preview.
+- `VITE_TURNSTILE_SITE_KEY` — chiave pubblica Cloudflare Turnstile, Production e Preview quando CAPTCHA Supabase è attivo.
 - `SUPABASE_URL` — server, Production e Preview.
 - `SUPABASE_PUBLISHABLE_KEY` — server, Production e Preview.
 - `SUPABASE_SERVICE_ROLE_KEY` — server-only, Production e Preview solo se serve.
+- `CRON_SECRET` — server-only, Production; Vercel lo usa come bearer token per il cron giornaliero.
 
 `SUPABASE_SERVICE_ROLE_KEY` è server-only: non va mai esposta al client.
+`VITE_TURNSTILE_SITE_KEY` è pubblica per design; la secret key Turnstile vive
+solo nelle impostazioni Supabase Auth.
 
 Per ora Pratix usa un solo progetto Supabase anche per le preview Vercel. Di
 conseguenza le preview servono a verificare build, routing e UI; non sono un
@@ -49,6 +53,34 @@ valutato solo se resta davvero dentro i limiti gratuiti disponibili.
 In GitHub Secrets non serve duplicare le variabili Vercel. Inserisci solo
 segreti necessari a workflow CI specifici. Il workflow `Quality` attuale non
 richiede segreti.
+
+## Osservabilità Vercel
+
+Pratix include i componenti ufficiali Vercel Web Analytics e Speed Insights nel
+root React. Per renderli operativi:
+
+1. Apri Vercel Project → Analytics e abilita Web Analytics.
+2. Apri Vercel Project → Speed Insights e abilita Speed Insights.
+3. Verifica dopo il primo deployment production, perché i dati non arrivano dal
+   server locale.
+
+Non aggiungere eventi custom con dati personali, nomi clienti, importi o dati di
+fatture. Per ora bastano pagine viste e metriche di performance aggregate.
+
+## Cron giornaliero
+
+`vercel.json` registra un solo cron Hobby-compatible:
+
+- path: `/api/cron/daily`
+- schedule: `0 6 * * *` (06:00 UTC, 08:00 in Italia durante l'ora legale)
+
+L'endpoint rifiuta ogni richiesta senza header `Authorization: Bearer
+$CRON_SECRET`. Prima del merge in produzione crea `CRON_SECRET` in Vercel
+Production; senza questa variabile il cron risponde `503` e non esegue nulla.
+
+Il cron oggi è un controllo leggero del runtime. Quando verranno introdotte
+notifiche o manutenzioni ricorrenti, aggiungere la logica nello stesso endpoint
+o creare un secondo cron solo se resta dentro i limiti gratuiti.
 
 ## Supabase Auth
 
@@ -70,6 +102,13 @@ verso URL generati e preferisci path relativi nelle chiamate interne.
 Nel piano Hobby usa Vercel Authentication con protezione standard per le
 preview e gli URL di deployment. La produzione su `https://pratix.vercel.app`
 resta pubblica.
+
+Impostazioni consigliate nel dashboard Vercel:
+
+- Deployment Protection: Vercel Authentication sulle preview e sugli URL di deployment.
+- Vercel Toolbar: attiva sulle preview per commenti e debug visivo.
+- Comments: attivi sulle preview, non necessari in produzione.
+- Instant Rollback: usare dal dashboard Deployment → Rollback se `main` pubblica una regressione.
 
 Verifiche minime su ogni preview:
 
