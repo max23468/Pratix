@@ -178,6 +178,19 @@ Le policy RLS continuano a valere anche sui messaggi realtime.
 - `supabase db advisors --linked --type performance` per anomalie di performance.
 - Linter pulito **non** garantisce sicurezza: review manuale delle policy obbligatoria.
 
+### Residui advisor noti
+
+- **Security — `Leaked Password Protection Disabled`**: warning accettato nel
+  percorso gratuito corrente. La protezione richiede un piano Supabase a
+  pagamento, quindi non va trattata come blocco operativo free-tier.
+- **Performance — foreign key senza indice**: gli avvisi su
+  `case_status_history.user_id` e `invoice_lines.user_id` sono stati chiusi con
+  la migration `20260502173000_add_fk_supporting_indexes.sql`.
+- **Performance — indici unused**: gli indici segnalati come non usati su
+  `cases`, `expenses`, `invoices` e `invoice_lines` non vanno rimossi alla
+  cieca. Rivalutarli solo dopo traffico reale, query osservate e conferma che
+  non servano a filtri, join, ordinamenti o policy RLS.
+
 ## Backup gratuito
 
 Il piano gratuito non deve dipendere da Point-in-Time Recovery o Log Drains. Per
