@@ -238,6 +238,9 @@ Stato locale:
 - `npm run build` completato con successo il 2026-05-02.
 - `npm audit --audit-level=moderate` completato senza vulnerabilità il
   2026-05-02.
+- L'advisor sicurezza Supabase segnala `Leaked Password Protection Disabled`,
+  ma la funzionalità richiede un piano Pro o superiore. Per il percorso gratuito
+  attuale resta non abilitata e non blocca il cutover.
 
 ## Fase 4 — Deploy su Vercel
 

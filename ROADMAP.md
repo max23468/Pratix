@@ -88,6 +88,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅ | Area Account separata da Impostazioni | `/account` con tab Profilo / Accesso e sicurezza / Aspetto / Notifiche, accesso da menu utente in topbar |
 | ✅ | Cambio password in-app | Riautenticazione con password attuale + `auth.updateUser` |
 | 🟡 | Email auth personalizzate (brand) | Post-cutover: oggi arrivano da Supabase Auth; valutare template italiani, mittente Pratix e dominio/SMTP dedicato |
+| 💤 | Leaked Password Protection Supabase | Richiede piano Pro o superiore; non prevista nel percorso gratuito attuale |
 | ⬜ | Cambio email | Con conferma sul nuovo indirizzo |
 | ⬜ | Eliminazione account | Soft + hard delete con conferma |
 | ⬜ | Esportazione dati personali | JSON/CSV per GDPR |
