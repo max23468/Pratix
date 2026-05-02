@@ -6,6 +6,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.3.3] — 2026-05-02
+
 ### Sotto il cofano
 
 - **Lint e formattazione puliti**: riallineato il repository alle regole Prettier/ESLint, esclusi dai controlli i file generati e tipizzati gli ultimi punti fatture che usavano `any`.
@@ -160,6 +162,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.3.3]: #033--2026-05-02
 [0.3.2]: #032--2026-05-02
 [0.3.1]: #031--2026-05-02
 [0.3.0]: #030--2026-04-29
