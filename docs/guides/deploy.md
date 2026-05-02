@@ -28,6 +28,25 @@ Il repo resta privato e nel percorso gratuito: non basare il processo su branch
 protection a pagamento. La protezione reale è la disciplina di PR + Quality +
 preview Vercel.
 
+## Quando serve verificare Vercel
+
+Vercel crea comunque deployment automatici quando una PR viene aperta o quando
+`main` riceve un merge. Questo non significa che ogni modifica debba bloccare il
+lavoro su una verifica funzionale completa.
+
+- **Documentazione interna non esposta all'app** (`AGENTS.md`, `README.md`,
+  `docs/**` operative): non serve attendere o verificare Vercel oltre ai check
+  GitHub pertinenti.
+- **Documenti o release esposti nella UI** (`CHANGELOG.md`, `src/lib/version.ts`,
+  testi pubblici, landing, privacy, termini): verifica almeno che il deployment
+  production sia `READY` e che la pagina interessata risponda.
+- **Codice, configurazione runtime, auth, routing, Supabase o UI**: segui il
+  normale giro Quality + preview/production Vercel proporzionato al rischio.
+
+Se Vercel deploya automaticamente una modifica docs-only interna, trattalo come
+effetto collaterale a basso rischio: non serve prolungare il task solo per uno
+smoke visivo.
+
 ## Variabili d'ambiente
 
 Configurare in Vercel Project Settings → Environment Variables:
@@ -130,7 +149,7 @@ necessario per Pratix e non fa parte del percorso gratuito attuale.
 Checklist minima:
 
 - [ ] PR verso `main` aperta e workflow `Quality` completato
-- [ ] Preview Vercel verificata
+- [ ] Preview/production Vercel verificata quando il diff tocca superfici esposte o runtime
 - [ ] `npm run build` ok
 - [ ] `npm run lint` ok oppure issue note e non correlate alla modifica
 - [ ] `npm audit --audit-level=moderate` ok se sono cambiate dipendenze

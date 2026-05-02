@@ -14,6 +14,7 @@
     "db:advisors:performance": "npx supabase db advisors --linked --type performance",
     "db:push:dry-run": "npx supabase db push --linked --dry-run",
     "db:types": "npx supabase gen types typescript --linked --schema public > src/integrations/supabase/types.ts",
+    "prepush:guard": "node scripts/prepush-guard.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."
