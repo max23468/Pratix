@@ -26,6 +26,8 @@ profile_user.json
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
+.vercel
+supabase/.temp/
 
 # Editor directories and files
 .vscode/*

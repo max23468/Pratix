@@ -21,14 +21,14 @@ Aggiornato a: versione **0.3.0**.
    `id` di `auth.users`, non una colonna `user_id` separata. Una riga viene
    creata automaticamente al primo signup dal trigger `handle_new_user`.
 
-4. **Nessuna foreign key dichiarata** verso `auth.users` o fra tabelle
-   `public.*`. È una scelta deliberata di Supabase per evitare lock cross-schema
-   e mantenere flessibilità. L'integrità referenziale è garantita
-   dall'applicazione + RLS.
+4. **Foreign key dichiarate** per le relazioni operative principali. Le tabelle
+   utente referenziano `auth.users(id)`; pratiche, scadenze, spese, fatture e
+   righe fattura dichiarano le relazioni fra loro per abilitare join PostgREST,
+   cancellazioni coerenti e integrità referenziale.
 
-5. **Soft references via UUID**. Le relazioni (`cases.client_id`,
-   `expenses.case_id`, `invoices.client_id`, ecc.) sono `uuid` puri. Indici
-   B-tree sulle colonne di join garantiscono performance.
+5. **RLS resta la barriera applicativa**. Le foreign key proteggono la coerenza
+   dei dati, mentre l'accesso alle righe continua a dipendere dalle policy
+   `auth.uid() = user_id`.
 
 ## Tabelle
 

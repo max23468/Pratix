@@ -19,7 +19,6 @@ import {
 import { InvoiceForm } from "@/components/invoice-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { downloadInvoicePdf } from "@/lib/invoice-pdf";
 import { generateInvoiceXmlFn } from "@/server/invoices.functions";
 
 export const Route = createFileRoute("/fatture/$invoiceId")({
@@ -110,8 +109,10 @@ function InvoiceDetailPage() {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  const handleDownloadPdf = () => {
+  const handleDownloadPdf = async () => {
     if (!data) return;
+    const { downloadInvoicePdf } = await import("@/lib/invoice-pdf");
+
     downloadInvoicePdf({
       invoice: {
         number: data.invoice.number,
