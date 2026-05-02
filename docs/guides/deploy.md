@@ -73,6 +73,21 @@ In GitHub Secrets non serve duplicare le variabili Vercel. Inserisci solo
 segreti necessari a workflow CI specifici. Il workflow `Quality` attuale non
 richiede segreti.
 
+### Regola secret e backup
+
+GitHub conserva solo codice, configurazione pubblicabile e migrations. La
+`.env` tracciata contiene esclusivamente URL, project id e publishable key
+Supabase; i secret runtime restano fuori dal repo.
+
+- Vercel: `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET` e altri secret server-only.
+- Supabase: secret provider come Turnstile secret o Custom SMTP quando attivi.
+- Locale: `.env.local` per test manuali, ignorato da Git.
+- Backup: dump, export e archivi in una cartella fuori dal repository o in un
+  archivio cifrato, mai in GitHub.
+
+Prima di pubblicare, controlla che `git status --ignored --short` non mostri
+backup o file secret pronti per lo stage.
+
 ## Osservabilità Vercel
 
 Pratix include i componenti ufficiali Vercel Web Analytics e Speed Insights nel
