@@ -11,11 +11,16 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 - **Sitemap e robots pubblici**: aggiunti `sitemap.xml` e `robots.txt` per dichiarare le pagine pubbliche e tenere fuori dall'indicizzazione aree riservate e pagine operative di accesso.
 - **Email Supabase in italiano**: personalizzati i template Auth di conferma account e recupero password con testi Pratix.
 
+### Correzioni
+
+- **Link recupero password non valido**: la pagina di reimpostazione ora mostra un messaggio chiaro e permette di richiedere un nuovo link invece di restare in verifica.
+
 ### Sotto il cofano
 
 - **Secret e backup fuori repo**: rafforzate regole e ignore list per tenere dump, archivi, chiavi private e secret runtime fuori da GitHub.
 - **Indici foreign key Supabase**: aggiunti gli indici mancanti su `case_status_history.user_id` e `invoice_lines.user_id` per chiudere gli avvisi informativi del Performance Advisor senza rimuovere indici ancora privi di traffico storico.
 - **Residui advisor Supabase**: documentate le decisioni operative su leaked password protection non free-tier e indici unused da rivalutare solo con traffico reale.
+- **Artefatti Playwright locali**: esclusi dagli stage Git gli snapshot generati dai controlli browser manuali.
 
 ## [0.3.9] — 2026-05-02
 
