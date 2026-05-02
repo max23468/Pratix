@@ -4,13 +4,13 @@ import { Logo } from "@/components/brand/logo";
 export const Route = createFileRoute("/termini")({
   head: () => ({
     meta: [
-      { title: "Termini di servizio — Pratix" },
+      { title: "Termini di servizio · Pratix" },
       {
         name: "description",
         content:
           "Termini e condizioni d'uso del servizio Pratix, gestionale per avvocati freelance.",
       },
-      { property: "og:title", content: "Termini di servizio — Pratix" },
+      { property: "og:title", content: "Termini di servizio · Pratix" },
       {
         property: "og:description",
         content:
@@ -84,8 +84,7 @@ function TerminiPage() {
               Pratix può essere usato esclusivamente per finalità lecite e nel
               rispetto della normativa applicabile. Sono vietati: l'accesso
               automatizzato non autorizzato, il reverse engineering, l'utilizzo
-              per scopi diversi dalla gestione della propria attività
-              professionale.
+              per scopi diversi dalla gestione della propria professione.
             </p>
           </section>
 
@@ -120,7 +119,7 @@ function TerminiPage() {
             <h2 className="font-display text-xl font-semibold">6. Limiti di responsabilità</h2>
             <p className="mt-2 text-muted-foreground">
               Pratix fornisce strumenti di supporto alla gestione amministrativa
-              dello studio professionale. Non sostituisce il commercialista,
+              della professione. Non sostituisce il commercialista,
               l'intermediario abilitato all'invio SDI, né la consulenza legale o
               fiscale. La responsabilità sui contenuti delle fatture, sulla
               numerazione, sui calcoli e sull'invio rimane in capo all'utente.

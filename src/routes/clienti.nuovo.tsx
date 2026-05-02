@@ -6,9 +6,9 @@ import { ClientForm } from "@/components/client-form";
 export const Route = createFileRoute("/clienti/nuovo")({
   head: () => ({
     meta: [
-      { title: "Nuovo cliente — Pratix" },
+      { title: "Nuovo cliente · Pratix" },
       { name: "description", content: "Aggiungi un nuovo cliente alla tua rubrica." },
-      { property: "og:title", content: "Nuovo cliente — Pratix" },
+      { property: "og:title", content: "Nuovo cliente · Pratix" },
       { property: "og:description", content: "Aggiungi un nuovo cliente alla tua rubrica." },
     ],
   }),

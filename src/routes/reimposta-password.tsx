@@ -11,12 +11,12 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/reimposta-password")({
   head: () => ({
     meta: [
-      { title: "Reimposta password — Pratix" },
+      { title: "Reimposta password · Pratix" },
       {
         name: "description",
         content: "Imposta una nuova password per il tuo account Pratix.",
       },
-      { property: "og:title", content: "Reimposta password — Pratix" },
+      { property: "og:title", content: "Reimposta password · Pratix" },
       {
         property: "og:description",
         content: "Imposta una nuova password per il tuo account Pratix.",
@@ -37,6 +37,20 @@ const schema = z
     path: ["confirm"],
   });
 
+function getPasswordUpdateErrorMessage(message?: string) {
+  const normalized = message?.toLowerCase() ?? "";
+
+  if (
+    normalized.includes("different") ||
+    normalized.includes("same password") ||
+    normalized.includes("new password")
+  ) {
+    return "La nuova password deve essere diversa da quella attuale.";
+  }
+
+  return "Impossibile aggiornare la password. Richiedi un nuovo link di recupero.";
+}
+
 function ResetPasswordPage() {
   const navigate = useNavigate();
   const [password, setPassword] = useState("");
@@ -50,6 +64,16 @@ function ResetPasswordPage() {
     let mounted = true;
 
     const init = async () => {
+      const code = new URLSearchParams(window.location.search).get("code");
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!mounted) return;
+        if (!error) {
+          setReady(true);
+          return;
+        }
+      }
+
       const { data } = await supabase.auth.getSession();
       if (mounted && data.session) setReady(true);
     };
@@ -82,9 +106,7 @@ function ResetPasswordPage() {
     });
     setSubmitting(false);
     if (error) {
-      toast.error(
-        "Impossibile aggiornare la password. Richiedi un nuovo link di recupero.",
-      );
+      toast.error(getPasswordUpdateErrorMessage(error.message));
       return;
     }
     toast.success("Password aggiornata. Accedi con le nuove credenziali.");

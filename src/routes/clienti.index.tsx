@@ -15,9 +15,9 @@ import { clientDisplayName, clientKindLabels } from "@/lib/labels";
 export const Route = createFileRoute("/clienti/")({
   head: () => ({
     meta: [
-      { title: "Clienti — Pratix" },
+      { title: "Clienti · Pratix" },
       { name: "description", content: "Gestisci la rubrica dei tuoi clienti." },
-      { property: "og:title", content: "Clienti — Pratix" },
+      { property: "og:title", content: "Clienti · Pratix" },
       { property: "og:description", content: "Gestisci la rubrica dei tuoi clienti." },
     ],
   }),

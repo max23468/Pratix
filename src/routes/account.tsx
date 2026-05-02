@@ -18,9 +18,9 @@ import { APP_VERSION, BUILD_DATE } from "@/lib/version";
 export const Route = createFileRoute("/account")({
   head: () => ({
     meta: [
-      { title: "Account — Pratix" },
+      { title: "Account · Pratix" },
       { name: "description", content: "Profilo, accesso, sicurezza e aspetto del tuo account Pratix." },
-      { property: "og:title", content: "Account — Pratix" },
+      { property: "og:title", content: "Account · Pratix" },
       { property: "og:description", content: "Profilo, accesso, sicurezza e aspetto del tuo account Pratix." },
     ],
   }),

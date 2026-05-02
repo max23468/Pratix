@@ -1,9 +1,48 @@
-// @lovable.dev/vite-tanstack-config already includes the following — do NOT add them manually
-// or the app will break with duplicate plugins:
-//   - tanstackStart, viteReact, tailwindcss, tsConfigPaths, cloudflare (build-only),
-//     componentTagger (dev-only), VITE_* env injection, @ path alias, React/TanStack dedupe,
-//     error logger plugins, and sandbox detection (port/host/strictPort).
-// You can pass additional config via defineConfig({ vite: { ... } }) if needed.
-import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import tailwindcss from "@tailwindcss/vite";
+import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import viteReact from "@vitejs/plugin-react";
+import { nitro } from "nitro/vite";
+import { defineConfig } from "vite";
+import tsConfigPaths from "vite-tsconfig-paths";
 
-export default defineConfig();
+function stripDependencyUseClientDirectives() {
+  return {
+    name: "strip-dependency-use-client-directives",
+    transform(code: string, id: string) {
+      if (!id.includes("node_modules")) return;
+      if (!/^["']use client["'];?\s*/.test(code)) return;
+
+      return {
+        code: code.replace(/^["']use client["'];?\s*/, ""),
+        map: null,
+      };
+    },
+  };
+}
+
+export default defineConfig({
+  build: {
+    chunkSizeWarningLimit: 700,
+    rollupOptions: {
+      onwarn(warning, defaultHandler) {
+        if (
+          warning.message.includes("node_modules/") &&
+          warning.message.includes("imported from external module") &&
+          warning.message.includes("but never used")
+        ) {
+          return;
+        }
+
+        defaultHandler(warning);
+      },
+    },
+  },
+  plugins: [
+    stripDependencyUseClientDirectives(),
+    tanstackStart(),
+    nitro(),
+    viteReact(),
+    tailwindcss(),
+    tsConfigPaths(),
+  ],
+});

@@ -11,9 +11,9 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/login")({
   head: () => ({
     meta: [
-      { title: "Accedi — Pratix" },
+      { title: "Accedi · Pratix" },
       { name: "description", content: "Accedi al tuo account Pratix." },
-      { property: "og:title", content: "Accedi — Pratix" },
+      { property: "og:title", content: "Accedi · Pratix" },
       { property: "og:description", content: "Accedi al tuo account Pratix." },
     ],
   }),

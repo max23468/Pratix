@@ -11,13 +11,13 @@ import { supabase } from "@/integrations/supabase/client";
 export const Route = createFileRoute("/recupera-password")({
   head: () => ({
     meta: [
-      { title: "Recupera password — Pratix" },
+      { title: "Recupera password · Pratix" },
       {
         name: "description",
         content:
           "Hai dimenticato la password di Pratix? Inserisci la tua email e ti invieremo un link per reimpostarla.",
       },
-      { property: "og:title", content: "Recupera password — Pratix" },
+      { property: "og:title", content: "Recupera password · Pratix" },
       {
         property: "og:description",
         content:

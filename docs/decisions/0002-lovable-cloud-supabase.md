@@ -1,6 +1,6 @@
 # ADR 0002 — Backend: Lovable Cloud (Supabase)
 
-- **Stato**: Accettato
+- **Stato**: Sostituito come target da ADR 0009
 - **Data**: 2026-04-29
 
 ## Contesto
@@ -15,9 +15,9 @@ Pratix gestisce dati personali e fiscali sensibili: anagrafica avvocati, anagraf
 
 Lovable Cloud fornisce tutto questo nativamente, basato su Supabase, con `client.ts` e `types.ts` auto-generati.
 
-## Decisione
+## Decisione storica
 
-Adottiamo **Lovable Cloud (Supabase)** come backend unico per Pratix:
+Abbiamo adottato **Lovable Cloud (Supabase)** come backend unico iniziale per Pratix:
 - Postgres con RLS obbligatoria su tutte le tabelle utente,
 - Auth Supabase,
 - Storage per allegati,
@@ -45,4 +45,5 @@ Comunichiamo agli utenti finali come **"Lovable Cloud"** (mai "Supabase" nei tes
 ## Riferimenti
 
 - [`docs/guides/database.md`](../guides/database.md)
+- [`0009-uscita-completa-da-lovable.md`](./0009-uscita-completa-da-lovable.md)
 - [`SECURITY.md`](../../SECURITY.md)

@@ -15,7 +15,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | Stato | Voce | Note |
 |---|---|---|
 | ✅ | Nome prodotto: **Pratix** | Gestionale per avvocati freelance |
-| ✅ | Tagline ufficiale: **"Tutto torna."** | Triplo senso: contabile, narrativo, ordine. Fuori dalla UI autenticata |
+| ✅ | Tagline ufficiale: **"Tutto torna."** | Triplo senso: contabile, narrativo, ordine. Fuori dalla UI autenticata. Nei title usa `·`: `Dashboard · Pratix`; `Pratix · Tutto torna.` solo in home |
 | ✅ | Palette inchiostro + terracotta + panna | Token semantici in `src/styles.css`, mai hex inline. Differenziazione da Fineco/banche (ADR-0007). I nomi token `--brand-navy/gold` sono alias storici |
 | ✅ | Logo adattivo cross-tema | Tone `navy` cambia tile/glifo fra light e dark via token `--logo-*` |
 | ✅ | Tipografia: Inter Tight + Inter + JetBrains Mono | Numeri tabular-nums, display weight max 600 |
@@ -87,7 +87,8 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅ | Messaggi auth generici (no user enumeration) | Login e registrazione |
 | ✅ | Area Account separata da Impostazioni | `/account` con tab Profilo / Accesso e sicurezza / Aspetto / Notifiche, accesso da menu utente in topbar |
 | ✅ | Cambio password in-app | Riautenticazione con password attuale + `auth.updateUser` |
-| ⬜ | Email auth personalizzate (brand) | Richiede dominio email custom |
+| 🟡 | Email auth personalizzate (brand) | Post-cutover: oggi arrivano da Supabase Auth; valutare template italiani, mittente Pratix e dominio/SMTP dedicato |
+| 💤 | Leaked Password Protection Supabase | Richiede piano Pro o superiore; non prevista nel percorso gratuito attuale |
 | ⬜ | Cambio email | Con conferma sul nuovo indirizzo |
 | ⬜ | Eliminazione account | Soft + hard delete con conferma |
 | ⬜ | Esportazione dati personali | JSON/CSV per GDPR |
@@ -103,9 +104,11 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅ | og:image globale + Twitter card | `/og-image.jpg` |
 | ⬜ | `sitemap.xml` + `robots.txt` | |
 | ⬜ | JSON-LD `Organization` / `SoftwareApplication` | |
-| ✅ | Pubblicazione | `https://pratix-legal.lovable.app` |
-| ⬜ | Dominio custom | Da scegliere (es. `pratix.it`) |
-| ⬜ | Project icon + Social preview nelle Project Settings di Lovable | Asset pronti: `public/app-icon-512.png`, `public/og-image.jpg` |
+| 🟡 | Uscita completa da Lovable | ADR-0009 + guida `docs/guides/uscita-lovable.md`; runtime/backend già spostati |
+| ✅ | Pubblicazione tramite Vercel | Produzione su `https://pratix.vercel.app`; dominio proprietario rimandato |
+| ✅ | Migrazione backend fuori da Lovable Cloud | Supabase di proprietà collegato, dati migrati, auth verificata |
+| 🟡 | Bonifica riferimenti Lovable | Runtime e docs operative pulite; restano riferimenti storici censiti in `docs/migration/lovable-reference-audit.md` |
+| 💤 | Dominio proprietario futuro | Eventuale dominio tipo `pratix.it` |
 
 ## 7. Qualità e processo
 
@@ -119,13 +122,14 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅ | `SECURITY.md` + `CONTRIBUTING.md` + `LICENSE` | Predisposti per repo pubblico |
 | ✅ | Cartella `docs/` con guide tematiche | architettura, database, fatturazione, tema, tono di voce, deploy |
 | ✅ | `docs/memory/` mirror di `mem://` | core, brand, roadmap |
-| ✅ | `docs/decisions/` con 8 ADR | Stack, backend, FatturaPA, tagline, target freelance, tema, palette, versioning |
+| ✅ | `docs/decisions/` con 9 ADR | Stack, backend storico, FatturaPA, tagline, target freelance, tema, palette, versioning, uscita Lovable |
 | ✅ | `docs/glossario.md` | Termini legali e fiscali italiani |
 | ✅ | Memoria di progetto sincronizzata | `mem://index.md` + `mem://design/brand` + `mem://process/roadmap` |
 | ✅ | **Versioning + Changelog + pagina Novità** | `src/lib/version.ts` + parser `CHANGELOG.md` + route `/novita` autenticata + campanella in topbar. ADR-0008 e guida `docs/guides/versioning-e-release.md` |
 | ✅ | **Categorie changelog ridisegnate** | Tre sezioni standard `Novità` / `Correzioni` / `Sotto il cofano`. La pagina `/novita` mette in evidenza le Novità, mantiene compatte le Correzioni e collassa le voci tecniche. Compatibile con voci storiche (Aggiunto/Modificato/Sicurezza) |
 | ✅ | **Schema DB su GitHub** | `supabase/schema.sql` baseline + `docs/data-model.md` narrativo + `docs/guides/migrations.md` per il flusso operativo |
-| ✅ | **Templates GitHub + Dependabot** | `.github/ISSUE_TEMPLATE/` (bug, idea), `PULL_REQUEST_TEMPLATE.md`, `dependabot.yml` (npm settimanale, minor/patch raggruppati). No GitHub Actions per ora (CI gira via Lovable + hook locale `.githooks/pre-push`) |
+| ✅ | **Templates GitHub + Dependabot** | `.github/ISSUE_TEMPLATE/` (bug, idea), `PULL_REQUEST_TEMPLATE.md`, `dependabot.yml` (npm settimanale, minor/patch raggruppati). No GitHub Actions per ora (build Vercel + hook locale `.githooks/pre-push`) |
+| 🟡 | **Guida uscita Lovable** | Piano completo per backend Supabase di proprietà, deploy Vercel e cutover |
 | ⬜ | Test minimi su funzioni critiche | XML FatturaPA, calcoli IVA/ritenuta, cassa forense |
 | ⬜ | Linter pulito su tutto il repo | `npm run lint` |
 | ⬜ | `npm audit --audit-level=moderate` periodico | |
@@ -138,6 +142,6 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 2. **Empty states + microcopy review** sull'app autenticata → percezione di cura.
 3. **Recupero password + esportazione dati** → blocchi minimi prima di pubblicare.
 4. **Audit contrasto/accessibilità** in entrambi i temi.
-5. **Pubblicazione su dominio custom**.
+5. **Migrazione fuori da Lovable**: backend proprietario + pubblicazione Vercel.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.

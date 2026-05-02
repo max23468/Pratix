@@ -20,6 +20,23 @@ npm ci
 npm run dev
 ```
 
+## Workflow operativo
+
+GitHub è la fonte primaria del codice. Il repository remoto attuale è
+`https://github.com/max23468/Pratix.git`.
+
+Flusso consigliato:
+
+1. Sincronizza `main` prima di iniziare.
+2. Lavora su branch breve, preferibilmente `codex/<nome-task>` per lavoro
+   guidato da Codex.
+3. Mantieni le modifiche atomiche.
+4. Esegui le verifiche pertinenti.
+5. Apri PR o mergea solo dopo review dei file toccati.
+
+Non usare editor o automazioni esterne in parallelo sulla stessa area mentre
+Codex sta lavorando sul branch. GitHub resta la fonte primaria delle modifiche.
+
 ## Convenzioni
 
 ### Lingua
@@ -31,7 +48,7 @@ npm run dev
 - Componenti piccoli, riusabili, in `src/components/`.
 - Hook in `src/hooks/`.
 - Solo token semantici da `src/styles.css`, mai hex inline.
-- Mai modificare: `src/integrations/supabase/client.ts`, `src/integrations/supabase/types.ts`, `src/routeTree.gen.ts`, `.env`.
+- Mai modificare manualmente: `src/integrations/supabase/types.ts`, `src/routeTree.gen.ts`, `.env`.
 
 ### Commit
 Conventional Commits coerenti con l'impatto reale:
@@ -61,6 +78,11 @@ npm run build
 npm run lint
 npm audit --audit-level=moderate   # se hai toccato dipendenze
 ```
+
+Per modifiche al backend o alla pubblicazione consulta anche
+[`docs/guides/database.md`](./docs/guides/database.md),
+[`docs/guides/migrations.md`](./docs/guides/migrations.md) e
+[`docs/guides/deploy.md`](./docs/guides/deploy.md).
 
 ### Documentazione
 

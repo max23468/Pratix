@@ -2,7 +2,8 @@
 -- Pratix — Schema baseline
 -- =============================================================================
 -- Generato: 2026-04-29 (versione app 0.3.0)
--- Sorgente:  introspezione del database Lovable Cloud (Supabase) di produzione.
+-- Sorgente:  introspezione del database di produzione iniziale,
+--            integrata con il trigger auth richiesto per il progetto Supabase.
 --
 -- Cosa è questo file
 -- ------------------
@@ -13,17 +14,18 @@
 -- Cosa NON è
 -- ----------
 -- - Non è eseguito automaticamente su Supabase: le migrations vere si
---   applicano via tool Lovable e sono storicizzate in `supabase/migrations/`.
--- - Non contiene oggetti gestiti da Supabase (auth.*, storage.*, realtime.*).
+--   applicano via Supabase CLI e sono storicizzate in `supabase/migrations/`.
+-- - Non contiene oggetti gestiti da Supabase (storage.*, realtime.*). Include
+--   solo il trigger su auth.users necessario a creare profiles alla signup.
 -- - Non contiene dati: per esportare dati usa Cloud → Database → Tables.
 --
 -- Convenzioni
 -- -----------
 -- - Tutti i timestamp `*_at` sono `timestamp with time zone`.
 -- - Ogni tabella user-owned ha colonna `user_id uuid` + 4 policy RLS
---   (select/insert/update/delete) su `auth.uid() = user_id`.
+--   (select/insert/update/delete) su `(select auth.uid()) = user_id`.
 -- - `profiles.id` coincide con `auth.users.id` (riempita dal trigger
---   `handle_new_user` su `auth.users`, non visibile in questo file).
+--   `on_auth_user_created` su `auth.users`).
 -- =============================================================================
 
 
@@ -65,7 +67,7 @@ CREATE TYPE public.tax_regime AS ENUM ('ordinario', 'forfettario');
 -- ============================================================================
 
 -- Riempie `profiles` quando un nuovo utente si registra in `auth.users`.
--- Trigger associato: `on_auth_user_created` su auth.users (gestito da Supabase).
+-- Trigger associato: `on_auth_user_created` su auth.users.
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger
 LANGUAGE plpgsql
@@ -296,6 +298,61 @@ CREATE INDEX idx_invoice_lines_invoice ON public.invoice_lines (invoice_id);
 
 
 -- ============================================================================
+-- FOREIGN KEYS
+-- ============================================================================
+
+ALTER TABLE public.profiles
+  ADD CONSTRAINT profiles_id_fkey
+  FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE public.clients
+  ADD CONSTRAINT clients_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE public.cases
+  ADD CONSTRAINT cases_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
+  ADD CONSTRAINT cases_client_id_fkey
+  FOREIGN KEY (client_id) REFERENCES public.clients(id) ON DELETE SET NULL;
+
+ALTER TABLE public.case_status_history
+  ADD CONSTRAINT case_status_history_case_id_fkey
+  FOREIGN KEY (case_id) REFERENCES public.cases(id) ON DELETE CASCADE,
+  ADD CONSTRAINT case_status_history_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE public.case_deadlines
+  ADD CONSTRAINT case_deadlines_case_id_fkey
+  FOREIGN KEY (case_id) REFERENCES public.cases(id) ON DELETE CASCADE,
+  ADD CONSTRAINT case_deadlines_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE public.expenses
+  ADD CONSTRAINT expenses_case_id_fkey
+  FOREIGN KEY (case_id) REFERENCES public.cases(id) ON DELETE CASCADE,
+  ADD CONSTRAINT expenses_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+ALTER TABLE public.invoices
+  ADD CONSTRAINT invoices_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
+  ADD CONSTRAINT invoices_client_id_fkey
+  FOREIGN KEY (client_id) REFERENCES public.clients(id) ON DELETE RESTRICT,
+  ADD CONSTRAINT invoices_case_id_fkey
+  FOREIGN KEY (case_id) REFERENCES public.cases(id) ON DELETE SET NULL;
+
+ALTER TABLE public.expenses
+  ADD CONSTRAINT expenses_invoice_fk
+  FOREIGN KEY (invoice_id) REFERENCES public.invoices(id) ON DELETE SET NULL;
+
+ALTER TABLE public.invoice_lines
+  ADD CONSTRAINT invoice_lines_invoice_id_fkey
+  FOREIGN KEY (invoice_id) REFERENCES public.invoices(id) ON DELETE CASCADE,
+  ADD CONSTRAINT invoice_lines_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
+
+-- ============================================================================
 -- TRIGGERS
 -- ============================================================================
 
@@ -310,11 +367,27 @@ CREATE TRIGGER cases_log_status_change
   AFTER INSERT OR UPDATE ON public.cases
   FOR EACH ROW EXECUTE FUNCTION public.log_case_status_change();
 
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+
+-- ============================================================================
+-- FUNCTION PERMISSIONS
+-- ============================================================================
+
+-- These functions are used by triggers only and must not be callable through
+-- PostgREST RPC by anonymous or authenticated users.
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.log_case_status_change() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.set_updated_at() FROM PUBLIC, anon, authenticated;
+
 
 -- ============================================================================
 -- ROW LEVEL SECURITY
 -- ============================================================================
--- Pattern: ogni tabella espone solo le righe dove auth.uid() = user_id
+-- Pattern: ogni tabella espone solo le righe dove (select auth.uid()) = user_id
 -- (tranne profiles, dove la chiave è id che coincide con auth.uid()).
 
 ALTER TABLE public.profiles            ENABLE ROW LEVEL SECURITY;
@@ -327,46 +400,46 @@ ALTER TABLE public.invoices            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invoice_lines       ENABLE ROW LEVEL SECURITY;
 
 -- profiles
-CREATE POLICY profiles_select_own ON public.profiles FOR SELECT TO authenticated USING (auth.uid() = id);
-CREATE POLICY profiles_insert_own ON public.profiles FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
-CREATE POLICY profiles_update_own ON public.profiles FOR UPDATE TO authenticated USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+CREATE POLICY profiles_select_own ON public.profiles FOR SELECT TO authenticated USING ((select auth.uid()) = id);
+CREATE POLICY profiles_insert_own ON public.profiles FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = id);
+CREATE POLICY profiles_update_own ON public.profiles FOR UPDATE TO authenticated USING ((select auth.uid()) = id) WITH CHECK ((select auth.uid()) = id);
 
 -- clients
-CREATE POLICY clients_select_own ON public.clients FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY clients_insert_own ON public.clients FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY clients_update_own ON public.clients FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY clients_delete_own ON public.clients FOR DELETE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY clients_select_own ON public.clients FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY clients_insert_own ON public.clients FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY clients_update_own ON public.clients FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY clients_delete_own ON public.clients FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
 
 -- cases
-CREATE POLICY cases_select_own ON public.cases FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY cases_insert_own ON public.cases FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY cases_update_own ON public.cases FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY cases_delete_own ON public.cases FOR DELETE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY cases_select_own ON public.cases FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY cases_insert_own ON public.cases FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY cases_update_own ON public.cases FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY cases_delete_own ON public.cases FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
 
 -- case_deadlines
-CREATE POLICY case_deadlines_select_own ON public.case_deadlines FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY case_deadlines_insert_own ON public.case_deadlines FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY case_deadlines_update_own ON public.case_deadlines FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY case_deadlines_delete_own ON public.case_deadlines FOR DELETE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY case_deadlines_select_own ON public.case_deadlines FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY case_deadlines_insert_own ON public.case_deadlines FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY case_deadlines_update_own ON public.case_deadlines FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY case_deadlines_delete_own ON public.case_deadlines FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
 
 -- case_status_history (solo select + insert; lo storico non si modifica)
-CREATE POLICY case_status_history_select_own ON public.case_status_history FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY case_status_history_insert_own ON public.case_status_history FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+CREATE POLICY case_status_history_select_own ON public.case_status_history FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY case_status_history_insert_own ON public.case_status_history FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
 
 -- expenses
-CREATE POLICY expenses_select_own ON public.expenses FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY expenses_insert_own ON public.expenses FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY expenses_update_own ON public.expenses FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY expenses_delete_own ON public.expenses FOR DELETE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY expenses_select_own ON public.expenses FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY expenses_insert_own ON public.expenses FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY expenses_update_own ON public.expenses FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY expenses_delete_own ON public.expenses FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
 
 -- invoices
-CREATE POLICY invoices_select_own ON public.invoices FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY invoices_insert_own ON public.invoices FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY invoices_update_own ON public.invoices FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY invoices_delete_own ON public.invoices FOR DELETE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY invoices_select_own ON public.invoices FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY invoices_insert_own ON public.invoices FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY invoices_update_own ON public.invoices FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY invoices_delete_own ON public.invoices FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
 
 -- invoice_lines
-CREATE POLICY invoice_lines_select_own ON public.invoice_lines FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY invoice_lines_insert_own ON public.invoice_lines FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY invoice_lines_update_own ON public.invoice_lines FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY invoice_lines_delete_own ON public.invoice_lines FOR DELETE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY invoice_lines_select_own ON public.invoice_lines FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY invoice_lines_insert_own ON public.invoice_lines FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY invoice_lines_update_own ON public.invoice_lines FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY invoice_lines_delete_own ON public.invoice_lines FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);

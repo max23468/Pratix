@@ -21,8 +21,13 @@ Doppio senso intenzionale:
 **Uso**:
 - Sempre con il punto fermo: `Tutto torna.`
 - Mai tradurre. È intraducibile per costruzione: il valore è proprio nella polisemia italiana di "tornare".
-- Si usa **da sola** in copertine, hero, OG image, social. **In coppia col logo** in footer e firme: `Pratix — Tutto torna.`
+- Si usa **da sola** in copertine, hero, OG image, social. **In coppia col nome prodotto** nei meta tag della home pubblica: `Pratix · Tutto torna.`
 - Mai abbreviare in "Tt." o usare emoji. Mai esclamativo.
+
+**Titoli pagina e meta tag**:
+- Usa sempre `·` come separatore fra titolo pagina e brand: `Dashboard · Pratix`.
+- Riserva `Pratix · Tutto torna.` alla home pubblica.
+- Non usare `— Pratix` nei title, negli `og:title` o nelle preview social.
 
 **Quando NON usarla**: dentro l'app autenticata (UI di lavoro), nei messaggi di errore, nei CTA. È un asset di marca, non microcopy.
 

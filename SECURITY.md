@@ -31,7 +31,7 @@ Sono in scope:
 
 Sono fuori scope:
 
-- Vulnerabilità in servizi terzi (Lovable, Supabase, Cloudflare): segnalarle ai rispettivi vendor.
+- Vulnerabilità in servizi terzi (Supabase, Vercel, provider DNS): segnalarle ai rispettivi vendor.
 - Attacchi di forza bruta non mitigabili a livello applicativo.
 - Bug di UI senza impatto sui dati.
 
@@ -39,7 +39,7 @@ Sono fuori scope:
 
 - Row-Level Security obbligatoria su tutte le tabelle con dati utente.
 - Ruoli mai memorizzati su `profiles`: tabella `user_roles` separata.
-- Nessun secret in repo: tutte le chiavi sensibili in Lovable Cloud Secrets.
+- Nessun secret in repo: tutte le chiavi sensibili vivono in Vercel/Supabase.
 - Messaggi di errore di autenticazione generici (no user enumeration).
 - `npm audit --audit-level=moderate` periodico.
 - Scan di sicurezza Supabase eseguiti regolarmente.

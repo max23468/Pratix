@@ -32,9 +32,9 @@ import { expenseCategoryLabels, clientDisplayName } from "@/lib/labels";
 export const Route = createFileRoute("/spese")({
   head: () => ({
     meta: [
-      { title: "Spese — Pratix" },
+      { title: "Spese · Pratix" },
       { name: "description", content: "Tutte le spese delle tue pratiche." },
-      { property: "og:title", content: "Spese — Pratix" },
+      { property: "og:title", content: "Spese · Pratix" },
       { property: "og:description", content: "Tutte le spese delle tue pratiche." },
     ],
   }),

@@ -15,10 +15,19 @@ dist-ssr
 .tanstack/**
 .nitro
 *.local
+.env.migration
+
+# Local migration exports (PII/secrets; never commit)
+pratix-migration/
+migration-exports/
+profile_user.json
+*.dump
 
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
+.vercel
+supabase/.temp/
 
 # Editor directories and files
 .vscode/*
