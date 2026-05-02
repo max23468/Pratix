@@ -13,15 +13,15 @@
 
 ## Glossario obbligatorio
 
-| ✅ Usare | ❌ Evitare |
-|---|---|
-| Pratica | Caso, fascicolo |
-| Cliente | Assistito |
-| Scadenza | Deadline |
-| Spese | Costi |
-| Fattura, Parcella | Conto |
+| ✅ Usare                                                   | ❌ Evitare                        |
+| ---------------------------------------------------------- | --------------------------------- |
+| Pratica                                                    | Caso, fascicolo                   |
+| Cliente                                                    | Assistito                         |
+| Scadenza                                                   | Deadline                          |
+| Spese                                                      | Costi                             |
+| Fattura, Parcella                                          | Conto                             |
 | Professione, la tua professione, i tuoi dati professionali | **Studio**, "attività" come label |
-| Salva, Annulla, Elimina | Conferma, Procedi, Cancella |
+| Salva, Annulla, Elimina                                    | Conferma, Procedi, Cancella       |
 
 > **"Studio" è vietata.** Il target è il freelance singolo. Vedi [ADR 0005](../decisions/0005-target-freelance-no-studio.md).
 
@@ -32,26 +32,32 @@
 ## Esempi
 
 ### Empty state
-- ✅ "Nessuna pratica ancora. Inizia da *Nuova pratica*."
+
+- ✅ "Nessuna pratica ancora. Inizia da _Nuova pratica_."
 - ❌ "Ops! Sembra che tu non abbia ancora creato pratiche 😊"
 
 ### Errore
+
 - ✅ "Partita IVA mancante. Configurala in Impostazioni."
 - ❌ "Whoops! Ti sei dimenticato qualcosa!!"
 
 ### Conferma distruttiva
+
 - ✅ "Eliminare la fattura **2026/0023**? L'azione non è reversibile."
 - ❌ "Sei sicuro sicuro di voler procedere?? 🚨"
 
 ### Salvataggio riuscito
+
 - ✅ "Modifiche salvate."
 - ❌ "Yay! Tutto pronto ✨"
 
 ### Onboarding
+
 - ✅ "Configura la tua professione in tre brevi passaggi. Potrai modificare tutto in seguito."
 - ❌ "Bentornato!! Configuriamo insieme il tuo studio 🚀"
 
 ### Microcopy bottoni
+
 - ✅ "Salva modifiche", "Crea pratica", "Genera XML", "Esporta PDF"
 - ❌ "Conferma", "Procedi", "Click qui", "Vai!"
 

@@ -51,12 +51,7 @@ export const generateInvoiceXmlFn = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
 
     const [{ data: invoice, error: iErr }, { data: profile, error: pErr }] = await Promise.all([
-      supabase
-        .from("invoices")
-        .select("*")
-        .eq("id", data.invoiceId)
-        .eq("user_id", userId)
-        .single(),
+      supabase.from("invoices").select("*").eq("id", data.invoiceId).eq("user_id", userId).single(),
       supabase.from("profiles").select("*").eq("id", userId).single(),
     ]);
     if (iErr) throw iErr;

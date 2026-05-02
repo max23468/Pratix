@@ -40,17 +40,20 @@ Codex sta lavorando sul branch. GitHub resta la fonte primaria delle modifiche.
 ## Convenzioni
 
 ### Lingua
+
 - **UI in italiano** (`lang="it"`), tono "tu" professionale.
 - **Identificatori in inglese** quando coerente con framework e librerie.
 - **Glossario obbligatorio**: Pratica/Cliente/Scadenza/Spese/Fattura. Vietata la parola "studio".
 
 ### Codice
+
 - Componenti piccoli, riusabili, in `src/components/`.
 - Hook in `src/hooks/`.
 - Solo token semantici da `src/styles.css`, mai hex inline.
 - Mai modificare manualmente: `src/integrations/supabase/types.ts`, `src/routeTree.gen.ts`, `.env`.
 
 ### Commit
+
 Conventional Commits coerenti con l'impatto reale:
 
 - `feat:` nuova funzionalità

@@ -16,10 +16,8 @@
 @theme inline {
   --font-sans:
     "Inter", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-display:
-    "Inter Tight", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-mono:
-    "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --font-display: "Inter Tight", "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -96,7 +94,7 @@
   --secondary-foreground: oklch(0.22 0.04 260);
 
   --muted: oklch(0.955 0.008 60);
-  --muted-foreground: oklch(0.50 0.02 260);
+  --muted-foreground: oklch(0.5 0.02 260);
 
   /* Accent (semantico shadcn) — pillola inchiostro chiarissima per hover/selected */
   --accent: oklch(0.945 0.012 260);
@@ -117,10 +115,10 @@
   --logo-border-opacity: 0.55;
   --logo-wordmark: var(--foreground);
 
-  --destructive: oklch(0.50 0.18 28);
+  --destructive: oklch(0.5 0.18 28);
   --destructive-foreground: oklch(0.985 0.004 80);
 
-  --success: oklch(0.52 0.10 155);
+  --success: oklch(0.52 0.1 155);
   --success-foreground: oklch(0.985 0.004 80);
 
   --warning: oklch(0.72 0.13 70);
@@ -135,7 +133,7 @@
 
   --chart-1: oklch(0.22 0.04 260);
   --chart-2: oklch(0.62 0.15 35);
-  --chart-3: oklch(0.52 0.10 155);
+  --chart-3: oklch(0.52 0.1 155);
   --chart-4: oklch(0.55 0.08 240);
   --chart-5: oklch(0.45 0.12 15);
 
@@ -149,29 +147,20 @@
   --sidebar-ring: oklch(0.62 0.15 35);
 
   /* Gradients */
-  --gradient-hero: linear-gradient(
-    135deg,
-    oklch(0.22 0.04 260) 0%,
-    oklch(0.16 0.03 265) 100%
-  );
-  --gradient-accent: linear-gradient(
-    135deg,
-    oklch(0.66 0.15 38) 0%,
-    oklch(0.56 0.16 28) 100%
-  );
+  --gradient-hero: linear-gradient(135deg, oklch(0.22 0.04 260) 0%, oklch(0.16 0.03 265) 100%);
+  --gradient-accent: linear-gradient(135deg, oklch(0.66 0.15 38) 0%, oklch(0.56 0.16 28) 100%);
 
   /* Shadows */
-  --shadow-soft: 0 1px 2px 0 oklch(0.22 0.04 260 / 0.04),
-    0 1px 3px 0 oklch(0.22 0.04 260 / 0.06);
-  --shadow-elevated: 0 4px 12px -2px oklch(0.22 0.04 260 / 0.08),
-    0 2px 6px -1px oklch(0.22 0.04 260 / 0.05);
-  --shadow-elegant: 0 20px 40px -12px oklch(0.22 0.04 260 / 0.20);
+  --shadow-soft: 0 1px 2px 0 oklch(0.22 0.04 260 / 0.04), 0 1px 3px 0 oklch(0.22 0.04 260 / 0.06);
+  --shadow-elevated:
+    0 4px 12px -2px oklch(0.22 0.04 260 / 0.08), 0 2px 6px -1px oklch(0.22 0.04 260 / 0.05);
+  --shadow-elegant: 0 20px 40px -12px oklch(0.22 0.04 260 / 0.2);
   --shadow-gold: 0 8px 24px -8px oklch(0.62 0.15 35 / 0.35);
 }
 
 .dark {
   /* Background = grigio caldo neutro, riposante per gli occhi (croma bassa) */
-  --background: oklch(0.18 0.010 60);
+  --background: oklch(0.18 0.01 60);
   --foreground: oklch(0.94 0.006 80);
 
   --card: oklch(0.22 0.012 60);
@@ -187,14 +176,14 @@
   --secondary-foreground: oklch(0.94 0.006 80);
 
   --muted: oklch(0.28 0.012 60);
-  --muted-foreground: oklch(0.70 0.012 80);
+  --muted-foreground: oklch(0.7 0.012 80);
 
   --accent: oklch(0.32 0.014 60);
   --accent-foreground: oklch(0.94 0.006 80);
 
   /* Terracotta più luminosa in dark per contrasto su fondo scuro */
-  --brand-gold: oklch(0.70 0.15 38);
-  --brand-gold-foreground: oklch(0.20 0.012 60);
+  --brand-gold: oklch(0.7 0.15 38);
+  --brand-gold-foreground: oklch(0.2 0.012 60);
   /* Brand fissi (identità logo). `--brand-navy` ora = inchiostro */
   --brand-navy: oklch(0.22 0.04 260);
   --brand-cream: oklch(0.985 0.004 80);
@@ -203,55 +192,47 @@
   --logo-tile: var(--brand-cream);
   --logo-glyph: var(--brand-navy);
   --logo-border: var(--brand-navy);
-  --logo-border-opacity: 0.30;
+  --logo-border-opacity: 0.3;
   --logo-wordmark: var(--brand-cream);
 
   --destructive: oklch(0.62 0.18 28);
   --destructive-foreground: oklch(0.985 0.004 80);
 
   --success: oklch(0.65 0.12 155);
-  --success-foreground: oklch(0.20 0.012 60);
+  --success-foreground: oklch(0.2 0.012 60);
 
   --warning: oklch(0.78 0.13 70);
-  --warning-foreground: oklch(0.20 0.012 60);
+  --warning-foreground: oklch(0.2 0.012 60);
 
-  --info: oklch(0.66 0.10 240);
-  --info-foreground: oklch(0.20 0.012 60);
+  --info: oklch(0.66 0.1 240);
+  --info-foreground: oklch(0.2 0.012 60);
 
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.70 0.15 38);
+  --ring: oklch(0.7 0.15 38);
 
-  --chart-1: oklch(0.70 0.15 38);
-  --chart-2: oklch(0.66 0.10 240);
+  --chart-1: oklch(0.7 0.15 38);
+  --chart-2: oklch(0.66 0.1 240);
   --chart-3: oklch(0.65 0.12 155);
   --chart-4: oklch(0.78 0.13 70);
   --chart-5: oklch(0.55 0.16 15);
 
-  --sidebar: oklch(0.20 0.012 60);
+  --sidebar: oklch(0.2 0.012 60);
   --sidebar-foreground: oklch(0.94 0.006 80);
-  --sidebar-primary: oklch(0.70 0.15 38);
-  --sidebar-primary-foreground: oklch(0.20 0.012 60);
+  --sidebar-primary: oklch(0.7 0.15 38);
+  --sidebar-primary-foreground: oklch(0.2 0.012 60);
   --sidebar-accent: oklch(0.28 0.012 60);
   --sidebar-accent-foreground: oklch(0.94 0.006 80);
   --sidebar-border: oklch(1 0 0 / 8%);
-  --sidebar-ring: oklch(0.70 0.15 38);
+  --sidebar-ring: oklch(0.7 0.15 38);
 
-  --gradient-hero: linear-gradient(
-    135deg,
-    oklch(0.22 0.012 60) 0%,
-    oklch(0.16 0.010 60) 100%
-  );
-  --gradient-accent: linear-gradient(
-    135deg,
-    oklch(0.72 0.15 40) 0%,
-    oklch(0.60 0.16 28) 100%
-  );
+  --gradient-hero: linear-gradient(135deg, oklch(0.22 0.012 60) 0%, oklch(0.16 0.01 60) 100%);
+  --gradient-accent: linear-gradient(135deg, oklch(0.72 0.15 40) 0%, oklch(0.6 0.16 28) 100%);
 
   --shadow-soft: 0 1px 2px 0 rgb(0 0 0 / 0.25);
   --shadow-elevated: 0 4px 12px -2px rgb(0 0 0 / 0.35);
   --shadow-elegant: 0 20px 40px -12px rgb(0 0 0 / 0.55);
-  --shadow-gold: 0 8px 24px -8px oklch(0.70 0.15 38 / 0.45);
+  --shadow-gold: 0 8px 24px -8px oklch(0.7 0.15 38 / 0.45);
 }
 
 @layer base {
@@ -274,7 +255,10 @@
   }
 
   /* Display: titoli, hero, KPI grandi */
-  h1, h2, h3, .font-display {
+  h1,
+  h2,
+  h3,
+  .font-display {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
   }

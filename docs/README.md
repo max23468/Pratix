@@ -31,20 +31,20 @@ docs/
 
 ## Quando consultare cosa
 
-| Vuoi… | Vai a… |
-|---|---|
-| Capire stack, struttura cartelle, routing | [`guides/architettura.md`](./guides/architettura.md) |
-| Lavorare su tabelle, RLS, migrazioni | [`guides/database.md`](./guides/database.md) |
-| Consultare stato migrazione e dismissione Lovable | [`guides/uscita-lovable.md`](./guides/uscita-lovable.md) |
-| Consultare l'inventario tecnico sanitizzato | [`migration/lovable-inventory.md`](./migration/lovable-inventory.md) |
+| Vuoi…                                                  | Vai a…                                                                           |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| Capire stack, struttura cartelle, routing              | [`guides/architettura.md`](./guides/architettura.md)                             |
+| Lavorare su tabelle, RLS, migrazioni                   | [`guides/database.md`](./guides/database.md)                                     |
+| Consultare stato migrazione e dismissione Lovable      | [`guides/uscita-lovable.md`](./guides/uscita-lovable.md)                         |
+| Consultare l'inventario tecnico sanitizzato            | [`migration/lovable-inventory.md`](./migration/lovable-inventory.md)             |
 | Verificare quali riferimenti storici a Lovable restano | [`migration/lovable-reference-audit.md`](./migration/lovable-reference-audit.md) |
-| Capire FatturaPA, calcoli IVA, regime forfettario | [`guides/fatturazione.md`](./guides/fatturazione.md) |
-| Cambiare colori, tema, componenti | [`guides/tema-e-design.md`](./guides/tema-e-design.md) |
-| Scrivere microcopy o label | [`guides/tono-di-voce.md`](./guides/tono-di-voce.md) |
-| Pubblicare o configurare il dominio | [`guides/deploy.md`](./guides/deploy.md) |
-| Sapere perché abbiamo scelto X | [`decisions/`](./decisions/) |
-| Capire un termine di dominio | [`glossario.md`](./glossario.md) |
-| Vedere le regole sempre attive | [`memory/core.md`](./memory/core.md) |
+| Capire FatturaPA, calcoli IVA, regime forfettario      | [`guides/fatturazione.md`](./guides/fatturazione.md)                             |
+| Cambiare colori, tema, componenti                      | [`guides/tema-e-design.md`](./guides/tema-e-design.md)                           |
+| Scrivere microcopy o label                             | [`guides/tono-di-voce.md`](./guides/tono-di-voce.md)                             |
+| Pubblicare o configurare il dominio                    | [`guides/deploy.md`](./guides/deploy.md)                                         |
+| Sapere perché abbiamo scelto X                         | [`decisions/`](./decisions/)                                                     |
+| Capire un termine di dominio                           | [`glossario.md`](./glossario.md)                                                 |
+| Vedere le regole sempre attive                         | [`memory/core.md`](./memory/core.md)                                             |
 
 ## Documentazione fuori da `docs/`
 

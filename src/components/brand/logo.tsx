@@ -83,11 +83,7 @@ function MarkPx({ tone, size }: { tone: LogoTone; size: number }) {
     : isInverse
       ? "var(--color-brand-navy)"
       : "var(--logo-border)";
-  const borderOpacity = isMono
-    ? 1
-    : isInverse
-      ? 0.35
-      : "var(--logo-border-opacity)";
+  const borderOpacity = isMono ? 1 : isInverse ? 0.35 : "var(--logo-border-opacity)";
 
   const glyphColor = isMono
     ? "currentColor"
@@ -242,8 +238,7 @@ function Wordmark({
       Prati
       <span
         style={{
-          color:
-            direction === "px" || direction === "seal" ? c.gold : wordColor,
+          color: direction === "px" || direction === "seal" ? c.gold : wordColor,
           // Stesso font, niente italic: evita il fallback che introduce spazio extra.
           fontStyle: "normal",
           marginLeft: "-0.02em",

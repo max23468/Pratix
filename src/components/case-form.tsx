@@ -27,11 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import {
-  caseMatterLabels,
-  caseStatusLabels,
-  clientDisplayName,
-} from "@/lib/labels";
+import { caseMatterLabels, caseStatusLabels, clientDisplayName } from "@/lib/labels";
 
 type CaseRow = {
   id?: string;
@@ -90,8 +86,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
 
   const isEdit = Boolean(initial?.id);
 
-  const upd = <K extends keyof CaseRow>(k: K, v: CaseRow[K]) =>
-    setForm((f) => ({ ...f, [k]: v }));
+  const upd = <K extends keyof CaseRow>(k: K, v: CaseRow[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   const { data: clients } = useQuery({
     queryKey: ["clients", "for-case"],
@@ -141,11 +136,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
         if (error) throw error;
         return data.id;
       } else {
-        const { data, error } = await supabase
-          .from("cases")
-          .insert(payload)
-          .select("id")
-          .single();
+        const { data, error } = await supabase.from("cases").insert(payload).select("id").single();
         if (error) throw error;
         return data.id;
       }
@@ -189,10 +180,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="client">Cliente</Label>
-              <Select
-                value={form.client_id ?? ""}
-                onValueChange={(v) => upd("client_id", v)}
-              >
+              <Select value={form.client_id ?? ""} onValueChange={(v) => upd("client_id", v)}>
                 <SelectTrigger id="client">
                   <SelectValue placeholder="Seleziona cliente" />
                 </SelectTrigger>
@@ -235,7 +223,9 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(caseMatterLabels).map(([k, l]) => (
-                    <SelectItem key={k} value={k}>{l}</SelectItem>
+                    <SelectItem key={k} value={k}>
+                      {l}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -248,7 +238,9 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(caseStatusLabels).map(([k, l]) => (
-                    <SelectItem key={k} value={k}>{l}</SelectItem>
+                    <SelectItem key={k} value={k}>
+                      {l}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>

@@ -6,6 +6,7 @@
 ## Contesto
 
 Pratix è un'app web full-stack che richiede:
+
 - routing tipato lato client e server,
 - SSR per SEO della landing pubblica e per share link,
 - server functions per logica protetta (generazione XML FatturaPA, integrazioni),

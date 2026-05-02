@@ -27,17 +27,17 @@ Le variabili d'ambiente (`.env`) non vanno committate. In produzione vivono su V
 
 ## Mappa della documentazione
 
-| File | Cosa contiene |
-|---|---|
-| [`README.md`](./README.md) | Questo file: panoramica e indice |
-| [`AGENTS.md`](./AGENTS.md) | Regole operative per chi (umani o agenti) modifica il codice |
-| [`BRAND.md`](./BRAND.md) | Guidelines di marca complete |
-| [`ROADMAP.md`](./ROADMAP.md) | Stato del prodotto per area, con legenda ✅🟡⬜💤 |
-| [`CHANGELOG.md`](./CHANGELOG.md) | Storia delle modifiche significative |
-| [`SECURITY.md`](./SECURITY.md) | Come segnalare vulnerabilità |
-| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Come contribuire al progetto |
-| [`LICENSE`](./LICENSE) | Licenza d'uso |
-| [`docs/`](./docs/) | Guide tematiche, memoria di progetto, decision log, glossario |
+| File                                   | Cosa contiene                                                 |
+| -------------------------------------- | ------------------------------------------------------------- |
+| [`README.md`](./README.md)             | Questo file: panoramica e indice                              |
+| [`AGENTS.md`](./AGENTS.md)             | Regole operative per chi (umani o agenti) modifica il codice  |
+| [`BRAND.md`](./BRAND.md)               | Guidelines di marca complete                                  |
+| [`ROADMAP.md`](./ROADMAP.md)           | Stato del prodotto per area, con legenda ✅🟡⬜💤             |
+| [`CHANGELOG.md`](./CHANGELOG.md)       | Storia delle modifiche significative                          |
+| [`SECURITY.md`](./SECURITY.md)         | Come segnalare vulnerabilità                                  |
+| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Come contribuire al progetto                                  |
+| [`LICENSE`](./LICENSE)                 | Licenza d'uso                                                 |
+| [`docs/`](./docs/)                     | Guide tematiche, memoria di progetto, decision log, glossario |
 
 ## Infrastruttura
 

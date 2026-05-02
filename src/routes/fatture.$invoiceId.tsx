@@ -19,6 +19,9 @@ import {
 import { InvoiceForm } from "@/components/invoice-form";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import type { InvoiceLineKind } from "@/lib/invoice-calc";
+import type { InvoicePdfData } from "@/lib/invoice-pdf";
+import type { InvoiceStatus } from "@/lib/labels";
 import { generateInvoiceXmlFn } from "@/server/invoices.functions";
 
 export const Route = createFileRoute("/fatture/$invoiceId")({
@@ -135,14 +138,14 @@ function InvoiceDetailPage() {
         apply_withholding: data.invoice.apply_withholding,
       },
       lines: data.lines.map((l) => ({
-        kind: l.kind as any,
+        kind: l.kind as InvoiceLineKind,
         description: l.description,
         quantity: Number(l.quantity),
         unit_price: Number(l.unit_price),
         amount: Number(l.amount),
       })),
-      client: data.client as any,
-      profile: data.profile as any,
+      client: data.client as InvoicePdfData["client"],
+      profile: data.profile as InvoicePdfData["profile"],
     });
   };
 
@@ -223,7 +226,7 @@ function InvoiceDetailPage() {
           year: data.invoice.year,
           issue_date: data.invoice.issue_date,
           due_date: data.invoice.due_date,
-          status: data.invoice.status as any,
+          status: data.invoice.status as InvoiceStatus,
           cassa_rate: Number(data.invoice.cassa_rate),
           vat_rate: Number(data.invoice.vat_rate),
           withholding_rate: Number(data.invoice.withholding_rate),
@@ -234,7 +237,7 @@ function InvoiceDetailPage() {
         }}
         initialLines={data.lines.map((l) => ({
           id: l.id,
-          kind: l.kind as any,
+          kind: l.kind as InvoiceLineKind,
           description: l.description,
           quantity: Number(l.quantity),
           unit_price: Number(l.unit_price),

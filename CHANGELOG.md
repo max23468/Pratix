@@ -6,6 +6,19 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.3.4] — 2026-05-02
+
+### Sotto il cofano
+
+- **Release automatizzata**: aggiunto `npm run release` per trasformare automaticamente il blocco `[Non rilasciato]` in una nuova versione SemVer, aggiornando `CHANGELOG.md` e `src/lib/version.ts`.
+- **Pubblicazione completa definita**: chiarito che "pubblicato" significa merge su `main`, deployment production Vercel verificato e chiusura del branch dedicato.
+
+## [0.3.3] — 2026-05-02
+
+### Sotto il cofano
+
+- **Lint e formattazione puliti**: riallineato il repository alle regole Prettier/ESLint, esclusi dai controlli i file generati e tipizzati gli ultimi punti fatture che usavano `any`.
+
 ## [0.3.2] — 2026-05-02
 
 ### Correzioni
@@ -156,6 +169,8 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.3.4]: #034--2026-05-02
+[0.3.3]: #033--2026-05-02
 [0.3.2]: #032--2026-05-02
 [0.3.1]: #031--2026-05-02
 [0.3.0]: #030--2026-04-29

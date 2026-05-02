@@ -22,6 +22,7 @@ Pratix oggi **genera** il file XML; **non** lo invia ancora a SDI (vedi roadmap)
 ## Regimi fiscali supportati
 
 ### Regime forfettario
+
 - Imponibile uguale al totale della prestazione
 - **Niente IVA** (operazione fuori campo IVA, art. 1 c. 54-89 L. 190/2014)
 - **Niente ritenuta d'acconto** in fattura
@@ -29,6 +30,7 @@ Pratix oggi **genera** il file XML; **non** lo invia ancora a SDI (vedi roadmap)
 - Soglia ricavi attuale: 85.000 € (verificare normativa vigente)
 
 ### Regime ordinario
+
 - IVA al **22%** sull'imponibile
 - **Ritenuta d'acconto 20%** sull'imponibile, se il cliente è **sostituto d'imposta** (azienda, partita IVA, ente)
 - No ritenuta verso persone fisiche private
@@ -63,7 +65,7 @@ netto_a_pagare     = totale_documento
 ## Numerazione
 
 - Numerazione progressiva annuale, reset a inizio anno.
-- Configurabile in *Impostazioni → Numerazione*.
+- Configurabile in _Impostazioni → Numerazione_.
 
 ## Ricezione cliente (codice destinatario / PEC)
 
@@ -73,16 +75,16 @@ netto_a_pagare     = totale_documento
 
 ## Cosa Pratix oggi fa
 
-| Capacità | Stato |
-|---|---|
-| Generazione XML FatturaPA TD06 | ✅ |
-| Generazione PDF di cortesia | ✅ |
-| Calcoli forfettario / ordinario | ✅ |
-| Cassa Forense 4% | ✅ |
-| Ritenuta d'acconto condizionata | ✅ |
-| Numerazione progressiva | ✅ |
-| Esportazione massiva ZIP | ⬜ |
-| Invio diretto SDI | ⬜ (ADR aperto) |
+| Capacità                        | Stato           |
+| ------------------------------- | --------------- |
+| Generazione XML FatturaPA TD06  | ✅              |
+| Generazione PDF di cortesia     | ✅              |
+| Calcoli forfettario / ordinario | ✅              |
+| Cassa Forense 4%                | ✅              |
+| Ritenuta d'acconto condizionata | ✅              |
+| Numerazione progressiva         | ✅              |
+| Esportazione massiva ZIP        | ⬜              |
+| Invio diretto SDI               | ⬜ (ADR aperto) |
 
 ## File rilevanti
 

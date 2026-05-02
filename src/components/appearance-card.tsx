@@ -24,9 +24,7 @@ export function AppearanceCard() {
                 type="button"
                 onClick={() => setMode(opt.value)}
                 className={`text-left rounded-lg border p-4 transition-colors ${
-                  active
-                    ? "border-primary bg-accent"
-                    : "border-border hover:border-primary/40"
+                  active ? "border-primary bg-accent" : "border-border hover:border-primary/40"
                 }`}
               >
                 <p className="font-display text-sm font-semibold text-foreground">{opt.label}</p>
@@ -36,7 +34,8 @@ export function AppearanceCard() {
           })}
         </div>
         <p className="text-xs text-muted-foreground">
-          Tema attivo: <strong className="text-foreground">{resolved === "dark" ? "Scuro" : "Chiaro"}</strong>
+          Tema attivo:{" "}
+          <strong className="text-foreground">{resolved === "dark" ? "Scuro" : "Chiaro"}</strong>
           {mode === "system" ? " (da sistema)" : ""}.
         </p>
       </CardContent>

@@ -35,9 +35,11 @@ Aggiornato a: versione **0.3.0**.
 ## Tabelle
 
 ### `profiles`
+
 Profilo professionale dell'avvocato (1:1 con `auth.users`).
 
 Contiene tre famiglie di dati:
+
 - **Anagrafica e fiscale**: nome, business name (denominazione attività), CF,
   P.IVA, REA, ordine professionale, indirizzo.
 - **Configurazione fatturazione**: regime fiscale, aliquote di default
@@ -46,14 +48,17 @@ Contiene tre famiglie di dati:
   `last_seen_changelog_version` (per la campanella "Novità"), `logo_url`.
 
 ### `clients`
+
 Rubrica clienti dell'avvocato. `kind` distingue persona fisica (`individual`)
 da soggetto giuridico (`company`); a seconda del tipo si valorizzano
 `first_name`+`last_name` o `business_name`. Indirizzo e dati fiscali servono
 per emettere fatture.
 
 ### `cases`
+
 Le **pratiche** legali. Una pratica appartiene a un cliente (`client_id`)
 e a un'unica materia (`matter`: civile, penale, lavoro…). Contiene:
+
 - numerazione interna (`case_number`, unica per utente)
 - stato corrente (`status`)
 - dati di causa (autorità, RG, controparte)
@@ -62,17 +67,20 @@ e a un'unica materia (`matter`: civile, penale, lavoro…). Contiene:
 - date di apertura/chiusura
 
 ### `case_deadlines`
+
 **Scadenze** legate a una pratica. Una scadenza ha descrizione, data, e flag
 `completed` con timestamp di completamento. Indice composito
 `(user_id, due_date)` per query "prossime scadenze".
 
 ### `case_status_history`
+
 **Storico append-only** dei cambi di stato di una pratica. Popolata
 automaticamente dal trigger `cases_log_status_change` su `INSERT` e su
 `UPDATE` quando lo `status` cambia. Non si modifica né si elimina (RLS lo
 impedisce).
 
 ### `expenses`
+
 **Spese** sostenute per conto del cliente. `is_art15` distingue le spese
 escluse dall'imponibile ex art. 15 DPR 633/72 (anticipazioni in nome e per
 conto del cliente) dalle spese imponibili. Una spesa può essere associata a
@@ -80,6 +88,7 @@ una fattura (`invoice_id` nullabile): finché è null, la spesa è "da
 fatturare".
 
 ### `invoices`
+
 **Fatture / parcelle**. Contengono numerazione (`number` + `year`, unica per
 utente), date, stato (`draft`, `issued`, `paid`, `overdue`), e tutti gli
 importi calcolati: imponibile onorari, imponibile spese, anticipazioni
@@ -91,7 +100,9 @@ documento al momento dell'emissione. Aliquote di default vengono ereditate
 da `profiles` ma sono editabili per fattura.
 
 ### `invoice_lines`
+
 **Righe di una fattura**. `kind` distingue:
+
 - `fee`: onorario imponibile
 - `expense_taxable`: spesa imponibile
 - `expense_art15`: anticipazione fuori imponibile
@@ -108,27 +119,27 @@ profiles (1) ─── (N) clients ─── (N) cases ─── (N) case_deadli
 
 ## Enum
 
-| Enum | Valori |
-|---|---|
-| `case_matter` | civile, penale, lavoro, famiglia, amministrativo, tributario, commerciale, altro |
-| `case_status` | open, in_progress, suspended, closed, archived |
-| `client_kind` | individual, company |
-| `expense_category` | contributo_unificato, marche_da_bollo, copie, trasferte, ctu, notifiche, altro |
-| `fee_type` | flat, hourly |
-| `invoice_line_kind` | fee, expense_taxable, expense_art15 |
-| `invoice_status` | draft, issued, paid, overdue |
-| `tax_regime` | ordinario, forfettario |
+| Enum                | Valori                                                                           |
+| ------------------- | -------------------------------------------------------------------------------- |
+| `case_matter`       | civile, penale, lavoro, famiglia, amministrativo, tributario, commerciale, altro |
+| `case_status`       | open, in_progress, suspended, closed, archived                                   |
+| `client_kind`       | individual, company                                                              |
+| `expense_category`  | contributo_unificato, marche_da_bollo, copie, trasferte, ctu, notifiche, altro   |
+| `fee_type`          | flat, hourly                                                                     |
+| `invoice_line_kind` | fee, expense_taxable, expense_art15                                              |
+| `invoice_status`    | draft, issued, paid, overdue                                                     |
+| `tax_regime`        | ordinario, forfettario                                                           |
 
 Convenzione: i valori enum sono in **inglese minuscolo** (perché identifier
 di codice), le label utente sono tradotte in italiano in `src/lib/labels.ts`.
 
 ## Trigger
 
-| Tabella | Trigger | Cosa fa |
-|---|---|---|
-| `profiles`, `clients`, `cases`, `case_deadlines`, `expenses`, `invoices` | `*_set_updated_at` | Aggiorna `updated_at = now()` su UPDATE |
-| `cases` | `cases_log_status_change` | Su INSERT e UPDATE (se status cambia), inserisce riga in `case_status_history` |
-| `auth.users` | `on_auth_user_created` (gestito da Supabase) | Chiama `handle_new_user()` che crea la riga `profiles` |
+| Tabella                                                                  | Trigger                                      | Cosa fa                                                                        |
+| ------------------------------------------------------------------------ | -------------------------------------------- | ------------------------------------------------------------------------------ |
+| `profiles`, `clients`, `cases`, `case_deadlines`, `expenses`, `invoices` | `*_set_updated_at`                           | Aggiorna `updated_at = now()` su UPDATE                                        |
+| `cases`                                                                  | `cases_log_status_change`                    | Su INSERT e UPDATE (se status cambia), inserisce riga in `case_status_history` |
+| `auth.users`                                                             | `on_auth_user_created` (gestito da Supabase) | Chiama `handle_new_user()` che crea la riga `profiles`                         |
 
 Le funzioni usate solo dai trigger (`handle_new_user`, `log_case_status_change`
 e `set_updated_at`) non sono eseguibili via RPC da ruoli `anon` o

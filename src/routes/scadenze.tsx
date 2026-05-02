@@ -44,7 +44,9 @@ function ScadenzeContent() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("case_deadlines")
-        .select("id, due_date, description, completed, completed_at, case_id, cases(id, case_number, title)")
+        .select(
+          "id, due_date, description, completed, completed_at, case_id, cases(id, case_number, title)",
+        )
         .order("due_date", { ascending: true });
       if (error) throw error;
       return data ?? [];

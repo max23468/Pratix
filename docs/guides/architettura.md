@@ -54,12 +54,12 @@ src/
 
 File-based, naming flat con punti:
 
-| File | URL |
-|---|---|
-| `routes/index.tsx` | `/` |
-| `routes/dashboard.tsx` | `/dashboard` |
-| `routes/pratiche.index.tsx` | `/pratiche` |
-| `routes/pratiche.$id.tsx` | `/pratiche/:id` |
+| File                           | URL                   |
+| ------------------------------ | --------------------- |
+| `routes/index.tsx`             | `/`                   |
+| `routes/dashboard.tsx`         | `/dashboard`          |
+| `routes/pratiche.index.tsx`    | `/pratiche`           |
+| `routes/pratiche.$id.tsx`      | `/pratiche/:id`       |
 | `routes/api/public/webhook.ts` | `/api/public/webhook` |
 
 **Regole TanStack Start importanti** (sintesi):

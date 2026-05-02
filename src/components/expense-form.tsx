@@ -127,7 +127,6 @@ export function ExpenseDialog({ caseId, trigger, onSaved }: Props) {
                   {(cases ?? []).map((c) => (
                     <SelectItem key={c.id} value={c.id}>
                       {c.case_number} · {c.title}
-                      
                       {c.clients ? ` — ${clientDisplayName(c.clients)}` : ""}
                     </SelectItem>
                   ))}
@@ -157,7 +156,9 @@ export function ExpenseDialog({ caseId, trigger, onSaved }: Props) {
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(expenseCategoryLabels).map(([k, l]) => (
-                    <SelectItem key={k} value={k}>{l}</SelectItem>
+                    <SelectItem key={k} value={k}>
+                      {l}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -188,7 +189,9 @@ export function ExpenseDialog({ caseId, trigger, onSaved }: Props) {
             </div>
             <div className="flex items-end gap-2">
               <div className="flex flex-col gap-1">
-                <Label htmlFor="art15" className="text-sm">Anticipazione Art. 15</Label>
+                <Label htmlFor="art15" className="text-sm">
+                  Anticipazione Art. 15
+                </Label>
                 <p className="text-xs text-muted-foreground">Esclusa da imponibile e IVA</p>
               </div>
               <Switch

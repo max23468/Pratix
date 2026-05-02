@@ -10,6 +10,7 @@
 ## Perché
 
 <!-- Problema risolto, link a issue, contesto. -->
+
 Closes #
 
 ## Tipo di modifica

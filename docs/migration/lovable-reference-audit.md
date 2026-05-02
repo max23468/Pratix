@@ -21,17 +21,17 @@ migrazione tecnica fuori da Lovable.
 
 ## Riferimenti storici rimasti
 
-| Area | File | Stato | Azione finale |
-|---|---|---|---|
-| Piano migrazione | `docs/guides/uscita-lovable.md` | Storico + checklist dismissione differita | Archiviare o rimuovere dopo la chiusura definitiva |
-| Inventario migrazione | `docs/migration/lovable-inventory.md` | Storico sanitizzato | Tenere come archivio o rimuovere se si vuole zero match assoluto |
-| Decision log | `docs/decisions/0001-stack-tanstack-start.md` | ADR storico | Tenere se si conserva lo storico decisionale |
-| Decision log | `docs/decisions/0002-lovable-cloud-supabase.md` | ADR sostituito | Tenere come decisione storica sostituita |
-| Decision log | `docs/decisions/0008-versioning-e-changelog.md` | ADR storico con vecchio processo | Valutare aggiornamento o nota di superseding |
-| Decision log | `docs/decisions/0009-uscita-completa-da-lovable.md` | ADR della migrazione completata | Tenere come decisione architetturale |
-| Changelog | `CHANGELOG.md` | Storico release | Non riscrivere salvo scelta esplicita |
-| Roadmap | `ROADMAP.md` | Stato migrazione e dismissione differita | Aggiornare solo quando Lovable viene chiuso o scollegato |
-| Indice docs | `docs/README.md` | Link a documenti storici | Aggiornare se i documenti vengono archiviati o rimossi |
+| Area                  | File                                                | Stato                                     | Azione finale                                                    |
+| --------------------- | --------------------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------- |
+| Piano migrazione      | `docs/guides/uscita-lovable.md`                     | Storico + checklist dismissione differita | Archiviare o rimuovere dopo la chiusura definitiva               |
+| Inventario migrazione | `docs/migration/lovable-inventory.md`               | Storico sanitizzato                       | Tenere come archivio o rimuovere se si vuole zero match assoluto |
+| Decision log          | `docs/decisions/0001-stack-tanstack-start.md`       | ADR storico                               | Tenere se si conserva lo storico decisionale                     |
+| Decision log          | `docs/decisions/0002-lovable-cloud-supabase.md`     | ADR sostituito                            | Tenere come decisione storica sostituita                         |
+| Decision log          | `docs/decisions/0008-versioning-e-changelog.md`     | ADR storico con vecchio processo          | Valutare aggiornamento o nota di superseding                     |
+| Decision log          | `docs/decisions/0009-uscita-completa-da-lovable.md` | ADR della migrazione completata           | Tenere come decisione architetturale                             |
+| Changelog             | `CHANGELOG.md`                                      | Storico release                           | Non riscrivere salvo scelta esplicita                            |
+| Roadmap               | `ROADMAP.md`                                        | Stato migrazione e dismissione differita  | Aggiornare solo quando Lovable viene chiuso o scollegato         |
+| Indice docs           | `docs/README.md`                                    | Link a documenti storici                  | Aggiornare se i documenti vengono archiviati o rimossi           |
 
 ## Gate operativo
 

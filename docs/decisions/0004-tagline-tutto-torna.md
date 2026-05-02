@@ -6,6 +6,7 @@
 ## Contesto
 
 Pratix è un nuovo brand. La tagline doveva essere:
+
 - **asciutta**, in linea col tono del prodotto,
 - **affermativa**, non esplicativa,
 - **memorabile** in italiano (target italiano, no calchi anglofoni),

@@ -8,12 +8,12 @@
  * - PATCH: bugfix, miglioramenti UI, contenuti, performance
  *
  * Per rilasciare una nuova versione:
- * 1. aggiorna `APP_VERSION` qui sotto
- * 2. aggiorna `BUILD_DATE` (formato YYYY-MM-DD)
- * 3. rinomina `[Non rilasciato]` in `CHANGELOG.md` con il nuovo numero e data
- * 4. promuovi il deployment di produzione su Vercel
+ * 1. aggiungi le voci sotto `[Non rilasciato]` in `CHANGELOG.md`
+ * 2. esegui `npm run release`
+ * 3. verifica il diff generato
+ * 4. promuovi e verifica il deployment di produzione su Vercel
  *
  * Vedi `docs/guides/versioning-e-release.md` per la procedura completa.
  */
-export const APP_VERSION = "0.3.2";
+export const APP_VERSION = "0.3.4";
 export const BUILD_DATE = "2026-05-02";

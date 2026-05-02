@@ -18,13 +18,13 @@ La parola **"studio"** è **vietata** in tutta la UI di Pratix (label, microcopy
 
 Sostituzioni canoniche:
 
-| Vecchio | Nuovo |
-|---|---|
-| "il tuo studio" | "la tua professione" |
-| "dati dello studio" | "i tuoi dati professionali", "i tuoi dati" |
-| "Tab: Studio" | "Tab: Professione" |
-| "Ragione sociale / Studio" | "Ragione sociale / Denominazione" |
-| Fallback fattura "Studio Legale" | "Avvocato" |
+| Vecchio                          | Nuovo                                      |
+| -------------------------------- | ------------------------------------------ |
+| "il tuo studio"                  | "la tua professione"                       |
+| "dati dello studio"              | "i tuoi dati professionali", "i tuoi dati" |
+| "Tab: Studio"                    | "Tab: Professione"                         |
+| "Ragione sociale / Studio"       | "Ragione sociale / Denominazione"          |
+| Fallback fattura "Studio Legale" | "Avvocato"                                 |
 
 > **Nota (2026-04-29)**: la parola **"attività"** — usata in una prima versione di questo ADR come sostituto di "studio" — è anch'essa stata **dismessa** perché ambigua in italiano (significa sia "impresa" sia "azione/task", e in Pratix indica già le voci di lavoro fatturabili). Il termine canonico è ora **"professione"** / "i tuoi dati professionali". "Attività" resta lecita solo come sostantivo comune ("le attività compiute tramite l'account") nei testi legali, mai come label di prodotto.
 

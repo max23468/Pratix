@@ -8,6 +8,8 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "ci:local": "npm run build && npm run lint && npm audit --audit-level=moderate",
+    "release": "node scripts/release.mjs",
+    "release:dry-run": "node scripts/release.mjs --dry-run",
     "db:advisors:security": "npx supabase db advisors --linked --type security",
     "db:advisors:performance": "npx supabase db advisors --linked --type performance",
     "db:push:dry-run": "npx supabase db push --linked --dry-run",

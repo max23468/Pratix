@@ -192,9 +192,10 @@ Pratix usa **SemVer convenzionale** adattato a SaaS hostato (vedi [`docs/decisio
 
 - **Single source of truth**: `src/lib/version.ts` (`APP_VERSION` + `BUILD_DATE`).
 - **Bump**: MAJOR = breaking utente, MINOR = nuova feature, PATCH = bugfix/UI/contenuti.
-- **Rilasciare** = bump `version.ts` + rinomina `[Non rilasciato]` → `[X.Y.Z] — YYYY-MM-DD` in `CHANGELOG.md` + promozione deployment Vercel.
+- **Rilasciare** = eseguire `npm run release` (oppure `npm run release -- --bump patch|minor|major`), verificare il diff generato e promuovere il deployment Vercel. Il comando aggiorna `src/lib/version.ts`, rinomina `[Non rilasciato]` → `[X.Y.Z] — YYYY-MM-DD`, crea il nuovo blocco `[Non rilasciato]` e aggiorna i link del changelog.
+- **Pubblicare / tutto pubblicato** = merge su `main` + deployment production Vercel completato e verificato + branch dedicato chiuso/eliminato se esiste. Una PR aperta, un push sul branch o una preview Vercel non bastano. Quando il proprietario chiede "pubblica", "pubblica tutto" o "è tutto pubblicato?", completa questi passaggi oppure dichiara esattamente cosa manca.
 - **Regola obbligatoria per ogni cambio progetto**: ogni volta che modifichi codice, documentazione, configurazione, schema DB, brand, processo o deploy, valuta sempre l'impatto sul versioning prima di chiudere il lavoro.
-- **Gate di chiusura fase**: prima di dichiarare conclusa una modifica, fase, migrazione, cutover o lavoro già pubblicato/deployato, controlla `CHANGELOG.md`. Se il blocco `[Non rilasciato]` contiene voci relative al lavoro appena completato, non chiudere il task senza fare il bump SemVer oppure senza dichiarare esplicitamente che il rilascio resta il prossimo step operativo.
+- **Gate di chiusura fase**: prima di dichiarare conclusa una modifica, fase, migrazione, cutover o lavoro già pubblicato/deployato, controlla `CHANGELOG.md`. Se il blocco `[Non rilasciato]` contiene voci relative al lavoro appena completato, non chiudere il task senza eseguire `npm run release` oppure senza dichiarare esplicitamente che il rilascio resta il prossimo step operativo.
 - **Default post-migrazione**: per migrazioni, cutover, correzioni infra o bonifiche sotto il cofano completate senza nuove feature utente, usa PATCH salvo istruzione diversa o impatto utente maggiore.
 - Procedura completa: [`docs/guides/versioning-e-release.md`](./docs/guides/versioning-e-release.md).
 
