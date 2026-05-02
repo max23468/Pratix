@@ -104,7 +104,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | `lang="it"` su root                            |                                                                                                                                                   |
 | ✅    | Meta unici per route pubbliche                 | Landing, login, registrazione, recupero, privacy, termini                                                                                         |
 | ✅    | og:image globale + Twitter card                | `/og-image.jpg`                                                                                                                                   |
-| ⬜    | `sitemap.xml` + `robots.txt`                   |                                                                                                                                                   |
+| ✅    | `sitemap.xml` + `robots.txt`                   | Sitemap pubblica per home, novità, privacy e termini; robots con esclusione di aree riservate e pagine operative di accesso                       |
 | ⬜    | JSON-LD `Organization` / `SoftwareApplication` |                                                                                                                                                   |
 | ✅    | Uscita tecnica da Lovable                      | GitHub + Vercel + Supabase attivi; produzione verificata su `https://pratix.vercel.app`; Lovable resta solo parcheggiato come archivio temporaneo |
 | ✅    | Pubblicazione tramite Vercel                   | Produzione su `https://pratix.vercel.app`; dominio proprietario rimandato                                                                         |

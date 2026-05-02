@@ -1,0 +1,18 @@
+User-agent: *
+Allow: /
+
+Disallow: /account
+Disallow: /api
+Disallow: /clienti
+Disallow: /dashboard
+Disallow: /fatture
+Disallow: /impostazioni
+Disallow: /login
+Disallow: /pratiche
+Disallow: /recupera-password
+Disallow: /register
+Disallow: /scadenze
+Disallow: /spese
+Disallow: /reimposta-password
+
+Sitemap: https://pratix.vercel.app/sitemap.xml
