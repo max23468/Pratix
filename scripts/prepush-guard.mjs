@@ -104,36 +104,48 @@ function isFormatRelevant(file) {
 
 function buildFingerprint() {
   const head = execGit(["rev-parse", "HEAD"], { cwd: root });
-  const upstream = resolveUpstream();
-  const committedChanges = upstream
-    ? execGit(["diff", "--name-only", `${upstream}...HEAD`], { cwd: root })
+  const comparisonRef = resolveComparisonRef();
+  const committedChanges = comparisonRef
+    ? execGit(["diff", "--name-only", `${comparisonRef}...HEAD`], { cwd: root })
     : execGit(["diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"], { cwd: root });
   const stagedChanges = execGit(["diff", "--cached", "--name-only"], { cwd: root });
   const unstagedChanges = execGit(["diff", "--name-only"], { cwd: root });
-  const untracked = execGit(["ls-files", "--others", "--exclude-standard"], { cwd: root });
-  const status = execGit(["status", "--porcelain"], { cwd: root });
+  const status = execGit(["status", "--porcelain", "--untracked-files=no"], { cwd: root });
 
-  const changedFiles = uniqueLines([committedChanges, stagedChanges, unstagedChanges, untracked]);
+  const changedFiles = uniqueLines([committedChanges, stagedChanges, unstagedChanges]);
   const source = {
     changedFiles,
+    comparisonRef,
     head,
     node: process.version,
     status,
-    upstream,
   };
   const id = createHash("sha256").update(JSON.stringify(source)).digest("hex");
 
   return { changedFiles, id, source };
 }
 
-function resolveUpstream() {
+function resolveComparisonRef() {
   try {
     return execGit(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"], {
       cwd: root,
     });
   } catch {
-    return "";
+    return resolveDefaultBase();
   }
+}
+
+function resolveDefaultBase() {
+  for (const ref of ["origin/main", "main"]) {
+    try {
+      execGit(["rev-parse", "--verify", ref], { cwd: root });
+      return ref;
+    } catch {
+      // Try the next default base.
+    }
+  }
+
+  return "";
 }
 
 function readCache() {

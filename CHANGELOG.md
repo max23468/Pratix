@@ -17,6 +17,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ### Sotto il cofano
 
+- **Ambiente Codex cloud allineato**: il workflow dei commenti Codex lavora solo sulle PR aperte, i gate locali ignorano file non tracciati usando `origin/main` come base quando una branch non ha upstream, e il vecchio lockfile Bun è stato rimosso.
 - **Stato integrazioni documentato**: aggiornata la documentazione operativa su GitHub, Vercel e Supabase per distinguere ciò che è completato, ciò che resta solo da verificare nel tempo e le integrazioni lasciate fuori dal percorso gratuito.
 - **Secret e backup fuori repo**: rafforzate regole e ignore list per tenere dump, archivi, chiavi private e secret runtime fuori da GitHub.
 - **Indici foreign key Supabase**: aggiunti gli indici mancanti su `case_status_history.user_id` e `invoice_lines.user_id` per chiudere gli avvisi informativi del Performance Advisor senza rimuovere indici ancora privi di traffico storico.

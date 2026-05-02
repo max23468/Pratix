@@ -63,7 +63,6 @@ function changedFiles() {
 
   groups.push(execGit(["diff", "--cached", "--name-only"], { cwd: root }));
   groups.push(execGit(["diff", "--name-only"], { cwd: root }));
-  groups.push(execGit(["ls-files", "--others", "--exclude-standard"], { cwd: root }));
 
   return uniqueLines(groups);
 }
@@ -82,8 +81,21 @@ function resolveBase() {
       cwd: root,
     });
   } catch {
-    return "";
+    return resolveDefaultBase();
   }
+}
+
+function resolveDefaultBase() {
+  for (const ref of ["origin/main", "main"]) {
+    try {
+      execGit(["rev-parse", "--verify", ref], { cwd: root });
+      return ref;
+    } catch {
+      // Try the next default base.
+    }
+  }
+
+  return "";
 }
 
 function isExistingFile(file) {
