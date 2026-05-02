@@ -67,6 +67,12 @@ Fallback intestazione fattura: **"Avvocato"**.
 
 Ogni decisione di prodotto/brand/tecnica condivisa in chat deve confluire in [`ROADMAP.md`](../../ROADMAP.md). Aggiornare stato (✅ 🟡 ⬜ 💤) a ogni cambio.
 
+Se il worktree contiene modifiche non collegate alla richiesta, non mescolare filoni diversi: per interventi non minuscoli usa un branch/worktree dedicato da base pulita; per interventi piccoli lavora nello stesso checkout solo se i file non si sovrappongono e segnala l'assunzione.
+
+Pratix resta un gestionale leggero per avvocati freelance. Nuove funzionalità devono rafforzare pratiche, clienti, scadenze, spese, fatture, sicurezza dati, qualità operativa o affidabilità del SaaS. Evita espansioni verso studi associati, CRM generalista, suite contabile completa, piattaforme enterprise, bot Telegram o VPS-first senza decisione esplicita e ADR.
+
+Per modifiche UI sostanziali verifica quando praticabile desktop/mobile e chiaro/scuro. Nelle risposte finali cita verifiche solo quando aggiungono valore: fallimenti, limiti, rischi residui o comandi rilevanti.
+
 ## Stack
 
 TanStack Start + Supabase di proprietà + Vercel. Lingua italiana, `lang="it"`.
