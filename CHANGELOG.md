@@ -6,6 +6,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.3.7] — 2026-05-02
+
 ### Correzioni
 
 - **Release con placeholder non versionati**: `npm run release` ignora le sezioni `Non versionato` vuote, evitando blocchi quando il changelog contiene solo intestazioni placeholder.
@@ -13,6 +15,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 ### Sotto il cofano
 
 - **Gestione settimanale commenti Codex**: aggiunto un workflow GitHub Actions che analizza solo le nuove PR rispetto all'ultimo stato salvato e chiede a Codex di gestire eventuali thread non risolti.
+- **Guardrail agenti rafforzati**: chiariti perimetro prodotto, gestione del worktree sporco, verifiche UI sostanziali e riepiloghi finali senza footer rituali.
 
 ## [0.3.6] — 2026-05-02
 
@@ -189,6 +192,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.3.7]: #037--2026-05-02
 [0.3.6]: #036--2026-05-02
 [0.3.5]: #035--2026-05-02
 [0.3.4]: #034--2026-05-02

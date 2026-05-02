@@ -30,6 +30,28 @@ Stack:
 
 Per dettagli: [`docs/guides/architettura.md`](./docs/guides/architettura.md), [`docs/data-model.md`](./docs/data-model.md), [`BRAND.md`](./BRAND.md).
 
+### Perimetro e non-obiettivi
+
+Pratix deve restare un gestionale leggero per il singolo avvocato freelance.
+
+Una nuova funzionalità ha senso quando rafforza almeno uno di questi assi:
+
+- pratiche, clienti, scadenze, spese o fatture;
+- sicurezza, privacy, esportazione o governo dei dati dell'utente;
+- qualità operativa del professionista freelance;
+- affidabilità, manutenzione o deploy del SaaS Vercel + Supabase.
+
+Evita o parcheggia in roadmap le proposte che aprono domini non necessari allo scopo attuale. In particolare Pratix **non** è:
+
+- un gestionale per studi associati o team multi-ruolo;
+- un CRM generalista;
+- una suite contabile completa;
+- una piattaforma multi-tenant enterprise;
+- un bot Telegram o un servizio VPS-first;
+- una dashboard analytics ampia.
+
+Spostamenti strutturali verso questi perimetri richiedono una decisione esplicita e, se diventano permanenti, un ADR.
+
 ## Aspettative sul repository
 
 ### Package manager
@@ -98,6 +120,7 @@ GitHub è la fonte primaria del codice. Vercel builda e pubblica dal repository.
 ## Prima di intervenire
 
 - Controlla rapidamente lo stato del repo con `git status --short`.
+- Se il worktree contiene modifiche non collegate alla richiesta, non mescolarle con il nuovo lavoro. Per interventi non minuscoli crea o usa un branch/worktree dedicato da una base pulita; per interventi piccoli puoi lavorare nello stesso checkout solo se i file toccati non si sovrappongono e lo dichiari nel riepilogo.
 - Prima di proporre architetture o refactor, leggi codice, test e file di configurazione pertinenti.
 - Per modifiche a routing o pagine, controlla i file vicini in `src/routes` e verifica che il routing non venga rotto.
 - Per modifiche al modello dati, leggi prima [`docs/data-model.md`](./docs/data-model.md) e [`supabase/schema.sql`](./supabase/schema.sql).
@@ -131,6 +154,7 @@ Vincoli di terminologia (vedi [`docs/glossario.md`](./docs/glossario.md)):
 - Non introdurre nuove dipendenze UI o librerie di stato senza motivazione esplicita e impatto chiaro.
 - **Solo token semantici per i colori** (`bg-primary`, `text-foreground`, `border-border`…). Mai hex inline o classi tipo `bg-white`. La palette vive in `src/styles.css` (oklch). Vedi [`BRAND.md`](./BRAND.md).
 - **Logo**: solo `<Logo>` da `src/components/brand/logo.tsx`. Mai SVG inline.
+- Per modifiche UI sostanziali, verifica quando praticabile la resa desktop/mobile e chiaro/scuro. Se non puoi farlo, dichiaralo con il rischio residuo.
 
 ## Sicurezza e dati
 
@@ -151,6 +175,7 @@ Vincoli di terminologia (vedi [`docs/glossario.md`](./docs/glossario.md)):
 - Usa `npm run ci:local` come gate completo quando la modifica è abbastanza ampia da giustificarlo.
 - Per modifiche solo documentali, non serve inventare test applicativi: rileggi il documento e verifica la coerenza delle istruzioni.
 - Non inventare risultati di test o comandi non eseguiti. Se un controllo non può essere eseguito, dichiaralo esplicitamente con motivo e rischio residuo.
+- Nelle risposte finali evita footer rituali sui test. Riporta verifiche solo quando sono utili: comando eseguito, fallimento, controllo non eseguibile, limite noto o rischio residuo.
 
 ## Documentazione, memoria, glossario
 
