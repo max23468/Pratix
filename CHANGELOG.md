@@ -7,11 +7,17 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 ## [Non rilasciato]
 
 ### Correzioni
+
 - **Termini allineati al glossario**: la pagina Termini usa "professione" al posto dei riferimenti generici ad attività o studio professionale.
 - **Separatori title standardizzati**: i titoli pagina e i meta tag usano `·` al posto del trattino lungo (`Dashboard · Pratix`), lasciando `Pratix · Tutto torna.` solo alla home pubblica.
 - **Recupero password più chiaro**: se la nuova password coincide con quella precedente, la pagina ora mostra un messaggio specifico invece di chiedere un nuovo link di recupero.
 
 ### Sotto il cofano
+
+- **Quality gate GitHub leggero**: aggiunto workflow Actions su PR e avvio manuale con build, lint sui sorgenti modificati e audit mirato.
+- **Dependabot esteso alle Actions**: gli aggiornamenti GitHub Actions sono ora controllati settimanalmente e raggruppati per ridurre rumore.
+- **Comandi Supabase operativi**: aggiunti script npm per advisors, dry-run delle migration e rigenerazione types senza automatizzare deploy DB.
+- **Guide GitHub/Vercel/Supabase rafforzate**: documentato il flusso gratuito con preview Vercel, env separati, niente secondo Supabase e backup manuale.
 - **Migrazione tecnica completata**: Pratix è operativo su GitHub, Vercel e Supabase di proprietà; Lovable resta solo parcheggiato come archivio temporaneo non operativo.
 - **Env tracciato riallineato**: `.env` punta al nuovo progetto Supabase di proprietà invece del vecchio ref storico.
 - **Migration FK resa idempotente**: la migration di ripristino foreign key salta i vincoli già presenti, così Supabase Preview può ricostruire il database da zero.
@@ -41,30 +47,36 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 ## [0.3.0] — 2026-04-29
 
 ### Novità
+
 - **Area Account separata**: il tuo profilo personale, l'email di accesso, il cambio password, il tema e le notifiche vivono ora in `/account`, raggiungibile dal menu utente in alto a destra. `/impostazioni` resta dedicata ai tuoi dati professionali (anagrafica, fiscale, IBAN, numerazione fatture).
 - **Cambio password in autonomia**: nuova sezione "Accesso e sicurezza" in Account. Inserisci la password attuale e la nuova, senza dover passare dal flusso di recupero email.
 - **Menu utente in topbar**: nuovo avatar circolare accanto alla campanella, con scorciatoie ad Account, Cambia password, Impostazioni professione e Esci.
 
 ### Correzioni
+
 - **Glossario**: dismessa la parola **"attività"** come label di prodotto perché ambigua (in italiano significa sia "impresa" sia "azione/task", e in Pratix indica già le voci di lavoro fatturabili). Sostituita ovunque con **"professione"** / "i tuoi dati professionali": tab Impostazioni → Professione, header "La mia professione", onboarding, dashboard, registrazione, menu utente. ADR-0005 aggiornato di conseguenza.
 
 ## [0.2.1] — 2026-04-29
 
 ### Novità
+
 - **Più visibilità al brand nella landing**: aggiunto il monogramma "Px" grande sopra al claim "Tutto torna." e logo ingrandito nella barra in alto, per riconoscimento immediato prima del login.
 - **Logo più grande nelle aree autenticate**: barra laterale e barra in alto con il monogramma più presente, senza occupare spazio in più ai contenuti.
 
 ### Correzioni
+
 - **Glossario**: rimosso il termine "assistiti" dalla pagina Clienti (sostituito con "clienti").
 - **Colore della chrome browser**: la barra superiore di iOS/Android ora segue il tema (inchiostro su scuro, panna su chiaro) invece di mostrare il vecchio navy.
 
 ### Sotto il cofano
+
 - Asset di pubblicazione (favicon, icona PWA, immagine social) rigenerati con la palette inchiostro + terracotta.
 - Categorie del changelog ridisegnate (`Novità` / `Correzioni` / `Sotto il cofano`) per separare ciò che cambia nell'esperienza da ciò che è interno. La pagina `/novita` mette in evidenza le Novità, mantiene compatte le Correzioni e raccoglie le voci tecniche in un blocco espandibile.
 
 ## [0.2.0] — 2026-04-29
 
 ### Aggiunto
+
 - **Pagina Novità** in-app (`/novita`, autenticata): mostra il changelog con voci raggruppate per versione, parsato a build time da `CHANGELOG.md`. Solo le versioni rilasciate sono visibili agli utenti.
 - **Campanella in topbar**: icona discreta accanto al nome dell'attività, con puntino terracotta quando esiste una versione più recente di quella già vista. Aprire la pagina Novità segna la versione corrente come letta.
 - **Footer Impostazioni** con versione corrente, data di build e link a "Cosa è cambiato".
@@ -84,6 +96,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 - **Prima pubblicazione su Lovable**: il prodotto è online su `https://pratix-legal.lovable.app`.
 
 ### Modificato
+
 - **Database**: aggiunto campo `last_seen_changelog_version` alla tabella `profiles` per tracciare l'ultima versione delle Novità vista da ogni utente.
 - **Palette brand**: il primario passa da navy `oklch(0.30 0.07 255)` a inchiostro profondo `oklch(0.22 0.04 260)`; l'accento passa da oro brunito `oklch(0.68 0.11 75)` a terracotta `oklch(0.62 0.15 35)`. Lo sfondo dark passa a un grigio caldo (hue 60) per armonizzare con la terracotta. Vibe editoriale legale italiano, lontano dal territorio fintech. I nomi dei token (`--brand-navy`, `--brand-gold`) sono mantenuti come alias storici per non rompere il codice esistente.
 - **Logo dark adattivo**: il tone `navy` di `<Logo>` ora cambia tile e glifo fra light e dark per garantire leggibilità sul fondo scuro. Tone `inverse` e `mono` invariati.
@@ -91,6 +104,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 - Memoria di progetto sincronizzata con i nuovi mirror in `docs/memory/`.
 
 ### Sicurezza
+
 - **Fix info leak in registrazione**: il messaggio di errore è ora generico ("Registrazione non riuscita. Riprova o accedi se hai già un account.") al posto del messaggio Supabase grezzo, prevenendo l'enumerazione degli utenti registrati.
 
 ---
@@ -100,6 +114,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturazione e gestione dati di base.
 
 ### Aggiunto
+
 - **Identità di marca**: nome **Pratix**, tagline ufficiale **"Tutto torna."**, palette navy + oro brunito + panna, tipografia Inter Tight + Inter + JetBrains Mono.
 - **Logo unificato** `<Logo>` con direzione default `px` e favicon SVG, mai SVG inline.
 - **Token semantici** in `src/styles.css` (mai hex inline) e token brand fissi cross-tema (`--color-brand-navy/cream/gold`).
@@ -114,11 +129,13 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - **`ROADMAP.md`** con stato per area (brand, tema, landing, prodotto, account, SEO, processo).
 
 ### Modificato
+
 - **Dark mode** ammorbidita: da navy intenso a grigio caldo neutro `oklch(0.18 0.012 250)` con croma molto bassa, più riposante per gli occhi.
 - **Glossario freelance**: rimossa la parola **"studio"** da tutta la UI (target è avvocato singolo, non studio associato). Sostituiti tab, label, descrizioni meta, copy onboarding e fallback fatture con "attività" / "tua attività professionale" / "Avvocato".
 - **Tagline**: scelta finale **"Tutto torna."** dopo iterazioni; documentato il triplo significato (contabile, narrativo, ordine) in `BRAND.md`.
 
 ### Sicurezza
+
 - RLS abilitato su tutte le tabelle utente, policy per `user_id`.
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 

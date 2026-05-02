@@ -83,6 +83,15 @@ Le policy che richiedono ruolo usano poi `public.has_role((select auth.uid()), '
 - Usa Supabase CLI e i file in `supabase/migrations/`.
 - **Mai** `ALTER DATABASE postgres` nelle migrazioni: non è permesso.
 - **Mai** modificare manualmente `src/integrations/supabase/types.ts`: è generato dall'API.
+- Prima di applicare una migration remota, usa `npm run db:push:dry-run`.
+- Dopo modifiche a schema, RLS, trigger o funzioni, usa:
+  - `npm run db:advisors:security`
+  - `npm run db:advisors:performance`
+- Rigenera i tipi Supabase solo con `npm run db:types`, poi controlla il diff.
+
+Non automatizzare `supabase db push` da GitHub Actions finché Pratix usa un solo
+progetto Supabase. Il deploy del database resta manuale e intenzionale: il
+workflow CI deve verificare, non cambiare la produzione.
 
 ## Realtime
 
@@ -99,7 +108,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const channel = supabase
   .channel("messages")
-  .on("postgres_changes", { event: "*", schema: "public" }, payload => {
+  .on("postgres_changes", { event: "*", schema: "public" }, (payload) => {
     console.log(payload);
   })
   .subscribe();
@@ -117,3 +126,17 @@ Le policy RLS continuano a valere anche sui messaggi realtime.
 - `supabase db advisors --linked --type security` per anomalie di sicurezza.
 - `supabase db advisors --linked --type performance` per anomalie di performance.
 - Linter pulito **non** garantisce sicurezza: review manuale delle policy obbligatoria.
+
+## Backup gratuito
+
+Il piano gratuito non deve dipendere da Point-in-Time Recovery o Log Drains. Per
+Pratix il backup operativo è manuale:
+
+1. Esporta periodicamente un dump logico del database con strumenti Supabase CLI
+   o Postgres.
+2. Conserva il dump fuori dal repository GitHub.
+3. Non salvare mai nel repo dump reali, dati clienti, fatture, email o chiavi.
+4. Quando possibile, prova il restore su ambiente locale o su un progetto
+   temporaneo non produttivo.
+
+Le migrations e `supabase/schema.sql` restano in GitHub; i dati reali no.

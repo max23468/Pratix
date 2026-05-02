@@ -8,6 +8,10 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "ci:local": "npm run build && npm run lint && npm audit --audit-level=moderate",
+    "db:advisors:security": "npx supabase db advisors --linked --type security",
+    "db:advisors:performance": "npx supabase db advisors --linked --type performance",
+    "db:push:dry-run": "npx supabase db push --linked --dry-run",
+    "db:types": "npx supabase gen types typescript --linked --schema public > src/integrations/supabase/types.ts",
     "preview": "vite preview",
     "lint": "eslint .",
     "format": "prettier --write ."
