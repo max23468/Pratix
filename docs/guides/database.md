@@ -115,10 +115,33 @@ La UI gestisce sia registrazione con sessione immediata sia registrazione con
 email da confermare. Il cambio password in-app richiede già la password attuale
 prima di chiamare Supabase.
 
+### Stato corrente Auth
+
+Al 2026-05-03 il percorso free-tier scelto è:
+
+- registrazione aperta;
+- email/password come metodo principale;
+- conferma email attiva e gestita dalla UI;
+- recupero password attivo con pagine `/recupera-password` e `/reimposta-password`;
+- link di reset assente, scaduto o non valido gestito con messaggio chiaro;
+- MFA non implementata per scelta attuale;
+- Secure Email Change non attivo per scelta attuale;
+- password policy Supabase non rafforzata oltre il minimo applicativo;
+- Leaked Password Protection lasciata fuori perché richiede un piano a pagamento.
+
+Se un test di registrazione reale incontra `over_email_send_rate_limit`, non
+alzare subito i limiti: attendi il reset della finestra Supabase e riprova con
+una casella controllata. Evita tentativi ripetuti con indirizzi fittizi, perché
+possono consumare il limite email.
+
 ### CAPTCHA
 
 Supabase Auth supporta CAPTCHA su registrazione, login e recupero password.
-Pratix è predisposto per Cloudflare Turnstile:
+Pratix è predisposto per Cloudflare Turnstile, ma l'integrazione non è attiva
+nel percorso corrente: non creare widget Cloudflare e non configurare secret
+Turnstile finché non viene presa una nuova decisione.
+
+Se in futuro si decide di attivarla:
 
 1. Crea il widget Turnstile per `pratix.vercel.app` e per gli eventuali domini preview.
 2. Inserisci la secret key in Supabase Auth → Bot and Abuse Protection.
@@ -129,18 +152,19 @@ Non salvare la secret key Turnstile in GitHub o nei file `.env` tracciati.
 
 ### Email Auth
 
-Per produzione conviene configurare Custom SMTP in Supabase, così conferme e
-recuperi password non dipendono dal servizio email di default.
+I template Supabase di conferma account e recupero password sono personalizzati
+in italiano. Custom SMTP e dominio email dedicato restano opzionali: non sono un
+blocco operativo nel percorso gratuito attuale.
 
-Template italiani consigliati:
+Template italiani attesi:
 
 - Confirm signup: oggetto `Conferma il tuo account Pratix`; testo breve con
   link di conferma e nota "Se non hai richiesto tu la registrazione, ignora
   questa email."
 - Reset password: oggetto `Reimposta la password di Pratix`; testo breve con
   link valido per il tempo impostato in Supabase.
-- Change email: mantenere testo neutro e conferma sul nuovo indirizzo quando la
-  funzione verrà attivata.
+- Change email: non attivo oggi; mantenere un testo neutro solo se la funzione
+  verrà attivata in futuro.
 
 Non inserire dati personali, importi o riferimenti a clienti nei template Auth.
 
