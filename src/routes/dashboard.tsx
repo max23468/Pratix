@@ -14,9 +14,9 @@ import { caseStatusLabels, caseStatusVariant, clientDisplayName } from "@/lib/la
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
-      { title: "Dashboard — Pratix" },
+      { title: "Dashboard · Pratix" },
       { name: "description", content: "Una visione d'insieme della tua professione." },
-      { property: "og:title", content: "Dashboard — Pratix" },
+      { property: "og:title", content: "Dashboard · Pratix" },
       { property: "og:description", content: "Una visione d'insieme della tua professione." },
     ],
   }),

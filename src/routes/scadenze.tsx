@@ -22,7 +22,7 @@ import { formatDate } from "@/lib/format";
 export const Route = createFileRoute("/scadenze")({
   head: () => ({
     meta: [
-      { title: "Scadenzario — Pratix" },
+      { title: "Scadenzario · Pratix" },
       { name: "description", content: "Tutte le scadenze delle tue pratiche in un unico posto." },
     ],
   }),

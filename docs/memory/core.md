@@ -6,7 +6,7 @@
 
 - **Nome**: Pratix, gestionale per avvocati freelance.
 - **Personalità**: professionale moderno.
-- **Tagline ufficiale**: **"Tutto torna."** (sempre col punto, mai tradurre, mai dentro la UI autenticata).
+- **Tagline ufficiale**: **"Tutto torna."** (sempre col punto, mai tradurre, mai dentro la UI autenticata). Nei title/meta usa sempre `·`: `Dashboard · Pratix`. La forma `Pratix · Tutto torna.` è riservata alla home pubblica.
 
 ## Palette
 

@@ -4,13 +4,13 @@ import { Logo } from "@/components/brand/logo";
 export const Route = createFileRoute("/privacy")({
   head: () => ({
     meta: [
-      { title: "Informativa sulla privacy — Pratix" },
+      { title: "Informativa sulla privacy · Pratix" },
       {
         name: "description",
         content:
           "Come Pratix tratta i dati personali degli avvocati che usano il servizio e dei loro clienti, ai sensi del GDPR.",
       },
-      { property: "og:title", content: "Informativa sulla privacy — Pratix" },
+      { property: "og:title", content: "Informativa sulla privacy · Pratix" },
       {
         property: "og:description",
         content:

@@ -8,9 +8,9 @@ import { Button } from "@/components/ui/button";
 export const Route = createFileRoute("/pratiche/nuova")({
   head: () => ({
     meta: [
-      { title: "Nuova pratica — Pratix" },
+      { title: "Nuova pratica · Pratix" },
       { name: "description", content: "Apri una nuova pratica." },
-      { property: "og:title", content: "Nuova pratica — Pratix" },
+      { property: "og:title", content: "Nuova pratica · Pratix" },
       { property: "og:description", content: "Apri una nuova pratica." },
     ],
   }),

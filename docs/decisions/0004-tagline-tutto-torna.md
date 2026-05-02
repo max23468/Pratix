@@ -30,6 +30,7 @@ La tagline ufficiale di Pratix è **"Tutto torna."** — sempre col **punto fina
 - **Sempre** col punto finale: `Tutto torna.`
 - **Mai** dentro la UI autenticata (è una promessa di marketing, non un messaggio di sistema).
 - Vive in: hero della landing, footer pubblico, meta tag (title, description, og), materiali di marca.
+- Nei title e nei meta tag, il separatore canonico è `·`: `Dashboard · Pratix`. La forma `Pratix · Tutto torna.` è riservata alla home pubblica.
 - **Mai** tradurre: il triplo senso esiste solo in italiano.
 
 ## Conseguenze

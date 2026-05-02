@@ -17,7 +17,7 @@ import { useUnreadChangelog } from "@/lib/use-unread-changelog";
 export const Route = createFileRoute("/novita")({
   head: () => ({
     meta: [
-      { title: "Novità — Pratix" },
+      { title: "Novità · Pratix" },
       { name: "description", content: "Cosa è cambiato di recente in Pratix." },
     ],
   }),

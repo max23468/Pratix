@@ -18,7 +18,7 @@ In caso di conflitto, seguire sempre il livello più alto.
 
 ## Cos'è Pratix
 
-**Pratix** è un gestionale per **avvocati freelance** (singolo professionista, non studio associato). Tagline ufficiale: **"Tutto torna."** — sempre col punto, mai dentro la UI autenticata.
+**Pratix** è un gestionale per **avvocati freelance** (singolo professionista, non studio associato). Tagline ufficiale: **"Tutto torna."** — sempre col punto, mai dentro la UI autenticata. Nei titoli pagina e nei meta tag usa il separatore `·`: `Dashboard · Pratix`. La forma `Pratix · Tutto torna.` è riservata alla home pubblica.
 
 Stack:
 - **Frontend**: React + TanStack Start v1 (Vite 7), routing **file-based** in `src/routes/`, server functions in `src/server/*.functions.ts`.

@@ -27,7 +27,7 @@
 
 ## Tagline ufficiale
 
-**"Tutto torna."** Sempre col punto finale. Mai tradurre. **Mai dentro la UI autenticata** — vive solo in marketing, landing, footer pubblico, meta tag. Vedi [ADR 0004](../decisions/0004-tagline-tutto-torna.md).
+**"Tutto torna."** Sempre col punto finale. Mai tradurre. **Mai dentro la UI autenticata** — vive solo in marketing, landing, footer pubblico, meta tag. Nei title e nei meta tag usa sempre il separatore `·`: `Dashboard · Pratix`. La forma `Pratix · Tutto torna.` è riservata alla home pubblica. Vedi [ADR 0004](../decisions/0004-tagline-tutto-torna.md).
 
 ## Esempi
 
@@ -67,7 +67,7 @@
 - **Title case**: solo per i titoli di sezione, brand, e tagline. Non per pulsanti.
 - **Sentence case**: pulsanti, label, descrizioni.
 - **Niente puntini di sospensione finti** (`...`): usare `…` quando serve davvero.
-- **Trattini**: `—` (em dash) per incisi narrativi (es. "Tutto torna — il gestionale per avvocati freelance"), mai `--` né `-`.
+- **Trattini**: `—` (em dash) per incisi narrativi, mai `--` né `-`. Non usarlo nei title o nei meta tag di pagina: lì resta `·`.
 
 ## Lingua
 

@@ -4,13 +4,13 @@ import { Logo } from "@/components/brand/logo";
 export const Route = createFileRoute("/termini")({
   head: () => ({
     meta: [
-      { title: "Termini di servizio — Pratix" },
+      { title: "Termini di servizio · Pratix" },
       {
         name: "description",
         content:
           "Termini e condizioni d'uso del servizio Pratix, gestionale per avvocati freelance.",
       },
-      { property: "og:title", content: "Termini di servizio — Pratix" },
+      { property: "og:title", content: "Termini di servizio · Pratix" },
       {
         property: "og:description",
         content:

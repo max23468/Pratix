@@ -11,9 +11,9 @@ import { clientDisplayName } from "@/lib/labels";
 export const Route = createFileRoute("/clienti/$clientId")({
   head: () => ({
     meta: [
-      { title: "Cliente — Pratix" },
+      { title: "Cliente · Pratix" },
       { name: "description", content: "Dettaglio cliente." },
-      { property: "og:title", content: "Cliente — Pratix" },
+      { property: "og:title", content: "Cliente · Pratix" },
       { property: "og:description", content: "Dettaglio cliente." },
     ],
   }),
