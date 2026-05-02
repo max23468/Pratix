@@ -19,9 +19,15 @@ export const Route = createFileRoute("/account")({
   head: () => ({
     meta: [
       { title: "Account · Pratix" },
-      { name: "description", content: "Profilo, accesso, sicurezza e aspetto del tuo account Pratix." },
+      {
+        name: "description",
+        content: "Profilo, accesso, sicurezza e aspetto del tuo account Pratix.",
+      },
       { property: "og:title", content: "Account · Pratix" },
-      { property: "og:description", content: "Profilo, accesso, sicurezza e aspetto del tuo account Pratix." },
+      {
+        property: "og:description",
+        content: "Profilo, accesso, sicurezza e aspetto del tuo account Pratix.",
+      },
     ],
   }),
   component: AccountPage,
@@ -133,7 +139,10 @@ function AccountPage() {
           </Card>
 
           <div className="flex justify-end">
-            <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || isLoading}>
+            <Button
+              onClick={() => saveMutation.mutate()}
+              disabled={saveMutation.isPending || isLoading}
+            >
               <Save className="mr-2 h-4 w-4" />
               {saveMutation.isPending ? "Salvataggio…" : "Salva profilo"}
             </Button>
@@ -158,16 +167,15 @@ function AccountPage() {
                 <ShieldCheck className="h-4 w-4 text-muted-foreground" />
                 Email di accesso
               </CardTitle>
-              <CardDescription>
-                È l'indirizzo che usi per entrare in Pratix.
-              </CardDescription>
+              <CardDescription>È l'indirizzo che usi per entrare in Pratix.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 <Label>Email</Label>
                 <Input value={user?.email ?? ""} readOnly disabled />
                 <p className="text-xs text-muted-foreground">
-                  Per cambiare l'email di accesso scrivi al supporto. Stiamo lavorando alla modifica autonoma.
+                  Per cambiare l'email di accesso scrivi al supporto. Stiamo lavorando alla modifica
+                  autonoma.
                 </p>
               </div>
             </CardContent>
@@ -185,8 +193,8 @@ function AccountPage() {
             <CardHeader>
               <CardTitle>Notifiche</CardTitle>
               <CardDescription>
-                Le notifiche di prodotto sono già attive: vedi un pallino sulla campanella in alto quando esce
-                una nuova versione di Pratix.
+                Le notifiche di prodotto sono già attive: vedi un pallino sulla campanella in alto
+                quando esce una nuova versione di Pratix.
               </CardDescription>
             </CardHeader>
             <CardContent>

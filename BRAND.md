@@ -14,23 +14,25 @@ Identità visiva e linee guida operative per Pratix, gestionale per avvocati fre
 **Tagline ufficiale: _Tutto torna._**
 
 Doppio senso intenzionale:
+
 1. **Letterale, da gestionale** — "tornare" in contabilità significa quadrare. I conti tornano, le ritenute tornano, le scadenze tornano. Rassicurazione asciutta sull'esattezza.
 2. **Emotivo** — "tutto torna" è la frase che si dice quando le cose, dopo la confusione, trovano un senso. Il sollievo del controllo.
 3. **Chiusura del cerchio** — ogni pratica si apre e si chiude, ogni fattura si emette e si incassa, ogni scadenza si fissa e si rispetta. Pratix fa tornare ogni cerchio al suo punto.
 
 **Uso**:
+
 - Sempre con il punto fermo: `Tutto torna.`
 - Mai tradurre. È intraducibile per costruzione: il valore è proprio nella polisemia italiana di "tornare".
 - Si usa **da sola** in copertine, hero, OG image, social. **In coppia col nome prodotto** nei meta tag della home pubblica: `Pratix · Tutto torna.`
 - Mai abbreviare in "Tt." o usare emoji. Mai esclamativo.
 
 **Titoli pagina e meta tag**:
+
 - Usa sempre `·` come separatore fra titolo pagina e brand: `Dashboard · Pratix`.
 - Riserva `Pratix · Tutto torna.` alla home pubblica.
 - Non usare `— Pratix` nei title, negli `og:title` o nelle preview social.
 
 **Quando NON usarla**: dentro l'app autenticata (UI di lavoro), nei messaggi di errore, nei CTA. È un asset di marca, non microcopy.
-
 
 ## 2. Sistema cromatico
 
@@ -40,17 +42,17 @@ Tutti i token vivono in `src/styles.css` come variabili CSS in `oklch`, con vari
 > per compatibilità ma ora veicolano rispettivamente **inchiostro profondo** e
 > **terracotta**. La scelta è documentata in [`docs/decisions/0007-palette-inchiostro-terracotta.md`](./docs/decisions/0007-palette-inchiostro-terracotta.md).
 
-| Ruolo | Token | Light | Dark |
-|---|---|---|---|
-| Primario (Inchiostro) | `--primary` | `oklch(0.22 0.04 260)` | `oklch(0.94 0.006 80)` (chiaro su scuro) |
-| Brand gold = **Terracotta** (accento) | `--brand-gold` | `oklch(0.62 0.15 35)` | `oklch(0.70 0.15 38)` |
-| Sfondo | `--background` | panna `oklch(0.985 0.004 80)` | grigio caldo `oklch(0.18 0.010 60)` |
-| Card | `--card` | bianco caldo | grigio caldo medio |
-| Border | `--border` | `oklch(0.91 0.008 60)` | bianco 10% |
-| Success | `--success` | verde bosco | verde bosco chiaro |
-| Warning | `--warning` | ambra calda (≠ terracotta) | ambra chiaro |
-| Destructive | `--destructive` | rosso mattone | rosso mattone vivido |
-| Info | `--info` | blu desaturato | blu chiaro |
+| Ruolo                                 | Token           | Light                         | Dark                                     |
+| ------------------------------------- | --------------- | ----------------------------- | ---------------------------------------- |
+| Primario (Inchiostro)                 | `--primary`     | `oklch(0.22 0.04 260)`        | `oklch(0.94 0.006 80)` (chiaro su scuro) |
+| Brand gold = **Terracotta** (accento) | `--brand-gold`  | `oklch(0.62 0.15 35)`         | `oklch(0.70 0.15 38)`                    |
+| Sfondo                                | `--background`  | panna `oklch(0.985 0.004 80)` | grigio caldo `oklch(0.18 0.010 60)`      |
+| Card                                  | `--card`        | bianco caldo                  | grigio caldo medio                       |
+| Border                                | `--border`      | `oklch(0.91 0.008 60)`        | bianco 10%                               |
+| Success                               | `--success`     | verde bosco                   | verde bosco chiaro                       |
+| Warning                               | `--warning`     | ambra calda (≠ terracotta)    | ambra chiaro                             |
+| Destructive                           | `--destructive` | rosso mattone                 | rosso mattone vivido                     |
+| Info                                  | `--info`        | blu desaturato                | blu chiaro                               |
 
 **Regole**:
 
@@ -70,11 +72,11 @@ in dark).
 
 ## 3. Tipografia
 
-| Ruolo | Font | Uso |
-|---|---|---|
-| Display | **Inter Tight** (600) | Titoli, hero, KPI, page header. `font-display` |
-| UI / Body | **Inter** (400/500/600) | Tutto il resto. `font-sans` (default) |
-| Mono | **JetBrains Mono** | Numeri fattura grandi, codici, importi tabellari. `font-mono` |
+| Ruolo     | Font                    | Uso                                                           |
+| --------- | ----------------------- | ------------------------------------------------------------- |
+| Display   | **Inter Tight** (600)   | Titoli, hero, KPI, page header. `font-display`                |
+| UI / Body | **Inter** (400/500/600) | Tutto il resto. `font-sans` (default)                         |
+| Mono      | **JetBrains Mono**      | Numeri fattura grandi, codici, importi tabellari. `font-mono` |
 
 Caricati via Google Fonts in `src/routes/__root.tsx`.
 
@@ -158,35 +160,35 @@ Componente: `src/components/brand/logo.tsx` → `<Logo />`.
 
 **Micro-copy canonico**:
 
-| Contesto | Sì | No |
-|---|---|---|
-| Login | "Accedi" | "Entra subito!" |
-| Login sub | "Inserisci le tue credenziali per continuare." | "Bentornato!" |
-| Empty pratiche | "Nessuna pratica ancora. Apri la prima per iniziare." | "Non hai pratiche! Creane una 🎉" |
-| Conferma elimina | "Eliminare questa pratica? L'azione non può essere annullata." | "Sicuro sicuro?" |
-| Toast successo | "Fattura emessa." | "Fattura emessa con successo! ✅" |
-| Errore | "Non è stato possibile salvare. Riprova." | "Oops! Qualcosa è andato storto" |
-| Loading | "Caricamento…" | "Sto caricando i tuoi dati..." |
-| CTA hero | "Crea il tuo account" | "Iniziamo insieme!" |
+| Contesto         | Sì                                                             | No                                |
+| ---------------- | -------------------------------------------------------------- | --------------------------------- |
+| Login            | "Accedi"                                                       | "Entra subito!"                   |
+| Login sub        | "Inserisci le tue credenziali per continuare."                 | "Bentornato!"                     |
+| Empty pratiche   | "Nessuna pratica ancora. Apri la prima per iniziare."          | "Non hai pratiche! Creane una 🎉" |
+| Conferma elimina | "Eliminare questa pratica? L'azione non può essere annullata." | "Sicuro sicuro?"                  |
+| Toast successo   | "Fattura emessa."                                              | "Fattura emessa con successo! ✅" |
+| Errore           | "Non è stato possibile salvare. Riprova."                      | "Oops! Qualcosa è andato storto"  |
+| Loading          | "Caricamento…"                                                 | "Sto caricando i tuoi dati..."    |
+| CTA hero         | "Crea il tuo account"                                          | "Iniziamo insieme!"               |
 
 ## 8. Glossario
 
 Termini canonici nella UI e nei testi user-facing. Mantenerli costanti.
 
-| Usa | Non usare |
-|---|---|
-| Pratica | Caso, Fascicolo, Dossier |
-| Cliente | Assistito (anche se tecnicamente corretto in ambito legale) |
-| Controparte | Resistente, Convenuto (riserva ai campi tecnici) |
-| Scadenza | Deadline, Termine |
-| Spese | Costi, Outlays |
-| Fattura | Documento, Parcella |
-| Fattura elettronica / XML SdI | E-invoice, Fattura PA |
-| Bozza · Emessa · Pagata · Scaduta · Annullata | Draft, Issued, Paid, Overdue, Voided |
-| Cassa Forense | Cassa previdenziale |
-| Ritenuta d'acconto | RA, Ritenuta fiscale |
-| Bollo | Marca da bollo (riserva al testo lungo) |
-| Numerazione fattura | Series, Sequence |
+| Usa                                           | Non usare                                                   |
+| --------------------------------------------- | ----------------------------------------------------------- |
+| Pratica                                       | Caso, Fascicolo, Dossier                                    |
+| Cliente                                       | Assistito (anche se tecnicamente corretto in ambito legale) |
+| Controparte                                   | Resistente, Convenuto (riserva ai campi tecnici)            |
+| Scadenza                                      | Deadline, Termine                                           |
+| Spese                                         | Costi, Outlays                                              |
+| Fattura                                       | Documento, Parcella                                         |
+| Fattura elettronica / XML SdI                 | E-invoice, Fattura PA                                       |
+| Bozza · Emessa · Pagata · Scaduta · Annullata | Draft, Issued, Paid, Overdue, Voided                        |
+| Cassa Forense                                 | Cassa previdenziale                                         |
+| Ritenuta d'acconto                            | RA, Ritenuta fiscale                                        |
+| Bollo                                         | Marca da bollo (riserva al testo lungo)                     |
+| Numerazione fattura                           | Series, Sequence                                            |
 
 ## 9. Asset
 

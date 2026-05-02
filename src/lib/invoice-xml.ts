@@ -16,7 +16,8 @@ const num = (n: number | null | undefined, decimals = 2): string => {
 };
 
 const cleanCountry = (c?: string | null): string => (c || "IT").toUpperCase().slice(0, 2);
-const cleanZip = (z?: string | null): string => (z || "00000").replace(/\D/g, "").padEnd(5, "0").slice(0, 5);
+const cleanZip = (z?: string | null): string =>
+  (z || "00000").replace(/\D/g, "").padEnd(5, "0").slice(0, 5);
 const cleanProvince = (p?: string | null): string => (p || "").toUpperCase().slice(0, 2);
 
 export type InvoiceXmlData = {
@@ -80,8 +81,7 @@ export type XmlBuildResult = {
   filename: string;
 };
 
-const regimeFiscale = (r?: string | null): string =>
-  r === "forfettario" ? "RF19" : "RF01";
+const regimeFiscale = (r?: string | null): string => (r === "forfettario" ? "RF19" : "RF01");
 
 /** Codice "Natura" IVA da usare per regimi/righe non imponibili. */
 const naturaForfettario = "N2.2"; // Operazioni non soggette - altri casi
@@ -97,8 +97,7 @@ export function buildInvoiceXml(data: InvoiceXmlData): XmlBuildResult {
     throw new Error("Partita IVA mancante: configurala in Impostazioni.");
   }
 
-  const cedenteName =
-    data.profile.business_name || data.profile.full_name || "Avvocato";
+  const cedenteName = data.profile.business_name || data.profile.full_name || "Avvocato";
 
   // Cessionario
   const isCompany = data.client.kind === "company" && !!data.client.business_name;
@@ -119,7 +118,8 @@ export function buildInvoiceXml(data: InvoiceXmlData): XmlBuildResult {
   const formatoTrasmissione = isCompany ? "FPR12" : "FPR12"; // privati/B2B
 
   // Riepilogo IVA
-  const imponibileIvato = data.invoice.taxable_fees + data.invoice.taxable_expenses + data.invoice.cassa_amount;
+  const imponibileIvato =
+    data.invoice.taxable_fees + data.invoice.taxable_expenses + data.invoice.cassa_amount;
   const aliquotaIva = isForfettario ? 0 : data.invoice.vat_rate;
 
   const riepilogoBlocks: string[] = [];
@@ -152,11 +152,9 @@ export function buildInvoiceXml(data: InvoiceXmlData): XmlBuildResult {
   const dettaglioLinee = data.lines
     .map((l) => {
       nLinea++;
-      const aliquota =
-        l.kind === "expense_art15" ? 0 : isForfettario ? 0 : data.invoice.vat_rate;
+      const aliquota = l.kind === "expense_art15" ? 0 : isForfettario ? 0 : data.invoice.vat_rate;
       const naturaTag = (() => {
-        if (l.kind === "expense_art15")
-          return `<Natura>N1</Natura>`;
+        if (l.kind === "expense_art15") return `<Natura>N1</Natura>`;
         if (isForfettario) return `<Natura>${naturaForfettario}</Natura>`;
         return "";
       })();
@@ -236,7 +234,9 @@ export function buildInvoiceXml(data: InvoiceXmlData): XmlBuildResult {
   const cessionarioIdFiscale = cessionarioPiva
     ? `<IdFiscaleIVA><IdPaese>${cleanCountry(data.client.address_country)}</IdPaese><IdCodice>${escapeXml(cessionarioPiva)}</IdCodice></IdFiscaleIVA>`
     : "";
-  const cessionarioCfTag = cessionarioCf ? `<CodiceFiscale>${escapeXml(cessionarioCf)}</CodiceFiscale>` : "";
+  const cessionarioCfTag = cessionarioCf
+    ? `<CodiceFiscale>${escapeXml(cessionarioCf)}</CodiceFiscale>`
+    : "";
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <p:FatturaElettronica xmlns:p="http://ivaservizi.agenziaentrate.gov.it/docs/xsd/fatture/v1.2" versione="${formatoTrasmissione}">

@@ -1,6 +1,6 @@
 # Memoria — Core
 
-> Mirror di `mem://index.md` (sezione *Core*). Regole sempre attive, applicate a ogni intervento sul progetto.
+> Mirror di `mem://index.md` (sezione _Core_). Regole sempre attive, applicate a ogni intervento sul progetto.
 
 ## Brand e prodotto
 
@@ -17,6 +17,7 @@
 - Solo token semantici, **mai hex inline**
 
 ### Token brand FISSI (uguali in light/dark)
+
 - `--color-brand-navy`
 - `--color-brand-cream`
 - `--color-brand-gold`
@@ -59,7 +60,7 @@ Da usare per logo e asset di marca che non devono invertirsi col tema.
 ❌ Caso · Assistito · Deadline · Costi
 
 **VIETATA** la parola **"studio"** (target è avvocato freelance, non studio associato).
-Usa: *professione*, *la tua professione*, *i tuoi dati professionali*, *rubrica*, oppure giri di parole. **"Attività"** è sconsigliata come label di prodotto perché ambigua (in Pratix indica anche le voci di lavoro fatturabili); resta lecita solo come sostantivo comune nei testi legali.
+Usa: _professione_, _la tua professione_, _i tuoi dati professionali_, _rubrica_, oppure giri di parole. **"Attività"** è sconsigliata come label di prodotto perché ambigua (in Pratix indica anche le voci di lavoro fatturabili); resta lecita solo come sostantivo comune nei testi legali.
 Fallback intestazione fattura: **"Avvocato"**.
 
 ## Processo

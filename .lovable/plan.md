@@ -35,7 +35,7 @@ Rinomina mentale: Impostazioni = "configurazione del gestionale", Account = "il 
 ## Perché questa separazione
 
 - **Convenzione SaaS consolidata**: praticamente ogni gestionale (Notion, Linear, Stripe, Fatture in Cloud) separa "Account/Profile" personale da "Workspace/Settings" di configurazione. Gli utenti si aspettano questa divisione.
-- **Coerenza col target**: l'avvocato freelance è sia *utente* che *attività*, ma sono comunque due cappelli diversi. Cambiare password ≠ cambiare aliquota IVA.
+- **Coerenza col target**: l'avvocato freelance è sia _utente_ che _attività_, ma sono comunque due cappelli diversi. Cambiare password ≠ cambiare aliquota IVA.
 - **Zero conflitti dati**: tutti i campi vivono già nella stessa tabella `profiles`, semplicemente li dividiamo per **superficie UI**, non per schema. Nessuna migrazione DB.
 - **Estensibilità futura**: l'area Account è il posto naturale per 2FA, sessioni, esportazione GDPR, billing del piano Pratix (quando ci sarà).
 
@@ -58,19 +58,22 @@ In più, aggiungiamo nel **dropdown utente in topbar** (se/quando lo introdurrem
 ## Cosa cambia in pratica
 
 1. **Nuova route** `src/routes/account.tsx` con tab interne:
-  - `Profilo` (nome, email contatto)
-  - `Accesso e sicurezza` (email login read-only, cambio password)
-  - `Aspetto` (sposto qui la card tema da Impostazioni)
-  - `Notifiche` (placeholder con coming-soon, oppure on/off campanella se vogliamo subito)
+
+- `Profilo` (nome, email contatto)
+- `Accesso e sicurezza` (email login read-only, cambio password)
+- `Aspetto` (sposto qui la card tema da Impostazioni)
+- `Notifiche` (placeholder con coming-soon, oppure on/off campanella se vogliamo subito)
+
 2. **Modifico `/impostazioni**`: rimuovo la tab "Aspetto" (va in Account). Le altre 4 tab restano: Attività, Fiscale, Pagamenti, Numerazione. Aggiorno description del PageHeader: "I dati della tua attività professionale, fiscalità, IBAN e numerazione".
 3. **Cambio password**: implemento via `supabase.auth.updateUser({ password })` con conferma. Non serve la flow di reset, l'utente è già autenticato.
 4. **Sidebar** (`src/components/app-sidebar.tsx`): aggiungo voce Account con icona `User`, posizionata accanto a Impostazioni.
 5. **Footer versione + link "Cosa è cambiato"**: oggi è in fondo a Impostazioni. Lo sposto in **Account → Profilo** (contesto utente personale, ha più senso lì che tra le aliquote IVA).
 6. **Rotta `/reimposta-password**`: resta com'è, è il flow non-autenticato per chi ha dimenticato la password.
 7. **Documentazione**:
-  - Aggiorno `ROADMAP.md` (sezione Account)
-  - Nota in `mem://process/roadmap` mirror
-  - Voce in `CHANGELOG.md` sotto `[Non rilasciato]` → `### Novità`: "Nuova area Account separata da Impostazioni: profilo, accesso, sicurezza e aspetto in un posto solo."
+
+- Aggiorno `ROADMAP.md` (sezione Account)
+- Nota in `mem://process/roadmap` mirror
+- Voce in `CHANGELOG.md` sotto `[Non rilasciato]` → `### Novità`: "Nuova area Account separata da Impostazioni: profilo, accesso, sicurezza e aspetto in un posto solo."
 
 ## Cosa NON faccio (per non sovraccaricare)
 

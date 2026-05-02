@@ -40,7 +40,9 @@ export const expenseCategoryLabels: Record<string, string> = {
   altro: "Altro",
 };
 
-export const invoiceStatusLabels: Record<string, string> = {
+export type InvoiceStatus = "draft" | "issued" | "paid" | "overdue";
+
+export const invoiceStatusLabels: Record<InvoiceStatus, string> = {
   draft: "Bozza",
   issued: "Emessa",
   paid: "Pagata",
@@ -48,7 +50,7 @@ export const invoiceStatusLabels: Record<string, string> = {
 };
 
 export const invoiceStatusVariant: Record<
-  string,
+  InvoiceStatus,
   "default" | "secondary" | "destructive" | "outline"
 > = {
   draft: "outline",
@@ -67,12 +69,14 @@ export const clientKindLabels: Record<string, string> = {
   company: "Azienda",
 };
 
-export const clientDisplayName = (c: {
+export type ClientDisplayData = {
   kind: string;
   first_name?: string | null;
   last_name?: string | null;
   business_name?: string | null;
-}): string => {
+};
+
+export const clientDisplayName = (c: ClientDisplayData): string => {
   if (c.kind === "company") return c.business_name || "—";
   return [c.first_name, c.last_name].filter(Boolean).join(" ") || "—";
 };

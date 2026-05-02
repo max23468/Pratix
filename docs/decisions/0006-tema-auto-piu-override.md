@@ -8,6 +8,7 @@
 Pratix viene usato per ore consecutive su pratiche, scadenze, fatture. La leggibilità e il comfort visivo sono parte del prodotto, non un dettaglio estetico.
 
 Decisioni da prendere:
+
 1. **Strategia di selezione del tema**: solo light? auto da sistema? toggle manuale?
 2. **Estetica della dark mode**: navy intenso (coerente col brand) o più neutro?
 

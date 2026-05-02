@@ -1,11 +1,23 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -81,8 +93,17 @@ export function OnboardingDialog() {
   };
 
   return (
-    <Dialog open={open} onOpenChange={() => { /* non chiudibile finché non si completa */ }}>
-      <DialogContent className="max-w-lg" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+    <Dialog
+      open={open}
+      onOpenChange={() => {
+        /* non chiudibile finché non si completa */
+      }}
+    >
+      <DialogContent
+        className="max-w-lg"
+        onPointerDownOutside={(e) => e.preventDefault()}
+        onEscapeKeyDown={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>Benvenuto in Pratix</DialogTitle>
           <DialogDescription>
@@ -103,12 +124,21 @@ export function OnboardingDialog() {
             <div className="space-y-3">
               <div className="space-y-2">
                 <Label htmlFor="bn">Ragione sociale / Denominazione</Label>
-                <Input id="bn" value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="Es. Avv. Mario Rossi" />
+                <Input
+                  id="bn"
+                  value={businessName}
+                  onChange={(e) => setBusinessName(e.target.value)}
+                  placeholder="Es. Avv. Mario Rossi"
+                />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label htmlFor="vat">P.IVA</Label>
-                  <Input id="vat" value={vatNumber} onChange={(e) => setVatNumber(e.target.value)} />
+                  <Input
+                    id="vat"
+                    value={vatNumber}
+                    onChange={(e) => setVatNumber(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="tc">Codice fiscale</Label>
@@ -117,21 +147,39 @@ export function OnboardingDialog() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="addr">Indirizzo</Label>
-                <Input id="addr" value={addressStreet} onChange={(e) => setAddressStreet(e.target.value)} placeholder="Via..." />
+                <Input
+                  id="addr"
+                  value={addressStreet}
+                  onChange={(e) => setAddressStreet(e.target.value)}
+                  placeholder="Via..."
+                />
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
                 <div className="space-y-2 sm:col-span-2">
                   <Label htmlFor="city">Città</Label>
-                  <Input id="city" value={addressCity} onChange={(e) => setAddressCity(e.target.value)} />
+                  <Input
+                    id="city"
+                    value={addressCity}
+                    onChange={(e) => setAddressCity(e.target.value)}
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="zip">CAP</Label>
-                  <Input id="zip" value={addressZip} onChange={(e) => setAddressZip(e.target.value)} />
+                  <Input
+                    id="zip"
+                    value={addressZip}
+                    onChange={(e) => setAddressZip(e.target.value)}
+                  />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="prov">Provincia (sigla)</Label>
-                <Input id="prov" value={addressProvince} maxLength={2} onChange={(e) => setAddressProvince(e.target.value.toUpperCase())} />
+                <Input
+                  id="prov"
+                  value={addressProvince}
+                  maxLength={2}
+                  onChange={(e) => setAddressProvince(e.target.value.toUpperCase())}
+                />
               </div>
             </div>
           )}
@@ -144,7 +192,10 @@ export function OnboardingDialog() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="regime">Regime fiscale</Label>
-                <Select value={taxRegime} onValueChange={(v) => setTaxRegime(v as "ordinario" | "forfettario")}>
+                <Select
+                  value={taxRegime}
+                  onValueChange={(v) => setTaxRegime(v as "ordinario" | "forfettario")}
+                >
                   <SelectTrigger id="regime">
                     <SelectValue />
                   </SelectTrigger>
@@ -158,7 +209,9 @@ export function OnboardingDialog() {
                 <div className="flex items-center justify-between rounded-md border p-3">
                   <div>
                     <Label className="text-sm">Applica ritenuta d'acconto (20%)</Label>
-                    <p className="text-xs text-muted-foreground">Standard per professionisti in regime ordinario.</p>
+                    <p className="text-xs text-muted-foreground">
+                      Standard per professionisti in regime ordinario.
+                    </p>
                   </div>
                   <Switch checked={applyWithholding} onCheckedChange={setApplyWithholding} />
                 </div>
@@ -170,24 +223,45 @@ export function OnboardingDialog() {
             <div className="space-y-3">
               <div className="space-y-2">
                 <Label htmlFor="iban">IBAN</Label>
-                <Input id="iban" value={iban} onChange={(e) => setIban(e.target.value.toUpperCase())} />
+                <Input
+                  id="iban"
+                  value={iban}
+                  onChange={(e) => setIban(e.target.value.toUpperCase())}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="prefix">Prefisso numerazione fatture (opz.)</Label>
-                <Input id="prefix" value={invoicePrefix} onChange={(e) => setInvoicePrefix(e.target.value)} placeholder="es. FT" />
-                <p className="text-xs text-muted-foreground">Es. con prefisso "FT" la prima fattura sarà FT-1/2026.</p>
+                <Input
+                  id="prefix"
+                  value={invoicePrefix}
+                  onChange={(e) => setInvoicePrefix(e.target.value)}
+                  placeholder="es. FT"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Es. con prefisso "FT" la prima fattura sarà FT-1/2026.
+                </p>
               </div>
             </div>
           )}
 
           <div className="flex justify-between pt-2">
             {step > 1 ? (
-              <Button type="button" variant="outline" onClick={() => setStep((s) => (s === 3 ? 2 : 1))}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setStep((s) => (s === 3 ? 2 : 1))}
+              >
                 Indietro
               </Button>
-            ) : <div />}
+            ) : (
+              <div />
+            )}
             <Button type="submit" disabled={mutation.isPending}>
-              {step < 3 ? "Continua" : mutation.isPending ? "Salvataggio…" : "Inizia ad usare Pratix"}
+              {step < 3
+                ? "Continua"
+                : mutation.isPending
+                  ? "Salvataggio…"
+                  : "Inizia ad usare Pratix"}
             </Button>
           </div>
         </form>

@@ -8,12 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -24,7 +19,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { clientDisplayName, invoiceStatusLabels } from "@/lib/labels";
+import { clientDisplayName, invoiceStatusLabels, type InvoiceStatus } from "@/lib/labels";
 import { formatCurrency } from "@/lib/format";
 import {
   computeInvoice,
@@ -50,7 +45,7 @@ type InvoiceFormValues = {
   year: number;
   issue_date: string;
   due_date: string | null;
-  status: "draft" | "issued" | "paid" | "overdue";
+  status: InvoiceStatus;
   cassa_rate: number;
   vat_rate: number;
   withholding_rate: number;
@@ -116,7 +111,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
     year: initialInvoice?.year ?? new Date().getFullYear(),
     issue_date: initialInvoice?.issue_date ?? today(),
     due_date: initialInvoice?.due_date ?? null,
-    status: (initialInvoice?.status as any) ?? "draft",
+    status: initialInvoice?.status ?? "draft",
     cassa_rate: Number(initialInvoice?.cassa_rate ?? 4),
     vat_rate: Number(initialInvoice?.vat_rate ?? 22),
     withholding_rate: Number(initialInvoice?.withholding_rate ?? 20),
@@ -251,7 +246,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
         apply_withholding: values.apply_withholding,
         payment_method: values.payment_method,
         notes: values.notes,
-        paid_at: values.status === "paid" ? values.paid_at ?? today() : null,
+        paid_at: values.status === "paid" ? (values.paid_at ?? today()) : null,
         taxable_fees: totals.taxableFees,
         taxable_expenses: totals.taxableExpenses,
         art15_expenses: totals.art15Expenses,
@@ -265,10 +260,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
 
       let savedId = invoiceId;
       if (invoiceId) {
-        const { error } = await supabase
-          .from("invoices")
-          .update(payload)
-          .eq("id", invoiceId);
+        const { error } = await supabase.from("invoices").update(payload).eq("id", invoiceId);
         if (error) throw error;
       } else {
         const { data, error } = await supabase
@@ -300,9 +292,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
         position: i,
       }));
       if (linesPayload.length > 0) {
-        const { error: linesErr } = await supabase
-          .from("invoice_lines")
-          .insert(linesPayload);
+        const { error: linesErr } = await supabase.from("invoice_lines").insert(linesPayload);
         if (linesErr) throw linesErr;
       }
 
@@ -317,10 +307,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
           .filter((e) => importedDescriptions.has(e.description))
           .map((e) => e.id);
         if (toLink.length > 0) {
-          await supabase
-            .from("expenses")
-            .update({ invoice_id: savedId })
-            .in("id", toLink);
+          await supabase.from("expenses").update({ invoice_id: savedId }).in("id", toLink);
         }
       }
 
@@ -347,9 +334,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
               <Label>Cliente *</Label>
               <Select
                 value={values.client_id}
-                onValueChange={(v) =>
-                  setValues((s) => ({ ...s, client_id: v, case_id: null }))
-                }
+                onValueChange={(v) => setValues((s) => ({ ...s, client_id: v, case_id: null }))}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Seleziona cliente" />
@@ -391,7 +376,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
               <Label>Stato</Label>
               <Select
                 value={values.status}
-                onValueChange={(v) => setValues((s) => ({ ...s, status: v as any }))}
+                onValueChange={(v) => setValues((s) => ({ ...s, status: v as InvoiceStatus }))}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -411,9 +396,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
                 <Label>Numero</Label>
                 <Input
                   value={values.number}
-                  onChange={(e) =>
-                    setValues((s) => ({ ...s, number: e.target.value }))
-                  }
+                  onChange={(e) => setValues((s) => ({ ...s, number: e.target.value }))}
                 />
               </div>
             )}
@@ -423,9 +406,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
               <Input
                 type="date"
                 value={values.issue_date}
-                onChange={(e) =>
-                  setValues((s) => ({ ...s, issue_date: e.target.value }))
-                }
+                onChange={(e) => setValues((s) => ({ ...s, issue_date: e.target.value }))}
               />
             </div>
 
@@ -434,9 +415,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
               <Input
                 type="date"
                 value={values.due_date ?? ""}
-                onChange={(e) =>
-                  setValues((s) => ({ ...s, due_date: e.target.value || null }))
-                }
+                onChange={(e) => setValues((s) => ({ ...s, due_date: e.target.value || null }))}
               />
             </div>
 
@@ -446,9 +425,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
                 <Input
                   type="date"
                   value={values.paid_at ?? today()}
-                  onChange={(e) =>
-                    setValues((s) => ({ ...s, paid_at: e.target.value }))
-                  }
+                  onChange={(e) => setValues((s) => ({ ...s, paid_at: e.target.value }))}
                 />
               </div>
             )}
@@ -457,9 +434,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
               <Label>Modalità di pagamento</Label>
               <Input
                 value={values.payment_method ?? ""}
-                onChange={(e) =>
-                  setValues((s) => ({ ...s, payment_method: e.target.value }))
-                }
+                onChange={(e) => setValues((s) => ({ ...s, payment_method: e.target.value }))}
                 placeholder="Bonifico"
               />
             </div>
@@ -471,12 +446,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
             <CardTitle>Righe</CardTitle>
             <div className="flex flex-wrap gap-2">
               {values.case_id && (
-                <Button
-                  type="button"
-                  size="sm"
-                  variant="outline"
-                  onClick={importPendingExpenses}
-                >
+                <Button type="button" size="sm" variant="outline" onClick={importPendingExpenses}>
                   Importa spese pratica
                 </Button>
               )}
@@ -502,12 +472,9 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
             </div>
           </CardHeader>
           <CardContent className="space-y-3">
-            {lines.length === 0 && (
-              <p className="text-sm text-muted-foreground">Nessuna riga.</p>
-            )}
+            {lines.length === 0 && <p className="text-sm text-muted-foreground">Nessuna riga.</p>}
             {lines.map((l, idx) => {
-              const amount =
-                Math.round((l.quantity * l.unit_price + Number.EPSILON) * 100) / 100;
+              const amount = Math.round((l.quantity * l.unit_price + Number.EPSILON) * 100) / 100;
               return (
                 <div
                   key={idx}
@@ -545,9 +512,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
                       type="number"
                       step="0.01"
                       value={l.quantity}
-                      onChange={(e) =>
-                        updateLine(idx, { quantity: Number(e.target.value) || 0 })
-                      }
+                      onChange={(e) => updateLine(idx, { quantity: Number(e.target.value) || 0 })}
                     />
                   </div>
                   <div className="space-y-1">
@@ -556,9 +521,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
                       type="number"
                       step="0.01"
                       value={l.unit_price}
-                      onChange={(e) =>
-                        updateLine(idx, { unit_price: Number(e.target.value) || 0 })
-                      }
+                      onChange={(e) => updateLine(idx, { unit_price: Number(e.target.value) || 0 })}
                     />
                   </div>
                   <div className="space-y-1">
@@ -627,9 +590,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
               <Switch
                 id="apply-withholding"
                 checked={values.apply_withholding}
-                onCheckedChange={(v) =>
-                  setValues((s) => ({ ...s, apply_withholding: v }))
-                }
+                onCheckedChange={(v) => setValues((s) => ({ ...s, apply_withholding: v }))}
               />
               <Label htmlFor="apply-withholding">Applica ritenuta d'acconto</Label>
             </div>
@@ -643,9 +604,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
           <CardContent>
             <Textarea
               value={values.notes ?? ""}
-              onChange={(e) =>
-                setValues((s) => ({ ...s, notes: e.target.value || null }))
-              }
+              onChange={(e) => setValues((s) => ({ ...s, notes: e.target.value || null }))}
               placeholder="Note che appariranno in fondo alla fattura"
               rows={3}
             />
@@ -698,15 +657,7 @@ export function InvoiceForm({ initialInvoice, initialLines, invoiceId }: Props) 
   );
 }
 
-function SummaryRow({
-  label,
-  value,
-  bold,
-}: {
-  label: string;
-  value: number;
-  bold?: boolean;
-}) {
+function SummaryRow({ label, value, bold }: { label: string; value: number; bold?: boolean }) {
   return (
     <div className={`flex items-center justify-between ${bold ? "font-semibold" : ""}`}>
       <span className="text-muted-foreground">{label}</span>

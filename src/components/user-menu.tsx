@@ -59,7 +59,10 @@ export function UserMenu() {
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut()} className="text-destructive focus:text-destructive">
+        <DropdownMenuItem
+          onClick={() => signOut()}
+          className="text-destructive focus:text-destructive"
+        >
           <LogOut className="mr-2 h-4 w-4" />
           Esci
         </DropdownMenuItem>

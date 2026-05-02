@@ -27,9 +27,15 @@ export const Route = createFileRoute("/impostazioni")({
   head: () => ({
     meta: [
       { title: "Impostazioni · Pratix" },
-      { name: "description", content: "Configura i tuoi dati professionali, fiscali e di numerazione." },
+      {
+        name: "description",
+        content: "Configura i tuoi dati professionali, fiscali e di numerazione.",
+      },
       { property: "og:title", content: "Impostazioni · Pratix" },
-      { property: "og:description", content: "Configura i tuoi dati professionali, fiscali e di numerazione." },
+      {
+        property: "og:description",
+        content: "Configura i tuoi dati professionali, fiscali e di numerazione.",
+      },
     ],
   }),
   component: SettingsPage,
@@ -149,15 +155,10 @@ function SettingsPage() {
       const payload = {
         ...rest,
         // forfettario: forziamo coerenza dei flag fiscali
-        ...(form.tax_regime === "forfettario"
-          ? { apply_withholding: false }
-          : {}),
+        ...(form.tax_regime === "forfettario" ? { apply_withholding: false } : {}),
         onboarding_completed: true,
       };
-      const { error } = await supabase
-        .from("profiles")
-        .update(payload)
-        .eq("id", user.id);
+      const { error } = await supabase.from("profiles").update(payload).eq("id", user.id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -174,7 +175,10 @@ function SettingsPage() {
         title="Impostazioni"
         description="I tuoi dati professionali, fiscalità, IBAN e numerazione. Per profilo, accesso e tema vai ad Account."
         actions={
-          <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || isLoading}>
+          <Button
+            onClick={() => saveMutation.mutate()}
+            disabled={saveMutation.isPending || isLoading}
+          >
             <Save className="mr-2 h-4 w-4" />
             {saveMutation.isPending ? "Salvataggio…" : "Salva modifiche"}
           </Button>
@@ -195,12 +199,40 @@ function SettingsPage() {
               <CardTitle>Anagrafica</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
-              <Field label="Ragione sociale / Denominazione" value={form.business_name} onChange={(v) => set("business_name", v)} placeholder="Es. Avv. Mario Rossi" />
-              <Field label="Nome e cognome titolare" value={form.full_name} onChange={(v) => set("full_name", v)} />
-              <Field label="Partita IVA *" value={form.vat_number} onChange={(v) => set("vat_number", v)} placeholder="11 cifre" />
-              <Field label="Codice Fiscale" value={form.tax_code} onChange={(v) => set("tax_code", v)} />
-              <Field label="Ordine degli Avvocati" value={form.bar_association} onChange={(v) => set("bar_association", v)} placeholder="Es. Milano" />
-              <Field label="Email" type="email" value={form.email} onChange={(v) => set("email", v)} />
+              <Field
+                label="Ragione sociale / Denominazione"
+                value={form.business_name}
+                onChange={(v) => set("business_name", v)}
+                placeholder="Es. Avv. Mario Rossi"
+              />
+              <Field
+                label="Nome e cognome titolare"
+                value={form.full_name}
+                onChange={(v) => set("full_name", v)}
+              />
+              <Field
+                label="Partita IVA *"
+                value={form.vat_number}
+                onChange={(v) => set("vat_number", v)}
+                placeholder="11 cifre"
+              />
+              <Field
+                label="Codice Fiscale"
+                value={form.tax_code}
+                onChange={(v) => set("tax_code", v)}
+              />
+              <Field
+                label="Ordine degli Avvocati"
+                value={form.bar_association}
+                onChange={(v) => set("bar_association", v)}
+                placeholder="Es. Milano"
+              />
+              <Field
+                label="Email"
+                type="email"
+                value={form.email}
+                onChange={(v) => set("email", v)}
+              />
               <Field label="PEC" type="email" value={form.pec} onChange={(v) => set("pec", v)} />
               <Field label="Telefono" value={form.phone} onChange={(v) => set("phone", v)} />
             </CardContent>
@@ -212,12 +244,31 @@ function SettingsPage() {
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="sm:col-span-2">
-                <Field label="Indirizzo" value={form.address_street} onChange={(v) => set("address_street", v)} placeholder="Via, numero civico" />
+                <Field
+                  label="Indirizzo"
+                  value={form.address_street}
+                  onChange={(v) => set("address_street", v)}
+                  placeholder="Via, numero civico"
+                />
               </div>
               <Field label="CAP" value={form.address_zip} onChange={(v) => set("address_zip", v)} />
-              <Field label="Città" value={form.address_city} onChange={(v) => set("address_city", v)} />
-              <Field label="Provincia" value={form.address_province} onChange={(v) => set("address_province", v.toUpperCase().slice(0, 2))} placeholder="MI" />
-              <Field label="Nazione" value={form.address_country} onChange={(v) => set("address_country", v.toUpperCase().slice(0, 2))} placeholder="IT" />
+              <Field
+                label="Città"
+                value={form.address_city}
+                onChange={(v) => set("address_city", v)}
+              />
+              <Field
+                label="Provincia"
+                value={form.address_province}
+                onChange={(v) => set("address_province", v.toUpperCase().slice(0, 2))}
+                placeholder="MI"
+              />
+              <Field
+                label="Nazione"
+                value={form.address_country}
+                onChange={(v) => set("address_country", v.toUpperCase().slice(0, 2))}
+                placeholder="IT"
+              />
             </CardContent>
           </Card>
         </TabsContent>
@@ -239,7 +290,9 @@ function SettingsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {Object.entries(taxRegimeLabels).map(([k, l]) => (
-                      <SelectItem key={k} value={k}>{l}</SelectItem>
+                      <SelectItem key={k} value={k}>
+                        {l}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -255,9 +308,17 @@ function SettingsPage() {
               <CardTitle>Aliquote di default</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-3">
-              <NumField label="Cassa Forense %" value={form.cassa_rate} onChange={(v) => set("cassa_rate", v)} />
+              <NumField
+                label="Cassa Forense %"
+                value={form.cassa_rate}
+                onChange={(v) => set("cassa_rate", v)}
+              />
               <NumField label="IVA %" value={form.vat_rate} onChange={(v) => set("vat_rate", v)} />
-              <NumField label="Ritenuta %" value={form.withholding_rate} onChange={(v) => set("withholding_rate", v)} />
+              <NumField
+                label="Ritenuta %"
+                value={form.withholding_rate}
+                onChange={(v) => set("withholding_rate", v)}
+              />
               <div className="flex items-center gap-2 sm:col-span-3">
                 <Switch
                   id="apply-with"
@@ -265,9 +326,7 @@ function SettingsPage() {
                   onCheckedChange={(v) => set("apply_withholding", v)}
                   disabled={form.tax_regime === "forfettario"}
                 />
-                <Label htmlFor="apply-with">
-                  Applica ritenuta d'acconto per default
-                </Label>
+                <Label htmlFor="apply-with">Applica ritenuta d'acconto per default</Label>
               </div>
             </CardContent>
           </Card>
@@ -317,8 +376,8 @@ function SettingsPage() {
                 step={1}
               />
               <p className="text-xs text-muted-foreground sm:col-span-3">
-                Esempio: con prefisso "FT-" e prossimo numero 7, la prossima fattura sarà <strong>FT-7</strong>.
-                L'anno si resetta automaticamente al cambio di anno solare.
+                Esempio: con prefisso "FT-" e prossimo numero 7, la prossima fattura sarà{" "}
+                <strong>FT-7</strong>. L'anno si resetta automaticamente al cambio di anno solare.
               </p>
             </CardContent>
           </Card>
@@ -327,7 +386,6 @@ function SettingsPage() {
     </AppLayout>
   );
 }
-
 
 function Field({
   label,

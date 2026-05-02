@@ -130,11 +130,7 @@ function ResetPasswordPage() {
           </p>
 
           {!ready ? (
-            <p
-              className="mt-6 text-sm text-muted-foreground"
-              role="status"
-              aria-live="polite"
-            >
+            <p className="mt-6 text-sm text-muted-foreground" role="status" aria-live="polite">
               Verifica del link in corso…
             </p>
           ) : (

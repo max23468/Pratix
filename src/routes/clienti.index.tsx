@@ -8,7 +8,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { clientDisplayName, clientKindLabels } from "@/lib/labels";
 
@@ -112,7 +119,11 @@ function ClientiList() {
               filtered.map((c) => (
                 <TableRow key={c.id} className="cursor-pointer">
                   <TableCell>
-                    <Link to="/clienti/$clientId" params={{ clientId: c.id }} className="font-medium hover:underline">
+                    <Link
+                      to="/clienti/$clientId"
+                      params={{ clientId: c.id }}
+                      className="font-medium hover:underline"
+                    >
                       {clientDisplayName(c)}
                     </Link>
                   </TableCell>
@@ -123,7 +134,9 @@ function ClientiList() {
                     {c.vat_number || c.tax_code || "—"}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{c.email ?? "—"}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{c.address_city ?? "—"}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {c.address_city ?? "—"}
+                  </TableCell>
                 </TableRow>
               ))
             )}

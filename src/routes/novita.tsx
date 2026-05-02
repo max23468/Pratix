@@ -37,10 +37,7 @@ function formatDate(date: string | null): string | null {
 
 type Category = "highlight" | "fix" | "internal";
 
-const CATEGORY_META: Record<
-  Category,
-  { label: string; icon: typeof Sparkles; tone: string }
-> = {
+const CATEGORY_META: Record<Category, { label: string; icon: typeof Sparkles; tone: string }> = {
   highlight: { label: "Novità", icon: Sparkles, tone: "text-brand-gold" },
   fix: { label: "Correzioni", icon: Wrench, tone: "text-foreground" },
   internal: { label: "Sotto il cofano", icon: Settings2, tone: "text-muted-foreground" },
@@ -122,10 +119,7 @@ function NovitaPage() {
 
   return (
     <AppLayout>
-      <PageHeader
-        title="Novità"
-        description="Le ultime modifiche pubblicate in Pratix."
-      />
+      <PageHeader title="Novità" description="Le ultime modifiche pubblicate in Pratix." />
 
       <div className="space-y-6">
         {series.map((s, sIdx) => {
@@ -138,17 +132,14 @@ function NovitaPage() {
             <Card key={s.key}>
               <CardHeader className="space-y-1.5 pb-4">
                 <div className="flex flex-wrap items-baseline gap-2">
-                  <CardTitle className="font-display text-xl">
-                    Serie {s.label}
-                  </CardTitle>
+                  <CardTitle className="font-display text-xl">Serie {s.label}</CardTitle>
                   {sIdx === 0 && (
                     <Badge variant="secondary" className="text-xs">
                       Attuale
                     </Badge>
                   )}
                   <span className="text-xs text-muted-foreground">
-                    {s.entries.length}{" "}
-                    {s.entries.length === 1 ? "versione" : "versioni"}
+                    {s.entries.length} {s.entries.length === 1 ? "versione" : "versioni"}
                   </span>
                 </div>
               </CardHeader>
@@ -227,39 +218,26 @@ function ReleaseBlock({
             In preparazione
           </Badge>
         )}
-        {dateLabel && (
-          <span className="text-xs text-muted-foreground">{dateLabel}</span>
-        )}
+        {dateLabel && <span className="text-xs text-muted-foreground">{dateLabel}</span>}
       </div>
 
-      {entry.intro && (
-        <p className="text-sm text-muted-foreground">{entry.intro}</p>
-      )}
+      {entry.intro && <p className="text-sm text-muted-foreground">{entry.intro}</p>}
 
       {entry.sections.length === 0 && !entry.intro && (
-        <p className="text-sm text-muted-foreground">
-          Nessun dettaglio per questa versione.
-        </p>
+        <p className="text-sm text-muted-foreground">Nessun dettaglio per questa versione.</p>
       )}
 
       {groups.highlight.length > 0 && (
         <CategoryBlock category="highlight" sections={groups.highlight} />
       )}
-      {groups.fix.length > 0 && (
-        <CategoryBlock category="fix" sections={groups.fix} />
-      )}
+      {groups.fix.length > 0 && <CategoryBlock category="fix" sections={groups.fix} />}
       {groups.internal.length > 0 && (
         <details className="group">
           <summary className="flex cursor-pointer list-none items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground">
             <Settings2 className="h-3.5 w-3.5" strokeWidth={1.6} />
-            Sotto il cofano · {internalCount}{" "}
-            {internalCount === 1 ? "voce" : "voci"}
-            <span className="ml-1 text-muted-foreground/70 group-open:hidden">
-              mostra
-            </span>
-            <span className="ml-1 hidden text-muted-foreground/70 group-open:inline">
-              nascondi
-            </span>
+            Sotto il cofano · {internalCount} {internalCount === 1 ? "voce" : "voci"}
+            <span className="ml-1 text-muted-foreground/70 group-open:hidden">mostra</span>
+            <span className="ml-1 hidden text-muted-foreground/70 group-open:inline">nascondi</span>
           </summary>
           <div className="mt-3 space-y-3 border-l-2 border-border/60 pl-4">
             {groups.internal.map((section) => (
@@ -298,11 +276,7 @@ function CategoryBlock({
           <SectionList
             key={section.title}
             section={section}
-            itemClass={
-              isHighlight
-                ? "text-sm text-foreground"
-                : "text-sm text-muted-foreground"
-            }
+            itemClass={isHighlight ? "text-sm text-foreground" : "text-sm text-muted-foreground"}
           />
         ))}
       </div>
@@ -314,13 +288,7 @@ function sectionIcon(sections: ChangelogSection[]) {
   return sections.some((s) => /sicurez/i.test(s.title)) ? ShieldCheck : Wrench;
 }
 
-function SectionList({
-  section,
-  itemClass,
-}: {
-  section: ChangelogSection;
-  itemClass: string;
-}) {
+function SectionList({ section, itemClass }: { section: ChangelogSection; itemClass: string }) {
   return (
     <ul className="space-y-1.5 pl-5 [list-style:disc] marker:text-muted-foreground/50">
       {section.items.map((item, i) => (

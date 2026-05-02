@@ -6,6 +6,7 @@
 ## Contesto
 
 Pratix gestisce dati personali e fiscali sensibili: anagrafica avvocati, anagrafica clienti, fatture, scadenze. Servono:
+
 - database relazionale (Postgres) con vincoli e migrazioni versionate,
 - autenticazione email/password,
 - Row-Level Security per isolamento dati per utente,
@@ -18,6 +19,7 @@ Lovable Cloud fornisce tutto questo nativamente, basato su Supabase, con `client
 ## Decisione storica
 
 Abbiamo adottato **Lovable Cloud (Supabase)** come backend unico iniziale per Pratix:
+
 - Postgres con RLS obbligatoria su tutte le tabelle utente,
 - Auth Supabase,
 - Storage per allegati,

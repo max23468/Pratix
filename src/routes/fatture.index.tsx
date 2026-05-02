@@ -29,6 +29,7 @@ import {
   clientDisplayName,
   invoiceStatusLabels,
   invoiceStatusVariant,
+  type ClientDisplayData,
 } from "@/lib/labels";
 import { formatCurrency, formatDate } from "@/lib/format";
 
@@ -77,7 +78,7 @@ function InvoicesIndex() {
       if (status !== "all" && i.status !== status) return false;
       if (year !== "all" && String(i.year) !== year) return false;
       if (!q) return true;
-      const name = clientDisplayName(i.client as any).toLowerCase();
+      const name = clientDisplayName(i.client as ClientDisplayData).toLowerCase();
       return i.number.toLowerCase().includes(q) || name.includes(q);
     });
   }, [data, search, status, year]);
@@ -199,8 +200,7 @@ function InvoicesIndex() {
                 )}
                 {filtered.map((i) => {
                   const today = new Date().toISOString().slice(0, 10);
-                  const isOverdue =
-                    i.status === "issued" && i.due_date && i.due_date < today;
+                  const isOverdue = i.status === "issued" && i.due_date && i.due_date < today;
                   return (
                     <TableRow key={i.id} className="cursor-pointer">
                       <TableCell>
@@ -213,12 +213,16 @@ function InvoicesIndex() {
                         </Link>
                       </TableCell>
                       <TableCell>{formatDate(i.issue_date)}</TableCell>
-                      <TableCell>{clientDisplayName(i.client as any)}</TableCell>
+                      <TableCell>{clientDisplayName(i.client as ClientDisplayData)}</TableCell>
                       <TableCell className={isOverdue ? "font-medium text-destructive" : ""}>
                         {formatDate(i.due_date)}
                       </TableCell>
                       <TableCell>
-                        <Badge variant={isOverdue ? "destructive" : invoiceStatusVariant[i.status] || "outline"}>
+                        <Badge
+                          variant={
+                            isOverdue ? "destructive" : invoiceStatusVariant[i.status] || "outline"
+                          }
+                        >
                           {isOverdue ? "Scaduta" : invoiceStatusLabels[i.status] || i.status}
                         </Badge>
                       </TableCell>

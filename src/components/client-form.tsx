@@ -6,7 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AlertDialog,
@@ -182,28 +188,48 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="fn">Nome</Label>
-                <Input id="fn" value={form.first_name ?? ""} onChange={(e) => upd("first_name", e.target.value)} />
+                <Input
+                  id="fn"
+                  value={form.first_name ?? ""}
+                  onChange={(e) => upd("first_name", e.target.value)}
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="ln">Cognome</Label>
-                <Input id="ln" value={form.last_name ?? ""} onChange={(e) => upd("last_name", e.target.value)} />
+                <Input
+                  id="ln"
+                  value={form.last_name ?? ""}
+                  onChange={(e) => upd("last_name", e.target.value)}
+                />
               </div>
             </div>
           ) : (
             <div className="space-y-2">
               <Label htmlFor="bn">Ragione sociale</Label>
-              <Input id="bn" value={form.business_name ?? ""} onChange={(e) => upd("business_name", e.target.value)} />
+              <Input
+                id="bn"
+                value={form.business_name ?? ""}
+                onChange={(e) => upd("business_name", e.target.value)}
+              />
             </div>
           )}
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="tc">Codice fiscale</Label>
-              <Input id="tc" value={form.tax_code ?? ""} onChange={(e) => upd("tax_code", e.target.value.toUpperCase())} />
+              <Input
+                id="tc"
+                value={form.tax_code ?? ""}
+                onChange={(e) => upd("tax_code", e.target.value.toUpperCase())}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="vat">Partita IVA</Label>
-              <Input id="vat" value={form.vat_number ?? ""} onChange={(e) => upd("vat_number", e.target.value)} />
+              <Input
+                id="vat"
+                value={form.vat_number ?? ""}
+                onChange={(e) => upd("vat_number", e.target.value)}
+              />
             </div>
           </div>
         </CardContent>
@@ -217,15 +243,29 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={form.email ?? ""} onChange={(e) => upd("email", e.target.value)} />
+              <Input
+                id="email"
+                type="email"
+                value={form.email ?? ""}
+                onChange={(e) => upd("email", e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Telefono</Label>
-              <Input id="phone" value={form.phone ?? ""} onChange={(e) => upd("phone", e.target.value)} />
+              <Input
+                id="phone"
+                value={form.phone ?? ""}
+                onChange={(e) => upd("phone", e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="pec">PEC</Label>
-              <Input id="pec" type="email" value={form.pec ?? ""} onChange={(e) => upd("pec", e.target.value)} />
+              <Input
+                id="pec"
+                type="email"
+                value={form.pec ?? ""}
+                onChange={(e) => upd("pec", e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="sdi">Codice destinatario SdI</Label>
@@ -247,16 +287,28 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
         <CardContent className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="addr">Indirizzo</Label>
-            <Input id="addr" value={form.address_street ?? ""} onChange={(e) => upd("address_street", e.target.value)} />
+            <Input
+              id="addr"
+              value={form.address_street ?? ""}
+              onChange={(e) => upd("address_street", e.target.value)}
+            />
           </div>
           <div className="grid gap-4 sm:grid-cols-4">
             <div className="space-y-2 sm:col-span-2">
               <Label htmlFor="city">Città</Label>
-              <Input id="city" value={form.address_city ?? ""} onChange={(e) => upd("address_city", e.target.value)} />
+              <Input
+                id="city"
+                value={form.address_city ?? ""}
+                onChange={(e) => upd("address_city", e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="zip">CAP</Label>
-              <Input id="zip" value={form.address_zip ?? ""} onChange={(e) => upd("address_zip", e.target.value)} />
+              <Input
+                id="zip"
+                value={form.address_zip ?? ""}
+                onChange={(e) => upd("address_zip", e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="prov">Prov.</Label>
@@ -276,7 +328,11 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
           <CardTitle className="text-base">Note</CardTitle>
         </CardHeader>
         <CardContent>
-          <Textarea rows={3} value={form.notes ?? ""} onChange={(e) => upd("notes", e.target.value)} />
+          <Textarea
+            rows={3}
+            value={form.notes ?? ""}
+            onChange={(e) => upd("notes", e.target.value)}
+          />
         </CardContent>
       </Card>
 
@@ -299,14 +355,18 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Annulla</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => deleteMutation.mutate()}>Elimina</AlertDialogAction>
+                  <AlertDialogAction onClick={() => deleteMutation.mutate()}>
+                    Elimina
+                  </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
           )}
         </div>
         <div className="flex gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>Annulla</Button>
+          <Button type="button" variant="outline" onClick={onCancel}>
+            Annulla
+          </Button>
           <Button type="submit" disabled={saveMutation.isPending}>
             {saveMutation.isPending ? "Salvataggio…" : "Salva"}
           </Button>

@@ -1,6 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Briefcase, Receipt, Wallet, AlertCircle, Plus, TrendingUp, AlertTriangle, Users } from "lucide-react";
+import {
+  Briefcase,
+  Receipt,
+  Wallet,
+  AlertCircle,
+  Plus,
+  TrendingUp,
+  AlertTriangle,
+  Users,
+} from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,15 +66,17 @@ function DashboardContent() {
           .limit(8),
         supabase
           .from("invoices")
-          .select("id, status, total_amount, net_to_pay, issue_date, due_date, paid_at, number, year"),
+          .select(
+            "id, status, total_amount, net_to_pay, issue_date, due_date, paid_at, number, year",
+          ),
         supabase
           .from("cases")
-          .select("id, case_number, title, status, updated_at, client_id, clients(kind, first_name, last_name, business_name)")
+          .select(
+            "id, case_number, title, status, updated_at, client_id, clients(kind, first_name, last_name, business_name)",
+          )
           .order("updated_at", { ascending: false })
           .limit(5),
-        supabase
-          .from("clients")
-          .select("id", { count: "exact", head: true }),
+        supabase.from("clients").select("id", { count: "exact", head: true }),
       ]);
 
       if (casesRes.error) throw casesRes.error;
@@ -81,7 +92,8 @@ function DashboardContent() {
         .filter((i) => i.status === "issued" || i.status === "overdue")
         .reduce((sum, i) => sum + Number(i.net_to_pay ?? 0), 0);
       const overdue = invoices.filter(
-        (i) => (i.status === "issued" || i.status === "overdue") && i.due_date && i.due_date < today,
+        (i) =>
+          (i.status === "issued" || i.status === "overdue") && i.due_date && i.due_date < today,
       );
       const overdueTotal = overdue.reduce((sum, i) => sum + Number(i.net_to_pay ?? 0), 0);
       const drafts = invoices.filter((i) => i.status === "draft");
@@ -137,8 +149,16 @@ function DashboardContent() {
       />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard icon={Briefcase} label="Pratiche attive" value={isLoading ? "—" : String(data?.activeCases ?? 0)} />
-        <StatCard icon={Users} label="Clienti" value={isLoading ? "—" : String(data?.totalClients ?? 0)} />
+        <StatCard
+          icon={Briefcase}
+          label="Pratiche attive"
+          value={isLoading ? "—" : String(data?.activeCases ?? 0)}
+        />
+        <StatCard
+          icon={Users}
+          label="Clienti"
+          value={isLoading ? "—" : String(data?.totalClients ?? 0)}
+        />
         <StatCard
           icon={AlertCircle}
           label="Scadenze (14gg)"
@@ -147,7 +167,9 @@ function DashboardContent() {
         <StatCard
           icon={Wallet}
           label="Bozze"
-          value={isLoading ? "—" : `${data?.draftCount ?? 0} · ${formatCurrency(data?.draftTotal ?? 0)}`}
+          value={
+            isLoading ? "—" : `${data?.draftCount ?? 0} · ${formatCurrency(data?.draftTotal ?? 0)}`
+          }
         />
         <StatCard
           icon={Receipt}
@@ -193,7 +215,6 @@ function DashboardContent() {
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{d.description}</p>
                         <p className="truncate text-xs text-muted-foreground">
-                          
                           {d.cases?.title ?? "—"}
                         </p>
                       </div>
@@ -205,7 +226,9 @@ function DashboardContent() {
                 })}
               </ul>
             ) : (
-              <p className="text-sm text-muted-foreground">Nessuna scadenza nei prossimi 14 giorni.</p>
+              <p className="text-sm text-muted-foreground">
+                Nessuna scadenza nei prossimi 14 giorni.
+              </p>
             )}
           </CardContent>
         </Card>
@@ -227,8 +250,7 @@ function DashboardContent() {
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{c.title}</p>
                         <p className="truncate text-xs text-muted-foreground">
-                          {c.case_number} · 
-                          {c.clients ? clientDisplayName(c.clients) : "—"}
+                          {c.case_number} ·{c.clients ? clientDisplayName(c.clients) : "—"}
                         </p>
                       </div>
                       <Badge variant={caseStatusVariant[c.status] ?? "outline"}>
@@ -240,7 +262,11 @@ function DashboardContent() {
               </ul>
             ) : (
               <p className="text-sm text-muted-foreground">
-                Nessuna pratica ancora. <Link to="/pratiche/nuova" className="text-primary hover:underline">Crea la prima</Link>.
+                Nessuna pratica ancora.{" "}
+                <Link to="/pratiche/nuova" className="text-primary hover:underline">
+                  Crea la prima
+                </Link>
+                .
               </p>
             )}
           </CardContent>
@@ -271,7 +297,9 @@ function StatCard({
   return (
     <Card className="border-border/70 shadow-soft">
       <CardContent className="flex items-center gap-3 p-4">
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${iconCls}`}>
+        <div
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${iconCls}`}
+        >
           <Icon className="h-5 w-5" strokeWidth={1.6} />
         </div>
         <div className="min-w-0">

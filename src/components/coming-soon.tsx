@@ -16,9 +16,7 @@ export function ComingSoon({ title, description, children }: Props) {
           <Construction className="h-5 w-5" />
         </div>
         <h2 className="text-lg font-semibold">{title}</h2>
-        {description && (
-          <p className="max-w-md text-sm text-muted-foreground">{description}</p>
-        )}
+        {description && <p className="max-w-md text-sm text-muted-foreground">{description}</p>}
         {children}
       </CardContent>
     </Card>

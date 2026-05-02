@@ -39,22 +39,22 @@ Da usare **solo** per logo e asset di marca che non devono invertirsi col tema.
 
 ## Palette (sorgente di verità)
 
-| Ruolo | Light | Dark |
-|---|---|---|
-| Sfondo | panna `oklch(0.985 0.004 80)` | grigio caldo `oklch(0.18 0.012 250)` |
-| Testo | navy carbone | panna |
-| Primario brand | navy `oklch(0.30 0.07 255)` | invariato |
-| Accento | oro `oklch(0.68 0.11 75)` | invariato |
+| Ruolo          | Light                         | Dark                                 |
+| -------------- | ----------------------------- | ------------------------------------ |
+| Sfondo         | panna `oklch(0.985 0.004 80)` | grigio caldo `oklch(0.18 0.012 250)` |
+| Testo          | navy carbone                  | panna                                |
+| Primario brand | navy `oklch(0.30 0.07 255)`   | invariato                            |
+| Accento        | oro `oklch(0.68 0.11 75)`     | invariato                            |
 
 La **dark mode è ammorbidita** (croma 0.012, hue 250): scelta esplicita per ridurre l'affaticamento visivo. Vedi [ADR 0006](../decisions/0006-tema-auto-piu-override.md).
 
 ## Tipografia
 
-| Scala | Font | Uso |
-|---|---|---|
-| `.font-display` | **Inter Tight** (max weight 600) | h1, h2, h3, hero |
-| body | **Inter** | UI generale |
-| `.font-mono` / numeri | **JetBrains Mono** | numeri tabellari, codici |
+| Scala                 | Font                             | Uso                      |
+| --------------------- | -------------------------------- | ------------------------ |
+| `.font-display`       | **Inter Tight** (max weight 600) | h1, h2, h3, hero         |
+| body                  | **Inter**                        | UI generale              |
+| `.font-mono` / numeri | **JetBrains Mono**               | numeri tabellari, codici |
 
 I numeri usano sempre `tabular-nums`: cifre di larghezza fissa per allineamento in colonne (fatture, importi, totali).
 

@@ -199,7 +199,9 @@ function DeadlinesTab({ caseId }: { caseId: string }) {
                       <Check className="h-3.5 w-3.5" />
                     </Button>
                     <div className="min-w-0">
-                      <p className={`truncate text-sm ${d.completed ? "line-through text-muted-foreground" : "font-medium"}`}>
+                      <p
+                        className={`truncate text-sm ${d.completed ? "line-through text-muted-foreground" : "font-medium"}`}
+                      >
                         {d.description}
                       </p>
                     </div>
@@ -376,9 +378,7 @@ function HistoryTab({ caseId }: { caseId: string }) {
                     {caseStatusLabels[h.new_status] ?? h.new_status}
                   </Badge>
                 </div>
-                <span className="text-xs text-muted-foreground">
-                  {formatDate(h.changed_at)}
-                </span>
+                <span className="text-xs text-muted-foreground">{formatDate(h.changed_at)}</span>
               </li>
             ))}
           </ul>

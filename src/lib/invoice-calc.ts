@@ -78,14 +78,10 @@ export function computeInvoice(
 
   const taxableTotal = round2(taxableFees + taxableExpenses);
 
-  const cassaAmount = isForfettario
-    ? 0
-    : round2(taxableTotal * (options.cassaRate / 100));
+  const cassaAmount = isForfettario ? 0 : round2(taxableTotal * (options.cassaRate / 100));
 
   const vatBase = round2(taxableTotal + cassaAmount);
-  const vatAmount = isForfettario
-    ? 0
-    : round2(vatBase * (options.vatRate / 100));
+  const vatAmount = isForfettario ? 0 : round2(vatBase * (options.vatRate / 100));
 
   const withholdingBase = isForfettario ? 0 : taxableTotal;
   const withholdingAmount =
@@ -101,9 +97,7 @@ export function computeInvoice(
     return 0;
   })();
 
-  const totalAmount = round2(
-    taxableTotal + cassaAmount + vatAmount + art15Expenses + stampAmount,
-  );
+  const totalAmount = round2(taxableTotal + cassaAmount + vatAmount + art15Expenses + stampAmount);
   const netToPay = round2(totalAmount - withholdingAmount);
 
   return {

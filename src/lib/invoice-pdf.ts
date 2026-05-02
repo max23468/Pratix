@@ -73,8 +73,7 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
   // Intestazione professionista
   doc.setFont("helvetica", "bold");
   doc.setFontSize(14);
-  const headerName =
-    data.profile.business_name || data.profile.full_name || "Avvocato";
+  const headerName = data.profile.business_name || data.profile.full_name || "Avvocato";
   doc.text(headerName, MARGIN, y);
   y += 6;
 
@@ -117,12 +116,9 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
     align: "right",
   });
   if (data.invoice.due_date) {
-    doc.text(
-      `Scadenza: ${formatDate(data.invoice.due_date)}`,
-      pageWidth - MARGIN,
-      MARGIN + 16,
-      { align: "right" },
-    );
+    doc.text(`Scadenza: ${formatDate(data.invoice.due_date)}`, pageWidth - MARGIN, MARGIN + 16, {
+      align: "right",
+    });
   }
 
   y = Math.max(y, MARGIN + 22) + 6;
@@ -218,16 +214,12 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
   if (data.invoice.taxable_expenses > 0)
     row("Spese imponibili", formatCurrency(data.invoice.taxable_expenses));
   if (data.invoice.cassa_amount > 0)
-    row(
-      `Cassa Forense (${data.invoice.cassa_rate}%)`,
-      formatCurrency(data.invoice.cassa_amount),
-    );
+    row(`Cassa Forense (${data.invoice.cassa_rate}%)`, formatCurrency(data.invoice.cassa_amount));
   if (data.invoice.vat_amount > 0)
     row(`IVA (${data.invoice.vat_rate}%)`, formatCurrency(data.invoice.vat_amount));
   if (data.invoice.art15_expenses > 0)
     row("Spese Art. 15 (escluse IVA)", formatCurrency(data.invoice.art15_expenses));
-  if (data.invoice.stamp_amount > 0)
-    row("Bollo", formatCurrency(data.invoice.stamp_amount));
+  if (data.invoice.stamp_amount > 0) row("Bollo", formatCurrency(data.invoice.stamp_amount));
 
   y += 1;
   doc.setDrawColor(150);

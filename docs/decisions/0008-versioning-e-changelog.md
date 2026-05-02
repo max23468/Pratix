@@ -27,11 +27,11 @@ in-app autenticata.
 
 ### Regole di versioning
 
-| Bump | Quando |
-| --- | --- |
+| Bump              | Quando                                                                                                                                   |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | **MAJOR** (X.0.0) | Cambia un comportamento visibile all'utente in modo non retrocompatibile (es. rimosso un campo fattura, cambiata una formula di calcolo) |
-| **MINOR** (0.X.0) | Nuova funzionalità retrocompatibile (nuova pagina, nuovo campo opzionale, nuova vista) |
-| **PATCH** (0.0.X) | Bugfix, miglioramenti UI, contenuti, performance, refactor invisibili |
+| **MINOR** (0.X.0) | Nuova funzionalità retrocompatibile (nuova pagina, nuovo campo opzionale, nuova vista)                                                   |
+| **PATCH** (0.0.X) | Bugfix, miglioramenti UI, contenuti, performance, refactor invisibili                                                                    |
 
 ### Single source of truth
 

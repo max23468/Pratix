@@ -37,24 +37,16 @@ export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
           variant="ghost"
           size={variant === "icon" ? "icon" : "sm"}
           aria-label="Cambia tema"
-          className={cn(
-            variant === "icon" ? "h-9 w-9" : "h-9 gap-2 px-2",
-            className,
-          )}
+          className={cn(variant === "icon" ? "h-9 w-9" : "h-9 gap-2 px-2", className)}
         >
           <Icon className="h-4 w-4" />
-          {variant === "full" && (
-            <span className="text-sm font-medium">{labels[mode]}</span>
-          )}
+          {variant === "full" && <span className="text-sm font-medium">{labels[mode]}</span>}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuLabel>Tema</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuRadioGroup
-          value={mode}
-          onValueChange={(v) => setMode(v as ThemeMode)}
-        >
+        <DropdownMenuRadioGroup value={mode} onValueChange={(v) => setMode(v as ThemeMode)}>
           <DropdownMenuRadioItem value="light">
             <Sun className="mr-2 h-4 w-4" /> Chiaro
           </DropdownMenuRadioItem>

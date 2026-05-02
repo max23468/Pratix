@@ -70,9 +70,8 @@ function Landing() {
               torna<span className="text-brand-gold">.</span>
             </h1>
             <p className="mx-auto mt-7 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Pratix è il gestionale per avvocati freelance. Pratiche,
-              scadenze, spese e fatturazione elettronica: ogni cosa al suo posto,
-              ogni conto che torna.
+              Pratix è il gestionale per avvocati freelance. Pratiche, scadenze, spese e
+              fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link to="/register">

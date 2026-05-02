@@ -114,7 +114,9 @@ function PraticheList() {
           <SelectContent>
             <SelectItem value="all">Tutti gli stati</SelectItem>
             {Object.entries(caseStatusLabels).map(([k, l]) => (
-              <SelectItem key={k} value={k}>{l}</SelectItem>
+              <SelectItem key={k} value={k}>
+                {l}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -125,7 +127,9 @@ function PraticheList() {
           <SelectContent>
             <SelectItem value="all">Tutte le materie</SelectItem>
             {Object.entries(caseMatterLabels).map(([k, l]) => (
-              <SelectItem key={k} value={k}>{l}</SelectItem>
+              <SelectItem key={k} value={k}>
+                {l}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
