@@ -23,7 +23,7 @@
 -- -----------
 -- - Tutti i timestamp `*_at` sono `timestamp with time zone`.
 -- - Ogni tabella user-owned ha colonna `user_id uuid` + 4 policy RLS
---   (select/insert/update/delete) su `auth.uid() = user_id`.
+--   (select/insert/update/delete) su `(select auth.uid()) = user_id`.
 -- - `profiles.id` coincide con `auth.users.id` (riempita dal trigger
 --   `on_auth_user_created` su `auth.users`).
 -- =============================================================================
@@ -387,7 +387,7 @@ REVOKE EXECUTE ON FUNCTION public.set_updated_at() FROM PUBLIC, anon, authentica
 -- ============================================================================
 -- ROW LEVEL SECURITY
 -- ============================================================================
--- Pattern: ogni tabella espone solo le righe dove auth.uid() = user_id
+-- Pattern: ogni tabella espone solo le righe dove (select auth.uid()) = user_id
 -- (tranne profiles, dove la chiave è id che coincide con auth.uid()).
 
 ALTER TABLE public.profiles            ENABLE ROW LEVEL SECURITY;
@@ -400,46 +400,46 @@ ALTER TABLE public.invoices            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invoice_lines       ENABLE ROW LEVEL SECURITY;
 
 -- profiles
-CREATE POLICY profiles_select_own ON public.profiles FOR SELECT TO authenticated USING (auth.uid() = id);
-CREATE POLICY profiles_insert_own ON public.profiles FOR INSERT TO authenticated WITH CHECK (auth.uid() = id);
-CREATE POLICY profiles_update_own ON public.profiles FOR UPDATE TO authenticated USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
+CREATE POLICY profiles_select_own ON public.profiles FOR SELECT TO authenticated USING ((select auth.uid()) = id);
+CREATE POLICY profiles_insert_own ON public.profiles FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = id);
+CREATE POLICY profiles_update_own ON public.profiles FOR UPDATE TO authenticated USING ((select auth.uid()) = id) WITH CHECK ((select auth.uid()) = id);
 
 -- clients
-CREATE POLICY clients_select_own ON public.clients FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY clients_insert_own ON public.clients FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY clients_update_own ON public.clients FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY clients_delete_own ON public.clients FOR DELETE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY clients_select_own ON public.clients FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY clients_insert_own ON public.clients FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY clients_update_own ON public.clients FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY clients_delete_own ON public.clients FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
 
 -- cases
-CREATE POLICY cases_select_own ON public.cases FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY cases_insert_own ON public.cases FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY cases_update_own ON public.cases FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY cases_delete_own ON public.cases FOR DELETE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY cases_select_own ON public.cases FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY cases_insert_own ON public.cases FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY cases_update_own ON public.cases FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY cases_delete_own ON public.cases FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
 
 -- case_deadlines
-CREATE POLICY case_deadlines_select_own ON public.case_deadlines FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY case_deadlines_insert_own ON public.case_deadlines FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY case_deadlines_update_own ON public.case_deadlines FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY case_deadlines_delete_own ON public.case_deadlines FOR DELETE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY case_deadlines_select_own ON public.case_deadlines FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY case_deadlines_insert_own ON public.case_deadlines FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY case_deadlines_update_own ON public.case_deadlines FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY case_deadlines_delete_own ON public.case_deadlines FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
 
 -- case_status_history (solo select + insert; lo storico non si modifica)
-CREATE POLICY case_status_history_select_own ON public.case_status_history FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY case_status_history_insert_own ON public.case_status_history FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
+CREATE POLICY case_status_history_select_own ON public.case_status_history FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY case_status_history_insert_own ON public.case_status_history FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
 
 -- expenses
-CREATE POLICY expenses_select_own ON public.expenses FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY expenses_insert_own ON public.expenses FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY expenses_update_own ON public.expenses FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY expenses_delete_own ON public.expenses FOR DELETE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY expenses_select_own ON public.expenses FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY expenses_insert_own ON public.expenses FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY expenses_update_own ON public.expenses FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY expenses_delete_own ON public.expenses FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
 
 -- invoices
-CREATE POLICY invoices_select_own ON public.invoices FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY invoices_insert_own ON public.invoices FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY invoices_update_own ON public.invoices FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY invoices_delete_own ON public.invoices FOR DELETE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY invoices_select_own ON public.invoices FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY invoices_insert_own ON public.invoices FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY invoices_update_own ON public.invoices FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY invoices_delete_own ON public.invoices FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
 
 -- invoice_lines
-CREATE POLICY invoice_lines_select_own ON public.invoice_lines FOR SELECT TO authenticated USING (auth.uid() = user_id);
-CREATE POLICY invoice_lines_insert_own ON public.invoice_lines FOR INSERT TO authenticated WITH CHECK (auth.uid() = user_id);
-CREATE POLICY invoice_lines_update_own ON public.invoice_lines FOR UPDATE TO authenticated USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-CREATE POLICY invoice_lines_delete_own ON public.invoice_lines FOR DELETE TO authenticated USING (auth.uid() = user_id);
+CREATE POLICY invoice_lines_select_own ON public.invoice_lines FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY invoice_lines_insert_own ON public.invoice_lines FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY invoice_lines_update_own ON public.invoice_lines FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY invoice_lines_delete_own ON public.invoice_lines FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);

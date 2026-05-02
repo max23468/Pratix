@@ -13,9 +13,11 @@ Aggiornato a: versione **0.3.0**.
    dell'avvocato proprietario. Nessuna tabella è condivisa fra utenti diversi.
 
 2. **RLS sempre attiva**. Ogni tabella user-owned ha quattro policy
-   (`select`, `insert`, `update`, `delete`) tutte basate su `auth.uid() =
-   user_id`. L'unica eccezione è `case_status_history`, che ha solo `select`
-   e `insert` perché lo storico per definizione non si modifica né si elimina.
+   (`select`, `insert`, `update`, `delete`) tutte basate su
+   `(select auth.uid()) = user_id`, così Postgres valuta l'utente una sola
+   volta per statement. L'unica eccezione è `case_status_history`, che ha solo
+   `select` e `insert` perché lo storico per definizione non si modifica né si
+   elimina.
 
 3. **`profiles` segue `auth.users`**. La PK di `profiles` (`id`) è la stessa
    `id` di `auth.users`, non una colonna `user_id` separata. Una riga viene
@@ -28,7 +30,7 @@ Aggiornato a: versione **0.3.0**.
 
 5. **RLS resta la barriera applicativa**. Le foreign key proteggono la coerenza
    dei dati, mentre l'accesso alle righe continua a dipendere dalle policy
-   `auth.uid() = user_id`.
+   `(select auth.uid()) = user_id`.
 
 ## Tabelle
 
