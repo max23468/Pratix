@@ -16,6 +16,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 - **Inventario sanitizzato per GitHub**: aggiunto `docs/migration/lovable-inventory.md` con le risposte tecniche Lovable ripulite da dati personali e aggiornato `.gitignore` per bloccare export locali con PII o dump.
 - **Promemoria password migrazione**: aggiunto al piano il cambio obbligatorio della password temporanea dall'area Account prima della chiusura definitiva di Lovable.
 - **Password migrazione sostituita**: verificato il login locale sul nuovo Supabase e sostituita la password temporanea dall'area Account.
+- **Email Auth Supabase tracciate**: segnato nel piano che le email di recupero password possono arrivare da Supabase Auth durante la migrazione e che mittente/template brandizzati sono un'attività post-cutover.
 - **Runtime Vercel preparato**: sostituita la configurazione Vite proprietaria Lovable con una configurazione esplicita TanStack Start + Nitro per Vercel, rimosso `wrangler.jsonc` e aggiornate le dipendenze.
 - **Build Vercel alleggerita**: caricato il generatore PDF solo al download della fattura e filtrati i warning innocui provenienti da dipendenze terze durante la build.
 - **Foreign key Supabase ripristinate**: aggiunta una migration per riallineare il nuovo backend Supabase alle relazioni delle migrations storiche, necessarie alle join PostgREST usate da pratiche, scadenze, spese e fatture.

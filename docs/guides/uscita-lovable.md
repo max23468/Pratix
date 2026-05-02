@@ -252,6 +252,10 @@ Stato locale:
 4. Verificare preview deployment da branch.
 5. Promuovere o deployare produzione su dominio `*.vercel.app`.
 6. Aggiornare redirect URL in Supabase Auth.
+7. Dopo il cutover, personalizzare le email Auth Supabase: mittente/nome
+   visibile, template italiani e dominio o SMTP dedicato se disponibile sul
+   piano scelto. Fino ad allora è normale che i messaggi arrivino da Supabase
+   Auth.
 
 Checklist minima:
 
@@ -261,6 +265,8 @@ Checklist minima:
 - le route autenticate non espongono dati senza sessione;
 - i download PDF/XML funzionano;
 - password reset torna al dominio Vercel;
+- la mail di recupero password arriva tramite Supabase Auth e la
+  personalizzazione brand resta tracciata come attività post-cutover;
 - nessuna variabile segreta è presente in git.
 
 ## Variabili ambiente target
