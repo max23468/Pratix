@@ -14,6 +14,21 @@ Per rilasciare la versione `X.Y.Z`:
 4. Promuovi il deployment di produzione su Vercel.
 5. Verifica: apri `/impostazioni` e controlla che il footer mostri la nuova versione.
 
+## Gate di chiusura fase
+
+Prima di dichiarare conclusa una fase, migrazione, cutover o lavoro già
+pubblicato/deployato, controlla `CHANGELOG.md`.
+
+Se `## [Non rilasciato]` contiene voci relative al lavoro appena completato,
+non chiudere il task senza:
+
+1. fare il bump SemVer e chiudere il blocco changelog; oppure
+2. dichiarare esplicitamente che il rilascio resta il prossimo step operativo.
+
+Per migrazioni, cutover, correzioni infra o bonifiche sotto il cofano completate
+senza nuove feature utente, il default è PATCH salvo istruzione diversa o impatto
+utente maggiore.
+
 ## Quando bumpare quale numero
 
 Pratix segue **Semantic Versioning** adattato al contesto SaaS.

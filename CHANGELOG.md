@@ -6,6 +6,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.3.1] — 2026-05-02
+
 ### Correzioni
 - **Termini allineati al glossario**: la pagina Termini usa "professione" al posto dei riferimenti generici ad attività o studio professionale.
 - **Separatori title standardizzati**: i titoli pagina e i meta tag usano `·` al posto del trattino lungo (`Dashboard · Pratix`), lasciando `Pratix · Tutto torna.` solo alla home pubblica.
@@ -37,6 +39,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 - **Templates issue/PR e Dependabot**: aggiunti `.github/ISSUE_TEMPLATE/` (bug, idea), `PULL_REQUEST_TEMPLATE.md`, `dependabot.yml` (npm settimanale, minor/patch raggruppati). Niente GitHub Actions per il momento.
 - **`AGENTS.md` riscritto**: stack reale (TanStack Start + Lovable Cloud) descritto con link a `docs/data-model.md`, `BRAND.md`, `docs/guides/architettura.md`. Aggiunte sezioni "File generati intoccabili", "Sync GitHub ↔ Lovable", "Glossario di prodotto", "Documentazione, memoria, glossario", "Versioning e rilascio". Esplicitato che lockfile autoritativo è `package-lock.json` (collaboratori usano npm, sandbox Lovable usa bun).
 - **`AGENTS.md` esteso**: aggiunte sezioni "Errori comuni da evitare" (router, colori, logo, tema, supabase client, RLS), "Server functions vs route API" (RPC tipato vs endpoint HTTP raw, helper `*.server.ts`), "Gestione segreti" (mai in `.env`, sempre via tool secrets), e mappa rapida "tipo di modifica → file da toccare" come tabella di riferimento.
+- **Gate versioning post-fase aggiunto**: istruzioni agenti, guida di rilascio e mirror memoria richiedono ora di chiudere o dichiarare esplicitamente il rilascio quando una fase, migrazione o cutover viene completata con voci già presenti nel changelog.
 
 ## [0.3.0] — 2026-04-29
 
@@ -123,6 +126,8 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.3.1]: #031--2026-05-02
+[0.3.0]: #030--2026-04-29
 [0.2.1]: #021--2026-04-29
 [0.2.0]: #020--2026-04-29
 [0.1.0]: #010--2026-04-29

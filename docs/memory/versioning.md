@@ -10,6 +10,17 @@ Pratix usa **SemVer convenzionale** adattato a SaaS hostato (no `npm publish`, n
 
 **Single source of truth**: `src/lib/version.ts` esporta `APP_VERSION` e `BUILD_DATE`. Mai duplicare la stringa di versione altrove.
 
+## Gate di chiusura fase
+
+Prima di dichiarare conclusa una fase, migrazione, cutover o lavoro già pubblicato/deployato, controllare `CHANGELOG.md`.
+
+Se il blocco `## [Non rilasciato]` contiene voci relative al lavoro appena completato, l'agente non deve chiudere il task senza:
+
+- fare il bump SemVer e chiudere il blocco changelog; oppure
+- dichiarare esplicitamente che il rilascio resta il prossimo step operativo.
+
+Per migrazioni, cutover, correzioni infra o bonifiche sotto il cofano completate senza nuove feature utente, il default è PATCH salvo istruzione diversa o impatto utente maggiore.
+
 ## Regole di bump
 
 - **MAJOR** = breaking visibile all'utente (rimosso campo, cambiata formula)
