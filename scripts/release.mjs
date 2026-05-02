@@ -192,11 +192,18 @@ function extractUnreleased(changelog) {
 }
 
 function inferBump(unreleasedBody) {
-  const sectionTitles = validateSections(unreleasedBody);
+  const sections = validateSections(unreleasedBody);
+  const sectionTitles = sections.map((section) => section.title);
   const normalizedBody = normalize(unreleasedBody);
-  const hasNonVersioned = sectionTitles.some((title) => nonVersionedSections.has(title));
-  const hasVersioned = sectionTitles.some(
-    (title) => majorSections.has(title) || minorSections.has(title) || patchSections.has(title),
+  const hasNonVersioned = sections.some(
+    (section) => nonVersionedSections.has(section.title) && section.hasContent,
+  );
+  const hasVersioned = sections.some(
+    (section) =>
+      section.hasContent &&
+      (majorSections.has(section.title) ||
+        minorSections.has(section.title) ||
+        patchSections.has(section.title)),
   );
 
   if (hasNonVersioned && hasVersioned) {
@@ -210,17 +217,17 @@ function inferBump(unreleasedBody) {
   }
 
   if (
-    sectionTitles.some((title) => majorSections.has(title)) ||
+    sections.some((section) => section.hasContent && majorSections.has(section.title)) ||
     /\bbreaking change\b/.test(normalizedBody)
   ) {
     return "major";
   }
 
-  if (sectionTitles.some((title) => minorSections.has(title))) {
+  if (sections.some((section) => section.hasContent && minorSections.has(section.title))) {
     return "minor";
   }
 
-  if (sectionTitles.some((title) => patchSections.has(title))) {
+  if (sections.some((section) => section.hasContent && patchSections.has(section.title))) {
     return "patch";
   }
 
@@ -228,40 +235,71 @@ function inferBump(unreleasedBody) {
 }
 
 function validateSections(unreleasedBody) {
-  const sectionTitles = parseSectionTitles(unreleasedBody);
-  const unknownSections = sectionTitles.filter(
-    (title) =>
-      !majorSections.has(title) &&
-      !minorSections.has(title) &&
-      !patchSections.has(title) &&
-      !nonVersionedSections.has(title),
+  const sections = parseSections(unreleasedBody);
+  const unknownSections = sections.filter(
+    (section) =>
+      !majorSections.has(section.title) &&
+      !minorSections.has(section.title) &&
+      !patchSections.has(section.title) &&
+      !nonVersionedSections.has(section.title),
   );
 
-  if (sectionTitles.length === 0) {
+  if (sections.length === 0) {
     fail("Il blocco [Non rilasciato] deve usare sezioni ### riconosciute.");
   }
 
   if (unknownSections.length > 0) {
     fail(
-      `Sezioni changelog non riconosciute: ${unknownSections.join(
-        ", ",
-      )}. Usa Novità, Correzioni, Sotto il cofano, Rimosso oppure Non versionato.`,
+      `Sezioni changelog non riconosciute: ${unknownSections
+        .map((section) => section.title)
+        .join(", ")}. Usa Novità, Correzioni, Sotto il cofano, Rimosso oppure Non versionato.`,
     );
   }
 
-  return sectionTitles;
+  return sections;
 }
 
 function parseSectionTitles(markdown) {
-  return [...markdown.matchAll(/^###\s+(.+)$/gm)].map((match) => normalize(match[1]));
+  return parseSections(markdown).map((section) => section.title);
+}
+
+function parseSections(markdown) {
+  const headings = [...markdown.matchAll(/^###\s+(.+)$/gm)];
+
+  return headings.map((heading, index) => {
+    const bodyStart = heading.index + heading[0].length;
+    const bodyEnd = index + 1 < headings.length ? headings[index + 1].index : markdown.length;
+    const body = markdown.slice(bodyStart, bodyEnd);
+
+    return {
+      hasContent: sectionHasContent(body),
+      title: normalize(heading[1]),
+    };
+  });
+}
+
+function sectionHasContent(body) {
+  return body.split("\n").some((line) => {
+    const trimmed = line.trim();
+
+    return trimmed && !trimmed.startsWith("<!--") && !trimmed.endsWith("-->");
+  });
 }
 
 function analyzeUnreleased(unreleasedBody) {
-  const sections = parseSectionTitles(unreleasedBody);
-  const hasNonVersioned = sections.some((title) => nonVersionedSections.has(title));
-  const hasMajor = sections.some((title) => majorSections.has(title));
-  const hasMinor = sections.some((title) => minorSections.has(title));
-  const hasPatch = sections.some((title) => patchSections.has(title));
+  const sections = parseSections(unreleasedBody);
+  const hasNonVersioned = sections.some(
+    (section) => section.hasContent && nonVersionedSections.has(section.title),
+  );
+  const hasMajor = sections.some(
+    (section) => section.hasContent && majorSections.has(section.title),
+  );
+  const hasMinor = sections.some(
+    (section) => section.hasContent && minorSections.has(section.title),
+  );
+  const hasPatch = sections.some(
+    (section) => section.hasContent && patchSections.has(section.title),
+  );
 
   if (hasNonVersioned) {
     return "non versionato";
@@ -350,7 +388,11 @@ const strategy = options.version ? "versione esplicita" : `bump ${bump}`;
 if (bump === "none") {
   const sections = validateSections(unreleased.body);
   const hasVersioned = sections.some(
-    (title) => majorSections.has(title) || minorSections.has(title) || patchSections.has(title),
+    (section) =>
+      section.hasContent &&
+      (majorSections.has(section.title) ||
+        minorSections.has(section.title) ||
+        patchSections.has(section.title)),
   );
 
   if (hasVersioned) {
@@ -362,7 +404,11 @@ if (bump === "none") {
   process.exit(0);
 }
 
-if (validateSections(unreleased.body).some((title) => nonVersionedSections.has(title))) {
+if (
+  validateSections(unreleased.body).some(
+    (section) => section.hasContent && nonVersionedSections.has(section.title),
+  )
+) {
   fail(
     "Il blocco [Non rilasciato] contiene voci Non versionato. Separale dalle voci da rilasciare prima di generare una versione.",
   );

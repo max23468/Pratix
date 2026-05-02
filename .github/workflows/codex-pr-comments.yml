@@ -1,0 +1,51 @@
+name: Codex PR comments
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Analizza senza pubblicare commenti o aggiornare lo stato"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: read
+
+concurrency:
+  group: codex-pr-comments
+  cancel-in-progress: false
+
+jobs:
+  codex-pr-comments:
+    name: Handle Codex PR comments
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Handle new PRs with pending Codex comments
+        env:
+          DRY_RUN: ${{ inputs.dry_run && 'true' || 'false' }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node .github/scripts/handle-codex-pr-comments.mjs
+
+      - name: Commit scan state
+        if: ${{ inputs.dry_run != true }}
+        run: |
+          if git diff --quiet -- .github/codex-pr-scan-state.json; then
+            echo "No scan state changes."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .github/codex-pr-scan-state.json
+          git commit -m "chore: update Codex PR comment scan state"
+          git push

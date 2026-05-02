@@ -1,0 +1,12 @@
+{
+  "lastPrNumber": 5,
+  "lastRunAt": "2026-05-02T00:00:00.000Z",
+  "processedPrs": [
+    {
+      "action": "manual-baseline",
+      "codexThreads": 2,
+      "number": 5,
+      "url": "https://github.com/max23468/Pratix/pull/5"
+    }
+  ]
+}
