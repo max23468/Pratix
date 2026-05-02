@@ -80,22 +80,22 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## 5. Account, sicurezza, dati
 
-| Stato | Voce                                         | Note                                                                                                              |
-| ----- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| ✅    | Registrazione + login                        | Email/password                                                                                                    |
-| ✅    | Recupero password                            | Pagine `/recupera-password` + `/reimposta-password`, email Supabase di default                                    |
-| ✅    | Messaggi auth generici (no user enumeration) | Login e registrazione                                                                                             |
-| ✅    | Area Account separata da Impostazioni        | `/account` con tab Profilo / Accesso e sicurezza / Aspetto / Notifiche, accesso da menu utente in topbar          |
-| ✅    | Cambio password in-app                       | Riautenticazione con password attuale + `auth.updateUser`                                                         |
-| ✅    | CAPTCHA Auth predisposto                     | Cloudflare Turnstile su registrazione, login e recupero password quando `VITE_TURNSTILE_SITE_KEY` è configurata   |
-| ✅    | Registrazione con conferma email             | Registrazione aperta; se Supabase richiede conferma, la UI mostra lo stato email invece di forzare la dashboard   |
-| 🟡    | Email auth personalizzate (brand)            | Post-cutover: oggi arrivano da Supabase Auth; valutare template italiani, mittente Pratix e dominio/SMTP dedicato |
-| 💤    | Leaked Password Protection Supabase          | Richiede piano Pro o superiore; non prevista nel percorso gratuito attuale                                        |
-| ⬜    | Cambio email                                 | Con conferma sul nuovo indirizzo                                                                                  |
-| ⬜    | Eliminazione account                         | Soft + hard delete con conferma                                                                                   |
-| ⬜    | Esportazione dati personali                  | JSON/CSV per GDPR                                                                                                 |
-| ⬜    | Audit RLS su tutte le tabelle                | Verifica policy per `user_id`                                                                                     |
-| ⬜    | Auth Google opzionale                        | Da valutare in base al target                                                                                     |
+| Stato | Voce                                         | Note                                                                                                                |
+| ----- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| ✅    | Registrazione + login                        | Email/password                                                                                                      |
+| ✅    | Recupero password                            | Pagine `/recupera-password` + `/reimposta-password`, email Supabase di default                                      |
+| ✅    | Messaggi auth generici (no user enumeration) | Login e registrazione                                                                                               |
+| ✅    | Area Account separata da Impostazioni        | `/account` con tab Profilo / Accesso e sicurezza / Aspetto / Notifiche, accesso da menu utente in topbar            |
+| ✅    | Cambio password in-app                       | Riautenticazione con password attuale + `auth.updateUser`                                                           |
+| ✅    | CAPTCHA Auth predisposto                     | Cloudflare Turnstile su registrazione, login e recupero password quando `VITE_TURNSTILE_SITE_KEY` è configurata     |
+| ✅    | Registrazione con conferma email             | Registrazione aperta; se Supabase richiede conferma, la UI mostra lo stato email invece di forzare la dashboard     |
+| 🟡    | Email auth personalizzate (brand)            | Template italiani Supabase attivi per conferma account e recupero password; resta da valutare dominio/SMTP dedicato |
+| 💤    | Leaked Password Protection Supabase          | Richiede piano Pro o superiore; non prevista nel percorso gratuito attuale                                          |
+| ⬜    | Cambio email                                 | Con conferma sul nuovo indirizzo                                                                                    |
+| ⬜    | Eliminazione account                         | Soft + hard delete con conferma                                                                                     |
+| ⬜    | Esportazione dati personali                  | JSON/CSV per GDPR                                                                                                   |
+| ⬜    | Audit RLS su tutte le tabelle                | Verifica policy per `user_id`                                                                                       |
+| ⬜    | Auth Google opzionale                        | Da valutare in base al target                                                                                       |
 
 ## 6. SEO, pubblicazione, dominio
 
