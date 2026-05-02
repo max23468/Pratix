@@ -68,3 +68,4 @@ Link a issue, PR, documenti, conversazioni rilevanti.
 | [0007](./0007-palette-inchiostro-terracotta.md) | Palette inchiostro + terracotta                        | Accettato                          |
 | [0008](./0008-versioning-e-changelog.md)        | Versioning e changelog                                 | Accettato                          |
 | [0009](./0009-uscita-completa-da-lovable.md)    | Uscita completa da Lovable                             | Accettato                          |
+| [0010](./0010-release-automatizzata.md)         | Release automatizzata locale                           | Accettato                          |

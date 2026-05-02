@@ -6,7 +6,9 @@ mirror_of: mem://process/versioning
 
 > Mirror leggibile di `mem://process/versioning`. Fonte di verità: `mem://`. Aggiornare entrambi quando la regola cambia.
 
-Pratix usa **SemVer convenzionale** adattato a SaaS hostato (no `npm publish`, no tag git manuale). "Rilasciare" = bump `version.ts` + rinomina blocco changelog + promozione deployment Vercel.
+Pratix usa **SemVer convenzionale** adattato a SaaS hostato (no `npm publish`, no tag git manuale). "Rilasciare" = `npm run release` + verifica diff + promozione deployment Vercel.
+
+"Pubblicare" / "tutto pubblicato" = merge su `main` + deployment production Vercel completato e verificato + branch dedicato chiuso/eliminato se esiste. Una PR aperta, un push sul branch o una preview Vercel non bastano.
 
 **Single source of truth**: `src/lib/version.ts` esporta `APP_VERSION` e `BUILD_DATE`. Mai duplicare la stringa di versione altrove.
 
@@ -16,7 +18,7 @@ Prima di dichiarare conclusa una fase, migrazione, cutover o lavoro già pubblic
 
 Se il blocco `## [Non rilasciato]` contiene voci relative al lavoro appena completato, l'agente non deve chiudere il task senza:
 
-- fare il bump SemVer e chiudere il blocco changelog; oppure
+- eseguire `npm run release` e chiudere il blocco changelog; oppure
 - dichiarare esplicitamente che il rilascio resta il prossimo step operativo.
 
 Per migrazioni, cutover, correzioni infra o bonifiche sotto il cofano completate senza nuove feature utente, il default è PATCH salvo istruzione diversa o impatto utente maggiore.
@@ -26,6 +28,19 @@ Per migrazioni, cutover, correzioni infra o bonifiche sotto il cofano completate
 - **MAJOR** = breaking visibile all'utente (rimosso campo, cambiata formula)
 - **MINOR** = nuova feature retrocompatibile
 - **PATCH** = bugfix / UI / contenuti
+
+## Automazione release
+
+Comando standard: `npm run release`.
+
+Il comando legge il blocco `## [Non rilasciato]`, rifiuta il rilascio se è vuoto, inferisce il bump quando possibile (`Novità`/`Aggiunto` = MINOR, sezioni breaking/`Rimosso` = MAJOR, altrimenti PATCH), aggiorna `src/lib/version.ts`, rinomina il blocco in `## [X.Y.Z] — YYYY-MM-DD`, crea un nuovo `## [Non rilasciato]` vuoto e aggiorna i link in fondo a `CHANGELOG.md`.
+
+Varianti utili:
+
+- `npm run release:dry-run` per vedere cosa succederebbe senza scrivere file.
+- `npm run release -- --bump patch|minor|major` per forzare il bump.
+- `npm run release -- --version X.Y.Z` per forzare una versione specifica.
+- `npm run release -- --date YYYY-MM-DD` per forzare la data.
 
 ## Changelog
 

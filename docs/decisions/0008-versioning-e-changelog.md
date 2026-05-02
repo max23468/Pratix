@@ -42,7 +42,9 @@ in-app autenticata.
   italiano, formato Keep a Changelog. Ogni voce rilasciata ha titolo
   `## [X.Y.Z] — YYYY-MM-DD`.
 - I lavori in corso vanno sotto `## [Non rilasciato]`. Al momento del
-  rilascio, quel blocco viene rinominato con la nuova versione e la data.
+  rilascio, `npm run release` rinomina quel blocco con la nuova versione e la
+  data, aggiorna `src/lib/version.ts`, crea il nuovo blocco non rilasciato e
+  aggiorna i link del changelog.
 
 ### Pagina "Novità" in-app
 
@@ -61,14 +63,14 @@ informazione interna al prodotto.
 ### Procedura di rilascio
 
 Vedi `docs/guides/versioning-e-release.md` per i passaggi operativi.
+ADR-0010 documenta l'automazione locale del comando di release.
 
 ## Conseguenze
 
 **Positive**
 
-- Nuove versioni richiedono 3 azioni meccaniche (bump `version.ts`,
-  rinomina blocco changelog, premi Publish) → soglia bassa, basso rischio
-  di "dimenticare di documentare".
+- Nuove versioni richiedono una singola azione meccanica locale
+  (`npm run release`) più la promozione del deployment Vercel.
 - L'utilizzatore non tecnico ha un canale dedicato per vedere le novità
   senza notifiche invasive (pallino discreto, non popup).
 - Il supporto può chiedere "che versione vedi nel footer Impostazioni?"
@@ -76,14 +78,15 @@ Vedi `docs/guides/versioning-e-release.md` per i passaggi operativi.
 
 **Negative**
 
-- La disciplina dipende da un'azione manuale: se dimentichiamo di
-  bumppare `version.ts`, la pagina Novità non si aggiorna.
+- La disciplina dipende dal fatto che le voci siano scritte correttamente sotto
+  `## [Non rilasciato]`: il comando automatizza il rilascio, non decide il
+  contenuto narrativo del changelog.
 - Il parser changelog è semplice (gestisce solo `### sezioni` e bullet
   list): formattazione complessa nel changelog non viene resa.
 
 **Mitigazioni**
 
-- La guida di rilascio include una checklist.
+- La guida di rilascio include una checklist e un comando dry-run.
 - Il footer Impostazioni mostra sempre versione corrente: una verifica
   visiva immediata dopo ogni Publish.
 
