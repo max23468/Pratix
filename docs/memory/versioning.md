@@ -25,20 +25,24 @@ Per migrazioni, cutover, correzioni infra o bonifiche sotto il cofano completate
 
 ## Regole di bump
 
-- **MAJOR** = breaking visibile all'utente (rimosso campo, cambiata formula)
-- **MINOR** = nuova feature retrocompatibile
-- **PATCH** = bugfix / UI / contenuti
+- **MAJOR** = breaking visibile all'utente o sui dati (campo rimosso, formula cambiata, formato export incompatibile, migration distruttiva)
+- **MINOR** = nuova feature retrocompatibile (pagina, campo opzionale, vista, integrazione, formato aggiuntivo)
+- **PATCH** = bugfix / UI / contenuti / sicurezza / runtime / deploy / processo di release consegnato col prodotto
+- **Nessuna release** = interventi senza effetto su prodotto pubblicato, deploy o supporto (bozze, note locali, test-only, commenti, formattazione isolata, docs interne non operative)
+
+Tutte le modifiche devono rientrare in una di queste quattro categorie. Se il blocco `[Non rilasciato]` contiene solo `### Non versionato`, `npm run release` deve riconoscere la categoria e non generare una nuova versione. Se mescola voci versionate e non versionate, deve fermarsi.
 
 ## Automazione release
 
 Comando standard: `npm run release`.
 
-Il comando legge il blocco `## [Non rilasciato]`, rifiuta il rilascio se è vuoto, inferisce il bump quando possibile (`Novità`/`Aggiunto` = MINOR, sezioni breaking/`Rimosso` = MAJOR, altrimenti PATCH), aggiorna `src/lib/version.ts`, rinomina il blocco in `## [X.Y.Z] — YYYY-MM-DD`, crea un nuovo `## [Non rilasciato]` vuoto e aggiorna i link in fondo a `CHANGELOG.md`.
+Il comando legge il blocco `## [Non rilasciato]`, rifiuta il rilascio se è vuoto, inferisce il bump quando possibile (`Novità`/`Aggiunto` = MINOR, sezioni breaking/`Rimosso` = MAJOR, `Correzioni`/`Sotto il cofano` = PATCH, solo `Non versionato` = nessuna release), aggiorna `src/lib/version.ts`, rinomina il blocco in `## [X.Y.Z] — YYYY-MM-DD`, crea un nuovo `## [Non rilasciato]` vuoto e aggiorna i link in fondo a `CHANGELOG.md`. Se trova sezioni non riconosciute o mescola voci versionate e non versionate, si ferma.
 
 Varianti utili:
 
 - `npm run release:dry-run` per vedere cosa succederebbe senza scrivere file.
 - `npm run release -- --bump patch|minor|major` per forzare il bump.
+- `npm run release -- --bump none` per dichiarare esplicitamente nessuna release.
 - `npm run release -- --version X.Y.Z` per forzare una versione specifica.
 - `npm run release -- --date YYYY-MM-DD` per forzare la data.
 

@@ -6,6 +6,18 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.3.6] — 2026-05-02
+
+### Sotto il cofano
+
+- **Quattro categorie di versioning**: formalizzato che ogni modifica rientra sempre in MAJOR, MINOR, PATCH oppure nessuna release; `npm run release` riconosce anche la categoria `Non versionato` senza produrre una nuova versione.
+
+## [0.3.5] — 2026-05-02
+
+### Sotto il cofano
+
+- **Criteri SemVer più selettivi**: il comando di release distingue MAJOR, MINOR, PATCH e interventi non versionabili, bloccando il rilascio quando il changelog contiene sezioni non riconosciute o non destinate a una release.
+
 ## [0.3.4] — 2026-05-02
 
 ### Sotto il cofano
@@ -169,6 +181,8 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.3.6]: #036--2026-05-02
+[0.3.5]: #035--2026-05-02
 [0.3.4]: #034--2026-05-02
 [0.3.3]: #033--2026-05-02
 [0.3.2]: #032--2026-05-02

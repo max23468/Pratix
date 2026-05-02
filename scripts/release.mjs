@@ -8,7 +8,17 @@ const root = process.cwd();
 const changelogPath = path.join(root, "CHANGELOG.md");
 const versionPath = path.join(root, "src/lib/version.ts");
 
-const validBumps = new Set(["major", "minor", "patch"]);
+const validBumps = new Set(["major", "minor", "patch", "none"]);
+const majorSections = new Set(["breaking", "breaking changes", "rimosso"]);
+const minorSections = new Set(["novita", "aggiunto"]);
+const patchSections = new Set([
+  "correzioni",
+  "modificato",
+  "risolto",
+  "sicurezza",
+  "sotto il cofano",
+]);
+const nonVersionedSections = new Set(["non versionato", "non rilasciabile", "nessuna release"]);
 
 function parseArgs(argv) {
   const options = {
@@ -78,13 +88,17 @@ function showHelp() {
   npm run release
   npm run release -- --dry-run
   npm run release -- --bump patch
+  npm run release -- --bump none
   npm run release -- --version 0.4.0
   npm run release -- --date 2026-05-02
 
 Senza --bump o --version, il bump viene inferito da CHANGELOG.md:
   major  se [Non rilasciato] contiene sezioni breaking o Rimosso
   minor  se contiene Novità o Aggiunto
-  patch  negli altri casi`);
+  patch  se contiene solo Correzioni, Sicurezza, Modificato, Risolto o Sotto il cofano
+  none   se contiene solo Non versionato
+
+Se contiene sezioni non riconosciute, il comando si ferma.`);
 }
 
 function fail(message) {
@@ -141,6 +155,7 @@ function bumpVersion(currentVersion, bump) {
   if (bump === "major") return `${major + 1}.0.0`;
   if (bump === "minor") return `${major}.${minor + 1}.0`;
   if (bump === "patch") return `${major}.${minor}.${patch + 1}`;
+  if (bump === "none") return currentVersion;
 
   fail(`Bump non valido: ${bump}`);
 }
@@ -177,21 +192,84 @@ function extractUnreleased(changelog) {
 }
 
 function inferBump(unreleasedBody) {
-  const sectionTitles = [...unreleasedBody.matchAll(/^###\s+(.+)$/gm)].map((match) =>
-    normalize(match[1]),
-  );
+  const sectionTitles = validateSections(unreleasedBody);
   const normalizedBody = normalize(unreleasedBody);
+  const hasNonVersioned = sectionTitles.some((title) => nonVersionedSections.has(title));
+  const hasVersioned = sectionTitles.some(
+    (title) => majorSections.has(title) || minorSections.has(title) || patchSections.has(title),
+  );
+
+  if (hasNonVersioned && hasVersioned) {
+    fail(
+      "Il blocco [Non rilasciato] mescola voci versionate e non versionate. Separa il lavoro prima di rilasciare.",
+    );
+  }
+
+  if (hasNonVersioned) {
+    return "none";
+  }
 
   if (
-    sectionTitles.some((title) => ["breaking", "breaking changes", "rimosso"].includes(title)) ||
+    sectionTitles.some((title) => majorSections.has(title)) ||
     /\bbreaking change\b/.test(normalizedBody)
   ) {
     return "major";
   }
 
-  if (sectionTitles.some((title) => ["novita", "aggiunto"].includes(title))) {
+  if (sectionTitles.some((title) => minorSections.has(title))) {
     return "minor";
   }
+
+  if (sectionTitles.some((title) => patchSections.has(title))) {
+    return "patch";
+  }
+
+  fail("Impossibile inferire la categoria dal blocco [Non rilasciato].");
+}
+
+function validateSections(unreleasedBody) {
+  const sectionTitles = parseSectionTitles(unreleasedBody);
+  const unknownSections = sectionTitles.filter(
+    (title) =>
+      !majorSections.has(title) &&
+      !minorSections.has(title) &&
+      !patchSections.has(title) &&
+      !nonVersionedSections.has(title),
+  );
+
+  if (sectionTitles.length === 0) {
+    fail("Il blocco [Non rilasciato] deve usare sezioni ### riconosciute.");
+  }
+
+  if (unknownSections.length > 0) {
+    fail(
+      `Sezioni changelog non riconosciute: ${unknownSections.join(
+        ", ",
+      )}. Usa Novità, Correzioni, Sotto il cofano, Rimosso oppure Non versionato.`,
+    );
+  }
+
+  return sectionTitles;
+}
+
+function parseSectionTitles(markdown) {
+  return [...markdown.matchAll(/^###\s+(.+)$/gm)].map((match) => normalize(match[1]));
+}
+
+function analyzeUnreleased(unreleasedBody) {
+  const sections = parseSectionTitles(unreleasedBody);
+  const hasNonVersioned = sections.some((title) => nonVersionedSections.has(title));
+  const hasMajor = sections.some((title) => majorSections.has(title));
+  const hasMinor = sections.some((title) => minorSections.has(title));
+  const hasPatch = sections.some((title) => patchSections.has(title));
+
+  if (hasNonVersioned) {
+    return "non versionato";
+  }
+
+  if (hasMajor) return "major";
+  if (hasMinor) return "minor";
+  if (hasPatch) return "patch";
 
   return "patch";
 }
@@ -244,7 +322,11 @@ if (options.help) {
 }
 
 if (options.bump && !validBumps.has(options.bump)) {
-  fail(`--bump deve essere major, minor o patch. Ricevuto: ${options.bump}`);
+  fail(`--bump deve essere major, minor, patch o none. Ricevuto: ${options.bump}`);
+}
+
+if (options.bump === "none" && options.version) {
+  fail("--bump none non può essere usato insieme a --version.");
 }
 
 if (options.date && !/^\d{4}-\d{2}-\d{2}$/.test(options.date)) {
@@ -259,9 +341,32 @@ const changelog = readFileSync(changelogPath, "utf8");
 const versionFile = readFileSync(versionPath, "utf8");
 const current = readCurrentVersion(versionFile);
 const unreleased = extractUnreleased(changelog);
+validateSections(unreleased.body);
 const bump = options.bump ?? (options.version ? null : inferBump(unreleased.body));
 const nextVersion = options.version ?? bumpVersion(current.version, bump);
 const releaseDate = options.date ?? todayInRome();
+const strategy = options.version ? "versione esplicita" : `bump ${bump}`;
+
+if (bump === "none") {
+  const sections = validateSections(unreleased.body);
+  const hasVersioned = sections.some(
+    (title) => majorSections.has(title) || minorSections.has(title) || patchSections.has(title),
+  );
+
+  if (hasVersioned) {
+    fail("--bump none può essere usato solo con voci Non versionato.");
+  }
+
+  console.log("Categoria: non versionato. Nessuna release SemVer da preparare.");
+  console.log("Nessun file aggiornato.");
+  process.exit(0);
+}
+
+if (validateSections(unreleased.body).some((title) => nonVersionedSections.has(title))) {
+  fail(
+    "Il blocco [Non rilasciato] contiene voci Non versionato. Separale dalle voci da rilasciare prima di generare una versione.",
+  );
+}
 
 if (compareVersions(nextVersion, current.version) <= 0) {
   fail(
@@ -278,12 +383,11 @@ const nextVersionFile = updateVersionFile(versionFile, {
   version: nextVersion,
 });
 
-const inferred = bump ? `bump ${bump}` : "versione esplicita";
-
 if (options.dryRun) {
   console.log(`Dry-run release Pratix ${nextVersion} (${releaseDate})`);
   console.log(`Versione corrente: ${current.version} (${current.buildDate})`);
-  console.log(`Strategia: ${inferred}`);
+  console.log(`Strategia: ${strategy}`);
+  console.log(`Analisi blocco [Non rilasciato]: ${analyzeUnreleased(unreleased.body)}`);
   console.log("File che verrebbero aggiornati:");
   console.log("- CHANGELOG.md");
   console.log("- src/lib/version.ts");
@@ -293,5 +397,5 @@ if (options.dryRun) {
 writeFileSync(changelogPath, nextChangelog);
 writeFileSync(versionPath, nextVersionFile);
 
-console.log(`Release Pratix ${nextVersion} preparata (${releaseDate}, ${inferred}).`);
+console.log(`Release Pratix ${nextVersion} preparata (${releaseDate}, ${strategy}).`);
 console.log("Aggiornati CHANGELOG.md e src/lib/version.ts.");

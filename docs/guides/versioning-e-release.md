@@ -44,35 +44,89 @@ utente maggiore.
 
 ## Quando bumpare quale numero
 
-Pratix segue **Semantic Versioning** adattato al contesto SaaS.
+Pratix usa quattro categorie obbligatorie per classificare ogni modifica:
+**MAJOR**, **MINOR**, **PATCH** e **nessuna release**. Le prime tre generano
+una nuova versione SemVer. La quarta documenta che il lavoro non deve produrre
+un numero versione.
 
 ### MAJOR — `X.0.0`
 
-Bump quando un cambiamento modifica un comportamento visibile all'utente in
-modo **non retrocompatibile**. Esempi:
+Bump quando un cambiamento modifica in modo **non retrocompatibile** ciò che
+l'utente vede, produce o si aspetta dai propri dati. Domanda guida: "dopo il
+deploy, un utente potrebbe ottenere un risultato diverso o dover cambiare il
+proprio modo di lavorare?"
 
 - Rimosso un campo dalla fattura (anche solo dal layout PDF).
 - Cambiata una formula di calcolo (es. cassa, ritenuta).
 - Cambiata una struttura dati che obbliga l'utente a ricompilare qualcosa.
 - Rimossa o rinominata una pagina raggiungibile dal menu.
+- Cambiato un formato di export/import in modo incompatibile.
+- Modificata una logica fiscale, di numerazione o di stato già usata.
+- Migration distruttiva o potenzialmente non reversibile su dati utente.
+
+Se il cambiamento è breaking ma inevitabile, usa una sezione `### Rimosso`
+oppure `### Breaking` nel blocco `[Non rilasciato]`.
 
 ### MINOR — `0.X.0`
 
-Bump per **nuove funzionalità retrocompatibili**. Esempi:
+Bump per **nuove funzionalità retrocompatibili**: aggiunge possibilità senza
+rompere flussi esistenti. Domanda guida: "un utente vede una capacità nuova,
+ma può ignorarla senza perdere nulla?"
 
 - Nuova pagina (es. "Novità", "Statistiche").
 - Nuovo campo opzionale in un form.
 - Nuovo formato di esportazione affiancato a uno esistente.
 - Nuova integrazione (es. PEC, conservazione).
+- Nuovo filtro, nuova vista, nuovo pannello o nuovo comando utente.
+- Nuova impostazione opzionale.
+- Nuova tabella o colonna visibile, purché opzionale e non distruttiva.
+
+Usa `### Novità` per questi cambiamenti.
 
 ### PATCH — `0.0.X`
 
-Bump per **fix e miglioramenti che non cambiano funzionalità**. Esempi:
+Bump per **fix e miglioramenti che non cambiano la forma del prodotto**.
+Domanda guida: "il prodotto si comporta meglio, ma non promette una nuova
+capacità?"
 
 - Bugfix.
 - Miglioramenti UI / copy / accessibilità.
 - Performance, refactor invisibili.
-- Aggiornamento dipendenze senza impatto utente.
+- Fix di sicurezza senza nuova interazione utente.
+- Correzioni di glossario, testi, validazioni e stati vuoti.
+- Aggiornamento dipendenze che entra nel bundle, nella build o nel runtime.
+- Miglioramenti a deploy, analytics, cron, auth hardening o release process che
+  cambiano il comportamento operativo pubblicato.
+
+Usa `### Correzioni` per fix visibili o sicurezza. Usa `### Sotto il cofano`
+per modifiche tecniche o operative che vengono comunque consegnate con il
+prodotto.
+
+### Nessuna release
+
+Questa è la quarta categoria del versioning, non un'eccezione fuori processo.
+Si usa quando il cambiamento non cambia il prodotto pubblicato, non aiuta il
+supporto a distinguere una versione e non ha effetto operativo sul deploy.
+Domanda guida: "se questa modifica non comparisse in una versione, un utente o
+chi fa supporto perderebbe informazione utile?"
+
+Esempi:
+
+- Appunti locali, bozze, note temporanee non pubblicate.
+- Commenti interni che non cambiano codice eseguito.
+- Riformattazione isolata senza cambio logico e senza output diverso.
+- Test aggiunti o rinominati senza cambio di comportamento.
+- Documentazione interna non operativa e non collegata a una decisione stabile.
+- File di lavoro non committati, screenshot locali, export sanitizzati usati
+  solo come materiale di analisi.
+
+Se serve annotarli durante il lavoro, usa `### Non versionato` nel blocco
+`[Non rilasciato]`. `npm run release` riconosce la categoria e non genera una
+nuova versione quando il blocco contiene solo voci non versionate.
+
+Non mescolare `### Non versionato` con `### Novità`, `### Correzioni` o
+`### Sotto il cofano` nello stesso rilascio: il comando si ferma e chiede di
+separare il lavoro.
 
 ## Cosa scrivere nel changelog
 
@@ -152,6 +206,7 @@ in base al contenuto accumulato:
 - almeno una voce in **Rimosso** o un breaking change esplicito → MAJOR
 - almeno una voce in **Novità** o **Aggiunto** → MINOR
 - solo **Correzioni**, **Sotto il cofano** o voci storiche non-breaking → PATCH
+- solo interventi senza effetto su prodotto/deploy/supporto → nessuna release
 
 ## Comando automatizzato
 
@@ -165,7 +220,9 @@ Il comando:
 
 - legge `CHANGELOG.md`;
 - rifiuta il rilascio se `## [Non rilasciato]` è vuoto;
-- inferisce il bump (`Novità`/`Aggiunto` = MINOR, sezioni breaking o `Rimosso` = MAJOR, altrimenti PATCH);
+- inferisce il bump (`Novità`/`Aggiunto` = MINOR, sezioni breaking o `Rimosso` = MAJOR, `Correzioni`/`Sotto il cofano` = PATCH);
+- riconosce `### Non versionato` come categoria "nessuna release";
+- si ferma se trova sezioni non riconosciute o se mescoli voci versionate e non versionate;
 - aggiorna `src/lib/version.ts` (`APP_VERSION` + `BUILD_DATE`);
 - rinomina `## [Non rilasciato]` in `## [X.Y.Z] — YYYY-MM-DD`;
 - crea un nuovo blocco `## [Non rilasciato]` vuoto;
@@ -178,6 +235,7 @@ npm run release:dry-run
 npm run release -- --bump patch
 npm run release -- --bump minor
 npm run release -- --bump major
+npm run release -- --bump none
 npm run release -- --version 0.4.0
 npm run release -- --date 2026-05-02
 ```
