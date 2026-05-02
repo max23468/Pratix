@@ -12,6 +12,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 - **Recupero password più chiaro**: se la nuova password coincide con quella precedente, la pagina ora mostra un messaggio specifico invece di chiedere un nuovo link di recupero.
 
 ### Sotto il cofano
+- **Env tracciato riallineato**: `.env` punta al nuovo progetto Supabase di proprietà invece del vecchio ref storico.
 - **Migration FK resa idempotente**: la migration di ripristino foreign key salta i vincoli già presenti, così Supabase Preview può ricostruire il database da zero.
 - **Audit riferimenti Lovable aggiunto**: censiti i riferimenti storici rimasti e definito il gate operativo per distinguere runtime pulito da documentazione storica.
 - **Documentazione operativa aggiornata**: guide e regole di lavoro descrivono ora GitHub, Vercel e Supabase come filiera corrente.
