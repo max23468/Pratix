@@ -15,6 +15,7 @@ dist-ssr
 .tanstack/**
 .nitro
 *.local
+.env.migration
 
 # Local migration exports (PII/secrets; never commit)
 pratix-migration/

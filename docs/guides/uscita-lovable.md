@@ -229,6 +229,16 @@ documenti.
    - generazione PDF/XML fattura;
    - reset password.
 
+Stato locale:
+
+- Config Vite esplicita preparata con `tanstackStart()`, `nitro()`,
+  `viteReact()`, Tailwind e path alias.
+- Rimossa la dipendenza da `@lovable.dev/vite-tanstack-config`.
+- Rimosso `wrangler.jsonc`, non necessario per il target Vercel.
+- `npm run build` completato con successo il 2026-05-02.
+- `npm audit --audit-level=moderate` completato senza vulnerabilità il
+  2026-05-02.
+
 ## Fase 4 — Deploy su Vercel
 
 1. Creare o collegare il progetto Vercel dal repository GitHub.
@@ -281,8 +291,11 @@ Da non migrare:
    `user_id`.
 5. Deployare la versione puntata al nuovo backend.
 6. Testare end-to-end su Vercel.
-7. Tenere Lovable in sola lettura per una finestra breve di rollback.
-8. Quando la verifica è conclusa, disconnettere o chiudere Lovable.
+7. Accedere con la password temporanea di migrazione e cambiarla dall'area
+   Account appena l'app punta al nuovo Supabase. **Completato in locale il
+   2026-05-02.**
+8. Tenere Lovable in sola lettura per una finestra breve di rollback.
+9. Quando la verifica è conclusa, disconnettere o chiudere Lovable.
 
 ## Fase 6 — Bonifica totale dei riferimenti
 
@@ -338,6 +351,8 @@ Lovable può essere chiuso quando:
 - il dominio Vercel `*.vercel.app` serve Pratix in HTTPS;
 - Pratix usa solo il nuovo backend;
 - l'utente esistente accede o ha completato reset password;
+- la password temporanea di migrazione è stata sostituita con una password
+  definitiva dall'area Account (**completato in locale il 2026-05-02**);
 - i dati migrati sono coerenti;
 - build e lint passano;
 - non esistono secrets del vecchio ambiente necessari al runtime;

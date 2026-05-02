@@ -50,6 +50,16 @@ function ResetPasswordPage() {
     let mounted = true;
 
     const init = async () => {
+      const code = new URLSearchParams(window.location.search).get("code");
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (!mounted) return;
+        if (!error) {
+          setReady(true);
+          return;
+        }
+      }
+
       const { data } = await supabase.auth.getSession();
       if (mounted && data.session) setReady(true);
     };

@@ -95,7 +95,9 @@ Procedura:
 2. Creare l'utente auth con UUID preservato tramite script locale.
 3. Lasciare che `on_auth_user_created` crei una riga minimale in `profiles`.
 4. Aggiornare quella riga con i dati esportati.
-5. Generare recovery link/reset password.
+5. Impostare una password temporanea locale e verificarne il login.
+6. Cambiare la password temporanea dall'area Account appena l'app punta al nuovo
+   Supabase. Completato in locale il 2026-05-02.
 
 Script locale:
 
