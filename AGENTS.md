@@ -192,6 +192,7 @@ Pratix usa **SemVer convenzionale** adattato a SaaS hostato (vedi [`docs/decisio
 
 - **Single source of truth**: `src/lib/version.ts` (`APP_VERSION` + `BUILD_DATE`).
 - **Bump**: MAJOR = breaking utente, MINOR = nuova feature, PATCH = bugfix/UI/contenuti.
+- **Nessun bump**: bozze, note locali, test-only, commenti, formattazione isolata e docs interne non operative non entrano nel changelog e non producono release.
 - **Rilasciare** = eseguire `npm run release` (oppure `npm run release -- --bump patch|minor|major`), verificare il diff generato e promuovere il deployment Vercel. Il comando aggiorna `src/lib/version.ts`, rinomina `[Non rilasciato]` → `[X.Y.Z] — YYYY-MM-DD`, crea il nuovo blocco `[Non rilasciato]` e aggiorna i link del changelog.
 - **Pubblicare / tutto pubblicato** = merge su `main` + deployment production Vercel completato e verificato + branch dedicato chiuso/eliminato se esiste. Una PR aperta, un push sul branch o una preview Vercel non bastano. Quando il proprietario chiede "pubblica", "pubblica tutto" o "è tutto pubblicato?", completa questi passaggi oppure dichiara esattamente cosa manca.
 - **Regola obbligatoria per ogni cambio progetto**: ogni volta che modifichi codice, documentazione, configurazione, schema DB, brand, processo o deploy, valuta sempre l'impatto sul versioning prima di chiudere il lavoro.

@@ -25,6 +25,8 @@ Il comando:
 - legge `CHANGELOG.md`;
 - rifiuta il rilascio se `## [Non rilasciato]` è vuoto;
 - inferisce il bump quando non viene passato esplicitamente;
+- distingue cambiamenti non versionabili e blocca il rilascio se il changelog
+  contiene `### Non versionato` o sezioni non riconosciute;
 - aggiorna `src/lib/version.ts`;
 - trasforma `## [Non rilasciato]` in `## [X.Y.Z] — YYYY-MM-DD`;
 - crea un nuovo blocco `## [Non rilasciato]` vuoto;
@@ -41,6 +43,9 @@ verificare il diff e promuovere il deployment Vercel.
   `## [Non rilasciato]`, la chiusura operativa passa da `npm run release`.
 - L'inferenza del bump è conservativa e va corretta con `--bump` quando il
   contenuto del changelog non racconta bene l'impatto reale.
+- Non ogni modifica diventa automaticamente PATCH: bozze, commenti, test-only,
+  appunti locali e documentazione interna non operativa restano fuori dal
+  changelog e dal numero versione.
 
 ## Alternative considerate
 

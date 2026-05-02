@@ -25,15 +25,18 @@ Per migrazioni, cutover, correzioni infra o bonifiche sotto il cofano completate
 
 ## Regole di bump
 
-- **MAJOR** = breaking visibile all'utente (rimosso campo, cambiata formula)
-- **MINOR** = nuova feature retrocompatibile
-- **PATCH** = bugfix / UI / contenuti
+- **MAJOR** = breaking visibile all'utente o sui dati (campo rimosso, formula cambiata, formato export incompatibile, migration distruttiva)
+- **MINOR** = nuova feature retrocompatibile (pagina, campo opzionale, vista, integrazione, formato aggiuntivo)
+- **PATCH** = bugfix / UI / contenuti / sicurezza / runtime / deploy / processo di release consegnato col prodotto
+- **Nessun bump** = interventi senza effetto su prodotto pubblicato, deploy o supporto (bozze, note locali, test-only, commenti, formattazione isolata, docs interne non operative)
+
+Le voci senza bump non dovrebbero entrare in `CHANGELOG.md`. Se ci entrano sotto `### Non versionato`, `npm run release` deve fermarsi invece di produrre una PATCH.
 
 ## Automazione release
 
 Comando standard: `npm run release`.
 
-Il comando legge il blocco `## [Non rilasciato]`, rifiuta il rilascio se è vuoto, inferisce il bump quando possibile (`Novità`/`Aggiunto` = MINOR, sezioni breaking/`Rimosso` = MAJOR, altrimenti PATCH), aggiorna `src/lib/version.ts`, rinomina il blocco in `## [X.Y.Z] — YYYY-MM-DD`, crea un nuovo `## [Non rilasciato]` vuoto e aggiorna i link in fondo a `CHANGELOG.md`.
+Il comando legge il blocco `## [Non rilasciato]`, rifiuta il rilascio se è vuoto, inferisce il bump quando possibile (`Novità`/`Aggiunto` = MINOR, sezioni breaking/`Rimosso` = MAJOR, `Correzioni`/`Sotto il cofano` = PATCH), aggiorna `src/lib/version.ts`, rinomina il blocco in `## [X.Y.Z] — YYYY-MM-DD`, crea un nuovo `## [Non rilasciato]` vuoto e aggiorna i link in fondo a `CHANGELOG.md`. Se trova sezioni non riconosciute o `### Non versionato`, si ferma.
 
 Varianti utili:
 
