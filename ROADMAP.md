@@ -80,22 +80,22 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## 5. Account, sicurezza, dati
 
-| Stato | Voce                                         | Note                                                                                                                |
-| ----- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| ✅    | Registrazione + login                        | Email/password                                                                                                      |
-| ✅    | Recupero password                            | Pagine `/recupera-password` + `/reimposta-password`, email Supabase di default                                      |
-| ✅    | Messaggi auth generici (no user enumeration) | Login e registrazione                                                                                               |
-| ✅    | Area Account separata da Impostazioni        | `/account` con tab Profilo / Accesso e sicurezza / Aspetto / Notifiche, accesso da menu utente in topbar            |
-| ✅    | Cambio password in-app                       | Riautenticazione con password attuale + `auth.updateUser`                                                           |
-| ✅    | CAPTCHA Auth predisposto                     | Cloudflare Turnstile su registrazione, login e recupero password quando `VITE_TURNSTILE_SITE_KEY` è configurata     |
-| ✅    | Registrazione con conferma email             | Registrazione aperta; se Supabase richiede conferma, la UI mostra lo stato email invece di forzare la dashboard     |
-| 🟡    | Email auth personalizzate (brand)            | Template italiani Supabase attivi per conferma account e recupero password; resta da valutare dominio/SMTP dedicato |
-| 💤    | Leaked Password Protection Supabase          | Richiede piano Pro o superiore; non prevista nel percorso gratuito attuale                                          |
-| ⬜    | Cambio email                                 | Con conferma sul nuovo indirizzo                                                                                    |
-| ⬜    | Eliminazione account                         | Soft + hard delete con conferma                                                                                     |
-| ⬜    | Esportazione dati personali                  | JSON/CSV per GDPR                                                                                                   |
-| ⬜    | Audit RLS su tutte le tabelle                | Verifica policy per `user_id`                                                                                       |
-| ⬜    | Auth Google opzionale                        | Da valutare in base al target                                                                                       |
+| Stato | Voce                                         | Note                                                                                                                            |
+| ----- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| ✅    | Registrazione + login                        | Email/password                                                                                                                  |
+| ✅    | Recupero password                            | Pagine `/recupera-password` + `/reimposta-password`, email Supabase di default                                                  |
+| ✅    | Messaggi auth generici (no user enumeration) | Login e registrazione                                                                                                           |
+| ✅    | Area Account separata da Impostazioni        | `/account` con tab Profilo / Accesso e sicurezza / Aspetto / Notifiche, accesso da menu utente in topbar                        |
+| ✅    | Cambio password in-app                       | Riautenticazione con password attuale + `auth.updateUser`                                                                       |
+| ✅    | CAPTCHA Auth predisposto ma non attivo       | Supporto Turnstile nel codice se `VITE_TURNSTILE_SITE_KEY` è configurata; integrazione Cloudflare non attiva per scelta attuale |
+| ✅    | Registrazione con conferma email             | Registrazione aperta; se Supabase richiede conferma, la UI mostra lo stato email invece di forzare la dashboard                 |
+| ✅    | Template email auth in italiano              | Template Supabase attivi per conferma account e recupero password; Custom SMTP/dominio dedicato non necessari ora               |
+| 💤    | Leaked Password Protection Supabase          | Richiede piano Pro o superiore; non prevista nel percorso gratuito attuale                                                      |
+| ⬜    | Cambio email                                 | Con conferma sul nuovo indirizzo                                                                                                |
+| ⬜    | Eliminazione account                         | Soft + hard delete con conferma                                                                                                 |
+| ⬜    | Esportazione dati personali                  | JSON/CSV per GDPR                                                                                                               |
+| ⬜    | Audit RLS su tutte le tabelle                | Verifica policy per `user_id`                                                                                                   |
+| ⬜    | Auth Google opzionale                        | Da valutare in base al target                                                                                                   |
 
 ## 6. SEO, pubblicazione, dominio
 
@@ -138,10 +138,10 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | **Pre-push intelligente**                     | `.githooks/pre-push` usa `scripts/prepush-guard.mjs` per selezionare build/lint/audit in base al diff e saltare controlli già validati dalla stessa fingerprint                                                                               |
 | ✅    | **Gate Prettier esplicito**                   | `format:changed:check` verifica i file cambiati in locale e in PR prima di build/lint; `format:changed` corregge solo il diff senza riscrivere tutto il repo                                                                                  |
 | ✅    | **Verifica Vercel proporzionata**             | Le docs interne non esposte non bloccano su Vercel; release, testi pubblici, UI e runtime richiedono verifica deployment proporzionata                                                                                                        |
-| ✅    | **Web Analytics + Speed Insights Vercel**     | Componenti ufficiali nel root React; abilitarli dal dashboard Vercel per dati production aggregati senza eventi custom                                                                                                                        |
-| ✅    | **Cron Vercel giornaliero protetto**          | `/api/cron/daily` schedulato una volta al giorno via `vercel.json`, protetto da `CRON_SECRET`                                                                                                                                                 |
-| 🟡    | **Integrazione Vercel preview**               | Preview deployment da branch/PR; protezione preview e separazione env da verificare nelle impostazioni Vercel                                                                                                                                 |
-| 🟡    | **Governance Supabase free**                  | Un solo progetto Supabase; migrations manuali con dry-run/advisors, auth hardening free, secret nei provider e backup logico manuale fuori repo                                                                                               |
+| ✅    | **Web Analytics + Speed Insights Vercel**     | Componenti ufficiali caricati in produzione; dashboard da leggere dopo traffico reale senza eventi custom                                                                                                                                     |
+| ✅    | **Cron Vercel giornaliero protetto**          | `/api/cron/daily` schedulato via `vercel.json`, protetto da `CRON_SECRET`; endpoint e log di protezione verificati, run schedulato da controllare dopo il prossimo giro                                                                       |
+| ✅    | **Integrazione Vercel preview**               | Preview deployment da branch/PR attivi; test auth su preview solo quando le redirect URL vengono aggiunte in Supabase                                                                                                                         |
+| ✅    | **Governance Supabase free**                  | Un solo progetto Supabase; migrations manuali con dry-run/advisors, hardening free completato, secret nei provider e backup logico manuale fuori repo                                                                                         |
 | ✅    | **Guida uscita Lovable**                      | Migrazione tecnica completata; la guida resta come storico e checklist di eventuale dismissione Lovable                                                                                                                                       |
 | ⬜    | Test minimi su funzioni critiche              | XML FatturaPA, calcoli IVA/ritenuta, cassa forense                                                                                                                                                                                            |
 | ✅    | Linter pulito su tutto il repo                | `npm run lint`                                                                                                                                                                                                                                |
@@ -153,7 +153,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 1. **Landing**: pricing, FAQ, mockup prodotto → si gioca qui la conversione.
 2. **Empty states + microcopy review** sull'app autenticata → percezione di cura.
-3. **Recupero password + esportazione dati** → blocchi minimi prima di pubblicare.
+3. **Esportazione dati personali** → blocco privacy utile prima di aprire a utenti esterni.
 4. **Audit contrasto/accessibilità** in entrambi i temi.
 5. **Dismissione Lovable differita**: verifica manuale GitHub App Lovable e chiusura progetto solo quando non serve piu come archivio.
 

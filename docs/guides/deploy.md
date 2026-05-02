@@ -28,6 +28,22 @@ Il repo resta privato e nel percorso gratuito: non basare il processo su branch
 protection a pagamento. La protezione reale è la disciplina di PR + Quality +
 preview Vercel.
 
+### Stato integrazione
+
+Al 2026-05-03 la filiera operativa gratuita è completa:
+
+- GitHub è la fonte primaria del codice.
+- Il workflow `Quality` gira sulle PR verso `main` e può essere avviato manualmente.
+- Vercel crea preview da branch/PR e pubblica la produzione da `main`.
+- La produzione ufficiale è `https://pratix.vercel.app`.
+- Il repository non richiede segreti GitHub per il workflow `Quality`.
+
+Le verifiche che restano periodiche, e non bloccanti per il codice, sono:
+
+- leggere Web Analytics e Speed Insights dopo traffico reale;
+- controllare nei log Vercel il run schedulato del cron dopo le 06:00 UTC;
+- aggiungere redirect preview in Supabase solo quando serve testare auth su una preview.
+
 ## Quando serve verificare Vercel
 
 Vercel crea comunque deployment automatici quando una PR viene aperta o quando
@@ -91,12 +107,14 @@ backup o file secret pronti per lo stage.
 ## Osservabilità Vercel
 
 Pratix include i componenti ufficiali Vercel Web Analytics e Speed Insights nel
-root React. Per renderli operativi:
+root React. In produzione gli script `/_vercel/insights/script.js` e
+`/_vercel/speed-insights/script.js` devono essere serviti dal dominio Vercel.
+Per leggere i dati:
 
 1. Apri Vercel Project → Analytics e abilita Web Analytics.
 2. Apri Vercel Project → Speed Insights e abilita Speed Insights.
-3. Verifica dopo il primo deployment production, perché i dati non arrivano dal
-   server locale.
+3. Verifica dopo qualche visita reale, perché i dati non arrivano dal server
+   locale e possono impiegare tempo a comparire.
 
 Non aggiungere eventi custom con dati personali, nomi clienti, importi o dati di
 fatture. Per ora bastano pagine viste e metriche di performance aggregate.
@@ -111,6 +129,11 @@ fatture. Per ora bastano pagine viste e metriche di performance aggregate.
 L'endpoint rifiuta ogni richiesta senza header `Authorization: Bearer
 $CRON_SECRET`. Prima del merge in produzione crea `CRON_SECRET` in Vercel
 Production; senza questa variabile il cron risponde `503` e non esegue nulla.
+
+Il comportamento di protezione atteso è un `401` con log Vercel
+`cron_unauthorized` quando l'endpoint viene chiamato senza secret. Il successo
+schedulato produce invece `cron_completed`; controllarlo dopo il primo run
+successivo al deployment.
 
 Il cron oggi è un controllo leggero del runtime. Quando verranno introdotte
 notifiche o manutenzioni ricorrenti, aggiungere la logica nello stesso endpoint
@@ -143,6 +166,10 @@ Impostazioni consigliate nel dashboard Vercel:
 - Vercel Toolbar: attiva sulle preview per commenti e debug visivo.
 - Comments: attivi sulle preview, non necessari in produzione.
 - Instant Rollback: usare dal dashboard Deployment → Rollback se `main` pubblica una regressione.
+
+Non creare un secondo progetto Supabase per le preview nel percorso gratuito
+attuale. Le preview usano lo stesso backend: vanno bene per build, routing e UI,
+non per test distruttivi sui dati.
 
 Verifiche minime su ogni preview:
 
