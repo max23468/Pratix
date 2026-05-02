@@ -3,6 +3,27 @@
 Questa guida definisce il piano per poter chiudere Lovable al 100% senza
 conseguenze operative su Pratix.
 
+## Stato attuale
+
+**Migrazione tecnica completata il 2026-05-02.**
+
+Pratix è operativo fuori da Lovable:
+
+- codice e collaborazione su GitHub;
+- produzione su Vercel: `https://pratix.vercel.app`;
+- backend, auth e dati sul progetto Supabase di proprietà;
+- login reale, dashboard, clienti, pratiche, dettaglio pratica e impostazioni
+  verificati in produzione;
+- Vercel Toolbar disattivata in produzione;
+- `.env` tracciato riallineato al nuovo progetto Supabase;
+- nessuna Edge Function o secret sul nuovo Supabase;
+- nessun webhook GitHub rilevato sul repository.
+
+Lovable resta **parcheggiato come archivio temporaneo non operativo**: non va
+usato per modifiche, publish, backend o gestione dati. La dismissione finale
+può essere fatta in un secondo momento, dopo ulteriore stabilità, verificando
+prima l'eventuale GitHub App Lovable nelle impostazioni GitHub.
+
 ## Obiettivo
 
 Portare Pratix su una filiera interamente controllata fuori da Lovable:
@@ -11,14 +32,14 @@ Portare Pratix su una filiera interamente controllata fuori da Lovable:
 - **Sviluppo**: Codex come ambiente principale, con branch e PR.
 - **Backend**: Supabase di proprietà del progetto, non Lovable Cloud.
 - **Pubblicazione**: Vercel, con dominio gratuito `*.vercel.app`.
-- **Lovable**: solo sorgente temporanea da svuotare, poi disattivare.
+- **Lovable**: archivio temporaneo non operativo; dismissione differita.
 
 DuckDNS non è un vincolo di progetto. Era stato considerato solo come modo per
 avere un dominio gratuito; Vercel risolve lo stesso bisogno con un dominio
 `*.vercel.app` e senza introdurre VPS, reverse proxy o aggiornamento DNS
 dinamico.
 
-## Stato di partenza
+## Stato di partenza storico
 
 - Il repository GitHub esiste già ed è il ponte operativo principale.
 - Il backend attuale è Lovable Cloud, basato su Supabase gestito da Lovable.
@@ -292,19 +313,21 @@ Da non migrare:
 
 ## Fase 5 — Cutover
 
-1. Congelare Lovable: niente nuove modifiche e niente nuovi dati.
-2. Eseguire export finale dati/auth.
-3. Importare nel nuovo Supabase.
-4. Creare l'utente nel nuovo Supabase e preservare l'UUID originale solo se il
-   test preliminare lo conferma; altrimenti rimappare `profiles.id` e i
-   `user_id`.
-5. Deployare la versione puntata al nuovo backend.
-6. Testare end-to-end su Vercel.
+1. Congelare Lovable: niente nuove modifiche e niente nuovi dati. **Completato:
+   Lovable resta parcheggiato e non operativo.**
+2. Eseguire export finale dati/auth. **Completato per i dati necessari.**
+3. Importare nel nuovo Supabase. **Completato.**
+4. Creare l'utente nel nuovo Supabase preservando l'UUID originale. **Completato:
+   login reale verificato in produzione.**
+5. Deployare la versione puntata al nuovo backend. **Completato su Vercel.**
+6. Testare end-to-end su Vercel. **Completato sui flussi principali.**
 7. Accedere con la password temporanea di migrazione e cambiarla dall'area
    Account appena l'app punta al nuovo Supabase. **Completato in locale il
    2026-05-02.**
 8. Tenere Lovable in sola lettura per una finestra breve di rollback.
+   **In corso per prudenza.**
 9. Quando la verifica è conclusa, disconnettere o chiudere Lovable.
+   **Differito: non è necessario per l'operatività corrente.**
 
 ## Fase 6 — Bonifica dei riferimenti
 
@@ -356,7 +379,7 @@ separatamente.
 
 ## Criteri di completamento
 
-Lovable può essere chiuso quando:
+La migrazione tecnica è completata quando:
 
 - il dominio Vercel `*.vercel.app` serve Pratix in HTTPS;
 - Pratix usa solo il nuovo backend;
@@ -370,3 +393,14 @@ Lovable può essere chiuso quando:
 - il controllo sui file operativi non trova riferimenti Lovable;
 - gli eventuali riferimenti storici rimasti sono censiti nell'audit;
 - il vecchio progetto Lovable non riceve piu traffico ne scritture.
+
+Tutti questi criteri operativi sono soddisfatti al 2026-05-02, con una nota:
+`npm run build` passa, mentre il lint completo resta una voce separata della
+roadmap per rumore storico non bloccante.
+
+Lovable può essere cancellato o disconnesso in seguito quando si decide di
+chiudere anche l'archivio temporaneo. Prima di farlo, verificare manualmente:
+
+- integrazione GitHub o GitHub App Lovable ancora autorizzata;
+- eventuale sync Lovable ancora collegata al repository;
+- assenza di modifiche recenti fatte da Lovable dopo il cutover.

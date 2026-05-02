@@ -2,8 +2,8 @@
 
 Aggiornato: 2026-05-02.
 
-Questo audit distingue i riferimenti operativi da quelli storici durante la
-migrazione fuori da Lovable.
+Questo audit distingue i riferimenti operativi da quelli storici dopo la
+migrazione tecnica fuori da Lovable.
 
 ## Esito sintetico
 
@@ -15,20 +15,22 @@ migrazione fuori da Lovable.
   `architettura`, `versioning` e mirror `docs/memory` non contengono riferimenti
   Lovable.
 - **Riferimenti storici**: restano in documenti di migrazione, ADR, changelog e
-  inventari sanitizzati. Sono accettabili durante la migrazione.
+  inventari sanitizzati. Sono accettabili come storico dopo la migrazione.
+- **Lovable**: resta parcheggiato come archivio temporaneo non operativo; non è
+  parte di runtime, backend, publish o gestione dati.
 
 ## Riferimenti storici rimasti
 
 | Area | File | Stato | Azione finale |
 |---|---|---|---|
-| Piano migrazione | `docs/guides/uscita-lovable.md` | Storico/operativo di cutover | Archiviare o rimuovere dopo la chiusura definitiva |
+| Piano migrazione | `docs/guides/uscita-lovable.md` | Storico + checklist dismissione differita | Archiviare o rimuovere dopo la chiusura definitiva |
 | Inventario migrazione | `docs/migration/lovable-inventory.md` | Storico sanitizzato | Tenere come archivio o rimuovere se si vuole zero match assoluto |
 | Decision log | `docs/decisions/0001-stack-tanstack-start.md` | ADR storico | Tenere se si conserva lo storico decisionale |
 | Decision log | `docs/decisions/0002-lovable-cloud-supabase.md` | ADR sostituito | Tenere come decisione storica sostituita |
 | Decision log | `docs/decisions/0008-versioning-e-changelog.md` | ADR storico con vecchio processo | Valutare aggiornamento o nota di superseding |
-| Decision log | `docs/decisions/0009-uscita-completa-da-lovable.md` | ADR della migrazione | Tenere finche la migrazione resta tracciata |
+| Decision log | `docs/decisions/0009-uscita-completa-da-lovable.md` | ADR della migrazione completata | Tenere come decisione architetturale |
 | Changelog | `CHANGELOG.md` | Storico release | Non riscrivere salvo scelta esplicita |
-| Roadmap | `ROADMAP.md` | Stato migrazione | Aggiornare quando la chiusura e completata |
+| Roadmap | `ROADMAP.md` | Stato migrazione e dismissione differita | Aggiornare solo quando Lovable viene chiuso o scollegato |
 | Indice docs | `docs/README.md` | Link a documenti storici | Aggiornare se i documenti vengono archiviati o rimossi |
 
 ## Gate operativo

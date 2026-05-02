@@ -23,6 +23,19 @@ codice, Codex l'ambiente principale di lavoro, il backend passa a un Supabase di
 proprietà del progetto e la pubblicazione avviene fuori da Lovable tramite
 Vercel, usando inizialmente un dominio gratuito `*.vercel.app`.
 
+## Stato di attuazione
+
+**Completata tecnicamente il 2026-05-02.**
+
+Pratix è operativo su GitHub, Vercel e Supabase di proprietà. Il dominio
+ufficiale attuale è `https://pratix.vercel.app`; login reale, dashboard, clienti,
+pratiche, dettaglio pratica e impostazioni sono stati verificati in produzione.
+
+Lovable non è piu parte del runtime, del backend, del publish o della gestione
+dati. Resta solo parcheggiato come archivio temporaneo non operativo. La
+dismissione definitiva del progetto Lovable e dell'eventuale GitHub App Lovable
+è una scelta differita, non un requisito per l'operatività corrente.
+
 ## Conseguenze
 
 - ✅ Nessuna dipendenza operativa da Lovable dopo il cutover.
@@ -34,14 +47,14 @@ Vercel, usando inizialmente un dominio gratuito `*.vercel.app`.
   Auth, RLS, client Supabase e types generati.
 - ✅ Il dominio gratuito `*.vercel.app` copre il bisogno iniziale di un dominio
   senza acquistare subito un dominio proprietario.
-- ⚠️ La migrazione auth va trattata con cautela; con un solo utente è preferibile
-  creare l'utente nel nuovo Supabase preservando l'UUID, senza trasferire hash
-  password dal vecchio ambiente.
-- ⚠️ Le guide attuali che descrivono Lovable come runtime restano storiche fino
-  al completamento del cutover e poi vanno aggiornate o archiviate.
-- ⚠️ Dopo il cutover runtime, configurazione e documentazione operativa non
-  devono contenere riferimenti a Lovable. I riferimenti storici eventualmente
-  mantenuti devono essere censiti in `docs/migration/lovable-reference-audit.md`.
+- ✅ L'utente è stato creato nel nuovo Supabase preservando l'UUID e senza
+  trasferire hash password dal vecchio ambiente.
+- ✅ Runtime, configurazione e documentazione operativa non contengono
+  riferimenti a Lovable.
+- ⚠️ I riferimenti storici mantenuti in ADR, changelog e documenti di migrazione
+  sono censiti in `docs/migration/lovable-reference-audit.md`.
+- ⚠️ La cancellazione del progetto Lovable è differita: Lovable resta inattivo e
+  non operativo come archivio temporaneo.
 
 ## Alternative considerate
 

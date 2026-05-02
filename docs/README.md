@@ -35,7 +35,7 @@ docs/
 |---|---|
 | Capire stack, struttura cartelle, routing | [`guides/architettura.md`](./guides/architettura.md) |
 | Lavorare su tabelle, RLS, migrazioni | [`guides/database.md`](./guides/database.md) |
-| Pianificare la chiusura completa di Lovable | [`guides/uscita-lovable.md`](./guides/uscita-lovable.md) |
+| Consultare stato migrazione e dismissione Lovable | [`guides/uscita-lovable.md`](./guides/uscita-lovable.md) |
 | Consultare l'inventario tecnico sanitizzato | [`migration/lovable-inventory.md`](./migration/lovable-inventory.md) |
 | Verificare quali riferimenti storici a Lovable restano | [`migration/lovable-reference-audit.md`](./migration/lovable-reference-audit.md) |
 | Capire FatturaPA, calcoli IVA, regime forfettario | [`guides/fatturazione.md`](./guides/fatturazione.md) |
