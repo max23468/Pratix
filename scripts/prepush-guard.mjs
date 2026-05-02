@@ -56,6 +56,7 @@ function buildPlan(files) {
   const hasPackageChanges = files.some((file) =>
     ["package.json", "package-lock.json"].includes(file),
   );
+  const hasFormatRelevantChanges = files.some(isFormatRelevant);
   const hasBuildRelevantChanges = files.some(
     (file) =>
       [
@@ -71,6 +72,10 @@ function buildPlan(files) {
       /^(src|scripts|\.github\/scripts)\/.*\.(cjs|js|jsx|mjs|ts|tsx)$/.test(file) ||
       ["eslint.config.js", "vite.config.ts"].includes(file),
   );
+
+  if (hasFormatRelevantChanges) {
+    checks.push({ command: "npm", args: ["run", "format:changed:check"] });
+  }
 
   if (hasBuildRelevantChanges) {
     checks.push({ command: "npm", args: ["run", "build"] });
@@ -88,6 +93,13 @@ function buildPlan(files) {
     checks,
     summary: checks.map((check) => [check.command, ...check.args].join(" ")).join(" && "),
   };
+}
+
+function isFormatRelevant(file) {
+  return (
+    /\.(cjs|css|html|js|jsx|json|md|mdx|mjs|ts|tsx|yaml|yml)$/.test(file) ||
+    [".prettierrc", ".prettierignore", "components.json"].includes(file)
+  );
 }
 
 function buildFingerprint() {

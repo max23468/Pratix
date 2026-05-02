@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.3.9] — 2026-05-02
+
+### Sotto il cofano
+
+- **Gate Prettier esplicito**: aggiunti controlli di formattazione sui soli file cambiati in pre-push e nel workflow Quality, con comando di fix mirato.
+
 ## [0.3.8] — 2026-05-02
 
 ### Sotto il cofano
@@ -199,6 +205,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.3.9]: #039--2026-05-02
 [0.3.8]: #038--2026-05-02
 [0.3.7]: #037--2026-05-02
 [0.3.6]: #036--2026-05-02

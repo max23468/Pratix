@@ -17,7 +17,10 @@
     "prepush:guard": "node scripts/prepush-guard.mjs",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "format:changed": "node scripts/format-changed.mjs --write",
+    "format:changed:check": "node scripts/format-changed.mjs --check"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

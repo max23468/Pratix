@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   quality:
-    name: Build and lint
+    name: Build, format and lint
     runs-on: ubuntu-latest
     timeout-minutes: 12
 
@@ -33,6 +33,18 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Check formatting
+        shell: bash
+        run: |
+          base_ref="${GITHUB_BASE_REF:-main}"
+          git fetch origin "$base_ref" --depth=1
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            npm run format:check
+          else
+            PRATIX_FORMAT_BASE="origin/${base_ref}" npm run format:changed:check
+          fi
 
       - name: Build
         run: npm run build
