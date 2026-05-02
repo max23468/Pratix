@@ -68,5 +68,5 @@ Ogni decisione di prodotto/brand/tecnica condivisa in chat deve confluire in [`R
 
 ## Stack
 
-TanStack Start + Lovable Cloud (Supabase). Lingua italiana, `lang="it"`.
-**Mai modificare**: `src/integrations/supabase/client.ts`, `src/integrations/supabase/types.ts`, `src/routeTree.gen.ts`, `.env`.
+TanStack Start + Supabase di proprietà + Vercel. Lingua italiana, `lang="it"`.
+**Mai modificare**: `src/integrations/supabase/types.ts`, `src/routeTree.gen.ts`, `.env`.

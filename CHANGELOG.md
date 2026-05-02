@@ -11,6 +11,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 - **Recupero password più chiaro**: se la nuova password coincide con quella precedente, la pagina ora mostra un messaggio specifico invece di chiedere un nuovo link di recupero.
 
 ### Sotto il cofano
+- **Documentazione operativa aggiornata**: guide e regole di lavoro descrivono ora GitHub, Vercel e Supabase come filiera corrente.
 - **Riferimenti runtime Lovable rimossi**: i messaggi di errore Supabase indicano ora Vercel o l'ambiente locale, e la configurazione Bun residua della vecchia sandbox è stata eliminata.
 - **Policy RLS ottimizzate**: aggiornate le policy Supabase per valutare `auth.uid()` una sola volta per statement e rimuovere gli avvisi performance `auth_rls_initplan`.
 - **Leaked Password Protection valutata**: documentato che l'advisor Supabase resta non bloccante perché la protezione richiede un piano Pro o superiore.

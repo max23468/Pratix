@@ -11,7 +11,7 @@ Per rilasciare la versione `X.Y.Z`:
 1. Aggiorna `src/lib/version.ts` → `APP_VERSION` e `BUILD_DATE`.
 2. In `CHANGELOG.md`, rinomina `## [Non rilasciato]` in `## [X.Y.Z] — YYYY-MM-DD`.
 3. Aggiungi un nuovo blocco vuoto `## [Non rilasciato]` in cima per i prossimi lavori.
-4. Premi **Publish** su Lovable.
+4. Promuovi il deployment di produzione su Vercel.
 5. Verifica: apri `/impostazioni` e controlla che il footer mostri la nuova versione.
 
 ## Quando bumpare quale numero
@@ -137,7 +137,7 @@ in base al contenuto accumulato:
    blocco appena rinominato. Servirà per i prossimi lavori.
 5. **Aggiorna i link in fondo al file** (sezione `[Non rilasciato]: ...` e
    nuova ancora per la versione appena rilasciata).
-6. **Premi Publish** su Lovable.
+6. **Promuovi il deployment di produzione** su Vercel.
 7. **Verifica**:
    - Apri `/impostazioni`: il footer deve mostrare `Pratix v0.3.0 · build 2026-05-15`.
    - Apri `/novita`: deve apparire la nuova versione in cima.
@@ -147,7 +147,7 @@ in base al contenuto accumulato:
 
 - **Non** modificare retroattivamente versioni già rilasciate. Se serve un
   fix, fai un nuovo bump (PATCH).
-- **Non** lasciare `[Non rilasciato]` vuoto dopo un Publish: significa che
+- **Non** lasciare `[Non rilasciato]` vuoto dopo un rilascio: significa che
   non hai documentato i lavori in corso.
 - **Non** usare la pagina Novità per annunci di marketing: è cronologia
   tecnica narrata, non comunicazione promozionale.

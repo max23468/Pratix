@@ -34,9 +34,8 @@ Flusso consigliato:
 4. Esegui le verifiche pertinenti.
 5. Apri PR o mergea solo dopo review dei file toccati.
 
-Durante la migrazione fuori da Lovable, non usare Lovable e Codex in parallelo
-sulla stessa area. Lovable è trattato come ambiente da svuotare e spegnere, non
-come fonte primaria di nuove modifiche.
+Non usare editor o automazioni esterne in parallelo sulla stessa area mentre
+Codex sta lavorando sul branch. GitHub resta la fonte primaria delle modifiche.
 
 ## Convenzioni
 
@@ -49,7 +48,7 @@ come fonte primaria di nuove modifiche.
 - Componenti piccoli, riusabili, in `src/components/`.
 - Hook in `src/hooks/`.
 - Solo token semantici da `src/styles.css`, mai hex inline.
-- Mai modificare: `src/integrations/supabase/client.ts`, `src/integrations/supabase/types.ts`, `src/routeTree.gen.ts`, `.env`.
+- Mai modificare manualmente: `src/integrations/supabase/types.ts`, `src/routeTree.gen.ts`, `.env`.
 
 ### Commit
 Conventional Commits coerenti con l'impatto reale:
@@ -80,8 +79,10 @@ npm run lint
 npm audit --audit-level=moderate   # se hai toccato dipendenze
 ```
 
-Per modifiche al backend, alla pubblicazione o alla migrazione fuori da Lovable,
-consulta anche [`docs/guides/uscita-lovable.md`](./docs/guides/uscita-lovable.md).
+Per modifiche al backend o alla pubblicazione consulta anche
+[`docs/guides/database.md`](./docs/guides/database.md),
+[`docs/guides/migrations.md`](./docs/guides/migrations.md) e
+[`docs/guides/deploy.md`](./docs/guides/deploy.md).
 
 ### Documentazione
 

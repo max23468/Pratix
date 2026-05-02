@@ -104,13 +104,11 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅ | og:image globale + Twitter card | `/og-image.jpg` |
 | ⬜ | `sitemap.xml` + `robots.txt` | |
 | ⬜ | JSON-LD `Organization` / `SoftwareApplication` | |
-| ✅ | Pubblicazione storica | `https://pratix-legal.lovable.app` finché Lovable non viene spento |
-| 🟡 | Uscita completa da Lovable | ADR-0009 + guida `docs/guides/uscita-lovable.md` |
-| 🟡 | Pubblicazione tramite Vercel | Usare dominio gratuito `*.vercel.app`; dominio proprietario rimandato |
-| ⬜ | Migrazione backend fuori da Lovable Cloud | Target: Supabase di proprietà del progetto, con export/import dati e auth |
+| 🟡 | Uscita completa da Lovable | ADR-0009 + guida `docs/guides/uscita-lovable.md`; runtime/backend già spostati |
+| ✅ | Pubblicazione tramite Vercel | Produzione su `https://pratix.vercel.app`; dominio proprietario rimandato |
+| ✅ | Migrazione backend fuori da Lovable Cloud | Supabase di proprietà collegato, dati migrati, auth verificata |
 | ⬜ | Bonifica riferimenti Lovable | Al termine `rg -i "lovable\|@lovable\\.dev" .` deve restituire zero risultati nel working tree |
 | 💤 | Dominio proprietario futuro | Eventuale dominio tipo `pratix.it` |
-| 💤 | Project icon + Social preview nelle Project Settings di Lovable | Storico finché Lovable resta accessibile |
 
 ## 7. Qualità e processo
 

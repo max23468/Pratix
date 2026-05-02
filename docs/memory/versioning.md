@@ -6,7 +6,7 @@ mirror_of: mem://process/versioning
 
 > Mirror leggibile di `mem://process/versioning`. Fonte di verità: `mem://`. Aggiornare entrambi quando la regola cambia.
 
-Pratix usa **SemVer convenzionale** adattato a SaaS hostato (no `npm publish`, no tag git, no pipeline). "Rilasciare" = bump `version.ts` + rinomina blocco changelog + Publish su Lovable.
+Pratix usa **SemVer convenzionale** adattato a SaaS hostato (no `npm publish`, no tag git manuale). "Rilasciare" = bump `version.ts` + rinomina blocco changelog + promozione deployment Vercel.
 
 **Single source of truth**: `src/lib/version.ts` esporta `APP_VERSION` e `BUILD_DATE`. Mai duplicare la stringa di versione altrove.
 

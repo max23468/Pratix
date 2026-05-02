@@ -1,13 +1,12 @@
 # Guida — Database e sicurezza dati
 
-Backend attuale gestito da Lovable Cloud (Supabase), con migrazione pianificata
-verso Supabase di proprietà del progetto. Postgres + Auth + Storage + Realtime.
-Vedi anche [`uscita-lovable.md`](./uscita-lovable.md).
+Backend gestito dal progetto Supabase di proprietà di Pratix:
+Postgres + Auth + Storage + Realtime.
 
 ## Principi non negoziabili
 
 1. **RLS sempre attiva** su ogni tabella con dati utente.
-2. **Mai chiave esterna verso `auth.users`** — usare `user_id uuid` libero e referenziarlo nelle policy.
+2. **Foreign key verso `auth.users` solo quando utili all'integrità** — restano le policy RLS a decidere l'accesso.
 3. **Mai memorizzare ruoli su `profiles`** — tabella `user_roles` separata + funzione `has_role()` `SECURITY DEFINER`.
 4. **Mai modificare schemi riservati** Supabase: `auth`, `storage`, `realtime`, `supabase_functions`, `vault`.
 5. **Validazioni con trigger**, non con `CHECK` immutabili (rompono il restore quando dipendono da `now()`).
@@ -21,11 +20,12 @@ Vedi anche [`uscita-lovable.md`](./uscita-lovable.md).
 - `user_roles` — ruoli applicativi (separati da `profiles`)
 - `clients` — anagrafica clienti
 - `cases` (Pratiche) — incarichi professionali
-- `deadlines` (Scadenze) — adempimenti con data
-- `expenses` (Spese) — costi sostenuti per cliente
+- `case_deadlines` (Scadenze) — adempimenti con data
+- `expenses` (Spese) — spese sostenute per cliente
 - `invoices` — fatture emesse, con righe e dati FatturaPA
+- `invoice_lines` — righe fattura
 
-Tutte le tabelle utente hanno `user_id uuid not null` e RLS che filtra per `user_id = auth.uid()`.
+Tutte le tabelle utente hanno `user_id uuid not null` e RLS che filtra per `user_id = (select auth.uid())`.
 
 ## Pattern RLS owner-scoped
 
@@ -35,20 +35,20 @@ alter table public.clients enable row level security;
 
 create policy "clients_owner_select"
   on public.clients for select
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 
 create policy "clients_owner_insert"
   on public.clients for insert
-  with check (auth.uid() = user_id);
+  with check ((select auth.uid()) = user_id);
 
 create policy "clients_owner_update"
   on public.clients for update
-  using (auth.uid() = user_id)
-  with check (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
 
 create policy "clients_owner_delete"
   on public.clients for delete
-  using (auth.uid() = user_id);
+  using ((select auth.uid()) = user_id);
 ```
 
 ## Pattern ruoli con `has_role()`
@@ -76,11 +76,11 @@ as $$
 $$;
 ```
 
-Le policy che richiedono ruolo usano poi `public.has_role(auth.uid(), 'admin')`.
+Le policy che richiedono ruolo usano poi `public.has_role((select auth.uid()), 'admin')`.
 
 ## Migrazioni
 
-- Usa lo strumento di migrazione di Lovable Cloud (richiede approvazione utente).
+- Usa Supabase CLI e i file in `supabase/migrations/`.
 - **Mai** `ALTER DATABASE postgres` nelle migrazioni: non è permesso.
 - **Mai** modificare manualmente `src/integrations/supabase/types.ts`: è generato dall'API.
 
@@ -110,10 +110,10 @@ Le policy RLS continuano a valere anche sui messaggi realtime.
 ## Limiti utili da ricordare
 
 - Default **1000 righe** per query Supabase: se "mancano dati", verifica il limit prima di cercare bug.
-- Ogni operazione in scrittura passa dalle migration tool: non eseguirle a mano in console.
+- Ogni modifica strutturale passa da migration versionata: non eseguirla solo in console.
 
 ## Linter e scan
 
-- `supabase--linter` programmatico per anomalie (RLS mancante, policy permissive).
-- `security--run_security_scan` per scan complessivi.
+- `supabase db advisors --linked --type security` per anomalie di sicurezza.
+- `supabase db advisors --linked --type performance` per anomalie di performance.
 - Linter pulito **non** garantisce sicurezza: review manuale delle policy obbligatoria.

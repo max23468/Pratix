@@ -22,7 +22,8 @@ In caso di conflitto, seguire sempre il livello più alto.
 
 Stack:
 - **Frontend**: React + TanStack Start v1 (Vite 7), routing **file-based** in `src/routes/`, server functions in `src/server/*.functions.ts`.
-- **Backend**: **Lovable Cloud** (Supabase managed). Database PostgreSQL con RLS sempre attiva, auth email/password, storage non ancora usato.
+- **Backend**: Supabase di proprietà del progetto. Database PostgreSQL con RLS sempre attiva, auth email/password, storage non ancora usato.
+- **Deploy**: Vercel, con produzione su `https://pratix.vercel.app`.
 - **UI**: Tailwind v4 (token in `src/styles.css`, mai hex inline), shadcn/Radix in `src/components/ui`, icone `lucide-react`.
 - **Lingua**: italiano, `lang="it"`.
 
@@ -33,24 +34,21 @@ Per dettagli: [`docs/guides/architettura.md`](./docs/guides/architettura.md), [`
 ### Package manager
 
 - **Lockfile autoritativo**: `package-lock.json`. Va sempre allineato a `package.json`.
-- **Collaboratori umani in locale**: usate `npm` (`npm ci`, `npm install`, `npm run …`). Il repo è progettato attorno a npm.
-- **Agenti Lovable in sandbox**: usate `bun` (`bun add`, `bunx`). La sandbox legge comunque `package-lock.json` come sorgente di verità.
-- **Mai committare** `bun.lockb` o lockfile alternativi: solo `package-lock.json`.
+- **Package manager**: usa `npm` (`npm ci`, `npm install`, `npm run …`). Il repo è progettato attorno a npm.
+- **Mai committare** lockfile alternativi: solo `package-lock.json`.
 
 ### File generati o gestiti automaticamente — NON modificare a mano
 
-Modificare uno di questi file rompe build, sync o tipi:
+Modificare uno di questi file rompe build o tipi:
 
 - `src/routeTree.gen.ts` — generato dal plugin TanStack Router.
-- `src/integrations/supabase/client.ts` — generato da Lovable Cloud.
 - `src/integrations/supabase/types.ts` — generato dallo schema Supabase.
-- `.env` — gestito da Lovable Cloud (contiene `VITE_SUPABASE_*`).
-- `supabase/config.toml` — i campi project-level sono gestiti da Lovable Cloud. Si possono aggiungere blocchi function-specific solo se serve.
+- `.env` — file locale non committato.
 
 ### Configurazione build
 
-- Non duplicare in `vite.config.ts` i plugin già forniti da `@lovable.dev/vite-tanstack-config`.
-- Non aggiungere `ssr.external` o `resolve.external` per l'env Worker SSR: causa hard build failure.
+- `vite.config.ts` contiene la configurazione esplicita TanStack Start + Nitro + Vercel.
+- Non aggiungere target Cloudflare/Wrangler o adapter alternativi senza una decisione architetturale esplicita.
 
 ### Disciplina di scope
 
@@ -67,8 +65,8 @@ Pattern che si ripetono e fanno perdere tempo. Evitali a monte:
 - **Logo**: mai SVG inline o `<img src="/logo.svg">`. Solo `<Logo />` da `src/components/brand/logo.tsx`.
 - **Tema**: non leggere `localStorage` direttamente per il tema. Usa `useTheme()` da `src/lib/theme-context.tsx`.
 - **Versione**: non hardcodare la versione in UI o documenti. Importa `APP_VERSION` da `src/lib/version.ts`.
-- **Supabase**: non creare nuovi client, non importare `@supabase/supabase-js` direttamente. Sempre `import { supabase } from "@/integrations/supabase/client"`.
-- **Tabelle**: ogni nuova tabella user-owned ha `user_id uuid not null`, RLS abilitata, 4 policy basate su `auth.uid() = user_id`. Niente CHECK constraint con `now()` (non immutabile): usa trigger di validazione.
+- **Supabase**: non creare nuovi client lato UI, non importare `@supabase/supabase-js` direttamente nei componenti. Usa `import { supabase } from "@/integrations/supabase/client"`.
+- **Tabelle**: ogni nuova tabella user-owned ha `user_id uuid not null`, RLS abilitata, 4 policy basate su `(select auth.uid()) = user_id`. Niente CHECK constraint con `now()` (non immutabile): usa trigger di validazione.
 
 ## Server functions vs route API
 
@@ -83,19 +81,18 @@ Helper "server-only" (accesso DB, secret) vivono in `src/server/*.server.ts` e s
 
 ## Gestione segreti
 
-- Segreti runtime (es. `LOVABLE_API_KEY`, chiavi terze parti) vanno aggiunti tramite il tool secrets di Lovable Cloud, **non** scritti in `.env` né committati.
-- Il file `.env` è gestito da Lovable Cloud e contiene solo `VITE_SUPABASE_*` (chiavi pubbliche per design).
-- Prima di scrivere codice che usa una chiave, verifica con il tool `fetch_secrets` se è già configurata. Se manca, chiedi all'utente di aggiungerla via `add_secret`.
+- Segreti runtime (es. `SUPABASE_SERVICE_ROLE_KEY`, chiavi terze parti) vanno configurati in Vercel Environment Variables o nel provider dedicato, **non** scritti in `.env` né committati.
+- Le chiavi pubbliche Supabase (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`) sono pubblicabili per design, ma si gestiscono comunque tramite env Vercel e file locali non tracciati.
+- Prima di scrivere codice che usa una chiave, verifica che sia prevista nel piano env e chiedi all'utente di inserirla nel provider corretto se manca.
 - Mai stampare segreti in log, errori o risposte chat. Per verificarne la presenza usa `test -n "$VAR"`, mai `echo $VAR`.
 
-## Sync GitHub ↔ Lovable
+## GitHub, Vercel e Supabase
 
-Il repo GitHub e il progetto Lovable sono in **sync bidirezionale in tempo reale**.
+GitHub è la fonte primaria del codice. Vercel builda e pubblica dal repository. Supabase gestisce database, auth, RLS e migrations.
 
-- Una push su GitHub si propaga in pochi secondi al progetto Lovable e viceversa.
 - Non assumere che lo stato locale sia autoritativo: chi lavora in locale dovrebbe `git pull` prima di iniziare e prima di pushare.
-- Se trovi modifiche estranee al tuo task (committate da Lovable o da un altro collaboratore), **non revertirle**: ignorale o lavora attorno.
-- Stato runtime (dati DB, secret, file Storage) **non** vive su GitHub: solo il codice. Vedi [`docs/guides/database.md`](./docs/guides/database.md) per export dati.
+- Una push sul branch collegato genera preview/production deployment su Vercel secondo la configurazione del progetto.
+- Stato runtime (dati DB, secret, file Storage) **non** vive su GitHub: solo codice, schema e migrations. Vedi [`docs/guides/database.md`](./docs/guides/database.md).
 
 ## Prima di intervenire
 
@@ -138,15 +135,15 @@ Vincoli di terminologia (vedi [`docs/glossario.md`](./docs/glossario.md)):
 
 - Non committare segreti, token, credenziali, file `.env` reali o dati personali.
 - Le chiavi pubbliche (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`) sono per design pubbliche e già committate.
-- I segreti runtime (es. `SUPABASE_SERVICE_ROLE_KEY`, `LOVABLE_API_KEY`) vivono in Lovable Cloud, mai nel repo.
+- I segreti runtime (es. `SUPABASE_SERVICE_ROLE_KEY`) vivono in Vercel/Supabase, mai nel repo.
 - Valida e tratta con cautela input utente, form, link esterni, HTML generato e contenuto renderizzato dinamicamente.
 - Evita leak di dati sensibili in log, errori, trace, screenshot o fixture. In particolare: niente nomi clienti reali, importi reali di fatture, dati personali in screenshot di issue o PR.
 - Per modifiche alle dipendenze, valuta il rischio di supply chain e usa `npm audit --audit-level=moderate`.
-- **RLS sempre attiva**: ogni nuova tabella user-owned ha 4 policy (select/insert/update/delete) basate su `auth.uid() = user_id`. Mai disabilitare RLS.
+- **RLS sempre attiva**: ogni nuova tabella user-owned ha 4 policy (select/insert/update/delete) basate su `(select auth.uid()) = user_id`. Mai disabilitare RLS.
 
 ## Setup e verifica
 
-- Installa le dipendenze con `npm ci` (locale) o lascia che la sandbox usi `bun` automaticamente.
+- Installa le dipendenze con `npm ci`.
 - Usa `npm run build` come comando principale di validazione.
 - Usa `npm run lint` quando le modifiche toccano TypeScript, React, routing, componenti UI condivisi o configurazione correlata.
 - Usa `npm audit --audit-level=moderate` dopo modifiche alle dipendenze.
@@ -194,13 +191,13 @@ Pratix usa **SemVer convenzionale** adattato a SaaS hostato (vedi [`docs/decisio
 
 - **Single source of truth**: `src/lib/version.ts` (`APP_VERSION` + `BUILD_DATE`).
 - **Bump**: MAJOR = breaking utente, MINOR = nuova feature, PATCH = bugfix/UI/contenuti.
-- **Rilasciare** = bump `version.ts` + rinomina `[Non rilasciato]` → `[X.Y.Z] — YYYY-MM-DD` in `CHANGELOG.md` + Publish dall'editor Lovable.
+- **Rilasciare** = bump `version.ts` + rinomina `[Non rilasciato]` → `[X.Y.Z] — YYYY-MM-DD` in `CHANGELOG.md` + promozione deployment Vercel.
 - Procedura completa: [`docs/guides/versioning-e-release.md`](./docs/guides/versioning-e-release.md).
 
 ## Commit e PR
 
 - Quando crei commit, mantienili atomici e usa **Conventional Commit** coerenti con l'impatto reale (`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`, `style:`).
-- Non aggiungere workflow GitHub Actions, policy di deploy o flussi di release non presenti senza richiesta esplicita. Pratix vive su Lovable: il "rilascio" è premere Publish.
+- Non aggiungere workflow GitHub Actions, policy di deploy o flussi di release non presenti senza richiesta esplicita. Il rilascio operativo avviene tramite Vercel.
 - Nelle PR usa il template in `.github/PULL_REQUEST_TEMPLATE.md`. Riporta in modo concreto cosa è cambiato, dove, eventuali rischi residui e verifiche rilevanti. Evita footer rituali se non aggiungono valore.
 
 ## Linee guida per la review
@@ -210,7 +207,7 @@ Pratix usa **SemVer convenzionale** adattato a SaaS hostato (vedi [`docs/decisio
 - Controlla che gli aggiornamenti alle dipendenze non disallineino `package.json` e `package-lock.json`.
 - Verifica che i nuovi colori usino token semantici, non hex inline.
 - Verifica che il glossario di prodotto sia rispettato (no "studio", no "attività" come label, no "Caso/Assistito/Deadline/Costi").
-- Verifica che le nuove tabelle abbiano RLS attiva e 4 policy per `user_id`.
+- Verifica che le nuove tabelle abbiano RLS attiva e 4 policy per `user_id` con `(select auth.uid())`.
 - Segnala problemi di sicurezza nella gestione degli input utente, HTML generato, link, form e modifiche alle dipendenze.
 
 ## Definizione di completamento

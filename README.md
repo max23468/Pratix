@@ -4,7 +4,7 @@
 >
 > Gestionale per avvocati freelance: pratiche, clienti, scadenze, spese, fatture (FatturaPA inclusa).
 
-[![Stack](https://img.shields.io/badge/stack-TanStack%20Start-3B82F6)](#) [![Backend](https://img.shields.io/badge/backend-migrazione%20Supabase-orange)](#) [![Lingua](https://img.shields.io/badge/lingua-italiano-green)](#)
+[![Stack](https://img.shields.io/badge/stack-TanStack%20Start-3B82F6)](#) [![Backend](https://img.shields.io/badge/backend-Supabase-orange)](#) [![Deploy](https://img.shields.io/badge/deploy-Vercel-black)](#) [![Lingua](https://img.shields.io/badge/lingua-italiano-green)](#)
 
 ---
 
@@ -23,7 +23,7 @@ npm run build   # build di produzione
 npm run lint    # linter
 ```
 
-Le variabili d'ambiente (`.env`) non vanno committate. Durante la migrazione da Lovable alcune variabili sono ancora gestite da Lovable Cloud; il target è spostarle su Supabase/host controllati. Non modificare manualmente `.env`, `src/integrations/supabase/client.ts`, `src/integrations/supabase/types.ts`, `src/routeTree.gen.ts`.
+Le variabili d'ambiente (`.env`) non vanno committate. In produzione vivono su Vercel; il backend è il progetto Supabase di proprietà. Non modificare manualmente `src/integrations/supabase/types.ts` o `src/routeTree.gen.ts`.
 
 ## Mappa della documentazione
 
@@ -39,14 +39,10 @@ Le variabili d'ambiente (`.env`) non vanno committate. Durante la migrazione da 
 | [`LICENSE`](./LICENSE) | Licenza d'uso |
 | [`docs/`](./docs/) | Guide tematiche, memoria di progetto, decision log, glossario |
 
-## Migrazione fuori da Lovable
+## Infrastruttura
 
-Pratix sta passando a una filiera senza dipendenze operative da Lovable: GitHub
-come fonte primaria, Codex come ambiente principale, backend Supabase di
-proprietà del progetto e pubblicazione fuori da Lovable tramite Vercel.
-
-Piano operativo: [`docs/guides/uscita-lovable.md`](./docs/guides/uscita-lovable.md).
-Decisione architetturale: [`docs/decisions/0009-uscita-completa-da-lovable.md`](./docs/decisions/0009-uscita-completa-da-lovable.md).
+Pratix usa GitHub come fonte primaria, Codex come ambiente principale, Supabase
+di proprietà del progetto come backend e Vercel per pubblicazione e preview.
 
 ## Documentazione approfondita
 
@@ -58,7 +54,8 @@ Decisione architetturale: [`docs/decisions/0009-uscita-completa-da-lovable.md`](
 ## Stack tecnico
 
 - **Frontend**: TanStack Start v1 (React 19, Vite 7, file-based routing)
-- **Backend**: Lovable Cloud in uscita; target Supabase di proprietà del progetto con RLS, auth, edge functions e storage
+- **Backend**: Supabase di proprietà del progetto con RLS, auth, edge functions e storage
+- **Deploy**: Vercel, produzione su `https://pratix.vercel.app`
 - **Styling**: Tailwind v4 con token semantici in `src/styles.css`
 - **UI**: shadcn/ui + Radix + lucide-react
 - **Lingua UI**: italiano (`lang="it"`)

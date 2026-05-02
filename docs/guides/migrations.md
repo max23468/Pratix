@@ -1,54 +1,51 @@
 # Migrations Supabase — guida operativa
 
-Questa guida spiega come Pratix tiene traccia delle migrations del database
-quando lavoriamo via Lovable Cloud. Il target aggiornato è spostare il backend
-su Supabase di proprietà del progetto: vedi
-[`uscita-lovable.md`](./uscita-lovable.md).
+Questa guida spiega come Pratix tiene traccia delle migrations del database nel
+progetto Supabase di proprietà.
 
 ## Stato attuale
 
-- **Baseline schema**: [`../../supabase/schema.sql`](../../supabase/schema.sql) è
-  la fotografia leggibile dello stato del DB alla versione **0.3.0**. Lo
-  aggiorniamo a mano dopo ogni migration applicata.
-- **Migrations applicate**: vivono nel registro interno Supabase
-  (`supabase_migrations.schema_migrations`). Non sono state esportate
-  retroattivamente file-per-file nel repo perché il flusso Lovable le
-  applica direttamente; per lo stato cumulativo basta `schema.sql`.
-- **Migrations future**: la cartella `supabase/migrations/` è gestita dal
-  tool Lovable Cloud. Quando applichiamo una migration via chat, il tool
-  scrive il file lì in automatico.
+- **Baseline schema**: [`../../supabase/schema.sql`](../../supabase/schema.sql)
+  è la fotografia leggibile dello stato del DB. Va aggiornata quando cambia lo
+  schema.
+- **Migrations versionate**: vivono in [`../../supabase/migrations/`](../../supabase/migrations/)
+  e si applicano in ordine cronologico.
+- **Registro remoto**: Supabase mantiene lo storico in
+  `supabase_migrations.schema_migrations`.
 
 ## Quando applichiamo una migration
 
-1. La proponi in chat (è il flusso normale Lovable Cloud).
-2. La approvi tu come proprietario.
-3. Il tool la esegue contro il DB e la archivia in `supabase/migrations/`.
-4. **Io aggiorno [`schema.sql`](../../supabase/schema.sql)** per tenere
-   allineata la baseline leggibile.
-5. Se cambia il modello dati visibile, aggiorno
-   [`../data-model.md`](../data-model.md).
-6. Se cambia un comportamento utente, aggiungo voce in
-   [`../../CHANGELOG.md`](../../CHANGELOG.md) sotto `[Non rilasciato]`.
+1. Crea il file con `supabase migration new <nome_descrittivo>`.
+2. Scrivi SQL idempotente quando possibile e limitato allo scopo.
+3. Verifica con `supabase db push --dry-run`.
+4. Applica al progetto collegato con `supabase db push --yes`.
+5. Verifica con `supabase migration list`.
+6. Se cambia il modello dati, aggiorna:
+   - [`../../supabase/schema.sql`](../../supabase/schema.sql)
+   - [`../data-model.md`](../data-model.md)
+   - [`../../CHANGELOG.md`](../../CHANGELOG.md), se rilevante
 
 ## Cosa NON committiamo mai
 
-- **Dati delle tabelle** (clienti, fatture, profili): sono PII, mai in git.
-  Per backup esistono gli export CSV da Cloud → Database → Tables.
-- **Oggetti dei domini riservati Supabase**: `auth`, `storage`, `realtime`,
-  `vault`, `supabase_functions`. Non li tocchiamo manualmente.
-- **Secret e service-role key**: vivono in Lovable Cloud, mai in repo.
+- **Dati delle tabelle**: clienti, fatture, profili o export con PII.
+- **Secret e service-role key**: vivono in Vercel/Supabase, mai in repo.
+- **Dump completi non sanitizzati**: usare file locali ignorati da git.
+
+## Schemi riservati
+
+Non modificare manualmente oggetti dei domini riservati Supabase (`auth`,
+`storage`, `realtime`, `vault`) salvo casi documentati e necessari, come il
+trigger `on_auth_user_created` su `auth.users`.
 
 ## Riproducibilità del DB da zero
 
-Per ricreare lo stato attuale in un nuovo progetto Supabase basta eseguire
-[`../../supabase/schema.sql`](../../supabase/schema.sql). Le migrations
-successive (`supabase/migrations/*.sql`) si eseguono in ordine cronologico.
+Per ricreare il DB:
 
-Non automatizziamo questo flusso: Pratix è un singolo progetto Lovable
-Cloud, non una libreria multi-tenant.
+1. applica le migrations in `supabase/migrations/`;
+2. usa `supabase/schema.sql` come baseline leggibile e controllo manuale;
+3. importa i dati solo da export locali non committati.
 
 ## Riferimenti
 
 - [`../data-model.md`](../data-model.md) — modello dati narrativo
 - [`./database.md`](./database.md) — guida generale al database
-- [`../decisions/0002-lovable-cloud-supabase.md`](../decisions/0002-lovable-cloud-supabase.md)

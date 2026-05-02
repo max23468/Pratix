@@ -5,8 +5,8 @@
 - **Framework**: TanStack Start v1 (full-stack React 19)
 - **Build**: Vite 7
 - **Routing**: file-based in `src/routes/`, route tree auto-generato
-- **Backend attuale**: Lovable Cloud (Supabase) — Postgres, Auth, Storage, Edge Functions
-- **Backend target**: Supabase di proprieta del progetto, fuori da Lovable
+- **Backend**: Supabase di proprietà del progetto — Postgres, Auth, Storage, Edge Functions
+- **Deploy**: Vercel
 - **Styling**: Tailwind v4 con `@import` in `src/styles.css`
 - **UI**: shadcn/ui + Radix + lucide-react
 - **State server**: TanStack Query
@@ -44,7 +44,7 @@ src/
 │   └── utils.ts
 ├── server/                 ← server functions (createServerFn)
 ├── integrations/supabase/
-│   ├── client.ts           ← AUTO-GENERATO, mai modificare
+│   ├── client.ts           ← client condiviso
 │   └── types.ts            ← AUTO-GENERATO, mai modificare
 ├── styles.css              ← token semantici, tema light/dark
 └── routeTree.gen.ts        ← AUTO-GENERATO, mai modificare
@@ -88,8 +88,8 @@ Vedi [tema-e-design](./tema-e-design.md) per il dettaglio.
 
 - **Server functions**: `createServerFn` da `@tanstack/react-start` per RPC tipato.
 - **Server routes**: file in `src/routes/api/` per HTTP grezzo (webhook, cron).
-- **Edge functions Supabase**: in `supabase/functions/`, deploy automatico.
-- **Runtime**: Cloudflare Worker con `nodejs_compat`. Evitare `child_process`, `sharp`, `puppeteer`, `fs.watch`. Usare API Web e fetch.
+- **Edge functions Supabase**: in `supabase/functions/`, deploy via Supabase CLI.
+- **Runtime deploy**: Vercel tramite TanStack Start + Nitro.
 
 ## Convenzioni
 
