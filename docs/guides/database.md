@@ -188,3 +188,5 @@ Pratix il backup operativo è manuale:
    temporaneo non produttivo.
 
 Le migrations e `supabase/schema.sql` restano in GitHub; i dati reali no.
+Se un export serve durante una migrazione, mettilo in una cartella ignorata o
+fuori dal checkout e cancellalo appena il restore e la verifica sono conclusi.
