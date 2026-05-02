@@ -7,10 +7,10 @@
 ## Contesto
 
 Le review automatiche di Codex su GitHub possono lasciare thread inline utili
-ma facili da perdere, soprattutto quando una PR viene mergeata o quando si
-aprono piu PR operative in sequenza. Serve un controllo periodico dentro il
-repository, non legato a un'automazione esterna di Codex, che analizzi solo il
-lavoro nuovo e non ripassi ogni settimana le stesse PR gia viste.
+ma facili da perdere, soprattutto quando si aprono piu PR operative in sequenza.
+Serve un controllo periodico dentro il repository, non legato a un'automazione
+esterna di Codex, che analizzi il lavoro ancora aperto senza riattivare PR gia
+chiuse o mergiate.
 
 ## Decisione
 
@@ -20,11 +20,11 @@ Il workflow:
 
 - gira ogni lunedi;
 - legge `.github/codex-pr-scan-state.json`;
-- analizza solo le PR con numero maggiore di `lastPrNumber`;
+- analizza solo le PR aperte;
 - cerca thread di review Codex non risolti e non outdated;
 - pubblica un commento `@codex address that feedback` sulle PR interessate;
-- aggiorna lo stato salvato nel repo, cosi la settimana successiva prosegue
-  dalle PR successive.
+- aggiorna lo stato salvato nel repo con il numero massimo visto, senza usare
+  quello stato per riaprire PR chiuse o mergiate.
 
 La baseline iniziale parte da PR #5 perche le PR #1-#5 sono gia state esaminate
 manualmente.
@@ -34,7 +34,7 @@ manualmente.
 - I commenti Codex non restano affidati alla memoria o alla lettura manuale
   delle notifiche email.
 - Il controllo resta versionato e revisionabile come parte di Pratix.
-- Il workflow produce piccoli commit di stato quando trova nuove PR da
+- Il workflow produce piccoli commit di stato quando trova PR aperte nuove da
   registrare.
 - L'efficacia dell'intervento dipende dal fatto che Codex risponda al commento
   `@codex address that feedback` pubblicato dal workflow GitHub Actions.
@@ -44,7 +44,7 @@ manualmente.
 - **Automazione esterna Codex** — Scartata: il controllo sarebbe fuori dal repo
   e meno visibile.
 - **Riesaminare sempre tutte le PR** — Scartata: genera rumore e rischia di
-  riaprire lavoro gia valutato.
+  riaprire lavoro gia valutato. Il controllo resta limitato alle PR aperte.
 - **Disabilitare Codex review** — Scartata: i commenti sono utili, il problema
   e intercettarli e gestirli.
 

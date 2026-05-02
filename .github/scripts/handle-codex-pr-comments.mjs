@@ -26,7 +26,7 @@ if (!owner || !repo) {
 }
 
 const state = readState();
-const prs = await listPullRequestsAfter(state.lastPrNumber);
+const prs = await listOpenPullRequests();
 const processedPrs = [];
 let maxPrNumber = state.lastPrNumber;
 
@@ -99,21 +99,17 @@ function writeState(nextState) {
   writeFileSync(statePath, `${JSON.stringify(nextState, null, 2)}\n`);
 }
 
-async function listPullRequestsAfter(lastPrNumber) {
+async function listOpenPullRequests() {
   const results = [];
 
   for (let page = 1; page <= 10; page++) {
     const batch = await githubJson(
-      `/repos/${owner}/${repo}/pulls?state=all&sort=created&direction=asc&per_page=100&page=${page}`,
+      `/repos/${owner}/${repo}/pulls?state=open&sort=created&direction=asc&per_page=100&page=${page}`,
     );
 
     if (batch.length === 0) break;
 
-    for (const pr of batch) {
-      if (pr.number > lastPrNumber) {
-        results.push(pr);
-      }
-    }
+    results.push(...batch);
 
     if (results.length >= 100) break;
   }
