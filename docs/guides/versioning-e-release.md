@@ -44,7 +44,10 @@ utente maggiore.
 
 ## Quando bumpare quale numero
 
-Pratix segue **Semantic Versioning** adattato al contesto SaaS.
+Pratix usa quattro categorie obbligatorie per classificare ogni modifica:
+**MAJOR**, **MINOR**, **PATCH** e **nessuna release**. Le prime tre generano
+una nuova versione SemVer. La quarta documenta che il lavoro non deve produrre
+un numero versione.
 
 ### MAJOR — `X.0.0`
 
@@ -99,13 +102,13 @@ Usa `### Correzioni` per fix visibili o sicurezza. Usa `### Sotto il cofano`
 per modifiche tecniche o operative che vengono comunque consegnate con il
 prodotto.
 
-### Nessun bump
+### Nessuna release
 
-Non tutto merita nemmeno `0.0.x`. Nessun bump quando il cambiamento non cambia
-il prodotto pubblicato, non aiuta il supporto a distinguere una versione e non
-ha effetto operativo sul deploy. Domanda guida: "se questa modifica sparisse
-dal numero di versione, un utente o chi fa supporto perderebbe informazione
-utile?"
+Questa è la quarta categoria del versioning, non un'eccezione fuori processo.
+Si usa quando il cambiamento non cambia il prodotto pubblicato, non aiuta il
+supporto a distinguere una versione e non ha effetto operativo sul deploy.
+Domanda guida: "se questa modifica non comparisse in una versione, un utente o
+chi fa supporto perderebbe informazione utile?"
 
 Esempi:
 
@@ -117,12 +120,13 @@ Esempi:
 - File di lavoro non committati, screenshot locali, export sanitizzati usati
   solo come materiale di analisi.
 
-Questi interventi non dovrebbero entrare in `CHANGELOG.md`. Se serve tenerne
-traccia, usa un documento operativo o la descrizione del commit/PR.
+Se serve annotarli durante il lavoro, usa `### Non versionato` nel blocco
+`[Non rilasciato]`. `npm run release` riconosce la categoria e non genera una
+nuova versione quando il blocco contiene solo voci non versionate.
 
-Se una voce finisce temporaneamente nel changelog ma non deve generare una
-release, mettila sotto `### Non versionato`: `npm run release` si fermerà e
-chiederà di rimuoverla o spostarla prima di rilasciare.
+Non mescolare `### Non versionato` con `### Novità`, `### Correzioni` o
+`### Sotto il cofano` nello stesso rilascio: il comando si ferma e chiede di
+separare il lavoro.
 
 ## Cosa scrivere nel changelog
 
@@ -217,7 +221,8 @@ Il comando:
 - legge `CHANGELOG.md`;
 - rifiuta il rilascio se `## [Non rilasciato]` è vuoto;
 - inferisce il bump (`Novità`/`Aggiunto` = MINOR, sezioni breaking o `Rimosso` = MAJOR, `Correzioni`/`Sotto il cofano` = PATCH);
-- si ferma se trova sezioni non riconosciute o `### Non versionato`;
+- riconosce `### Non versionato` come categoria "nessuna release";
+- si ferma se trova sezioni non riconosciute o se mescoli voci versionate e non versionate;
 - aggiorna `src/lib/version.ts` (`APP_VERSION` + `BUILD_DATE`);
 - rinomina `## [Non rilasciato]` in `## [X.Y.Z] — YYYY-MM-DD`;
 - crea un nuovo blocco `## [Non rilasciato]` vuoto;
@@ -230,6 +235,7 @@ npm run release:dry-run
 npm run release -- --bump patch
 npm run release -- --bump minor
 npm run release -- --bump major
+npm run release -- --bump none
 npm run release -- --version 0.4.0
 npm run release -- --date 2026-05-02
 ```

@@ -362,6 +362,12 @@ if (bump === "none") {
   process.exit(0);
 }
 
+if (validateSections(unreleased.body).some((title) => nonVersionedSections.has(title))) {
+  fail(
+    "Il blocco [Non rilasciato] contiene voci Non versionato. Separale dalle voci da rilasciare prima di generare una versione.",
+  );
+}
+
 if (compareVersions(nextVersion, current.version) <= 0) {
   fail(
     `La nuova versione (${nextVersion}) deve essere maggiore della versione corrente (${current.version}).`,
