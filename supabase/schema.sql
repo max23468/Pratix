@@ -2,8 +2,8 @@
 -- Pratix — Schema baseline
 -- =============================================================================
 -- Generato: 2026-04-29 (versione app 0.3.0)
--- Sorgente:  introspezione del database Lovable Cloud (Supabase) di produzione,
---            integrata con il trigger auth richiesto per migrare fuori da Lovable.
+-- Sorgente:  introspezione del database di produzione iniziale,
+--            integrata con il trigger auth richiesto per il progetto Supabase.
 --
 -- Cosa è questo file
 -- ------------------
@@ -14,7 +14,7 @@
 -- Cosa NON è
 -- ----------
 -- - Non è eseguito automaticamente su Supabase: le migrations vere si
---   applicano via tool Lovable e sono storicizzate in `supabase/migrations/`.
+--   applicano via Supabase CLI e sono storicizzate in `supabase/migrations/`.
 -- - Non contiene oggetti gestiti da Supabase (storage.*, realtime.*). Include
 --   solo il trigger su auth.users necessario a creare profiles alla signup.
 -- - Non contiene dati: per esportare dati usa Cloud → Database → Tables.

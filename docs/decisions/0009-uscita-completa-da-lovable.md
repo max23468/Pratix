@@ -35,13 +35,13 @@ Vercel, usando inizialmente un dominio gratuito `*.vercel.app`.
 - ✅ Il dominio gratuito `*.vercel.app` copre il bisogno iniziale di un dominio
   senza acquistare subito un dominio proprietario.
 - ⚠️ La migrazione auth va trattata con cautela; con un solo utente è preferibile
-  creare l'utente nel nuovo Supabase e rimappare gli UUID, salvo export auth
-  affidabile da Lovable.
+  creare l'utente nel nuovo Supabase preservando l'UUID, senza trasferire hash
+  password dal vecchio ambiente.
 - ⚠️ Le guide attuali che descrivono Lovable come runtime restano storiche fino
-  al completamento del cutover e poi vanno aggiornate.
-- ⚠️ Dopo il cutover anche questa ADR e la guida di migrazione sono temporanee:
-  il working tree finale non deve contenere riferimenti a Lovable. Il gate di
-  completamento e `rg -i "lovable|@lovable\\.dev" .` senza risultati.
+  al completamento del cutover e poi vanno aggiornate o archiviate.
+- ⚠️ Dopo il cutover runtime, configurazione e documentazione operativa non
+  devono contenere riferimenti a Lovable. I riferimenti storici eventualmente
+  mantenuti devono essere censiti in `docs/migration/lovable-reference-audit.md`.
 
 ## Alternative considerate
 

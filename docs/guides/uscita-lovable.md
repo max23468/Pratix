@@ -306,12 +306,13 @@ Da non migrare:
 8. Tenere Lovable in sola lettura per una finestra breve di rollback.
 9. Quando la verifica è conclusa, disconnettere o chiudere Lovable.
 
-## Fase 6 — Bonifica totale dei riferimenti
+## Fase 6 — Bonifica dei riferimenti
 
-Il cutover non basta: al termine della migrazione non deve restare nessun
-riferimento a Lovable nel working tree del progetto. Questa stessa guida, l'ADR
-di migrazione e le note storiche che nominano Lovable sono documenti
-temporanei: servono durante l'uscita, poi vanno rimossi o riscritti.
+Il cutover non basta: al termine della migrazione non devono restare riferimenti
+operativi a Lovable in runtime, configurazione o documentazione corrente. I
+riferimenti storici autorizzati restano solo in documenti di migrazione, ADR,
+changelog e inventari sanitizzati, e sono censiti in
+[`../migration/lovable-reference-audit.md`](../migration/lovable-reference-audit.md).
 
 Aggiornare o rimuovere:
 
@@ -324,22 +325,22 @@ Aggiornare o rimuovere:
 - `docs/memory/` come mirror leggibile;
 - `CHANGELOG.md`;
 - `ROADMAP.md`;
-- questa guida, che va eliminata o sostituita da una guida neutra su deploy e
-  backend;
-- l'ADR 0009 e ogni ADR storico che contiene riferimenti a Lovable, che vanno
-  rimossi o sostituiti da decisioni correnti;
+- questa guida, da archiviare o eliminare dopo la chiusura definitiva;
+- gli ADR storici, da mantenere solo se si conserva il decision log completo;
 - `package.json`, `package-lock.json`, `vite.config.ts`, commenti, errori e
   messaggi runtime che nominano `@lovable.dev` o Lovable.
 
-Verifica obbligatoria:
+Verifica obbligatoria sui file operativi:
 
 ```bash
-rg -i "lovable|@lovable\\.dev" .
+rg -i "lovable|@lovable\\.dev" AGENTS.md README.md CONTRIBUTING.md SECURITY.md docs/guides/architettura.md docs/guides/database.md docs/guides/deploy.md docs/guides/migrations.md docs/guides/versioning-e-release.md docs/memory/core.md docs/memory/versioning.md src package.json vite.config.ts supabase/config.toml
 ```
 
-Il comando deve restituire zero risultati nel working tree. La storia Git
-continuerà a contenere riferimenti storici, salvo riscrittura esplicita della
-history: quella è un'operazione distruttiva e va decisa separatamente.
+Il comando deve restituire zero risultati. Il controllo completo del working
+tree puo ancora trovare riferimenti storici nei documenti censiti dall'audit.
+La storia Git continuera a contenere riferimenti storici, salvo riscrittura
+esplicita della history: quella e un'operazione distruttiva e va decisa
+separatamente.
 
 ## Rischi principali
 
@@ -366,5 +367,6 @@ Lovable può essere chiuso quando:
 - build e lint passano;
 - non esistono secrets del vecchio ambiente necessari al runtime;
 - il repo documenta solo il nuovo flusso;
-- `rg -i "lovable|@lovable\\.dev" .` restituisce zero risultati nel working tree;
+- il controllo sui file operativi non trova riferimenti Lovable;
+- gli eventuali riferimenti storici rimasti sono censiti nell'audit;
 - il vecchio progetto Lovable non riceve piu traffico ne scritture.

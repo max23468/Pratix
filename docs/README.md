@@ -14,7 +14,8 @@ docs/
 │   ├── brand.md
 │   └── roadmap.md
 ├── migration/          ← inventari e note tecniche di migrazione sanitizzati
-│   └── lovable-inventory.md
+│   ├── lovable-inventory.md
+│   └── lovable-reference-audit.md
 ├── guides/             ← guide tematiche operative
 │   ├── architettura.md
 │   ├── database.md
@@ -36,6 +37,7 @@ docs/
 | Lavorare su tabelle, RLS, migrazioni | [`guides/database.md`](./guides/database.md) |
 | Pianificare la chiusura completa di Lovable | [`guides/uscita-lovable.md`](./guides/uscita-lovable.md) |
 | Consultare l'inventario tecnico sanitizzato | [`migration/lovable-inventory.md`](./migration/lovable-inventory.md) |
+| Verificare quali riferimenti storici a Lovable restano | [`migration/lovable-reference-audit.md`](./migration/lovable-reference-audit.md) |
 | Capire FatturaPA, calcoli IVA, regime forfettario | [`guides/fatturazione.md`](./guides/fatturazione.md) |
 | Cambiare colori, tema, componenti | [`guides/tema-e-design.md`](./guides/tema-e-design.md) |
 | Scrivere microcopy o label | [`guides/tono-di-voce.md`](./guides/tono-di-voce.md) |

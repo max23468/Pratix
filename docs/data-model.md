@@ -1,6 +1,6 @@
 # Modello dati di Pratix
 
-> Documento narrativo, leggibile senza accesso a Lovable Cloud. La sorgente di
+> Documento narrativo, leggibile senza accesso diretto al database. La sorgente di
 > verità SQL è [`../supabase/schema.sql`](../supabase/schema.sql); questo file
 > spiega **cosa** rappresentano le tabelle e **perché** sono fatte così.
 

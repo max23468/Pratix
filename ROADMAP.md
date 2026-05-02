@@ -107,7 +107,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | 🟡 | Uscita completa da Lovable | ADR-0009 + guida `docs/guides/uscita-lovable.md`; runtime/backend già spostati |
 | ✅ | Pubblicazione tramite Vercel | Produzione su `https://pratix.vercel.app`; dominio proprietario rimandato |
 | ✅ | Migrazione backend fuori da Lovable Cloud | Supabase di proprietà collegato, dati migrati, auth verificata |
-| ⬜ | Bonifica riferimenti Lovable | Al termine `rg -i "lovable\|@lovable\\.dev" .` deve restituire zero risultati nel working tree |
+| 🟡 | Bonifica riferimenti Lovable | Runtime e docs operative pulite; restano riferimenti storici censiti in `docs/migration/lovable-reference-audit.md` |
 | 💤 | Dominio proprietario futuro | Eventuale dominio tipo `pratix.it` |
 
 ## 7. Qualità e processo
@@ -128,7 +128,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅ | **Versioning + Changelog + pagina Novità** | `src/lib/version.ts` + parser `CHANGELOG.md` + route `/novita` autenticata + campanella in topbar. ADR-0008 e guida `docs/guides/versioning-e-release.md` |
 | ✅ | **Categorie changelog ridisegnate** | Tre sezioni standard `Novità` / `Correzioni` / `Sotto il cofano`. La pagina `/novita` mette in evidenza le Novità, mantiene compatte le Correzioni e collassa le voci tecniche. Compatibile con voci storiche (Aggiunto/Modificato/Sicurezza) |
 | ✅ | **Schema DB su GitHub** | `supabase/schema.sql` baseline + `docs/data-model.md` narrativo + `docs/guides/migrations.md` per il flusso operativo |
-| ✅ | **Templates GitHub + Dependabot** | `.github/ISSUE_TEMPLATE/` (bug, idea), `PULL_REQUEST_TEMPLATE.md`, `dependabot.yml` (npm settimanale, minor/patch raggruppati). No GitHub Actions per ora (CI gira via Lovable + hook locale `.githooks/pre-push`) |
+| ✅ | **Templates GitHub + Dependabot** | `.github/ISSUE_TEMPLATE/` (bug, idea), `PULL_REQUEST_TEMPLATE.md`, `dependabot.yml` (npm settimanale, minor/patch raggruppati). No GitHub Actions per ora (build Vercel + hook locale `.githooks/pre-push`) |
 | 🟡 | **Guida uscita Lovable** | Piano completo per backend Supabase di proprietà, deploy Vercel e cutover |
 | ⬜ | Test minimi su funzioni critiche | XML FatturaPA, calcoli IVA/ritenuta, cassa forense |
 | ⬜ | Linter pulito su tutto il repo | `npm run lint` |
