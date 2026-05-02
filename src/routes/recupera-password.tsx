@@ -3,10 +3,12 @@ import { useState, type FormEvent } from "react";
 import { Logo } from "@/components/brand/logo";
 import { z } from "zod";
 import { toast } from "sonner";
+import { TurnstileChallenge } from "@/components/security/turnstile-challenge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { isTurnstileEnabled } from "@/lib/turnstile";
 
 export const Route = createFileRoute("/recupera-password")({
   head: () => ({
@@ -33,7 +35,10 @@ const schema = z.object({
 });
 
 function ForgotPasswordPage() {
+  const captchaEnabled = isTurnstileEnabled();
   const [email, setEmail] = useState("");
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [captchaResetSignal, setCaptchaResetSignal] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
 
@@ -44,13 +49,19 @@ function ForgotPasswordPage() {
       toast.error(parsed.error.issues[0]?.message ?? "Email non valida");
       return;
     }
+    if (captchaEnabled && !captchaToken) {
+      toast.error("Completa la verifica di sicurezza.");
+      return;
+    }
     setSubmitting(true);
     // Tentiamo l'invio. Anche in caso di errore mostriamo lo stesso messaggio
     // generico per evitare user enumeration.
     await supabase.auth.resetPasswordForEmail(parsed.data.email, {
       redirectTo: `${window.location.origin}/reimposta-password`,
+      ...(captchaToken ? { captchaToken } : {}),
     });
     setSubmitting(false);
+    setCaptchaResetSignal((current) => current + 1);
     setSent(true);
   };
 
@@ -62,12 +73,10 @@ function ForgotPasswordPage() {
         </Link>
 
         <div className="rounded-xl border border-border bg-card p-6 shadow-elevated">
-          <h1 className="font-display text-2xl font-semibold text-foreground">
-            Recupera password
-          </h1>
+          <h1 className="font-display text-2xl font-semibold text-foreground">Recupera password</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Inserisci l'email del tuo account: ti invieremo un link per impostare
-            una nuova password.
+            Inserisci l'email del tuo account: ti invieremo un link per impostare una nuova
+            password.
           </p>
 
           {sent ? (
@@ -78,8 +87,8 @@ function ForgotPasswordPage() {
             >
               <p className="font-medium">Controlla la tua casella.</p>
               <p className="mt-1 text-muted-foreground">
-                Se l'indirizzo è registrato, riceverai a breve un'email con il
-                link per reimpostare la password. Controlla anche lo spam.
+                Se l'indirizzo è registrato, riceverai a breve un'email con il link per reimpostare
+                la password. Controlla anche lo spam.
               </p>
             </div>
           ) : (
@@ -95,6 +104,11 @@ function ForgotPasswordPage() {
                   required
                 />
               </div>
+              <TurnstileChallenge
+                action="password_recovery"
+                onTokenChange={setCaptchaToken}
+                resetSignal={captchaResetSignal}
+              />
               <Button type="submit" className="w-full" disabled={submitting}>
                 {submitting ? "Invio in corso…" : "Invia link di recupero"}
               </Button>

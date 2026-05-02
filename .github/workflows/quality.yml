@@ -1,0 +1,75 @@
+name: Quality
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: quality-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality:
+    name: Build and lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Lint changed source files
+        shell: bash
+        run: |
+          base_ref="${GITHUB_BASE_REF:-main}"
+          git fetch origin "$base_ref" --depth=1
+
+          changed_source_files="$(git diff --name-only "origin/${base_ref}...HEAD" \
+            | grep -E '^((src|scripts|supabase)/.*\.(ts|tsx|js|jsx|mjs|cjs)|vite\.config\.ts|eslint\.config\.js)$' \
+            || true)"
+
+          if [[ -z "$changed_source_files" ]]; then
+            echo "No changed source files to lint."
+            exit 0
+          fi
+
+          npx eslint $changed_source_files
+
+      - name: Detect dependency changes
+        id: dependency-changes
+        shell: bash
+        run: |
+          base_ref="${GITHUB_BASE_REF:-main}"
+          git fetch origin "$base_ref" --depth=1
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "run_audit=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "origin/${base_ref}...HEAD" \
+            | grep -Eq '^(package\.json|package-lock\.json)$'; then
+            echo "run_audit=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run_audit=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Audit dependencies
+        if: steps.dependency-changes.outputs.run_audit == 'true'
+        run: npm audit --audit-level=moderate

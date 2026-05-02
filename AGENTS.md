@@ -21,6 +21,7 @@ In caso di conflitto, seguire sempre il livello più alto.
 **Pratix** è un gestionale per **avvocati freelance** (singolo professionista, non studio associato). Tagline ufficiale: **"Tutto torna."** — sempre col punto, mai dentro la UI autenticata. Nei titoli pagina e nei meta tag usa il separatore `·`: `Dashboard · Pratix`. La forma `Pratix · Tutto torna.` è riservata alla home pubblica.
 
 Stack:
+
 - **Frontend**: React + TanStack Start v1 (Vite 7), routing **file-based** in `src/routes/`, server functions in `src/server/*.functions.ts`.
 - **Backend**: Supabase di proprietà del progetto. Database PostgreSQL con RLS sempre attiva, auth email/password, storage non ancora usato.
 - **Deploy**: Vercel, con produzione su `https://pratix.vercel.app`.
@@ -157,7 +158,7 @@ Pratix tiene molta documentazione "viva": va aggiornata insieme alle modifiche.
 
 ### Cosa aggiornare e quando
 
-- **`ROADMAP.md`** — *ogni* decisione di prodotto, brand o tecnica condivisa in chat deve confluire qui. Aggiorna lo stato (✅ 🟡 ⬜ 💤) quando una voce cambia.
+- **`ROADMAP.md`** — _ogni_ decisione di prodotto, brand o tecnica condivisa in chat deve confluire qui. Aggiorna lo stato (✅ 🟡 ⬜ 💤) quando una voce cambia.
 - **`CHANGELOG.md`** — voci sotto `[Non rilasciato]` per ogni modifica utente-visibile. Tre categorie: `Novità` (in evidenza), `Correzioni` (bugfix/sicurezza), `Sotto il cofano` (refactor/asset/migrazioni invisibili).
 - **`docs/decisions/`** — un nuovo ADR per ogni decisione "per sempre" (architettura, brand strutturale, vincoli di processo). Numerazione progressiva.
 - **`docs/guides/`** — guide operative per aree tematiche (architettura, database, fatturazione, tema, tono di voce, deploy, migrations, versioning).
@@ -167,17 +168,17 @@ Pratix tiene molta documentazione "viva": va aggiornata insieme alle modifiche.
 
 #### Mappa rapida: tipo di modifica → file da toccare
 
-| Tipo di modifica | File da aggiornare (oltre al codice) |
-|---|---|
-| Nuova feature utente-visibile | `CHANGELOG.md` (Novità), `ROADMAP.md`, bump MINOR in `version.ts` al rilascio |
-| Bugfix / correzione UI | `CHANGELOG.md` (Correzioni), bump PATCH al rilascio |
-| Refactor o asset interno | `CHANGELOG.md` (Sotto il cofano), nessun bump richiesto |
-| Decisione "per sempre" (architettura, brand, processo) | nuovo ADR in `docs/decisions/` + `ROADMAP.md` + memoria |
-| Cambio modello dati (tabelle, RLS, trigger) | migrazione SQL + `docs/data-model.md` + `supabase/schema.sql` + `CHANGELOG.md` |
-| Cambio brand (palette, tipografia, logo, tono) | `BRAND.md` + `src/styles.css` + memoria + `CHANGELOG.md` |
-| Nuovo o vietato termine di prodotto | `docs/glossario.md` + memoria + (se cambia label UI) `CHANGELOG.md` |
-| Nuova guida operativa | `docs/guides/<nome>.md` + link da `AGENTS.md` o `README.md` se rilevante |
-| Cambio regola di processo per agenti | `mem://` + mirror in `docs/memory/` + (se utile) `AGENTS.md` |
+| Tipo di modifica                                       | File da aggiornare (oltre al codice)                                           |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| Nuova feature utente-visibile                          | `CHANGELOG.md` (Novità), `ROADMAP.md`, bump MINOR in `version.ts` al rilascio  |
+| Bugfix / correzione UI                                 | `CHANGELOG.md` (Correzioni), bump PATCH al rilascio                            |
+| Refactor o asset interno                               | `CHANGELOG.md` (Sotto il cofano), nessun bump richiesto                        |
+| Decisione "per sempre" (architettura, brand, processo) | nuovo ADR in `docs/decisions/` + `ROADMAP.md` + memoria                        |
+| Cambio modello dati (tabelle, RLS, trigger)            | migrazione SQL + `docs/data-model.md` + `supabase/schema.sql` + `CHANGELOG.md` |
+| Cambio brand (palette, tipografia, logo, tono)         | `BRAND.md` + `src/styles.css` + memoria + `CHANGELOG.md`                       |
+| Nuovo o vietato termine di prodotto                    | `docs/glossario.md` + memoria + (se cambia label UI) `CHANGELOG.md`            |
+| Nuova guida operativa                                  | `docs/guides/<nome>.md` + link da `AGENTS.md` o `README.md` se rilevante       |
+| Cambio regola di processo per agenti                   | `mem://` + mirror in `docs/memory/` + (se utile) `AGENTS.md`                   |
 
 ### Memoria di progetto
 

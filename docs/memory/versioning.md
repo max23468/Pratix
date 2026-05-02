@@ -39,7 +39,7 @@ In quest'ordine. Sceglierle bene è importante perché la pagina `/novita` le re
 - `### Correzioni` — bugfix, sicurezza, fix di copy/glossario → compatte ma visibili (Wrench/ShieldCheck)
 - `### Sotto il cofano` — refactor, asset rigenerati, migrazioni invisibili, dipendenze → collassate in `<details>` (Settings2)
 
-Test mentale per scegliere: *"un avvocato che apre Pratix domani se ne accorge?"* → sì = Novità, no = Sotto il cofano. Sicurezza va sempre in Correzioni anche se invisibile.
+Test mentale per scegliere: _"un avvocato che apre Pratix domani se ne accorge?"_ → sì = Novità, no = Sotto il cofano. Sicurezza va sempre in Correzioni anche se invisibile.
 
 ### Compatibilità storica
 

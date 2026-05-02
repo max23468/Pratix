@@ -83,6 +83,63 @@ Le policy che richiedono ruolo usano poi `public.has_role((select auth.uid()), '
 - Usa Supabase CLI e i file in `supabase/migrations/`.
 - **Mai** `ALTER DATABASE postgres` nelle migrazioni: non è permesso.
 - **Mai** modificare manualmente `src/integrations/supabase/types.ts`: è generato dall'API.
+- Prima di applicare una migration remota, usa `npm run db:push:dry-run`.
+- Dopo modifiche a schema, RLS, trigger o funzioni, usa:
+  - `npm run db:advisors:security`
+  - `npm run db:advisors:performance`
+- Rigenera i tipi Supabase solo con `npm run db:types`, poi controlla il diff.
+
+Non automatizzare `supabase db push` da GitHub Actions finché Pratix usa un solo
+progetto Supabase. Il deploy del database resta manuale e intenzionale: il
+workflow CI deve verificare, non cambiare la produzione.
+
+## Supabase Auth
+
+Impostazioni operative desiderate nel dashboard Supabase:
+
+- Registrazione aperta: `Allow new users to sign up` attivo.
+- Conferma email attiva per le nuove registrazioni.
+- Secure Email Change non attivo per scelta di prodotto attuale.
+- Policy password standard: minimo applicativo 8 caratteri; non rafforzare i
+  requisiti Supabase finché il percorso resta volutamente leggero.
+- Anonymous sign-ins disattivati.
+- Rate limits Auth rivisti e lasciati su valori prudenti per il piano gratuito.
+- Redirect URL produzione:
+  - `https://pratix.vercel.app/dashboard`
+  - `https://pratix.vercel.app/reimposta-password`
+
+La UI gestisce sia registrazione con sessione immediata sia registrazione con
+email da confermare. Il cambio password in-app richiede già la password attuale
+prima di chiamare Supabase.
+
+### CAPTCHA
+
+Supabase Auth supporta CAPTCHA su registrazione, login e recupero password.
+Pratix è predisposto per Cloudflare Turnstile:
+
+1. Crea il widget Turnstile per `pratix.vercel.app` e per gli eventuali domini preview.
+2. Inserisci la secret key in Supabase Auth → Bot and Abuse Protection.
+3. Aggiungi `VITE_TURNSTILE_SITE_KEY` in Vercel Production e Preview.
+4. Ridistribuisci: i form pubblici mostreranno la verifica solo quando la site key è presente.
+
+Non salvare la secret key Turnstile in GitHub o nei file `.env` tracciati.
+
+### Email Auth
+
+Per produzione conviene configurare Custom SMTP in Supabase, così conferme e
+recuperi password non dipendono dal servizio email di default.
+
+Template italiani consigliati:
+
+- Confirm signup: oggetto `Conferma il tuo account Pratix`; testo breve con
+  link di conferma e nota "Se non hai richiesto tu la registrazione, ignora
+  questa email."
+- Reset password: oggetto `Reimposta la password di Pratix`; testo breve con
+  link valido per il tempo impostato in Supabase.
+- Change email: mantenere testo neutro e conferma sul nuovo indirizzo quando la
+  funzione verrà attivata.
+
+Non inserire dati personali, importi o riferimenti a clienti nei template Auth.
 
 ## Realtime
 
@@ -99,7 +156,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const channel = supabase
   .channel("messages")
-  .on("postgres_changes", { event: "*", schema: "public" }, payload => {
+  .on("postgres_changes", { event: "*", schema: "public" }, (payload) => {
     console.log(payload);
   })
   .subscribe();
@@ -117,3 +174,17 @@ Le policy RLS continuano a valere anche sui messaggi realtime.
 - `supabase db advisors --linked --type security` per anomalie di sicurezza.
 - `supabase db advisors --linked --type performance` per anomalie di performance.
 - Linter pulito **non** garantisce sicurezza: review manuale delle policy obbligatoria.
+
+## Backup gratuito
+
+Il piano gratuito non deve dipendere da Point-in-Time Recovery o Log Drains. Per
+Pratix il backup operativo è manuale:
+
+1. Esporta periodicamente un dump logico del database con strumenti Supabase CLI
+   o Postgres.
+2. Conserva il dump fuori dal repository GitHub.
+3. Non salvare mai nel repo dump reali, dati clienti, fatture, email o chiavi.
+4. Quando possibile, prova il restore su ambiente locale o su un progetto
+   temporaneo non produttivo.
+
+Le migrations e `supabase/schema.sql` restano in GitHub; i dati reali no.

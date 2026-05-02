@@ -31,6 +31,7 @@ import { Route as FattureNuovaRouteImport } from './routes/fatture.nuova'
 import { Route as FattureInvoiceIdRouteImport } from './routes/fatture.$invoiceId'
 import { Route as ClientiNuovoRouteImport } from './routes/clienti.nuovo'
 import { Route as ClientiClientIdRouteImport } from './routes/clienti.$clientId'
+import { Route as ApiCronDailyRouteImport } from './routes/api.cron.daily'
 
 const TerminiRoute = TerminiRouteImport.update({
   id: '/termini',
@@ -142,6 +143,11 @@ const ClientiClientIdRoute = ClientiClientIdRouteImport.update({
   path: '/clienti/$clientId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronDailyRoute = ApiCronDailyRouteImport.update({
+  id: '/api/cron/daily',
+  path: '/api/cron/daily',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/clienti/': typeof ClientiIndexRoute
   '/fatture/': typeof FattureIndexRoute
   '/pratiche/': typeof PraticheIndexRoute
+  '/api/cron/daily': typeof ApiCronDailyRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -190,6 +197,7 @@ export interface FileRoutesByTo {
   '/clienti': typeof ClientiIndexRoute
   '/fatture': typeof FattureIndexRoute
   '/pratiche': typeof PraticheIndexRoute
+  '/api/cron/daily': typeof ApiCronDailyRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -215,6 +223,7 @@ export interface FileRoutesById {
   '/clienti/': typeof ClientiIndexRoute
   '/fatture/': typeof FattureIndexRoute
   '/pratiche/': typeof PraticheIndexRoute
+  '/api/cron/daily': typeof ApiCronDailyRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -241,6 +250,7 @@ export interface FileRouteTypes {
     | '/clienti/'
     | '/fatture/'
     | '/pratiche/'
+    | '/api/cron/daily'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -265,6 +275,7 @@ export interface FileRouteTypes {
     | '/clienti'
     | '/fatture'
     | '/pratiche'
+    | '/api/cron/daily'
   id:
     | '__root__'
     | '/'
@@ -289,6 +300,7 @@ export interface FileRouteTypes {
     | '/clienti/'
     | '/fatture/'
     | '/pratiche/'
+    | '/api/cron/daily'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -314,6 +326,7 @@ export interface RootRouteChildren {
   ClientiIndexRoute: typeof ClientiIndexRoute
   FattureIndexRoute: typeof FattureIndexRoute
   PraticheIndexRoute: typeof PraticheIndexRoute
+  ApiCronDailyRoute: typeof ApiCronDailyRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -472,6 +485,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientiClientIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/cron/daily': {
+      id: '/api/cron/daily'
+      path: '/api/cron/daily'
+      fullPath: '/api/cron/daily'
+      preLoaderRoute: typeof ApiCronDailyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -498,6 +518,7 @@ const rootRouteChildren: RootRouteChildren = {
   ClientiIndexRoute: ClientiIndexRoute,
   FattureIndexRoute: FattureIndexRoute,
   PraticheIndexRoute: PraticheIndexRoute,
+  ApiCronDailyRoute: ApiCronDailyRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

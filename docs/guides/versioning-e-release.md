@@ -100,14 +100,17 @@ le mostra con gerarchia visiva diversa, quindi scegliere bene la categoria
 ## [0.3.0] — 2026-05-15
 
 ### Novità
+
 - **Esportazione XML** delle fatture in formato FatturaPA TD06.
 - Filtro per stato in elenco Pratiche.
 
 ### Correzioni
+
 - Il logo non veniva incluso nel PDF della fattura.
 - Glossario: rimossa la parola "studio" dall'onboarding.
 
 ### Sotto il cofano
+
 - Asset social rigenerati con la nuova palette.
 - Aggiornamento dipendenze interne (TanStack Router).
 ```

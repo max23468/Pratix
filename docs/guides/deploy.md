@@ -14,21 +14,73 @@ Pratix viene pubblicato su **Vercel** dal repository GitHub.
 1. Lavora su branch dedicato.
 2. Esegui le verifiche pertinenti in locale.
 3. Push su GitHub.
-4. Vercel crea un deployment dal branch.
-5. Quando la preview è verificata, promuovi il deployment a production.
+4. Apri una PR verso `main`: GitHub esegue il workflow `Quality`.
+5. Vercel crea un deployment di preview dal branch.
+6. Quando Quality e preview sono verificati, fai merge su `main`.
+7. Vercel pubblica la produzione dal branch `main`.
+
+Il workflow GitHub è volutamente leggero: `npm ci`, `npm run build`, lint solo
+sui file sorgente modificati e `npm audit --audit-level=moderate` solo quando
+cambiano `package.json` o `package-lock.json`. L'avvio manuale esegue sempre
+anche l'audit.
+
+Il repo resta privato e nel percorso gratuito: non basare il processo su branch
+protection a pagamento. La protezione reale è la disciplina di PR + Quality +
+preview Vercel.
 
 ## Variabili d'ambiente
 
 Configurare in Vercel Project Settings → Environment Variables:
 
-- `VITE_SUPABASE_URL`
-- `VITE_SUPABASE_PUBLISHABLE_KEY`
-- `VITE_SUPABASE_PROJECT_ID`
-- `SUPABASE_URL`
-- `SUPABASE_PUBLISHABLE_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `VITE_SUPABASE_URL` — client e server, Production e Preview.
+- `VITE_SUPABASE_PUBLISHABLE_KEY` — client e server, Production e Preview.
+- `VITE_SUPABASE_PROJECT_ID` — client e server, Production e Preview.
+- `VITE_TURNSTILE_SITE_KEY` — chiave pubblica Cloudflare Turnstile, Production e Preview quando CAPTCHA Supabase è attivo.
+- `SUPABASE_URL` — server, Production e Preview.
+- `SUPABASE_PUBLISHABLE_KEY` — server, Production e Preview.
+- `SUPABASE_SERVICE_ROLE_KEY` — server-only, Production e Preview solo se serve.
+- `CRON_SECRET` — server-only, Production; Vercel lo usa come bearer token per il cron giornaliero.
 
 `SUPABASE_SERVICE_ROLE_KEY` è server-only: non va mai esposta al client.
+`VITE_TURNSTILE_SITE_KEY` è pubblica per design; la secret key Turnstile vive
+solo nelle impostazioni Supabase Auth.
+
+Per ora Pratix usa un solo progetto Supabase anche per le preview Vercel. Di
+conseguenza le preview servono a verificare build, routing e UI; non sono un
+ambiente per test distruttivi sui dati. Un secondo Supabase free può essere
+valutato solo se resta davvero dentro i limiti gratuiti disponibili.
+
+In GitHub Secrets non serve duplicare le variabili Vercel. Inserisci solo
+segreti necessari a workflow CI specifici. Il workflow `Quality` attuale non
+richiede segreti.
+
+## Osservabilità Vercel
+
+Pratix include i componenti ufficiali Vercel Web Analytics e Speed Insights nel
+root React. Per renderli operativi:
+
+1. Apri Vercel Project → Analytics e abilita Web Analytics.
+2. Apri Vercel Project → Speed Insights e abilita Speed Insights.
+3. Verifica dopo il primo deployment production, perché i dati non arrivano dal
+   server locale.
+
+Non aggiungere eventi custom con dati personali, nomi clienti, importi o dati di
+fatture. Per ora bastano pagine viste e metriche di performance aggregate.
+
+## Cron giornaliero
+
+`vercel.json` registra un solo cron Hobby-compatible:
+
+- path: `/api/cron/daily`
+- schedule: `0 6 * * *` (06:00 UTC, 08:00 in Italia durante l'ora legale)
+
+L'endpoint rifiuta ogni richiesta senza header `Authorization: Bearer
+$CRON_SECRET`. Prima del merge in produzione crea `CRON_SECRET` in Vercel
+Production; senza questa variabile il cron risponde `503` e non esegue nulla.
+
+Il cron oggi è un controllo leggero del runtime. Quando verranno introdotte
+notifiche o manutenzioni ricorrenti, aggiungere la logica nello stesso endpoint
+o creare un secondo cron solo se resta dentro i limiti gratuiti.
 
 ## Supabase Auth
 
@@ -42,6 +94,30 @@ Nel progetto Supabase:
 Le preview Vercel possono essere aggiunte come redirect separati quando serve
 testare flussi auth su branch.
 
+Se la Deployment Protection Vercel è attiva sulle preview, evita fetch assoluti
+verso URL generati e preferisci path relativi nelle chiamate interne.
+
+## Preview Vercel
+
+Nel piano Hobby usa Vercel Authentication con protezione standard per le
+preview e gli URL di deployment. La produzione su `https://pratix.vercel.app`
+resta pubblica.
+
+Impostazioni consigliate nel dashboard Vercel:
+
+- Deployment Protection: Vercel Authentication sulle preview e sugli URL di deployment.
+- Vercel Toolbar: attiva sulle preview per commenti e debug visivo.
+- Comments: attivi sulle preview, non necessari in produzione.
+- Instant Rollback: usare dal dashboard Deployment → Rollback se `main` pubblica una regressione.
+
+Verifiche minime su ogni preview:
+
+- login e logout;
+- navigazione nelle route principali;
+- recupero password solo se la redirect URL è configurata in Supabase;
+- nessun errore evidente nei log Vercel;
+- nessun test distruttivo sul database condiviso.
+
 ## Dominio
 
 Il dominio gratuito ufficiale è `https://pratix.vercel.app`.
@@ -53,6 +129,8 @@ necessario per Pratix e non fa parte del percorso gratuito attuale.
 
 Checklist minima:
 
+- [ ] PR verso `main` aperta e workflow `Quality` completato
+- [ ] Preview Vercel verificata
 - [ ] `npm run build` ok
 - [ ] `npm run lint` ok oppure issue note e non correlate alla modifica
 - [ ] `npm audit --audit-level=moderate` ok se sono cambiate dipendenze
