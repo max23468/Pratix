@@ -73,6 +73,10 @@ Pratix resta un gestionale leggero per avvocati freelance. Nuove funzionalità d
 
 Per modifiche UI sostanziali verifica quando praticabile desktop/mobile e chiaro/scuro. Nelle risposte finali cita verifiche solo quando aggiungono valore: fallimenti, limiti, rischi residui o comandi rilevanti.
 
+Il pre-push usa `npm run prepush:guard`: seleziona i controlli in base al diff e salva una cache locale per la stessa fingerprint, così un push ripetuto non rilancia build/lint/audit senza motivo. `PRATIX_SKIP_PREPUSH=1 git push` è ammesso solo quando i controlli equivalenti sono già stati eseguiti sullo stesso diff e il motivo viene dichiarato.
+
+Vercel deploya automaticamente da PR/main, ma le modifiche solo documentali non esposte all'app non devono bloccare la chiusura su una verifica Vercel. Per `CHANGELOG.md`, `src/lib/version.ts`, testi pubblici o runtime verifica invece almeno deployment `READY` e pagina interessata.
+
 ## Stack
 
 TanStack Start + Supabase di proprietà + Vercel. Lingua italiana, `lang="it"`.

@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.3.8] — 2026-05-02
+
+### Sotto il cofano
+
+- **Pre-push intelligente**: l'hook locale seleziona build, lint e audit in base al diff e riusa una cache per non ripetere controlli già validati sulla stessa fingerprint.
+- **Verifica Vercel proporzionata**: documentato quando le modifiche solo documentali possono chiudersi senza attendere Vercel e quando invece serve una verifica production leggera.
+
 ## [0.3.7] — 2026-05-02
 
 ### Correzioni
@@ -192,6 +199,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.3.8]: #038--2026-05-02
 [0.3.7]: #037--2026-05-02
 [0.3.6]: #036--2026-05-02
 [0.3.5]: #035--2026-05-02
