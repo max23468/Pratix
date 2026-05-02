@@ -229,6 +229,7 @@ CREATE TABLE public.case_status_history (
   changed_at      timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_case_status_history_case ON public.case_status_history (case_id);
+CREATE INDEX idx_case_status_history_user ON public.case_status_history (user_id);
 
 CREATE TABLE public.expenses (
   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -295,6 +296,7 @@ CREATE TABLE public.invoice_lines (
   created_at  timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX idx_invoice_lines_invoice ON public.invoice_lines (invoice_id);
+CREATE INDEX idx_invoice_lines_user    ON public.invoice_lines (user_id);
 
 
 -- ============================================================================

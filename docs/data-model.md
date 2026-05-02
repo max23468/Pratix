@@ -77,7 +77,8 @@ e a un'unica materia (`matter`: civile, penale, lavoro…). Contiene:
 **Storico append-only** dei cambi di stato di una pratica. Popolata
 automaticamente dal trigger `cases_log_status_change` su `INSERT` e su
 `UPDATE` quando lo `status` cambia. Non si modifica né si elimina (RLS lo
-impedisce).
+impedisce). Ha indici su `case_id` e `user_id`, così le foreign key usate dal
+trigger e dalle policy restano coperte anche al crescere dello storico.
 
 ### `expenses`
 
@@ -108,6 +109,8 @@ da `profiles` ma sono editabili per fattura.
 - `expense_art15`: anticipazione fuori imponibile
 
 `position` ordina le righe nel documento.
+La tabella mantiene indici su `invoice_id` e `user_id`, così la cascata dalla
+fattura e le policy RLS non richiedono scansioni complete.
 
 ## Relazioni (logiche, non FK)
 

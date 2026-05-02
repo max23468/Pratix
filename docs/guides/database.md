@@ -104,9 +104,12 @@ Impostazioni operative desiderate nel dashboard Supabase:
   requisiti Supabase finché il percorso resta volutamente leggero.
 - Anonymous sign-ins disattivati.
 - Rate limits Auth rivisti e lasciati su valori prudenti per il piano gratuito.
+- Site URL produzione: `https://pratix.vercel.app/`.
 - Redirect URL produzione:
   - `https://pratix.vercel.app/dashboard`
   - `https://pratix.vercel.app/reimposta-password`
+- Template email Supabase personalizzati in italiano per conferma account e
+  recupero password, con link `{{ .ConfirmationURL }}`.
 
 La UI gestisce sia registrazione con sessione immediata sia registrazione con
 email da confermare. Il cambio password in-app richiede già la password attuale
