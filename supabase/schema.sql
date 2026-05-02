@@ -374,6 +374,17 @@ CREATE TRIGGER on_auth_user_created
 
 
 -- ============================================================================
+-- FUNCTION PERMISSIONS
+-- ============================================================================
+
+-- These functions are used by triggers only and must not be callable through
+-- PostgREST RPC by anonymous or authenticated users.
+REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.log_case_status_change() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.set_updated_at() FROM PUBLIC, anon, authenticated;
+
+
+-- ============================================================================
 -- ROW LEVEL SECURITY
 -- ============================================================================
 -- Pattern: ogni tabella espone solo le righe dove auth.uid() = user_id

@@ -128,6 +128,10 @@ di codice), le label utente sono tradotte in italiano in `src/lib/labels.ts`.
 | `cases` | `cases_log_status_change` | Su INSERT e UPDATE (se status cambia), inserisce riga in `case_status_history` |
 | `auth.users` | `on_auth_user_created` (gestito da Supabase) | Chiama `handle_new_user()` che crea la riga `profiles` |
 
+Le funzioni usate solo dai trigger (`handle_new_user`, `log_case_status_change`
+e `set_updated_at`) non sono eseguibili via RPC da ruoli `anon` o
+`authenticated`.
+
 ## Cosa NON c'è (e perché)
 
 - **Niente `time_entries`**: il time tracking è in roadmap (vedi `ROADMAP.md`,

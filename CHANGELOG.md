@@ -11,6 +11,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 - **Recupero password più chiaro**: se la nuova password coincide con quella precedente, la pagina ora mostra un messaggio specifico invece di chiedere un nuovo link di recupero.
 
 ### Sotto il cofano
+- **Permessi funzioni Supabase ristretti**: revocata l'esecuzione RPC pubblica delle funzioni usate solo dai trigger del database.
 - **Piano di uscita da Lovable**: aggiunti ADR-0009 e `docs/guides/uscita-lovable.md` per migrare Pratix fuori da Lovable al 100%, con backend Supabase di proprietà, pubblicazione tramite Vercel, checklist di cutover e bonifica finale di tutti i riferimenti Lovable nel working tree.
 - **Inventario migrazione Lovable**: integrato nel piano l'esito dell'inventario backend: un solo utente, una sola riga `profiles`, nessun dato in clienti/pratiche/fatture, nessuno storage bucket, nessuna Edge Function e migrations allineate.
 - **Baseline Supabase autosufficiente**: aggiunto a `supabase/schema.sql` il trigger `on_auth_user_created` su `auth.users` e creato `scripts/recreate-supabase-user.mjs` per ricreare l'utente nel nuovo Supabase preservando l'UUID, usando solo variabili d'ambiente.
