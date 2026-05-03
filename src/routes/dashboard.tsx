@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Briefcase, Receipt, Wallet, Plus, TrendingUp, AlertTriangle, Users } from "lucide-react";
+import { Briefcase, Receipt, Plus, TrendingUp, AlertTriangle, Users } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -76,8 +76,6 @@ function DashboardContent() {
           (i.status === "issued" || i.status === "overdue") && i.due_date && i.due_date < today,
       );
       const overdueTotal = overdue.reduce((sum, i) => sum + Number(i.net_to_pay ?? 0), 0);
-      const drafts = invoices.filter((i) => i.status === "draft");
-      const draftTotal = drafts.reduce((sum, i) => sum + Number(i.total_amount ?? 0), 0);
       const collectedMonth = invoices
         .filter((i) => i.status === "paid" && i.paid_at && i.paid_at >= monthStart)
         .reduce((sum, i) => sum + Number(i.total_amount ?? 0), 0);
@@ -91,8 +89,6 @@ function DashboardContent() {
         unpaid,
         overdueCount: overdue.length,
         overdueTotal,
-        draftCount: drafts.length,
-        draftTotal,
         collectedMonth,
         revenueYear,
         recentCases: recentCasesRes.data ?? [],
@@ -107,26 +103,26 @@ function DashboardContent() {
         description="Una visione d'insieme della tua professione."
         actions={
           <>
-            <Link to="/pratiche/nuova">
-              <Button size="sm" variant="outline">
-                <Plus className="mr-1 h-4 w-4" /> Pratica
-              </Button>
-            </Link>
             <Link to="/clienti/nuovo">
               <Button size="sm" variant="outline">
                 <Plus className="mr-1 h-4 w-4" /> Cliente
               </Button>
             </Link>
             <Link to="/fatture/nuova">
-              <Button size="sm">
+              <Button size="sm" variant="outline">
                 <Plus className="mr-1 h-4 w-4" /> Fattura
+              </Button>
+            </Link>
+            <Link to="/pratiche/nuova">
+              <Button size="sm">
+                <Plus className="mr-1 h-4 w-4" /> Pratica
               </Button>
             </Link>
           </>
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           icon={Briefcase}
           label="Pratiche attive"
@@ -136,13 +132,6 @@ function DashboardContent() {
           icon={Users}
           label="Clienti"
           value={isLoading ? "—" : String(data?.totalClients ?? 0)}
-        />
-        <StatCard
-          icon={Wallet}
-          label="Bozze"
-          value={
-            isLoading ? "—" : `${data?.draftCount ?? 0} · ${formatCurrency(data?.draftTotal ?? 0)}`
-          }
         />
         <StatCard
           icon={Receipt}

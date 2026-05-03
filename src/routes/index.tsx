@@ -1,12 +1,16 @@
-import { createFileRoute, Link, redirect } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
 import { FileText, Receipt, Wallet, ShieldCheck, ArrowRight, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/")({
   beforeLoad: async () => {
+    if (typeof window === "undefined") return;
+
     const { data } = await supabase.auth.getSession();
     if (data.session) {
       throw redirect({ to: "/dashboard" });
@@ -33,6 +37,23 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
+  const { session, loading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && session) {
+      navigate({ to: "/dashboard", replace: true });
+    }
+  }, [loading, navigate, session]);
+
+  if (loading || session) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="text-sm text-muted-foreground">Caricamento…</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b border-border/60 bg-background/80 backdrop-blur">
