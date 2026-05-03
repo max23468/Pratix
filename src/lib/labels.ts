@@ -75,6 +75,26 @@ export const counterpartyKindLabels: Record<string, string> = {
   group: "Composta",
 };
 
+export const priceBookStatusLabels: Record<string, string> = {
+  draft: "Bozza",
+  active: "Attivo",
+  archived: "Archiviato",
+};
+
+export const priceBookStatusVariant: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  draft: "outline",
+  active: "default",
+  archived: "secondary",
+};
+
+export const priceItemKindLabels: Record<string, string> = {
+  fee: "Compenso",
+  expense_reimbursement: "Rimborso spese",
+};
+
 export type ClientDisplayData = {
   kind: string;
   first_name?: string | null;

@@ -21,11 +21,14 @@ import { Route as ImpostazioniRouteImport } from './routes/impostazioni'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PrezziIndexRouteImport } from './routes/prezzi.index'
 import { Route as PraticheIndexRouteImport } from './routes/pratiche.index'
 import { Route as FattureIndexRouteImport } from './routes/fatture.index'
 import { Route as ContropartiIndexRouteImport } from './routes/controparti.index'
 import { Route as CommittentiIndexRouteImport } from './routes/committenti.index'
 import { Route as ClientiIndexRouteImport } from './routes/clienti.index'
+import { Route as PrezziNuovoRouteImport } from './routes/prezzi.nuovo'
+import { Route as PrezziPriceBookIdRouteImport } from './routes/prezzi.$priceBookId'
 import { Route as PraticheNuovaRouteImport } from './routes/pratiche.nuova'
 import { Route as PraticheCaseIdRouteImport } from './routes/pratiche.$caseId'
 import { Route as FattureNuovaRouteImport } from './routes/fatture.nuova'
@@ -98,6 +101,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PrezziIndexRoute = PrezziIndexRouteImport.update({
+  id: '/prezzi/',
+  path: '/prezzi/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PraticheIndexRoute = PraticheIndexRouteImport.update({
   id: '/pratiche/',
   path: '/pratiche/',
@@ -121,6 +129,16 @@ const CommittentiIndexRoute = CommittentiIndexRouteImport.update({
 const ClientiIndexRoute = ClientiIndexRouteImport.update({
   id: '/clienti/',
   path: '/clienti/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrezziNuovoRoute = PrezziNuovoRouteImport.update({
+  id: '/prezzi/nuovo',
+  path: '/prezzi/nuovo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrezziPriceBookIdRoute = PrezziPriceBookIdRouteImport.update({
+  id: '/prezzi/$priceBookId',
+  path: '/prezzi/$priceBookId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PraticheNuovaRoute = PraticheNuovaRouteImport.update({
@@ -203,11 +221,14 @@ export interface FileRoutesByFullPath {
   '/fatture/nuova': typeof FattureNuovaRoute
   '/pratiche/$caseId': typeof PraticheCaseIdRoute
   '/pratiche/nuova': typeof PraticheNuovaRoute
+  '/prezzi/$priceBookId': typeof PrezziPriceBookIdRoute
+  '/prezzi/nuovo': typeof PrezziNuovoRoute
   '/clienti/': typeof ClientiIndexRoute
   '/committenti/': typeof CommittentiIndexRoute
   '/controparti/': typeof ContropartiIndexRoute
   '/fatture/': typeof FattureIndexRoute
   '/pratiche/': typeof PraticheIndexRoute
+  '/prezzi/': typeof PrezziIndexRoute
   '/api/cron/daily': typeof ApiCronDailyRoute
 }
 export interface FileRoutesByTo {
@@ -233,11 +254,14 @@ export interface FileRoutesByTo {
   '/fatture/nuova': typeof FattureNuovaRoute
   '/pratiche/$caseId': typeof PraticheCaseIdRoute
   '/pratiche/nuova': typeof PraticheNuovaRoute
+  '/prezzi/$priceBookId': typeof PrezziPriceBookIdRoute
+  '/prezzi/nuovo': typeof PrezziNuovoRoute
   '/clienti': typeof ClientiIndexRoute
   '/committenti': typeof CommittentiIndexRoute
   '/controparti': typeof ContropartiIndexRoute
   '/fatture': typeof FattureIndexRoute
   '/pratiche': typeof PraticheIndexRoute
+  '/prezzi': typeof PrezziIndexRoute
   '/api/cron/daily': typeof ApiCronDailyRoute
 }
 export interface FileRoutesById {
@@ -264,11 +288,14 @@ export interface FileRoutesById {
   '/fatture/nuova': typeof FattureNuovaRoute
   '/pratiche/$caseId': typeof PraticheCaseIdRoute
   '/pratiche/nuova': typeof PraticheNuovaRoute
+  '/prezzi/$priceBookId': typeof PrezziPriceBookIdRoute
+  '/prezzi/nuovo': typeof PrezziNuovoRoute
   '/clienti/': typeof ClientiIndexRoute
   '/committenti/': typeof CommittentiIndexRoute
   '/controparti/': typeof ContropartiIndexRoute
   '/fatture/': typeof FattureIndexRoute
   '/pratiche/': typeof PraticheIndexRoute
+  '/prezzi/': typeof PrezziIndexRoute
   '/api/cron/daily': typeof ApiCronDailyRoute
 }
 export interface FileRouteTypes {
@@ -296,11 +323,14 @@ export interface FileRouteTypes {
     | '/fatture/nuova'
     | '/pratiche/$caseId'
     | '/pratiche/nuova'
+    | '/prezzi/$priceBookId'
+    | '/prezzi/nuovo'
     | '/clienti/'
     | '/committenti/'
     | '/controparti/'
     | '/fatture/'
     | '/pratiche/'
+    | '/prezzi/'
     | '/api/cron/daily'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -326,11 +356,14 @@ export interface FileRouteTypes {
     | '/fatture/nuova'
     | '/pratiche/$caseId'
     | '/pratiche/nuova'
+    | '/prezzi/$priceBookId'
+    | '/prezzi/nuovo'
     | '/clienti'
     | '/committenti'
     | '/controparti'
     | '/fatture'
     | '/pratiche'
+    | '/prezzi'
     | '/api/cron/daily'
   id:
     | '__root__'
@@ -356,11 +389,14 @@ export interface FileRouteTypes {
     | '/fatture/nuova'
     | '/pratiche/$caseId'
     | '/pratiche/nuova'
+    | '/prezzi/$priceBookId'
+    | '/prezzi/nuovo'
     | '/clienti/'
     | '/committenti/'
     | '/controparti/'
     | '/fatture/'
     | '/pratiche/'
+    | '/prezzi/'
     | '/api/cron/daily'
   fileRoutesById: FileRoutesById
 }
@@ -387,11 +423,14 @@ export interface RootRouteChildren {
   FattureNuovaRoute: typeof FattureNuovaRoute
   PraticheCaseIdRoute: typeof PraticheCaseIdRoute
   PraticheNuovaRoute: typeof PraticheNuovaRoute
+  PrezziPriceBookIdRoute: typeof PrezziPriceBookIdRoute
+  PrezziNuovoRoute: typeof PrezziNuovoRoute
   ClientiIndexRoute: typeof ClientiIndexRoute
   CommittentiIndexRoute: typeof CommittentiIndexRoute
   ContropartiIndexRoute: typeof ContropartiIndexRoute
   FattureIndexRoute: typeof FattureIndexRoute
   PraticheIndexRoute: typeof PraticheIndexRoute
+  PrezziIndexRoute: typeof PrezziIndexRoute
   ApiCronDailyRoute: typeof ApiCronDailyRoute
 }
 
@@ -481,6 +520,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/prezzi/': {
+      id: '/prezzi/'
+      path: '/prezzi'
+      fullPath: '/prezzi/'
+      preLoaderRoute: typeof PrezziIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/pratiche/': {
       id: '/pratiche/'
       path: '/pratiche'
@@ -514,6 +560,20 @@ declare module '@tanstack/react-router' {
       path: '/clienti'
       fullPath: '/clienti/'
       preLoaderRoute: typeof ClientiIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prezzi/nuovo': {
+      id: '/prezzi/nuovo'
+      path: '/prezzi/nuovo'
+      fullPath: '/prezzi/nuovo'
+      preLoaderRoute: typeof PrezziNuovoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prezzi/$priceBookId': {
+      id: '/prezzi/$priceBookId'
+      path: '/prezzi/$priceBookId'
+      fullPath: '/prezzi/$priceBookId'
+      preLoaderRoute: typeof PrezziPriceBookIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pratiche/nuova': {
@@ -619,11 +679,14 @@ const rootRouteChildren: RootRouteChildren = {
   FattureNuovaRoute: FattureNuovaRoute,
   PraticheCaseIdRoute: PraticheCaseIdRoute,
   PraticheNuovaRoute: PraticheNuovaRoute,
+  PrezziPriceBookIdRoute: PrezziPriceBookIdRoute,
+  PrezziNuovoRoute: PrezziNuovoRoute,
   ClientiIndexRoute: ClientiIndexRoute,
   CommittentiIndexRoute: CommittentiIndexRoute,
   ContropartiIndexRoute: ContropartiIndexRoute,
   FattureIndexRoute: FattureIndexRoute,
   PraticheIndexRoute: PraticheIndexRoute,
+  PrezziIndexRoute: PrezziIndexRoute,
   ApiCronDailyRoute: ApiCronDailyRoute,
 }
 export const routeTree = rootRouteImport

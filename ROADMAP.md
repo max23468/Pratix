@@ -76,7 +76,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Committenti                       | Anagrafica soggetto fatturato e regole economiche di base                                          |
 | ✅    | Clienti multi-committente         | Relazione molti-a-molti fra committenti e clienti                                                  |
 | ✅    | Controparti strutturate           | Persone/società e gruppi di soggetti senza ruoli                                                   |
-| ⬜    | Prezzi per committente            | Compensi/rimborsi abilitabili per committente, voci e prezzi unitari personalizzabili per anno     |
+| ✅    | Prezzi per committente            | Compensi/rimborsi abilitabili per committente, voci e prezzi unitari personalizzabili per anno     |
 | ⬜    | Attività fatturabili              | Stato da fatturare/fatturata, allegati facoltativi                                                 |
 | ⬜    | Fatturazione committente/periodo  | Estrazione attività, inclusione/rinvio, spese generali opzionali, cassa forense e rendiconti Excel |
 | ⬜    | Import archivio guidato           | Wizard manuale + Excel strutturato, anche largo, con staging e validazione                         |
@@ -163,9 +163,9 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## Prossime mosse suggerite (in ordine)
 
-1. **Pubblicare la Fase 3** con release, merge su `main` e verifica deployment production.
-2. **Costruire il flusso attività → fattura** per committente e periodo.
-3. **Aggiungere import guidato** manuale ed Excel con staging.
-4. **Collegare i selettori Fase 3** dentro pratica, import e fatturazione man mano che quelle superfici vengono costruite.
+1. **Pubblicare la Fase 4** con release, merge su `main` e verifica deployment production.
+2. **Costruire Pratiche e Attività Fase 5**, collegando committente, cliente, controparte e voce prezzo.
+3. **Costruire il flusso attività → fattura** per committente e periodo.
+4. **Aggiungere import guidato** manuale ed Excel con staging.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.

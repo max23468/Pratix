@@ -9,6 +9,7 @@ import {
   LogOut,
   Building2,
   UserRoundSearch,
+  Tags,
 } from "lucide-react";
 import {
   Sidebar,
@@ -28,6 +29,7 @@ import { useAuth } from "@/lib/auth-context";
 const items = [
   { title: "Dashboard", url: "/dashboard" as const, icon: LayoutDashboard },
   { title: "Committenti", url: "/committenti" as const, icon: Building2 },
+  { title: "Prezzi", url: "/prezzi" as const, icon: Tags },
   { title: "Clienti", url: "/clienti" as const, icon: Users },
   { title: "Controparti", url: "/controparti" as const, icon: UserRoundSearch },
   { title: "Pratiche", url: "/pratiche" as const, icon: Briefcase },
