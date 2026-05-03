@@ -65,6 +65,16 @@ informazione interna al prodotto.
 Vedi `docs/guides/versioning-e-release.md` per i passaggi operativi.
 ADR-0010 documenta l'automazione locale del comando di release.
 
+### Chiarimento 2026-05-03
+
+Pubblicare una modifica documentale su GitHub/main non equivale sempre a
+rilasciare una nuova versione dell'app.
+
+Piani di evoluzione, ADR, guide interne, PDF di pianificazione e regole agenti
+che non cambiano UI, runtime, contenuti esposti o supporto a una versione già
+rilasciata devono restare **Non versionato**. In questi casi non si modifica
+`src/lib/version.ts`, anche se il lavoro viene mergiato e pubblicato nel repo.
+
 ## Conseguenze
 
 **Positive**

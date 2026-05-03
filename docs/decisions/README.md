@@ -71,3 +71,4 @@ Link a issue, PR, documenti, conversazioni rilevanti.
 | [0010](./0010-release-automatizzata.md)                | Release automatizzata locale                           | Accettato                          |
 | [0011](./0011-gestione-settimanale-commenti-codex.md)  | Gestione settimanale commenti Codex                    | Accettato                          |
 | [0012](./0012-storage-e-observability-vercel-first.md) | Storage privato e observability Vercel-first           | Accettato                          |
+| [0013](./0013-focus-recupero-crediti.md)               | Focus recupero crediti                                 | Accettato                          |

@@ -36,7 +36,7 @@ Pratix deve restare un gestionale leggero per il singolo avvocato freelance.
 
 Una nuova funzionalità ha senso quando rafforza almeno uno di questi assi:
 
-- pratiche, clienti, scadenze, spese o fatture;
+- recupero crediti, committenti, clienti, controparti, pratiche, attività, compensi/onorari, prezzi, rimborsi spese, rendiconti Excel o fatture;
 - sicurezza, privacy, esportazione o governo dei dati dell'utente;
 - qualità operativa del professionista freelance;
 - affidabilità, manutenzione o deploy del SaaS Vercel + Supabase.
@@ -140,10 +140,10 @@ GitHub è la fonte primaria del codice. Vercel builda e pubblica dal repository.
 
 Vincoli di terminologia (vedi [`docs/glossario.md`](./docs/glossario.md)):
 
-- **Usa**: Pratica, Cliente, Scadenza, Spese, Fattura, Professione.
+- **Usa**: Committente, Cliente, Controparte, Pratica, Attività, Compenso/Onorario, Prezzi, Rimborso spese, Spese, Fattura, Rendiconto Excel, Professione.
 - **Vietato**: Caso, Assistito, Deadline, Costi.
-- **Vietata** la parola **"studio"**: il target è l'avvocato freelance, non lo studio associato.
-- **Vietata** la parola **"attività"** come label di prodotto: è ambigua (significa sia "impresa" sia "azione/task" e in Pratix indica già le voci di lavoro fatturabili). Usa "professione" / "i tuoi dati professionali". Resta lecita solo come sostantivo comune nei testi legali (es. "le attività compiute tramite l'account").
+- **Studio** non è più una parola vietata in assoluto, ma Pratix resta per avvocati freelance: non usare "studio" per posizionare il prodotto come gestionale per studi associati o team multi-ruolo.
+- **Attività** è ora un termine centrale di prodotto: indica le voci operative e fatturabili dentro una pratica.
 
 ## Qualità UI React
 
@@ -187,7 +187,7 @@ Pratix tiene molta documentazione "viva": va aggiornata insieme alle modifiche.
 ### Cosa aggiornare e quando
 
 - **`ROADMAP.md`** — _ogni_ decisione di prodotto, brand o tecnica condivisa in chat deve confluire qui. Aggiorna lo stato (✅ 🟡 ⬜ 💤) quando una voce cambia.
-- **`CHANGELOG.md`** — voci sotto `[Non rilasciato]` per ogni modifica utente-visibile. Tre categorie: `Novità` (in evidenza), `Correzioni` (bugfix/sicurezza), `Sotto il cofano` (refactor/asset/migrazioni invisibili).
+- **`CHANGELOG.md`** — voci sotto `[Non rilasciato]` per ogni modifica utente-visibile o operativamente rilevante. Categorie versionate: `Novità` (in evidenza), `Correzioni` (bugfix/sicurezza), `Sotto il cofano` (refactor/asset/migrazioni invisibili). Usa `Non versionato` per piani, ADR, guide, regole agenti e documentazione interna che vengono pubblicati nel repo ma non cambiano app, runtime, contenuti esposti o supporto a una versione.
 - **`docs/decisions/`** — un nuovo ADR per ogni decisione "per sempre" (architettura, brand strutturale, vincoli di processo). Numerazione progressiva.
 - **`docs/guides/`** — guide operative per aree tematiche (architettura, database, fatturazione, tema, tono di voce, deploy, migrations, versioning).
 - **`docs/data-model.md`** + **`supabase/schema.sql`** — quando cambia il modello dati.
@@ -196,17 +196,17 @@ Pratix tiene molta documentazione "viva": va aggiornata insieme alle modifiche.
 
 #### Mappa rapida: tipo di modifica → file da toccare
 
-| Tipo di modifica                                       | File da aggiornare (oltre al codice)                                           |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| Nuova feature utente-visibile                          | `CHANGELOG.md` (Novità), `ROADMAP.md`, bump MINOR in `version.ts` al rilascio  |
-| Bugfix / correzione UI                                 | `CHANGELOG.md` (Correzioni), bump PATCH al rilascio                            |
-| Refactor o asset interno                               | `CHANGELOG.md` (Sotto il cofano), nessun bump richiesto                        |
-| Decisione "per sempre" (architettura, brand, processo) | nuovo ADR in `docs/decisions/` + `ROADMAP.md` + memoria                        |
-| Cambio modello dati (tabelle, RLS, trigger)            | migrazione SQL + `docs/data-model.md` + `supabase/schema.sql` + `CHANGELOG.md` |
-| Cambio brand (palette, tipografia, logo, tono)         | `BRAND.md` + `src/styles.css` + memoria + `CHANGELOG.md`                       |
-| Nuovo o vietato termine di prodotto                    | `docs/glossario.md` + memoria + (se cambia label UI) `CHANGELOG.md`            |
-| Nuova guida operativa                                  | `docs/guides/<nome>.md` + link da `AGENTS.md` o `README.md` se rilevante       |
-| Cambio regola di processo per agenti                   | `mem://` + mirror in `docs/memory/` + (se utile) `AGENTS.md`                   |
+| Tipo di modifica                                       | File da aggiornare (oltre al codice)                                                                                |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
+| Nuova feature utente-visibile                          | `CHANGELOG.md` (Novità), `ROADMAP.md`, bump MINOR in `version.ts` al rilascio                                       |
+| Bugfix / correzione UI                                 | `CHANGELOG.md` (Correzioni), bump PATCH al rilascio                                                                 |
+| Refactor o asset interno                               | `CHANGELOG.md` (Sotto il cofano), bump PATCH al rilascio se entra in app/runtime                                    |
+| Decisione "per sempre" (architettura, brand, processo) | nuovo ADR in `docs/decisions/` + `ROADMAP.md` + memoria + `CHANGELOG.md` (Non versionato se resta solo documentale) |
+| Cambio modello dati (tabelle, RLS, trigger)            | migrazione SQL + `docs/data-model.md` + `supabase/schema.sql` + `CHANGELOG.md`                                      |
+| Cambio brand (palette, tipografia, logo, tono)         | `BRAND.md` + `src/styles.css` + memoria + `CHANGELOG.md`                                                            |
+| Nuovo, modificato o vietato termine di prodotto        | `docs/glossario.md` + memoria + (se cambia label UI) `CHANGELOG.md`                                                 |
+| Nuova guida operativa                                  | `docs/guides/<nome>.md` + link da `AGENTS.md` o `README.md` se rilevante                                            |
+| Cambio regola di processo per agenti                   | `mem://` + mirror in `docs/memory/` + (se utile) `AGENTS.md`                                                        |
 
 ### Memoria di progetto
 
@@ -219,13 +219,14 @@ Pratix tiene molta documentazione "viva": va aggiornata insieme alle modifiche.
 Pratix usa **SemVer convenzionale** adattato a SaaS hostato (vedi [`docs/decisions/0008-versioning-e-changelog.md`](./docs/decisions/0008-versioning-e-changelog.md)).
 
 - **Single source of truth**: `src/lib/version.ts` (`APP_VERSION` + `BUILD_DATE`).
-- **Bump**: MAJOR = breaking utente, MINOR = nuova feature, PATCH = bugfix/UI/contenuti.
-- **Nessuna release**: quarta categoria obbligatoria per bozze, note locali, test-only, commenti, formattazione isolata e docs interne non operative; non produce una nuova versione.
+- **Bump**: MAJOR = breaking utente, MINOR = nuova feature, PATCH = bugfix/UI/contenuti/runtime/supporto.
+- **Nessuna release**: quarta categoria obbligatoria per bozze, note locali, test-only, commenti, formattazione isolata, piani, ADR, regole agenti e docs interne non operative; non produce una nuova versione. Se viene annotata nel changelog, usa `### Non versionato`.
 - **Rilasciare** = eseguire `npm run release` (oppure `npm run release -- --bump patch|minor|major`), verificare il diff generato e promuovere il deployment Vercel. Il comando aggiorna `src/lib/version.ts`, rinomina `[Non rilasciato]` → `[X.Y.Z] — YYYY-MM-DD`, crea il nuovo blocco `[Non rilasciato]` e aggiorna i link del changelog.
 - **Pubblicare / tutto pubblicato** = merge su `main` + deployment production Vercel completato e verificato + branch dedicato chiuso/eliminato se esiste. Una PR aperta, un push sul branch o una preview Vercel non bastano. Quando il proprietario chiede "pubblica", "pubblica tutto" o "è tutto pubblicato?", completa questi passaggi oppure dichiara esattamente cosa manca.
+- **Pubblicare non significa sempre rilasciare**: se il diff contiene solo piani, ADR, guide interne, PDF di pianificazione o regole di processo non esposte nell'app, pubblica su GitHub/main senza bump SemVer e senza modificare `src/lib/version.ts`.
 - Per modifiche solo documentali non esposte all'app (`AGENTS.md`, `README.md`, `docs/**` interne), il deploy Vercel automatico non deve bloccare la chiusura: basta verificare PR/check pertinenti. Per documenti o release esposti nella UI (`CHANGELOG.md`, `src/lib/version.ts`, testi pubblici, landing, privacy/termini), verifica almeno che il deployment production sia `READY` e che la pagina interessata risponda.
 - **Regola obbligatoria per ogni cambio progetto**: ogni volta che modifichi codice, documentazione, configurazione, schema DB, brand, processo o deploy, valuta sempre l'impatto sul versioning prima di chiudere il lavoro.
-- **Gate di chiusura fase**: prima di dichiarare conclusa una modifica, fase, migrazione, cutover o lavoro già pubblicato/deployato, controlla `CHANGELOG.md`. Se il blocco `[Non rilasciato]` contiene voci relative al lavoro appena completato, non chiudere il task senza eseguire `npm run release` oppure senza dichiarare esplicitamente che il rilascio resta il prossimo step operativo.
+- **Gate di chiusura fase**: prima di dichiarare conclusa una modifica, fase, migrazione, cutover o lavoro già pubblicato/deployato, controlla `CHANGELOG.md`. Se il blocco `[Non rilasciato]` contiene solo `Non versionato`, non eseguire release e non bumpare. Se contiene `Novità`, `Correzioni` o `Sotto il cofano`, non chiudere senza `npm run release` oppure senza dichiarare esplicitamente che il rilascio resta il prossimo step operativo.
 - **Default post-migrazione**: per migrazioni, cutover, correzioni infra o bonifiche sotto il cofano completate senza nuove feature utente, usa PATCH salvo istruzione diversa o impatto utente maggiore.
 - Procedura completa: [`docs/guides/versioning-e-release.md`](./docs/guides/versioning-e-release.md).
 
@@ -241,7 +242,7 @@ Pratix usa **SemVer convenzionale** adattato a SaaS hostato (vedi [`docs/decisio
 - Controlla che le modifiche UI restino responsive su mobile e desktop, in **entrambi i temi** (chiaro e scuro).
 - Controlla che gli aggiornamenti alle dipendenze non disallineino `package.json` e `package-lock.json`.
 - Verifica che i nuovi colori usino token semantici, non hex inline.
-- Verifica che il glossario di prodotto sia rispettato (no "studio", no "attività" come label, no "Caso/Assistito/Deadline/Costi").
+- Verifica che il glossario di prodotto sia rispettato (Committente/Cliente/Controparte/Pratica/Attività/Compenso-Onorario/Prezzi/Rimborso spese/Fattura/Rendiconto Excel; no Caso/Assistito/Deadline/Costi).
 - Verifica che le nuove tabelle abbiano RLS attiva e 4 policy per `user_id` con `(select auth.uid())`.
 - Segnala problemi di sicurezza nella gestione degli input utente, HTML generato, link, form e modifiche alle dipendenze.
 

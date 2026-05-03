@@ -13,17 +13,27 @@
 
 ## Glossario obbligatorio
 
-| ✅ Usare                                                   | ❌ Evitare                        |
-| ---------------------------------------------------------- | --------------------------------- |
-| Pratica                                                    | Caso, fascicolo                   |
-| Cliente                                                    | Assistito                         |
-| Scadenza                                                   | Deadline                          |
-| Spese                                                      | Costi                             |
-| Fattura, Parcella                                          | Conto                             |
-| Professione, la tua professione, i tuoi dati professionali | **Studio**, "attività" come label |
-| Salva, Annulla, Elimina                                    | Conferma, Procedi, Cancella       |
+| ✅ Usare                                                   | ❌ Evitare                                        |
+| ---------------------------------------------------------- | ------------------------------------------------- |
+| Pratica                                                    | Caso, fascicolo                                   |
+| Committente                                                | Mandante generico quando si parla di fatturazione |
+| Cliente                                                    | Assistito                                         |
+| Controparte                                                | Debitore come unica label generale                |
+| Attività                                                   | Task, action                                      |
+| Compenso, Onorario                                         | Fee                                               |
+| Rimborso spese                                             | Costo                                             |
+| Prezzi                                                     | Listino, Tariffe come label principale            |
+| Rendiconto Excel                                           | Report generico                                   |
+| Scadenza                                                   | Deadline                                          |
+| Spese                                                      | Costi                                             |
+| Fattura, Parcella                                          | Conto                                             |
+| Professione, la tua professione, i tuoi dati professionali | Business, workspace                               |
+| Salva, Annulla, Elimina                                    | Conferma, Procedi, Cancella                       |
 
-> **"Studio" è vietata.** Il target è il freelance singolo. Vedi [ADR 0005](../decisions/0005-target-freelance-no-studio.md).
+Pratix resta pensato per il freelance singolo, non per studi associati o team
+multi-ruolo. "Studio" non è più una parola vietata in assoluto, ma non va usata
+per riposizionare il prodotto come gestionale per studi associati. Vedi
+[ADR 0013](../decisions/0013-focus-recupero-crediti.md).
 
 ## Tagline ufficiale
 

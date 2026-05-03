@@ -4,6 +4,20 @@ Questa guida descrive **come rilasciare una nuova versione di Pratix**.
 
 Decisione di riferimento: [ADR-0008](../decisions/0008-versioning-e-changelog.md).
 
+## Pubblicazione non è sempre release
+
+In Pratix ci sono due azioni diverse:
+
+1. **Pubblicare**: portare una modifica su GitHub/main e, quando serve,
+   verificarne il deployment Vercel.
+2. **Rilasciare**: creare una nuova versione SemVer dell'app aggiornando
+   `src/lib/version.ts` e chiudendo il blocco versionato del changelog.
+
+Piani, ADR, guide interne, PDF di pianificazione, regole agenti e
+documentazione non esposta nell'app possono essere pubblicati nel repo senza
+rilasciare una nuova versione. In quel caso non modificare `APP_VERSION` e usa
+`### Non versionato` nel changelog se serve tenere traccia del lavoro.
+
 ## TL;DR
 
 Per rilasciare la versione `X.Y.Z`:
@@ -32,11 +46,15 @@ operativo.
 Prima di dichiarare conclusa una fase, migrazione, cutover o lavoro già
 pubblicato/deployato, controlla `CHANGELOG.md`.
 
-Se `## [Non rilasciato]` contiene voci relative al lavoro appena completato,
-non chiudere il task senza:
+Se `## [Non rilasciato]` contiene voci relative al lavoro appena completato in
+`### Novità`, `### Correzioni` o `### Sotto il cofano`, non chiudere il task
+senza:
 
 1. eseguire `npm run release` e chiudere il blocco changelog; oppure
 2. dichiarare esplicitamente che il rilascio resta il prossimo step operativo.
+
+Se invece contiene solo `### Non versionato`, il lavoro può essere pubblicato
+senza release SemVer e senza modificare `src/lib/version.ts`.
 
 Per migrazioni, cutover, correzioni infra o bonifiche sotto il cofano completate
 senza nuove feature utente, il default è PATCH salvo istruzione diversa o impatto
@@ -116,13 +134,18 @@ Esempi:
 - Commenti interni che non cambiano codice eseguito.
 - Riformattazione isolata senza cambio logico e senza output diverso.
 - Test aggiunti o rinominati senza cambio di comportamento.
-- Documentazione interna non operativa e non collegata a una decisione stabile.
+- Documentazione interna non operativa.
+- Piani di evoluzione, ADR e guide operative non ancora implementati in app.
+- PDF o export stampabili di pianificazione salvati nel repo.
+- Regole agenti o processo che orientano il lavoro futuro ma non cambiano
+  runtime, UI, contenuti pubblici o supporto a una versione già rilasciata.
 - File di lavoro non committati, screenshot locali, export sanitizzati usati
   solo come materiale di analisi.
 
-Se serve annotarli durante il lavoro, usa `### Non versionato` nel blocco
-`[Non rilasciato]`. `npm run release` riconosce la categoria e non genera una
-nuova versione quando il blocco contiene solo voci non versionate.
+Se serve annotarli durante il lavoro o pubblicarli su GitHub/main, usa
+`### Non versionato` nel blocco `[Non rilasciato]`. `npm run release` riconosce
+la categoria e non genera una nuova versione quando il blocco contiene solo
+voci non versionate.
 
 Non mescolare `### Non versionato` con `### Novità`, `### Correzioni` o
 `### Sotto il cofano` nello stesso rilascio: il comando si ferma e chiede di
@@ -157,8 +180,8 @@ le mostra con gerarchia visiva diversa, quindi scegliere bene la categoria
 - Frasi brevi, soggetto implicito ("Aggiunto X" non "Abbiamo aggiunto X").
 - Niente riferimenti a file, commit, PR, issue: il changelog è per l'utente,
   non per gli sviluppatori.
-- Termini di prodotto coerenti con il glossario: Pratica, Cliente, Scadenza,
-  Spese, Fattura. Mai "studio".
+- Termini di prodotto coerenti con il glossario: Committente, Cliente,
+  Controparte, Pratica, Attivita, Compenso, Rimborso spese, Fattura.
 - Bold (`**`) per evidenziare il nome di una funzionalità.
 
 ### Esempio buono
@@ -206,7 +229,8 @@ in base al contenuto accumulato:
 - almeno una voce in **Rimosso** o un breaking change esplicito → MAJOR
 - almeno una voce in **Novità** o **Aggiunto** → MINOR
 - solo **Correzioni**, **Sotto il cofano** o voci storiche non-breaking → PATCH
-- solo interventi senza effetto su prodotto/deploy/supporto → nessuna release
+- solo **Non versionato** o interventi senza effetto su prodotto/deploy/supporto
+  → nessuna release
 
 ## Comando automatizzato
 

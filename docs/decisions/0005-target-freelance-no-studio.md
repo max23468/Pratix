@@ -1,5 +1,10 @@
 # ADR 0005 — Target esplicito freelance: vietata la parola "studio"
 
+> Nota 2026-05-03: [ADR 0013](./0013-focus-recupero-crediti.md) mantiene il
+> target freelance ma aggiorna i vincoli lessicali. "Studio" non e piu vietata
+> in assoluto, mentre "attivita" diventa termine centrale per le voci operative
+> e fatturabili della pratica.
+
 - **Stato**: Accettato
 - **Data**: 2026-04-29
 

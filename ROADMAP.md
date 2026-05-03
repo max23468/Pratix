@@ -21,7 +21,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Tipografia: Inter Tight + Inter + JetBrains Mono          | Numeri tabular-nums, display weight max 600                                                                                                            |
 | ✅    | Logo unificato `<Logo>` + favicon SVG                     | Direzione default `px`, mai SVG inline                                                                                                                 |
 | ✅    | Tono di voce "tu" professionale                           | No emoji UI, no esclamativi multipli                                                                                                                   |
-| ✅    | Glossario freelance                                       | Pratica/Cliente/Scadenza/Spese/Fattura — vietata "studio"                                                                                              |
+| ✅    | Glossario freelance + recupero crediti                    | Committente/Cliente/Controparte/Pratica/Attività/Compenso-Onorario/Prezzi/Rimborso spese/Fattura/Rendiconto Excel; Pratix resta per avvocati freelance |
 | ⬜    | Pagina `/brand` o sezione interna riassuntiva             | Non urgente; per ora basta `BRAND.md`                                                                                                                  |
 | 💤    | Loghi alternativi (orizzontale scuro su panna, monocromo) | Solo se serviranno per export/press                                                                                                                    |
 
@@ -65,18 +65,26 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## 4. Funzionalità di prodotto
 
-| Stato | Voce                             | Note                                        |
-| ----- | -------------------------------- | ------------------------------------------- |
-| ✅    | Pratiche, Clienti, Fatture base  | CRUD + visualizzazione                      |
-| ✅    | Generazione fattura PDF          | `src/lib/invoice-pdf.ts`                    |
-| ✅    | Generazione XML FatturaPA (TD06) | `src/lib/invoice-xml.ts`                    |
-| ⬜    | Scadenziario con notifiche       | In-app + opzionale email                    |
-| ⬜    | Time tracking per pratica        | Timer + voci manuali                        |
-| ⬜    | Spese con allegati               | Upload ricevute via storage                 |
-| ⬜    | Esportazione massiva fatture     | ZIP PDF + XML per periodo                   |
-| ⬜    | Numerazione automatica           | Già presente? Verificare reset annuale      |
-| 💤    | Area cliente esterna             | Login dedicato per visione fatture/scadenze |
-| 💤    | Integrazione invio SDI           | Oggi solo generazione XML; invio futuro     |
+| Stato | Voce                              | Note                                                                        |
+| ----- | --------------------------------- | --------------------------------------------------------------------------- |
+| ✅    | Pratiche, Clienti, Fatture base   | CRUD + visualizzazione                                                      |
+| ✅    | Generazione fattura PDF           | `src/lib/invoice-pdf.ts`                                                    |
+| ✅    | Generazione XML FatturaPA (TD06)  | `src/lib/invoice-xml.ts`                                                    |
+| ✅    | Piano evoluzione recupero crediti | `docs/plans/evoluzione-recupero-crediti.md`, versione stampabile + ADR-0013 |
+| ⬜    | Rimozione scadenzario             | Route, sidebar, dashboard, tab pratica e tabella `case_deadlines`           |
+| ⬜    | Committenti                       | Anagrafica soggetto fatturato                                               |
+| ⬜    | Clienti multi-committente         | Relazione molti-a-molti fra committenti e clienti                           |
+| ⬜    | Controparti strutturate           | Persone/società, gruppi di soggetti e cessioni credito                      |
+| ⬜    | Prezzi annuali condivisi          | Compensi/onorari fissi e rimborsi Art. 15 ammessi, versionati per anno      |
+| ⬜    | Attività fatturabili              | Stato da fatturare/fatturata, allegati facoltativi                          |
+| ⬜    | Fatturazione committente/periodo  | Estrazione attività, inclusione/rinvio, fattura e rendiconti Excel          |
+| ⬜    | Import archivio guidato           | Wizard manuale + Excel strutturato, anche largo, con staging e validazione  |
+| 💤    | Time tracking per pratica         | Fuori dal perimetro recupero crediti attuale                                |
+| ⬜    | Spese con allegati                | Da ricondurre alle attività/rimborsi spese                                  |
+| ⬜    | Esportazione massiva fatture      | ZIP PDF + XML per periodo                                                   |
+| ⬜    | Numerazione automatica            | Già presente? Verificare reset annuale                                      |
+| 💤    | Area cliente esterna              | Login dedicato per visione fatture/scadenze                                 |
+| 💤    | Integrazione invio SDI            | Oggi solo generazione XML; invio futuro                                     |
 
 ## 5. Account, sicurezza, dati
 
@@ -111,7 +119,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Pubblicazione tramite Vercel                   | Produzione su `https://pratix.vercel.app`; dominio proprietario rimandato                                                                         |
 | ✅    | Migrazione backend fuori da Lovable Cloud      | Supabase di proprietà collegato, dati migrati, auth verificata                                                                                    |
 | ✅    | Bonifica riferimenti Lovable                   | Runtime, configurazione e docs operative pulite; restano solo riferimenti storici censiti in `docs/migration/lovable-reference-audit.md`          |
-| 💤    | Dismissione definitiva Lovable                 | Progetto Lovable lasciato inattivo per prudenza; in futuro verificare/rimuovere GitHub App Lovable e chiudere il progetto se non serve piu        |
+| 💤    | Dismissione definitiva Lovable                 | Progetto Lovable lasciato inattivo per prudenza; in futuro verificare/rimuovere GitHub App Lovable e chiudere il progetto se non serve più        |
 | 💤    | Dominio proprietario futuro                    | Eventuale dominio tipo `pratix.it`                                                                                                                |
 
 ## 7. Qualità e processo
@@ -153,10 +161,10 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## Prossime mosse suggerite (in ordine)
 
-1. **Landing**: pricing, FAQ, mockup prodotto → si gioca qui la conversione.
-2. **Empty states + microcopy review** sull'app autenticata → percezione di cura.
-3. **Esportazione dati personali** → blocco privacy utile prima di aprire a utenti esterni.
-4. **Audit contrasto/accessibilità** in entrambi i temi.
-5. **Dismissione Lovable differita**: verifica manuale GitHub App Lovable e chiusura progetto solo quando non serve piu come archivio.
+1. **Rimuovere lo scadenzario** come fase isolata.
+2. **Disegnare e migrare il nuovo schema recupero crediti** con committenti, clienti, controparti, pratiche, prezzi e attività.
+3. **Costruire il flusso attività → fattura** per committente e periodo.
+4. **Aggiungere import guidato** manuale ed Excel con staging.
+5. **Rifinire ricerca, filtri e rendiconti Excel** dopo i primi flussi completi.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.

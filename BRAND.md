@@ -4,7 +4,7 @@ Identità visiva e linee guida operative per Pratix, gestionale per avvocati fre
 
 ## 1. Posizionamento
 
-- **Cosa è**: gestionale completo per avvocati che lavorano da soli (pratiche, scadenze, spese, fatturazione elettronica).
+- **Cosa è**: gestionale per avvocati freelance focalizzato su recupero crediti, pratiche, attività fatturabili, rimborsi spese e fatturazione elettronica.
 - **Personalità**: professionale moderno. Fiducioso, ordinato, contemporaneo. Niente austerità da software legale anni '90, niente leggerezza da SaaS generico.
 - **Promessa**: "Tutto sotto controllo, niente fronzoli."
 - **Pubblico**: avvocato/avvocata freelance, 28-55 anni, attento ai dettagli, alla forma e alla riservatezza.
@@ -15,9 +15,9 @@ Identità visiva e linee guida operative per Pratix, gestionale per avvocati fre
 
 Doppio senso intenzionale:
 
-1. **Letterale, da gestionale** — "tornare" in contabilità significa quadrare. I conti tornano, le ritenute tornano, le scadenze tornano. Rassicurazione asciutta sull'esattezza.
+1. **Letterale, da gestionale** — "tornare" in contabilità significa quadrare. I conti tornano, le ritenute tornano, le attività da fatturare tornano. Rassicurazione asciutta sull'esattezza.
 2. **Emotivo** — "tutto torna" è la frase che si dice quando le cose, dopo la confusione, trovano un senso. Il sollievo del controllo.
-3. **Chiusura del cerchio** — ogni pratica si apre e si chiude, ogni fattura si emette e si incassa, ogni scadenza si fissa e si rispetta. Pratix fa tornare ogni cerchio al suo punto.
+3. **Chiusura del cerchio** — ogni pratica si apre e si chiude, ogni attività si registra e si fattura, ogni fattura si emette e si incassa. Pratix fa tornare ogni cerchio al suo punto.
 
 **Uso**:
 
@@ -178,8 +178,14 @@ Termini canonici nella UI e nei testi user-facing. Mantenerli costanti.
 | Usa                                           | Non usare                                                   |
 | --------------------------------------------- | ----------------------------------------------------------- |
 | Pratica                                       | Caso, Fascicolo, Dossier                                    |
+| Committente                                   | Mandante generico quando si parla di fatturazione           |
 | Cliente                                       | Assistito (anche se tecnicamente corretto in ambito legale) |
 | Controparte                                   | Resistente, Convenuto (riserva ai campi tecnici)            |
+| Attività                                      | Task, Action                                                |
+| Compenso, Onorario                            | Fee                                                         |
+| Prezzi                                        | Listino, Tariffe come label principale                      |
+| Rimborso spese                                | Costo                                                       |
+| Rendiconto Excel                              | Report generico                                             |
 | Scadenza                                      | Deadline, Termine                                           |
 | Spese                                         | Costi, Outlays                                              |
 | Fattura                                       | Documento, Parcella                                         |

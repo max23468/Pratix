@@ -19,7 +19,7 @@ Stato delle voci con legenda:
 2. **Tema e accessibilità** — base ✅, audit accessibilità ⬜
 3. **Landing pubblica** — hero ✅, resto ⬜
 4. **Esperienza prodotto** (UI autenticata) — base ✅, rifinitura ⬜
-5. **Funzionalità di prodotto** — pratiche/clienti/fatture ✅, time tracking/scadenziario/spese ⬜
+5. **Funzionalità di prodotto** — focus recupero crediti, committenti/clienti/controparti/pratiche/attività/prezzi/rendiconti Excel/fatture; scadenzario da rimuovere
 6. **Account, sicurezza, dati** — auth base ✅, area `/account` separata da Impostazioni ✅, cambio password in-app ✅, Supabase Storage privato ✅, eliminazione/GDPR/cambio email ⬜
 7. **SEO, pubblicazione, dominio** — `lang="it"` ✅, resto ⬜
 8. **Qualità e processo** — `AGENTS.md`/`BRAND.md`/`ROADMAP.md` ✅, Observability Vercel-first ✅, test critici ⬜
