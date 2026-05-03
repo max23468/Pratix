@@ -50,20 +50,55 @@ function ClientiList() {
     },
   });
 
+  const { data: principals = [] } = useQuery({
+    queryKey: ["principals", "client-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("principals")
+        .select("id, business_name, archived_at")
+        .order("business_name", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: principalLinks = [] } = useQuery({
+    queryKey: ["principal-clients", "client-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("principal_clients")
+        .select("client_id, principal_id");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const principalNamesByClient = useMemo(() => {
+    const principalsById = new Map(principals.map((principal) => [principal.id, principal]));
+    return principalLinks.reduce<Record<string, string[]>>((acc, link) => {
+      const principal = principalsById.get(link.principal_id);
+      if (!principal) return acc;
+      acc[link.client_id] = [...(acc[link.client_id] ?? []), principal.business_name];
+      return acc;
+    }, {});
+  }, [principalLinks, principals]);
+
   const filtered = useMemo(() => {
     if (!data) return [];
     const term = q.trim().toLowerCase();
     if (!term) return data;
     return data.filter((c) => {
       const name = clientDisplayName(c).toLowerCase();
+      const principalNames = principalNamesByClient[c.id]?.join(" ").toLowerCase() ?? "";
       return (
         name.includes(term) ||
+        principalNames.includes(term) ||
         (c.tax_code ?? "").toLowerCase().includes(term) ||
         (c.vat_number ?? "").toLowerCase().includes(term) ||
         (c.email ?? "").toLowerCase().includes(term)
       );
     });
-  }, [data, q]);
+  }, [data, principalNamesByClient, q]);
 
   return (
     <>
@@ -97,6 +132,7 @@ function ClientiList() {
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>Tipo</TableHead>
+              <TableHead>Committenti</TableHead>
               <TableHead>CF / P.IVA</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Città</TableHead>
@@ -105,13 +141,13 @@ function ClientiList() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
                   Caricamento…
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
                   {q ? "Nessun risultato." : "Nessun cliente. Aggiungi il primo."}
                 </TableCell>
               </TableRow>
@@ -129,6 +165,9 @@ function ClientiList() {
                   </TableCell>
                   <TableCell>
                     <Badge variant="outline">{clientKindLabels[c.kind] ?? c.kind}</Badge>
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {principalNamesByClient[c.id]?.join(", ") || "—"}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {c.vat_number || c.tax_code || "—"}

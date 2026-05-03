@@ -658,6 +658,8 @@ Uscita fase:
 
 ### Fase 3 — Anagrafiche
 
+**Stato**: implementata nella UI operativa.
+
 **Obiettivo**: permettere all'utente di creare e mantenere le entità base.
 
 Attività:

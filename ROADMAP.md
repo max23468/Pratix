@@ -73,9 +73,9 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Piano evoluzione recupero crediti | `docs/plans/evoluzione-recupero-crediti.md` + ADR-0013                                             |
 | ✅    | Rimozione scadenzario             | Route, sidebar, dashboard, tab pratica e tabella `case_deadlines` rimossi                          |
 | ✅    | Schema recupero crediti Fase 2    | Migration applicata, tipi Supabase rigenerati e snapshot SQL aggiornato                            |
-| ⬜    | Committenti                       | Anagrafica soggetto fatturato                                                                      |
-| ⬜    | Clienti multi-committente         | Relazione molti-a-molti fra committenti e clienti                                                  |
-| ⬜    | Controparti strutturate           | Persone/società, gruppi di soggetti e cessioni credito                                             |
+| ✅    | Committenti                       | Anagrafica soggetto fatturato e regole economiche di base                                          |
+| ✅    | Clienti multi-committente         | Relazione molti-a-molti fra committenti e clienti                                                  |
+| ✅    | Controparti strutturate           | Persone/società e gruppi di soggetti senza ruoli                                                   |
 | ⬜    | Prezzi per committente            | Compensi/rimborsi abilitabili per committente, voci e prezzi unitari personalizzabili per anno     |
 | ⬜    | Attività fatturabili              | Stato da fatturare/fatturata, allegati facoltativi                                                 |
 | ⬜    | Fatturazione committente/periodo  | Estrazione attività, inclusione/rinvio, spese generali opzionali, cassa forense e rendiconti Excel |
@@ -163,9 +163,9 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## Prossime mosse suggerite (in ordine)
 
-1. **Pubblicare la Fase 2** con merge su `main` e verifica deployment production.
-2. **Costruire le anagrafiche Fase 3** per committenti, clienti multi-committente e controparti.
-3. **Costruire il flusso attività → fattura** per committente e periodo.
-4. **Aggiungere import guidato** manuale ed Excel con staging.
+1. **Pubblicare la Fase 3** con release, merge su `main` e verifica deployment production.
+2. **Costruire il flusso attività → fattura** per committente e periodo.
+3. **Aggiungere import guidato** manuale ed Excel con staging.
+4. **Collegare i selettori Fase 3** dentro pratica, import e fatturazione man mano che quelle superfici vengono costruite.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.
