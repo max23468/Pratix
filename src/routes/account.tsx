@@ -199,7 +199,8 @@ function AccountPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                In futuro qui potrai gestire promemoria via email per scadenze e fatture.
+                In futuro qui potrai gestire promemoria via email per fatture e aggiornamenti
+                importanti.
               </p>
             </CardContent>
           </Card>

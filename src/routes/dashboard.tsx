@@ -1,15 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import {
-  Briefcase,
-  Receipt,
-  Wallet,
-  AlertCircle,
-  Plus,
-  TrendingUp,
-  AlertTriangle,
-  Users,
-} from "lucide-react";
+import { Briefcase, Receipt, Wallet, Plus, TrendingUp, AlertTriangle, Users } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import { caseStatusLabels, caseStatusVariant, clientDisplayName } from "@/lib/labels";
 
 export const Route = createFileRoute("/dashboard")({
@@ -46,24 +37,14 @@ function DashboardContent() {
     queryFn: async () => {
       const now = new Date();
       const today = now.toISOString().slice(0, 10);
-      const in14 = new Date(now);
-      in14.setDate(in14.getDate() + 14);
-      const horizon = in14.toISOString().slice(0, 10);
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
       const yearStart = new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 10);
 
-      const [casesRes, deadlinesRes, invoicesRes, recentCasesRes, clientsRes] = await Promise.all([
+      const [casesRes, invoicesRes, recentCasesRes, clientsRes] = await Promise.all([
         supabase
           .from("cases")
           .select("id, status", { count: "exact" })
           .in("status", ["open", "in_progress"]),
-        supabase
-          .from("case_deadlines")
-          .select("id, due_date, description, completed, case_id, cases(title)")
-          .eq("completed", false)
-          .lte("due_date", horizon)
-          .order("due_date", { ascending: true })
-          .limit(8),
         supabase
           .from("invoices")
           .select(
@@ -80,7 +61,6 @@ function DashboardContent() {
       ]);
 
       if (casesRes.error) throw casesRes.error;
-      if (deadlinesRes.error) throw deadlinesRes.error;
       if (invoicesRes.error) throw invoicesRes.error;
       if (recentCasesRes.error) throw recentCasesRes.error;
       if (clientsRes.error) throw clientsRes.error;
@@ -108,7 +88,6 @@ function DashboardContent() {
       return {
         activeCases,
         totalClients,
-        deadlines: deadlinesRes.data ?? [],
         unpaid,
         overdueCount: overdue.length,
         overdueTotal,
@@ -117,7 +96,6 @@ function DashboardContent() {
         collectedMonth,
         revenueYear,
         recentCases: recentCasesRes.data ?? [],
-        today,
       };
     },
   });
@@ -160,11 +138,6 @@ function DashboardContent() {
           value={isLoading ? "—" : String(data?.totalClients ?? 0)}
         />
         <StatCard
-          icon={AlertCircle}
-          label="Scadenze (14gg)"
-          value={isLoading ? "—" : String(data?.deadlines.length ?? 0)}
-        />
-        <StatCard
           icon={Wallet}
           label="Bozze"
           value={
@@ -200,39 +173,7 @@ function DashboardContent() {
         />
       </div>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Prossime scadenze</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {data?.deadlines.length ? (
-              <ul className="divide-y">
-                {data.deadlines.map((d) => {
-                  const overdue = d.due_date < (data.today ?? "");
-                  return (
-                    <li key={d.id} className="flex items-center justify-between py-2.5">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{d.description}</p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {d.cases?.title ?? "—"}
-                        </p>
-                      </div>
-                      <Badge variant={overdue ? "destructive" : "outline"}>
-                        {formatDate(d.due_date)}
-                      </Badge>
-                    </li>
-                  );
-                })}
-              </ul>
-            ) : (
-              <p className="text-sm text-muted-foreground">
-                Nessuna scadenza nei prossimi 14 giorni.
-              </p>
-            )}
-          </CardContent>
-        </Card>
-
+      <div className="mt-6">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Pratiche recenti</CardTitle>

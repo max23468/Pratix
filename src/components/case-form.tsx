@@ -388,8 +388,8 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                 <AlertDialogHeader>
                   <AlertDialogTitle>Eliminare la pratica?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Verranno rimosse anche le scadenze, le spese e lo storico stati associati.
-                    L'azione non può essere annullata.
+                    L'eliminazione riguarda anche spese e storico stati associati. L'azione non può
+                    essere annullata.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

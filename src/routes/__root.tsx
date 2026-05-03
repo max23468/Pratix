@@ -45,7 +45,7 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Pratix è il gestionale per avvocati freelance. Pratiche, scadenze, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
+          "Pratix è il gestionale per avvocati freelance. Pratiche, clienti, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
       },
       { name: "author", content: "Pratix" },
       { property: "og:title", content: "Pratix" },
@@ -80,17 +80,17 @@ export const Route = createRootRoute({
       {
         name: "description",
         content:
-          "Pratix è il gestionale per avvocati freelance. Pratiche, scadenze, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
+          "Pratix è il gestionale per avvocati freelance. Pratiche, clienti, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
       },
       {
         property: "og:description",
         content:
-          "Pratix è il gestionale per avvocati freelance. Pratiche, scadenze, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
+          "Pratix è il gestionale per avvocati freelance. Pratiche, clienti, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
       },
       {
         name: "twitter:description",
         content:
-          "Pratix è il gestionale per avvocati freelance. Pratiche, scadenze, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
+          "Pratix è il gestionale per avvocati freelance. Pratiche, clienti, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
       },
     ],
     links: [

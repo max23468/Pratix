@@ -11,7 +11,6 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TerminiRouteImport } from './routes/termini'
 import { Route as SpeseRouteImport } from './routes/spese'
-import { Route as ScadenzeRouteImport } from './routes/scadenze'
 import { Route as ReimpostaPasswordRouteImport } from './routes/reimposta-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as RecuperaPasswordRouteImport } from './routes/recupera-password'
@@ -41,11 +40,6 @@ const TerminiRoute = TerminiRouteImport.update({
 const SpeseRoute = SpeseRouteImport.update({
   id: '/spese',
   path: '/spese',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ScadenzeRoute = ScadenzeRouteImport.update({
-  id: '/scadenze',
-  path: '/scadenze',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReimpostaPasswordRoute = ReimpostaPasswordRouteImport.update({
@@ -160,7 +154,6 @@ export interface FileRoutesByFullPath {
   '/recupera-password': typeof RecuperaPasswordRoute
   '/register': typeof RegisterRoute
   '/reimposta-password': typeof ReimpostaPasswordRoute
-  '/scadenze': typeof ScadenzeRoute
   '/spese': typeof SpeseRoute
   '/termini': typeof TerminiRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
@@ -185,7 +178,6 @@ export interface FileRoutesByTo {
   '/recupera-password': typeof RecuperaPasswordRoute
   '/register': typeof RegisterRoute
   '/reimposta-password': typeof ReimpostaPasswordRoute
-  '/scadenze': typeof ScadenzeRoute
   '/spese': typeof SpeseRoute
   '/termini': typeof TerminiRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
@@ -211,7 +203,6 @@ export interface FileRoutesById {
   '/recupera-password': typeof RecuperaPasswordRoute
   '/register': typeof RegisterRoute
   '/reimposta-password': typeof ReimpostaPasswordRoute
-  '/scadenze': typeof ScadenzeRoute
   '/spese': typeof SpeseRoute
   '/termini': typeof TerminiRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
@@ -238,7 +229,6 @@ export interface FileRouteTypes {
     | '/recupera-password'
     | '/register'
     | '/reimposta-password'
-    | '/scadenze'
     | '/spese'
     | '/termini'
     | '/clienti/$clientId'
@@ -263,7 +253,6 @@ export interface FileRouteTypes {
     | '/recupera-password'
     | '/register'
     | '/reimposta-password'
-    | '/scadenze'
     | '/spese'
     | '/termini'
     | '/clienti/$clientId'
@@ -288,7 +277,6 @@ export interface FileRouteTypes {
     | '/recupera-password'
     | '/register'
     | '/reimposta-password'
-    | '/scadenze'
     | '/spese'
     | '/termini'
     | '/clienti/$clientId'
@@ -314,7 +302,6 @@ export interface RootRouteChildren {
   RecuperaPasswordRoute: typeof RecuperaPasswordRoute
   RegisterRoute: typeof RegisterRoute
   ReimpostaPasswordRoute: typeof ReimpostaPasswordRoute
-  ScadenzeRoute: typeof ScadenzeRoute
   SpeseRoute: typeof SpeseRoute
   TerminiRoute: typeof TerminiRoute
   ClientiClientIdRoute: typeof ClientiClientIdRoute
@@ -343,13 +330,6 @@ declare module '@tanstack/react-router' {
       path: '/spese'
       fullPath: '/spese'
       preLoaderRoute: typeof SpeseRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/scadenze': {
-      id: '/scadenze'
-      path: '/scadenze'
-      fullPath: '/scadenze'
-      preLoaderRoute: typeof ScadenzeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reimposta-password': {
@@ -506,7 +486,6 @@ const rootRouteChildren: RootRouteChildren = {
   RecuperaPasswordRoute: RecuperaPasswordRoute,
   RegisterRoute: RegisterRoute,
   ReimpostaPasswordRoute: ReimpostaPasswordRoute,
-  ScadenzeRoute: ScadenzeRoute,
   SpeseRoute: SpeseRoute,
   TerminiRoute: TerminiRoute,
   ClientiClientIdRoute: ClientiClientIdRoute,

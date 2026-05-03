@@ -205,20 +205,6 @@ CREATE INDEX idx_cases_user   ON public.cases (user_id);
 CREATE INDEX idx_cases_client ON public.cases (client_id);
 CREATE INDEX idx_cases_status ON public.cases (status);
 
-CREATE TABLE public.case_deadlines (
-  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id      uuid NOT NULL,
-  case_id      uuid NOT NULL,
-  description  text NOT NULL,
-  due_date     date NOT NULL,
-  completed    boolean NOT NULL DEFAULT false,
-  completed_at timestamptz,
-  created_at   timestamptz NOT NULL DEFAULT now(),
-  updated_at   timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX idx_case_deadlines_case     ON public.case_deadlines (case_id);
-CREATE INDEX idx_case_deadlines_user_due ON public.case_deadlines (user_id, due_date);
-
 CREATE TABLE public.case_status_history (
   id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   case_id         uuid NOT NULL,
@@ -323,12 +309,6 @@ ALTER TABLE public.case_status_history
   ADD CONSTRAINT case_status_history_user_id_fkey
   FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
-ALTER TABLE public.case_deadlines
-  ADD CONSTRAINT case_deadlines_case_id_fkey
-  FOREIGN KEY (case_id) REFERENCES public.cases(id) ON DELETE CASCADE,
-  ADD CONSTRAINT case_deadlines_user_id_fkey
-  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
-
 ALTER TABLE public.expenses
   ADD CONSTRAINT expenses_case_id_fkey
   FOREIGN KEY (case_id) REFERENCES public.cases(id) ON DELETE CASCADE,
@@ -361,7 +341,6 @@ ALTER TABLE public.invoice_lines
 CREATE TRIGGER profiles_set_updated_at        BEFORE UPDATE ON public.profiles        FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER clients_set_updated_at         BEFORE UPDATE ON public.clients         FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER cases_set_updated_at           BEFORE UPDATE ON public.cases           FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER case_deadlines_set_updated_at  BEFORE UPDATE ON public.case_deadlines  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER expenses_set_updated_at        BEFORE UPDATE ON public.expenses        FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER invoices_set_updated_at        BEFORE UPDATE ON public.invoices        FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
@@ -395,7 +374,6 @@ REVOKE EXECUTE ON FUNCTION public.set_updated_at() FROM PUBLIC, anon, authentica
 ALTER TABLE public.profiles            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.clients             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cases               ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.case_deadlines      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.case_status_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.expenses            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invoices            ENABLE ROW LEVEL SECURITY;
@@ -417,12 +395,6 @@ CREATE POLICY cases_select_own ON public.cases FOR SELECT TO authenticated USING
 CREATE POLICY cases_insert_own ON public.cases FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
 CREATE POLICY cases_update_own ON public.cases FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
 CREATE POLICY cases_delete_own ON public.cases FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
-
--- case_deadlines
-CREATE POLICY case_deadlines_select_own ON public.case_deadlines FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
-CREATE POLICY case_deadlines_insert_own ON public.case_deadlines FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
-CREATE POLICY case_deadlines_update_own ON public.case_deadlines FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
-CREATE POLICY case_deadlines_delete_own ON public.case_deadlines FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
 
 -- case_status_history (solo select + insert; lo storico non si modifica)
 CREATE POLICY case_status_history_select_own ON public.case_status_history FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
