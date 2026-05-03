@@ -6,6 +6,16 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.7.0] — 2026-05-03
+
+### Novità
+
+- **Prezzi recupero crediti Fase 4**: aggiunta la sezione Prezzi per creare e modificare prezzi annuali per committente, con template comune 2025/2026, copia dall'anno precedente, voci compenso a prezzo unitario e rimborsi spese Art. 15 a importo libero.
+
+### Sotto il cofano
+
+- **Template Excel privati**: aggiunta una cartella locale ignorata per conservare i template 2026 senza portarli su GitHub.
+
 ## [0.6.0] — 2026-05-03
 
 ### Novità
@@ -269,6 +279,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.7.0]: #070--2026-05-03
 [0.6.0]: #060--2026-05-03
 [0.5.2]: #052--2026-05-03
 [0.5.1]: #051--2026-05-03

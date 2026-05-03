@@ -23,6 +23,7 @@ dist-ssr
 # Local migration exports (PII/secrets; never commit)
 pratix-migration/
 migration-exports/
+private-templates/
 profile_user.json
 *.dump
 *.backup

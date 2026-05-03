@@ -99,6 +99,10 @@ Materiali ricevuti o ancora utili per dettagliare l'implementazione:
 5. Template rendiconto trimestrale rimborsi: ricevuto ed estratto da
    `spese-iv-trim-2025.xlsx`. Da usare solo come riferimento locale e non da
    committare.
+6. Template 2026 ricevuti come riferimento locale non committato:
+   `onorari-i-trim-2026.xlsx` e `spese-i-trim-2026.xlsx`. Sono salvati nella
+   cartella ignorata `private-templates/pricing-templates/2026/`; i prezzi 2026
+   coincidono con quelli 2025 finché non viene deciso diversamente.
 
 ## Esempio operativo tipo
 
@@ -683,6 +687,8 @@ Uscita fase:
 - i selettori sono pronti per pratica, import e fatturazione.
 
 ### Fase 4 — Prezzi per committente e anno
+
+**Stato**: implementata nella UI operativa. Il template comune 2025 è disponibile anche per il 2026, perché i prezzi 2026 coincidono con quelli 2025 nella configurazione iniziale.
 
 **Obiettivo**: rendere configurabili le voci economiche usate dalle attività.
 
