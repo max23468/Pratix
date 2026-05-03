@@ -43,7 +43,7 @@ Codex sta lavorando sul branch. GitHub resta la fonte primaria delle modifiche.
 
 - **UI in italiano** (`lang="it"`), tono "tu" professionale.
 - **Identificatori in inglese** quando coerente con framework e librerie.
-- **Glossario obbligatorio**: Pratica/Cliente/Scadenza/Spese/Fattura. Vietata la parola "studio".
+- **Glossario obbligatorio**: Committente/Cliente/Controparte/Pratica/Attività/Compenso-Onorario/Prezzi/Rimborso spese/Fattura/Rendiconto Excel.
 
 ### Codice
 

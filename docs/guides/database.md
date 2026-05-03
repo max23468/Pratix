@@ -20,7 +20,6 @@ Postgres + Auth + Storage + Realtime.
 - `user_roles` — ruoli applicativi (separati da `profiles`)
 - `clients` — anagrafica clienti
 - `cases` (Pratiche) — incarichi professionali
-- `case_deadlines` (Scadenze) — adempimenti con data
 - `expenses` (Spese) — spese sostenute per cliente
 - `invoices` — fatture emesse, con righe e dati FatturaPA
 - `invoice_lines` — righe fattura

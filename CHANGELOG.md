@@ -6,12 +6,11 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
-### Non versionato
+## [0.5.0] — 2026-05-03
 
-- **Piano recupero crediti**: definita e aggiornata l'evoluzione di Pratix verso committenti, clienti, controparti, pratiche, attività fatturabili, prezzi per committente, rendiconti Excel e fatturazione per committente/periodo.
-- **Regole economiche recupero crediti**: chiarite abilitazioni compensi/rimborsi per committente, personalizzazione dei prezzi, calcolo compensi come quantità x prezzo unitario, spese generali opzionali al 10% e cassa forense 4% solo su compensi + spese generali.
-- **Glossario recupero crediti**: aggiornate le regole terminologiche; "attività" diventa termine centrale, "Prezzi" sostituisce listini/tariffe come label UI, "onorario" e "compenso" sono sinonimi e "studio" non è più vietata in assoluto, pur restando fuori dal posizionamento verso studi associati.
-- **Versioning documentale chiarito**: pubblicare piani, ADR e documenti interni non equivale a rilasciare una nuova versione dell'app; queste modifiche restano non versionate finché non cambiano prodotto, runtime o contenuti esposti.
+### Novità
+
+- **Scadenzario rimosso**: tolti pagina `/scadenze`, voce sidebar, card dashboard, tab pratica e tabella `case_deadlines`, mantenendo solo le scadenze fiscali proprie delle fatture.
 
 ## [0.4.1] — 2026-05-03
 
@@ -239,6 +238,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.5.0]: #050--2026-05-03
 [0.4.1]: #041--2026-05-03
 [0.4.0]: #040--2026-05-03
 [0.3.9]: #039--2026-05-02

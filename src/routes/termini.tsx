@@ -58,7 +58,7 @@ function TerminiPage() {
             <p className="mt-2 text-muted-foreground">
               I presenti termini disciplinano l'uso di Pratix, applicazione web destinata agli
               avvocati che esercitano la professione in forma individuale (freelance) per la
-              gestione di pratiche, clienti, scadenze, spese e fatturazione elettronica.
+              gestione di pratiche, clienti, spese e fatturazione elettronica.
             </p>
           </section>
 

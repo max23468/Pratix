@@ -24,8 +24,8 @@ Aggiornato a: versione **0.4.0** + Storage privato.
    creata automaticamente al primo signup dal trigger `handle_new_user`.
 
 4. **Foreign key dichiarate** per le relazioni operative principali. Le tabelle
-   utente referenziano `auth.users(id)`; pratiche, scadenze, spese, fatture e
-   righe fattura dichiarano le relazioni fra loro per abilitare join PostgREST,
+   utente referenziano `auth.users(id)`; pratiche, spese, fatture e righe
+   fattura dichiarano le relazioni fra loro per abilitare join PostgREST,
    cancellazioni coerenti e integrità referenziale.
 
 5. **RLS resta la barriera applicativa**. Le foreign key proteggono la coerenza
@@ -65,12 +65,6 @@ e a un'unica materia (`matter`: civile, penale, lavoro…). Contiene:
 - accordo economico (`fee_type` flat/orario, `agreed_fee`, `hourly_rate`,
   `retainer`)
 - date di apertura/chiusura
-
-### `case_deadlines`
-
-**Scadenze** legate a una pratica. Una scadenza ha descrizione, data, e flag
-`completed` con timestamp di completamento. Indice composito
-`(user_id, due_date)` per query "prossime scadenze".
 
 ### `case_status_history`
 
@@ -115,8 +109,8 @@ fattura e le policy RLS non richiedono scansioni complete.
 ## Relazioni (logiche, non FK)
 
 ```
-profiles (1) ─── (N) clients ─── (N) cases ─── (N) case_deadlines
-                                     │              case_status_history
+profiles (1) ─── (N) clients ─── (N) cases ─── (N) case_status_history
+                                     │
                                      └──── (N) expenses ─── (0..1) invoices ─── (N) invoice_lines
 ```
 
@@ -161,11 +155,11 @@ di codice), le label utente sono tradotte in italiano in `src/lib/labels.ts`.
 
 ## Trigger
 
-| Tabella                                                                  | Trigger                                      | Cosa fa                                                                        |
-| ------------------------------------------------------------------------ | -------------------------------------------- | ------------------------------------------------------------------------------ |
-| `profiles`, `clients`, `cases`, `case_deadlines`, `expenses`, `invoices` | `*_set_updated_at`                           | Aggiorna `updated_at = now()` su UPDATE                                        |
-| `cases`                                                                  | `cases_log_status_change`                    | Su INSERT e UPDATE (se status cambia), inserisce riga in `case_status_history` |
-| `auth.users`                                                             | `on_auth_user_created` (gestito da Supabase) | Chiama `handle_new_user()` che crea la riga `profiles`                         |
+| Tabella                                                | Trigger                                      | Cosa fa                                                                        |
+| ------------------------------------------------------ | -------------------------------------------- | ------------------------------------------------------------------------------ |
+| `profiles`, `clients`, `cases`, `expenses`, `invoices` | `*_set_updated_at`                           | Aggiorna `updated_at = now()` su UPDATE                                        |
+| `cases`                                                | `cases_log_status_change`                    | Su INSERT e UPDATE (se status cambia), inserisce riga in `case_status_history` |
+| `auth.users`                                           | `on_auth_user_created` (gestito da Supabase) | Chiama `handle_new_user()` che crea la riga `profiles`                         |
 
 Le funzioni usate solo dai trigger (`handle_new_user`, `log_case_status_change`
 e `set_updated_at`) non sono eseguibili via RPC da ruoli `anon` o
@@ -176,6 +170,9 @@ e `set_updated_at`) non sono eseguibili via RPC da ruoli `anon` o
 - **Niente `time_entries`**: il time tracking è in roadmap (vedi `ROADMAP.md`,
   area "Funzionalità di prodotto" → ⬜). Per ora le ore si registrano nelle
   righe fattura.
+- **Niente `case_deadlines`**: lo scadenzario autonomo è stato rimosso dal
+  perimetro recupero crediti. Restano solo le date proprie dei documenti e
+  della fatturazione, ad esempio la scadenza pagamento della fattura.
 - **Niente tabella `documents`**: lo Storage privato è predisposto, ma non c'è
   ancora un catalogo applicativo degli allegati. Quando serviranno metadati,
   versioning o ricerca sui file, introdurre una tabella user-owned con RLS.

@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Check, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
@@ -17,7 +17,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CaseForm } from "@/components/case-form";
-import { DeadlineDialog } from "@/components/deadline-form";
 import { ExpenseDialog } from "@/components/expense-form";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -32,9 +31,9 @@ export const Route = createFileRoute("/pratiche/$caseId")({
   head: () => ({
     meta: [
       { title: "Pratica · Pratix" },
-      { name: "description", content: "Dettaglio pratica con scadenze e spese." },
+      { name: "description", content: "Dettaglio pratica con dati, spese e storico." },
       { property: "og:title", content: "Pratica · Pratix" },
-      { property: "og:description", content: "Dettaglio pratica con scadenze e spese." },
+      { property: "og:description", content: "Dettaglio pratica con dati, spese e storico." },
     ],
   }),
   component: () => (
@@ -101,7 +100,6 @@ function CaseDetail() {
       <Tabs defaultValue="info">
         <TabsList>
           <TabsTrigger value="info">Dati</TabsTrigger>
-          <TabsTrigger value="deadlines">Scadenze</TabsTrigger>
           <TabsTrigger value="expenses">Spese</TabsTrigger>
           <TabsTrigger value="history">Storico stati</TabsTrigger>
         </TabsList>
@@ -114,10 +112,6 @@ function CaseDetail() {
           />
         </TabsContent>
 
-        <TabsContent value="deadlines" className="mt-4">
-          <DeadlinesTab caseId={caseId} />
-        </TabsContent>
-
         <TabsContent value="expenses" className="mt-4">
           <ExpensesTab caseId={caseId} />
         </TabsContent>
@@ -127,107 +121,6 @@ function CaseDetail() {
         </TabsContent>
       </Tabs>
     </>
-  );
-}
-
-function DeadlinesTab({ caseId }: { caseId: string }) {
-  const qc = useQueryClient();
-  const { data, isLoading } = useQuery({
-    queryKey: ["case-deadlines", caseId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("case_deadlines")
-        .select("*")
-        .eq("case_id", caseId)
-        .order("due_date", { ascending: true });
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  const toggle = useMutation({
-    mutationFn: async (d: { id: string; completed: boolean }) => {
-      const { error } = await supabase
-        .from("case_deadlines")
-        .update({
-          completed: !d.completed,
-          completed_at: !d.completed ? new Date().toISOString() : null,
-        })
-        .eq("id", d.id);
-      if (error) throw error;
-    },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["case-deadlines", caseId] }),
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("case_deadlines").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Scadenza eliminata");
-      qc.invalidateQueries({ queryKey: ["case-deadlines", caseId] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const today = new Date().toISOString().slice(0, 10);
-
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-base">Scadenze</CardTitle>
-        <DeadlineDialog caseId={caseId} />
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <p className="text-sm text-muted-foreground">Caricamento…</p>
-        ) : data && data.length > 0 ? (
-          <ul className="divide-y">
-            {data.map((d) => {
-              const overdue = !d.completed && d.due_date < today;
-              return (
-                <li key={d.id} className="flex items-center justify-between gap-2 py-2.5">
-                  <div className="flex min-w-0 items-center gap-3">
-                    <Button
-                      size="icon"
-                      variant={d.completed ? "default" : "outline"}
-                      className="h-7 w-7"
-                      onClick={() => toggle.mutate({ id: d.id, completed: d.completed })}
-                    >
-                      <Check className="h-3.5 w-3.5" />
-                    </Button>
-                    <div className="min-w-0">
-                      <p
-                        className={`truncate text-sm ${d.completed ? "line-through text-muted-foreground" : "font-medium"}`}
-                      >
-                        {d.description}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={overdue ? "destructive" : "outline"}>
-                      {formatDate(d.due_date)}
-                    </Badge>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 text-muted-foreground"
-                      onClick={() => remove.mutate(d.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">Nessuna scadenza registrata.</p>
-        )}
-      </CardContent>
-    </Card>
   );
 }
 
