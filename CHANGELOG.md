@@ -6,6 +6,21 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.8.0] — 2026-05-04
+
+### Novità
+
+- **Pratiche e attività Fase 5**: ricostruita la pratica come incrocio fra committente, cliente e controparte, con numero pratica numerico manuale o suggerito, voci fatturabili da Prezzi, quantità, udienze, allegati e stati da fatturare/fatturata.
+- **Attività nel menu**: aggiunta la sezione `/attivita` per inserire e controllare rapidamente compensi/onorari e rimborsi spese senza entrare prima nel dettaglio pratica.
+- **Spese ricondotte alla pratica**: rimossa la vecchia pagina autonoma `/spese`; i rimborsi spese si registrano come voci fatturabili della pratica.
+
+### Sotto il cofano
+
+- **Voci storiche fatturate**: rilassato il vincolo sulle attività fatturate per consentire l'inserimento manuale di voci già fatturate prima della generazione fatture in Pratix.
+- **Definizione Attività ufficializzata**: aggiunta ADR 0014 e allineati glossario, memoria e piano evolutivo alla nuova label di prodotto.
+- **Residui legacy ripuliti**: aggiornati README, robots e lockfile per rimuovere riferimenti operativi a `/spese` e alla cache npm Lovable.
+- **Residui non bonificati censiti**: segnati in roadmap e piano i residui `expenses` da chiudere nella Fase 6.
+
 ## [0.7.0] — 2026-05-03
 
 ### Novità
@@ -279,6 +294,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.8.0]: #080--2026-05-04
 [0.7.0]: #070--2026-05-03
 [0.6.0]: #060--2026-05-03
 [0.5.2]: #052--2026-05-03

@@ -169,6 +169,10 @@ Gli stati ammessi sono:
 - `to_invoice`: da fatturare;
 - `invoiced`: fatturata.
 
+`invoice_id` viene valorizzato quando la voce viene fatturata tramite il modulo
+Pratix. Resta facoltativo per consentire l'inserimento manuale di voci storiche
+gia' fatturate prima dell'adozione del SaaS.
+
 `postponed_until` e `postponed_count` supportano il rinvio al periodo di
 fatturazione successivo.
 
@@ -192,8 +196,9 @@ una fattura (`invoice_id` nullabile): finché è null, la spesa è "da
 fatturare".
 
 Nel nuovo recupero crediti i rimborsi confluiscono in `case_activities` con
-`kind = expense_reimbursement`. `expenses` resta per compatibilità con la UI
-esistente fino alla migrazione delle schermate.
+`kind = expense_reimbursement`. La vecchia route autonoma `/spese` non fa più
+parte della navigazione; `expenses` resta solo come tabella legacy finché il
+flusso fatture precedente non sarà ricondotto al nuovo modello.
 
 ### `invoices`
 

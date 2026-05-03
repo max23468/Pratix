@@ -31,7 +31,7 @@ Sostituzioni canoniche:
 | "Ragione sociale / Studio"       | "Ragione sociale / Denominazione"          |
 | Fallback fattura "Studio Legale" | "Avvocato"                                 |
 
-> **Nota (2026-04-29)**: la parola **"attività"** — usata in una prima versione di questo ADR come sostituto di "studio" — è anch'essa stata **dismessa** perché ambigua in italiano (significa sia "impresa" sia "azione/task", e in Pratix indica già le voci di lavoro fatturabili). Il termine canonico è ora **"professione"** / "i tuoi dati professionali". "Attività" resta lecita solo come sostantivo comune ("le attività compiute tramite l'account") nei testi legali, mai come label di prodotto.
+> **Nota (2026-04-29)**: la parola **"attività"** — usata in una prima versione di questo ADR come sostituto di "studio" — è stata dismessa in quel contesto perché ambigua in italiano. Per parlare del lavoro o dei dati professionali dell'utente il termine canonico resta **"professione"** / "i tuoi dati professionali". La decisione successiva [ADR 0014](./0014-attivita-termine-prodotto.md) ha pero' reso **Attività** una label ufficiale nel dominio recupero crediti, limitata alle registrazioni operative e fatturabili della pratica.
 
 L'unico contesto ammesso per "studio" è **dentro nomi liberi inseriti dall'utente** (es. `business_name = "Studio Legale Rossi & Partners"`): il software non li riscrive.
 

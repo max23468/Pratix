@@ -52,3 +52,16 @@ export function buildInvoiceStoragePath(userId: string, invoiceId: string, fileN
     fileName,
   });
 }
+
+export function buildActivityAttachmentStoragePath(
+  userId: string,
+  activityId: string,
+  fileName: string,
+) {
+  return buildPratixStoragePath({
+    userId,
+    area: PRATIX_STORAGE_AREAS.activities,
+    ownerRecordId: activityId,
+    fileName,
+  });
+}

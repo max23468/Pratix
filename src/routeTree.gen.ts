@@ -10,7 +10,6 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TerminiRouteImport } from './routes/termini'
-import { Route as SpeseRouteImport } from './routes/spese'
 import { Route as ReimpostaPasswordRouteImport } from './routes/reimposta-password'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as RecuperaPasswordRouteImport } from './routes/recupera-password'
@@ -27,6 +26,7 @@ import { Route as FattureIndexRouteImport } from './routes/fatture.index'
 import { Route as ContropartiIndexRouteImport } from './routes/controparti.index'
 import { Route as CommittentiIndexRouteImport } from './routes/committenti.index'
 import { Route as ClientiIndexRouteImport } from './routes/clienti.index'
+import { Route as AttivitaIndexRouteImport } from './routes/attivita.index'
 import { Route as PrezziNuovoRouteImport } from './routes/prezzi.nuovo'
 import { Route as PrezziPriceBookIdRouteImport } from './routes/prezzi.$priceBookId'
 import { Route as PraticheNuovaRouteImport } from './routes/pratiche.nuova'
@@ -44,11 +44,6 @@ import { Route as ApiCronDailyRouteImport } from './routes/api.cron.daily'
 const TerminiRoute = TerminiRouteImport.update({
   id: '/termini',
   path: '/termini',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SpeseRoute = SpeseRouteImport.update({
-  id: '/spese',
-  path: '/spese',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReimpostaPasswordRoute = ReimpostaPasswordRouteImport.update({
@@ -131,6 +126,11 @@ const ClientiIndexRoute = ClientiIndexRouteImport.update({
   path: '/clienti/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AttivitaIndexRoute = AttivitaIndexRouteImport.update({
+  id: '/attivita/',
+  path: '/attivita/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PrezziNuovoRoute = PrezziNuovoRouteImport.update({
   id: '/prezzi/nuovo',
   path: '/prezzi/nuovo',
@@ -209,7 +209,6 @@ export interface FileRoutesByFullPath {
   '/recupera-password': typeof RecuperaPasswordRoute
   '/register': typeof RegisterRoute
   '/reimposta-password': typeof ReimpostaPasswordRoute
-  '/spese': typeof SpeseRoute
   '/termini': typeof TerminiRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
@@ -223,6 +222,7 @@ export interface FileRoutesByFullPath {
   '/pratiche/nuova': typeof PraticheNuovaRoute
   '/prezzi/$priceBookId': typeof PrezziPriceBookIdRoute
   '/prezzi/nuovo': typeof PrezziNuovoRoute
+  '/attivita/': typeof AttivitaIndexRoute
   '/clienti/': typeof ClientiIndexRoute
   '/committenti/': typeof CommittentiIndexRoute
   '/controparti/': typeof ContropartiIndexRoute
@@ -242,7 +242,6 @@ export interface FileRoutesByTo {
   '/recupera-password': typeof RecuperaPasswordRoute
   '/register': typeof RegisterRoute
   '/reimposta-password': typeof ReimpostaPasswordRoute
-  '/spese': typeof SpeseRoute
   '/termini': typeof TerminiRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
@@ -256,6 +255,7 @@ export interface FileRoutesByTo {
   '/pratiche/nuova': typeof PraticheNuovaRoute
   '/prezzi/$priceBookId': typeof PrezziPriceBookIdRoute
   '/prezzi/nuovo': typeof PrezziNuovoRoute
+  '/attivita': typeof AttivitaIndexRoute
   '/clienti': typeof ClientiIndexRoute
   '/committenti': typeof CommittentiIndexRoute
   '/controparti': typeof ContropartiIndexRoute
@@ -276,7 +276,6 @@ export interface FileRoutesById {
   '/recupera-password': typeof RecuperaPasswordRoute
   '/register': typeof RegisterRoute
   '/reimposta-password': typeof ReimpostaPasswordRoute
-  '/spese': typeof SpeseRoute
   '/termini': typeof TerminiRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
@@ -290,6 +289,7 @@ export interface FileRoutesById {
   '/pratiche/nuova': typeof PraticheNuovaRoute
   '/prezzi/$priceBookId': typeof PrezziPriceBookIdRoute
   '/prezzi/nuovo': typeof PrezziNuovoRoute
+  '/attivita/': typeof AttivitaIndexRoute
   '/clienti/': typeof ClientiIndexRoute
   '/committenti/': typeof CommittentiIndexRoute
   '/controparti/': typeof ContropartiIndexRoute
@@ -311,7 +311,6 @@ export interface FileRouteTypes {
     | '/recupera-password'
     | '/register'
     | '/reimposta-password'
-    | '/spese'
     | '/termini'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
@@ -325,6 +324,7 @@ export interface FileRouteTypes {
     | '/pratiche/nuova'
     | '/prezzi/$priceBookId'
     | '/prezzi/nuovo'
+    | '/attivita/'
     | '/clienti/'
     | '/committenti/'
     | '/controparti/'
@@ -344,7 +344,6 @@ export interface FileRouteTypes {
     | '/recupera-password'
     | '/register'
     | '/reimposta-password'
-    | '/spese'
     | '/termini'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
@@ -358,6 +357,7 @@ export interface FileRouteTypes {
     | '/pratiche/nuova'
     | '/prezzi/$priceBookId'
     | '/prezzi/nuovo'
+    | '/attivita'
     | '/clienti'
     | '/committenti'
     | '/controparti'
@@ -377,7 +377,6 @@ export interface FileRouteTypes {
     | '/recupera-password'
     | '/register'
     | '/reimposta-password'
-    | '/spese'
     | '/termini'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
@@ -391,6 +390,7 @@ export interface FileRouteTypes {
     | '/pratiche/nuova'
     | '/prezzi/$priceBookId'
     | '/prezzi/nuovo'
+    | '/attivita/'
     | '/clienti/'
     | '/committenti/'
     | '/controparti/'
@@ -411,7 +411,6 @@ export interface RootRouteChildren {
   RecuperaPasswordRoute: typeof RecuperaPasswordRoute
   RegisterRoute: typeof RegisterRoute
   ReimpostaPasswordRoute: typeof ReimpostaPasswordRoute
-  SpeseRoute: typeof SpeseRoute
   TerminiRoute: typeof TerminiRoute
   ClientiClientIdRoute: typeof ClientiClientIdRoute
   ClientiNuovoRoute: typeof ClientiNuovoRoute
@@ -425,6 +424,7 @@ export interface RootRouteChildren {
   PraticheNuovaRoute: typeof PraticheNuovaRoute
   PrezziPriceBookIdRoute: typeof PrezziPriceBookIdRoute
   PrezziNuovoRoute: typeof PrezziNuovoRoute
+  AttivitaIndexRoute: typeof AttivitaIndexRoute
   ClientiIndexRoute: typeof ClientiIndexRoute
   CommittentiIndexRoute: typeof CommittentiIndexRoute
   ContropartiIndexRoute: typeof ContropartiIndexRoute
@@ -441,13 +441,6 @@ declare module '@tanstack/react-router' {
       path: '/termini'
       fullPath: '/termini'
       preLoaderRoute: typeof TerminiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/spese': {
-      id: '/spese'
-      path: '/spese'
-      fullPath: '/spese'
-      preLoaderRoute: typeof SpeseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reimposta-password': {
@@ -562,6 +555,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientiIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/attivita/': {
+      id: '/attivita/'
+      path: '/attivita'
+      fullPath: '/attivita/'
+      preLoaderRoute: typeof AttivitaIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/prezzi/nuovo': {
       id: '/prezzi/nuovo'
       path: '/prezzi/nuovo'
@@ -667,7 +667,6 @@ const rootRouteChildren: RootRouteChildren = {
   RecuperaPasswordRoute: RecuperaPasswordRoute,
   RegisterRoute: RegisterRoute,
   ReimpostaPasswordRoute: ReimpostaPasswordRoute,
-  SpeseRoute: SpeseRoute,
   TerminiRoute: TerminiRoute,
   ClientiClientIdRoute: ClientiClientIdRoute,
   ClientiNuovoRoute: ClientiNuovoRoute,
@@ -681,6 +680,7 @@ const rootRouteChildren: RootRouteChildren = {
   PraticheNuovaRoute: PraticheNuovaRoute,
   PrezziPriceBookIdRoute: PrezziPriceBookIdRoute,
   PrezziNuovoRoute: PrezziNuovoRoute,
+  AttivitaIndexRoute: AttivitaIndexRoute,
   ClientiIndexRoute: ClientiIndexRoute,
   CommittentiIndexRoute: CommittentiIndexRoute,
   ContropartiIndexRoute: ContropartiIndexRoute,

@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Trash2 } from "lucide-react";
-import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { ArrowLeft } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -17,23 +16,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { CaseForm } from "@/components/case-form";
-import { ExpenseDialog } from "@/components/expense-form";
+import { CaseActivitiesTab } from "@/components/case-activities";
 import { supabase } from "@/integrations/supabase/client";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatDate } from "@/lib/format";
 import {
   caseStatusLabels,
   caseStatusVariant,
-  expenseCategoryLabels,
   clientDisplayName,
+  counterpartyDisplayName,
 } from "@/lib/labels";
 
 export const Route = createFileRoute("/pratiche/$caseId")({
   head: () => ({
     meta: [
       { title: "Pratica · Pratix" },
-      { name: "description", content: "Dettaglio pratica con dati, spese e storico." },
+      { name: "description", content: "Dettaglio pratica con dati e voci fatturabili." },
       { property: "og:title", content: "Pratica · Pratix" },
-      { property: "og:description", content: "Dettaglio pratica con dati, spese e storico." },
+      { property: "og:description", content: "Dettaglio pratica con dati e voci fatturabili." },
     ],
   }),
   component: () => (
@@ -52,7 +51,9 @@ function CaseDetail() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("cases")
-        .select("*, clients(kind, first_name, last_name, business_name)")
+        .select(
+          "*, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
+        )
         .eq("id", caseId)
         .maybeSingle();
       if (error) throw error;
@@ -77,12 +78,16 @@ function CaseDetail() {
   }
 
   const clientName = caseRow.clients ? clientDisplayName(caseRow.clients) : "—";
+  const principalName = caseRow.principals?.business_name ?? "—";
+  const counterpartyName = caseRow.counterparties
+    ? counterpartyDisplayName(caseRow.counterparties)
+    : "—";
 
   return (
     <>
       <PageHeader
         title={caseRow.title}
-        description={`${caseRow.case_number} · ${clientName}`}
+        description={`Pratica ${caseRow.practice_number} · ${principalName} · ${clientName} · ${counterpartyName}`}
         actions={
           <>
             <Badge variant={caseStatusVariant[caseRow.status] ?? "outline"}>
@@ -100,7 +105,8 @@ function CaseDetail() {
       <Tabs defaultValue="info">
         <TabsList>
           <TabsTrigger value="info">Dati</TabsTrigger>
-          <TabsTrigger value="expenses">Spese</TabsTrigger>
+          <TabsTrigger value="activities">Voci fatturabili</TabsTrigger>
+          <TabsTrigger value="transfers">Cessioni credito</TabsTrigger>
           <TabsTrigger value="history">Storico stati</TabsTrigger>
         </TabsList>
 
@@ -112,8 +118,12 @@ function CaseDetail() {
           />
         </TabsContent>
 
-        <TabsContent value="expenses" className="mt-4">
-          <ExpensesTab caseId={caseId} />
+        <TabsContent value="activities" className="mt-4">
+          <CaseActivitiesTab caseRow={caseRow} />
+        </TabsContent>
+
+        <TabsContent value="transfers" className="mt-4">
+          <CreditTransfersTab caseId={caseId} />
         </TabsContent>
 
         <TabsContent value="history" className="mt-4">
@@ -121,114 +131,6 @@ function CaseDetail() {
         </TabsContent>
       </Tabs>
     </>
-  );
-}
-
-function ExpensesTab({ caseId }: { caseId: string }) {
-  const qc = useQueryClient();
-  const { data, isLoading } = useQuery({
-    queryKey: ["case-expenses", caseId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("expenses")
-        .select("*")
-        .eq("case_id", caseId)
-        .order("expense_date", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  const remove = useMutation({
-    mutationFn: async (id: string) => {
-      const { error } = await supabase.from("expenses").delete().eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Spesa eliminata");
-      qc.invalidateQueries({ queryKey: ["case-expenses", caseId] });
-      qc.invalidateQueries({ queryKey: ["expenses"] });
-    },
-    onError: (e: Error) => toast.error(e.message),
-  });
-
-  const totals = (data ?? []).reduce(
-    (acc, e) => {
-      const amt = Number(e.amount) || 0;
-      if (e.is_art15) acc.art15 += amt;
-      else acc.taxable += amt;
-      return acc;
-    },
-    { taxable: 0, art15: 0 },
-  );
-
-  return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-base">Spese</CardTitle>
-        <ExpenseDialog caseId={caseId} />
-      </CardHeader>
-      <CardContent>
-        <div className="mb-4 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Imponibili</p>
-            <p className="text-lg font-semibold">{formatCurrency(totals.taxable)}</p>
-          </div>
-          <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Anticipazioni Art. 15</p>
-            <p className="text-lg font-semibold">{formatCurrency(totals.art15)}</p>
-          </div>
-        </div>
-
-        {isLoading ? (
-          <p className="text-sm text-muted-foreground">Caricamento…</p>
-        ) : data && data.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data</TableHead>
-                <TableHead>Categoria</TableHead>
-                <TableHead>Descrizione</TableHead>
-                <TableHead>Tipo</TableHead>
-                <TableHead className="text-right">Importo</TableHead>
-                <TableHead></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((e) => (
-                <TableRow key={e.id}>
-                  <TableCell className="text-sm">{formatDate(e.expense_date)}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {expenseCategoryLabels[e.category] ?? e.category}
-                  </TableCell>
-                  <TableCell className="text-sm">{e.description}</TableCell>
-                  <TableCell>
-                    <Badge variant={e.is_art15 ? "secondary" : "outline"}>
-                      {e.is_art15 ? "Art. 15" : "Imponibile"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right text-sm font-medium">
-                    {formatCurrency(Number(e.amount))}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 text-muted-foreground"
-                      onClick={() => remove.mutate(e.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <p className="text-sm text-muted-foreground">Nessuna spesa registrata.</p>
-        )}
-      </CardContent>
-    </Card>
   );
 }
 
@@ -277,6 +179,61 @@ function HistoryTab({ caseId }: { caseId: string }) {
           </ul>
         ) : (
           <p className="text-sm text-muted-foreground">Nessun cambio di stato registrato.</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function CreditTransfersTab({ caseId }: { caseId: string }) {
+  const { data, isLoading } = useQuery({
+    queryKey: ["case-credit-transfers", caseId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("case_credit_transfers")
+        .select(
+          "*, previous_client:clients!case_credit_transfers_previous_client_owner_fkey(kind, first_name, last_name, business_name), new_client:clients!case_credit_transfers_new_client_owner_fkey(kind, first_name, last_name, business_name)",
+        )
+        .eq("case_id", caseId)
+        .order("transferred_at", { ascending: false });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base">Cessioni credito</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Caricamento…</p>
+        ) : data && data.length > 0 ? (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Data</TableHead>
+                <TableHead>Cliente precedente</TableHead>
+                <TableHead>Cliente corrente</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {data.map((transfer) => (
+                <TableRow key={transfer.id}>
+                  <TableCell className="text-sm">{formatDate(transfer.transferred_at)}</TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
+                    {transfer.previous_client ? clientDisplayName(transfer.previous_client) : "—"}
+                  </TableCell>
+                  <TableCell className="text-sm">
+                    {transfer.new_client ? clientDisplayName(transfer.new_client) : "—"}
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        ) : (
+          <p className="text-sm text-muted-foreground">Nessuna cessione registrata.</p>
         )}
       </CardContent>
     </Card>
