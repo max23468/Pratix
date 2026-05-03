@@ -34,9 +34,8 @@ Committente -> Cliente -> Controparte -> Pratica -> Attività -> Fattura
 
 Il modulo scadenze viene rimosso dal perimetro evolutivo. Le attività
 fatturabili, i compensi/onorari, i rimborsi spese Art. 15, i prezzi annuali
-condivisi, gli allegati, la fatturazione per committente + periodo e i
-rendiconti Excel nel formato del committente diventano il nuovo nucleo
-prodotto.
+per committente, gli allegati, la fatturazione per committente + periodo e i
+rendiconti Excel nel formato del committente diventano il nuovo nucleo prodotto.
 
 ## Conseguenze
 
@@ -49,10 +48,16 @@ prodotto.
 - La **Pratica** mantiene numero numerico unico per utente, inseribile
   manualmente o generabile automaticamente.
 - Le **Attività** hanno solo stato minimo: da fatturare o fatturata.
-- I compensi, chiamati anche onorari, derivano dai prezzi annuali condivisi e
-  non sono modificabili sulla singola pratica.
+- I compensi, chiamati anche onorari, derivano dai prezzi annuali del
+  committente; ogni committente può abilitare compensi, rimborsi spese o
+  entrambi.
+- Il totale dei compensi è calcolato come quantità attività x prezzo unitario.
 - I rimborsi spese sono sempre anticipazioni Art. 15; i compensi/onorari sono
   sempre imponibili.
+- Le spese generali sono opzionali in fatturazione e valgono il 10% del totale
+  compensi quando attivate.
+- La cassa forense 4% si applica solo a compensi + spese generali, mai ai
+  rimborsi spese Art. 15.
 - Gli allegati sono facoltativi e ammessi sia per compensi sia per rimborsi,
   con upload, download, anteprima, nome descrittivo, note e tipo documento.
 - L'import deve essere sia manuale guidato sia da Excel strutturato.
@@ -70,7 +75,8 @@ prodotto.
 - **Mantenere lo scadenzario come modulo autonomo** — scartato perché non serve
   nel perimetro indicato e aumenterebbe complessità.
 - **Consentire importi compensi modificabili per pratica** — scartato: i prezzi
-  annuali condivisi definiscono gli importi e devono restare coerenti.
+  annuali del committente definiscono gli importi unitari e devono restare
+  coerenti.
 
 ## Riferimenti
 
