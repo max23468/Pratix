@@ -15,6 +15,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 ### Sotto il cofano
 
 - **Lint CI su file cancellati**: il workflow Quality esclude dal lint i file rimossi, così le PR di eliminazione moduli non falliscono su percorsi non più presenti.
+- **Tipi Supabase allineati**: rigenerati i tipi dal database remoto dopo l'applicazione della migrazione che rimuove `case_deadlines`.
 
 ## [0.4.1] — 2026-05-03
 
