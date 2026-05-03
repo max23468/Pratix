@@ -45,34 +45,41 @@ committente per un periodo scelto.
 13. Lo stato delle attività è volutamente minimo: **da fatturare** o
     **fatturata**.
 14. Gli importi dei compensi non sono modificabili sulla singola pratica:
-    derivano dai prezzi annuali condivisi.
-15. Per la V1 tutti i committenti usano lo stesso template e gli stessi prezzi.
-    Il modello può restare estendibile a prezzi per committente, ma non è un
-    requisito iniziale.
-16. I prezzi possono cambiare al massimo su base annua, all'inizio dell'anno.
-17. La data che decide quale prezzo applicare è la **data attività**.
-18. I rimborsi spese sono sempre anticipazioni Art. 15.
-19. I compensi/onorari sono sempre imponibili.
-20. Gli allegati sono consigliati, non obbligatori, sia per rimborsi spese sia
+    derivano dai prezzi del committente validi per anno.
+15. Per la V1 ogni committente può avere una configurazione autonoma che abilita
+    compensi, rimborsi spese o entrambi.
+16. Per la V1 ogni committente può personalizzare elenco prezzi e prezzo
+    unitario, partendo dal template comune come modello iniziale.
+17. I prezzi possono cambiare al massimo su base annua, all'inizio dell'anno.
+18. La data che decide quale prezzo applicare è la **data attività**.
+19. Il calcolo dei compensi avviene sempre come **quantità attività x prezzo
+    unitario**.
+20. I rimborsi spese sono sempre anticipazioni Art. 15.
+21. I compensi/onorari sono sempre imponibili.
+22. Gli allegati sono consigliati, non obbligatori, sia per rimborsi spese sia
     per compensi.
-21. Gli allegati devono supportare upload, download, anteprima, nome
+23. Gli allegati devono supportare upload, download, anteprima, nome
     descrittivo, note e tipo documento.
-22. La fattura viene generata per **committente + periodo**, non per singolo
+24. La fattura viene generata per **committente + periodo**, non per singolo
     cliente.
-23. Alla fattura si allegano rendiconti Excel nel formato fornito dal
+25. In fatturazione l'utente può attivare un flag per includere le **spese
+    generali**, calcolate come 10% del totale compensi.
+26. La cassa forense 4% si applica solo a totale compensi + spese generali, mai
+    ai rimborsi spese Art. 15.
+27. Alla fattura si allegano rendiconti Excel nel formato fornito dal
     committente: uno per onorari/compensi e uno per rimborsi spese.
-24. Le attività possono essere escluse da una fattura e rinviate a un periodo
+28. Le attività possono essere escluse da una fattura e rinviate a un periodo
     successivo senza motivazione obbligatoria.
-25. Un'attività rinviata ricompare automaticamente nel periodo successivo e può
+29. Un'attività rinviata ricompare automaticamente nel periodo successivo e può
     essere rinviata ancora.
-26. L'import deve supportare sia Excel strutturato sia inserimento guidato
+30. L'import deve supportare sia Excel strutturato sia inserimento guidato
     voce per voce.
-27. Il formato Excel ricevuto dal committente va replicato negli output, anche
+31. Il formato Excel ricevuto dal committente va replicato negli output, anche
     se la UI interna può essere diversa.
-28. La label principale per listini/tariffe in UI è **Prezzi**.
-29. L'archivio pregresso oggi è un quaderno cartaceo scritto a mano: non è
+32. La label principale per listini/tariffe in UI è **Prezzi**.
+33. L'archivio pregresso oggi è un quaderno cartaceo scritto a mano: non è
     disponibile come file e va gestito con inserimento guidato/manuale.
-30. Il database attuale contiene solo dati di test: non serve preservare i dati
+34. Il database attuale contiene solo dati di test: non serve preservare i dati
     esistenti e il modello può essere trasformato liberamente.
 
 ## Materiali e stato acquisizione
@@ -138,8 +145,8 @@ fasi:
 ### Committente
 
 Società o ente per cui l'avvocato lavora contrattualmente e a cui viene emessa
-fattura. Ha una propria anagrafica fiscale. Nella V1 usa il set annuale di
-prezzi condiviso da tutti i committenti.
+fattura. Ha una propria anagrafica fiscale. Nella V1 ha prezzi annuali propri,
+con flag per abilitare compensi, rimborsi spese o entrambi.
 
 ### Cliente
 
@@ -169,23 +176,24 @@ deposito, accesso, richiesta documentale.
 
 ### Compenso
 
-Sinonimo di **Onorario**. Attività con importo definito dai prezzi annuali
-condivisi. L'importo non si modifica sulla singola pratica, salvo aggiornamento
-dei prezzi per l'anno di competenza. I compensi/onorari sono
-sempre imponibili.
+Sinonimo di **Onorario**. Attività con importo unitario definito dai prezzi del
+committente per l'anno di competenza. L'importo unitario non si modifica sulla
+singola pratica; il totale è calcolato come quantità per prezzo unitario. I
+compensi/onorari sono sempre imponibili.
 
 ### Rimborso spese
 
-Attività o voce ammessa dai prezzi condivisi con importo liberamente inseribile
-dal professionista. I rimborsi spese sono sempre anticipazioni Art. 15. Possono
-avere allegati di supporto, ma l'allegato non blocca la fatturazione.
+Attività o voce ammessa dai prezzi del committente con importo liberamente
+inseribile dal professionista. I rimborsi spese sono sempre anticipazioni Art. 15. Possono avere allegati di supporto, ma l'allegato non blocca la
+fatturazione.
 
 ### Prezzi
 
-Insieme annuale delle voci ammesse per le pratiche. Per la V1 il set è
-condiviso da tutti i committenti e corrisponde a quello che in fase di analisi
-era chiamato "listino". In UI e documenti di prodotto si usa **Prezzi** come
-label principale.
+Insieme annuale delle voci ammesse per le pratiche, configurato per singolo
+committente. Ogni committente può abilitare compensi, rimborsi spese o entrambi
+e può personalizzare elenco voci e prezzo unitario. Il template comune estratto
+dagli Excel resta il modello iniziale da clonare, non un vincolo uguale per
+tutti. In UI e documenti di prodotto si usa **Prezzi** come label principale.
 
 ## Esempi Excel ricevuti
 
@@ -209,8 +217,8 @@ Voci prezzo estratte dal template:
 
 | Voce / fase                                                                          | Prezzo unitario |
 | ------------------------------------------------------------------------------------ | --------------: |
-| Procedura cartacea                                                                   |         80,00 € |
-| Procedura telematica                                                                 |         40,00 € |
+| Procedura cartacea / Decreto ingiuntivo                                              |         80,00 € |
+| Procedura telematica / Decreto ingiuntivo                                            |         40,00 € |
 | Precetto                                                                             |         25,00 € |
 | Pignoramento mobiliare presso terzi, con iscrizione a ruolo                          |         90,00 € |
 | Pignoramento mobiliare presso terzi, senza iscrizione a ruolo                        |         60,00 € |
@@ -221,7 +229,7 @@ Voci prezzo estratte dal template:
 | Intervento in procedura esecutiva immobiliare, decorrenza 12 mesi dal deposito       |        100,00 € |
 | Intervento in procedura esecutiva immobiliare, distribuzione somme                   |        100,00 € |
 | Accesso in cancelleria o richiesta notificazione non inclusa in altre fasi           |         25,00 € |
-| Procedimenti ordinari, mediazione, esecutivi o concorsuali: udienza sostenuta        |         40,00 € |
+| Procedimenti ordinari, mediazione, esecutivi, concorsuali: udienza sostenuta         |         40,00 € |
 | Partecipazione vendita senza aggiudicazione                                          |        100,00 € |
 | Partecipazione vendita con aggiudicazione e immissione nel possesso                  |        200,00 € |
 | Partecipazione a vendite contestuali / incontri per assenso cancellazione ipoteche   |        170,00 € |
@@ -260,29 +268,30 @@ test.
 
 ### Tabelle principali
 
-| Tabella proposta             | Scopo                                                                                          |
-| ---------------------------- | ---------------------------------------------------------------------------------------------- |
-| `principals`                 | Committenti. Dati fiscali, contatti, note, impostazioni di fatturazione se specifiche.         |
-| `clients`                    | Clienti collegabili a più committenti. L'attuale tabella va reinterpretata o ricreata.         |
-| `principal_clients`          | Relazione molti-a-molti tra committenti e clienti.                                             |
-| `counterparties`             | Anagrafica controparte aggregata con ragione sociale oppure soggetti collegati.                |
-| `counterparty_subjects`      | Soggetti individuali dentro una controparte composta, senza ruoli.                             |
-| `cases`                      | Pratiche: numero, committente, cliente corrente, controparte, stato, note.                     |
-| `case_credit_transfers`      | Storico cessioni/passaggi credito cliente X -> cliente Y, mantenendo la stessa pratica.        |
-| `price_books`                | Prezzi annuali condivisi. Un prezzario per anno, estendibile in futuro per committente.        |
-| `price_items`                | Voci di prezzo: compensi/onorari a importo fisso o rimborsi Art. 15 a importo libero.          |
-| `case_activities`            | Attività della pratica, con snapshot della voce prezzo e stato da fatturare/fatturata.         |
-| `activity_attachments`       | Metadati degli allegati caricati su Supabase Storage per compensi o rimborsi.                  |
-| `billing_runs`               | Selezione di attività per committente + periodo prima della generazione fattura.               |
-| `billing_run_items`          | Attività incluse, escluse o rinviate nella singola estrazione.                                 |
-| `billing_exports`            | Rendiconti Excel compilati nel formato del committente e allegati alla fattura.                |
-| `invoices` / `invoice_lines` | Fatture e righe, aggiornate per fatturare al committente e congelare le attività selezionate.  |
-| `imports` / `import_rows`    | Import guidati da Excel o inserimento manuale, con staging e validazione prima della conferma. |
+| Tabella proposta             | Scopo                                                                                                     |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------- |
+| `principals`                 | Committenti. Dati fiscali, contatti, note, impostazioni di fatturazione e abilitazioni economiche.        |
+| `clients`                    | Clienti collegabili a più committenti. L'attuale tabella va reinterpretata o ricreata.                    |
+| `principal_clients`          | Relazione molti-a-molti tra committenti e clienti.                                                        |
+| `counterparties`             | Anagrafica controparte aggregata con ragione sociale oppure soggetti collegati.                           |
+| `counterparty_subjects`      | Soggetti individuali dentro una controparte composta, senza ruoli.                                        |
+| `cases`                      | Pratiche: numero, committente, cliente corrente, controparte, stato, note.                                |
+| `case_credit_transfers`      | Storico cessioni/passaggi credito cliente X -> cliente Y, mantenendo la stessa pratica.                   |
+| `price_books`                | Prezzi per committente e anno, clonabili dal template comune.                                             |
+| `price_items`                | Voci di prezzo personalizzabili: compensi/onorari a importo unitario o rimborsi Art. 15 a importo libero. |
+| `case_activities`            | Attività della pratica, con snapshot della voce prezzo e stato da fatturare/fatturata.                    |
+| `case_activity_hearings`     | Date udienza collegate alle attività che richiedono conteggio udienze sostenute.                          |
+| `activity_attachments`       | Metadati degli allegati caricati su Supabase Storage per compensi o rimborsi.                             |
+| `billing_runs`               | Selezione di attività per committente + periodo prima della generazione fattura.                          |
+| `billing_run_items`          | Attività incluse, escluse o rinviate nella singola estrazione.                                            |
+| `billing_exports`            | Rendiconti Excel compilati nel formato del committente e allegati alla fattura.                           |
+| `invoices` / `invoice_lines` | Fatture e righe, aggiornate per fatturare al committente e congelare le attività selezionate.             |
+| `imports` / `import_rows`    | Import guidati da Excel o inserimento manuale, con staging e validazione prima della conferma.            |
 
 ### Relazioni principali
 
 ```text
-Prezzi annuali condivisi -> (N) Voci di prezzo
+Committente -> Prezzi annuali del committente -> (N) Voci di prezzo
 Committente (N) <-> (N) Cliente
 Cliente (N) <-> (N) Controparte
 Committente + Cliente + Controparte -> Pratica
@@ -331,10 +340,23 @@ cliente Y:
 - lo storico della cessione può essere conservato come informazione tecnica o
   nota interna, ma non deve complicare la UI ordinaria.
 
-## Prezzi annuali
+## Prezzi per committente e anno
 
-I prezzi sono condivisi da tutti i committenti e specifici per anno. La data
-che decide quale prezzo applicare è la data attività.
+I prezzi sono specifici per committente e per anno. La data che decide quale
+prezzo applicare è la data attività.
+
+Ogni committente deve avere una configurazione economica minima:
+
+- compensi abilitati: sì/no;
+- rimborsi spese abilitati: sì/no;
+- prezzo annuale attivo;
+- voci compenso abilitate e importo unitario;
+- categorie rimborso abilitate.
+
+Il template comune 2025 serve come seed iniziale. In creazione committente
+Pratix può proporre la copia del template comune, ma l'utente deve poter
+disattivare intere sezioni, rimuovere voci non applicabili e modificare i prezzi
+unitari del committente.
 
 ### Compensi
 
@@ -342,7 +364,9 @@ che decide quale prezzo applicare è la data attività.
 - L'importo viene proposto e poi congelato nell'attività.
 - Non sono modificabili manualmente sulla singola pratica.
 - Sono sempre imponibili.
-- Per cambiare importi o voci si crea o aggiorna il prezzario dell'anno nuovo.
+- Il totale riga è sempre `quantità x prezzo unitario`.
+- Per cambiare importi o voci si crea o aggiorna il prezzario annuale del
+  committente.
 
 ### Rimborsi spese
 
@@ -350,6 +374,8 @@ che decide quale prezzo applicare è la data attività.
 - L'importo è inserito manualmente dall'avvocato.
 - Sono sempre anticipazioni Art. 15.
 - Gli allegati sono consigliati ma non bloccanti.
+- Possono essere disattivati per committente quando il committente non rimborsa
+  spese.
 
 ### Snapshot
 
@@ -359,7 +385,9 @@ salvare almeno:
 - nome voce;
 - tipo voce (`fee` o `expense_reimbursement`);
 - anno prezzi;
-- importo applicato, se compenso;
+- committente e prezzo annuale di origine;
+- quantità, prezzo unitario e totale, se compenso;
+- importo, se rimborso spese;
 - riferimento alla voce prezzo originale.
 
 Questo evita che una modifica futura dei prezzi alteri attività già
@@ -377,11 +405,23 @@ Campi funzionali minimi:
 - voce prezzo;
 - tipo: compenso o rimborso spese;
 - descrizione visibile in fattura;
-- importo;
+- quantità;
+- prezzo unitario;
+- importo totale calcolato;
 - stato: `to_invoice` o `invoiced`;
 - fattura collegata quando fatturata;
 - note interne;
 - allegati facoltativi.
+
+Per i compensi il totale non è inserito liberamente: è calcolato come quantità
+dell'attività per prezzo unitario. Per i rimborsi spese resta libero l'importo
+anticipato.
+
+La voce **Procedimenti ordinari, mediazione, esecutivi, concorsuali** richiede
+un comportamento specifico: l'utente deve poter indicare il numero di udienze
+sostenute e la data di ciascuna udienza. Il numero di udienze alimenta la
+quantità della riga compenso; le date restano consultabili nel dettaglio
+attività e disponibili per rendiconto.
 
 Un'attività rinviata in fatturazione resta `to_invoice`, ricompare
 automaticamente nel periodo successivo e può essere rinviata di nuovo.
@@ -408,11 +448,14 @@ Flusso desiderato:
 3. Pratix mostra tutte le attività da fatturare nel periodo, raggruppate per
    cliente, controparte e pratica.
 4. L'utente può includere o rinviare singole attività.
-5. Pratix genera una fattura al committente con righe coerenti e importi
+5. L'utente può attivare l'inclusione delle spese generali.
+6. Pratix genera una fattura al committente con righe coerenti e importi
    congelati.
-6. Pratix genera e collega i due rendiconti Excel richiesti dal committente:
+7. Pratix calcola, se attivate, le spese generali come 10% del totale compensi.
+8. Pratix calcola la cassa forense 4% solo su totale compensi + spese generali.
+9. Pratix genera e collega i due rendiconti Excel richiesti dal committente:
    onorari/compensi e rimborsi spese.
-7. Le attività incluse passano a `invoiced`.
+10. Le attività incluse passano a `invoiced`.
 
 La fattura deve poter mostrare nelle righe o nel dettaglio:
 
@@ -421,7 +464,18 @@ La fattura deve poter mostrare nelle righe o nel dettaglio:
 - controparte;
 - descrizione attività;
 - data o periodo attività;
-- importo.
+- quantità, prezzo unitario e importo totale per i compensi;
+- importo rimborso per le anticipazioni Art. 15.
+
+Regole fiscali minime:
+
+- i compensi sono imponibili;
+- i rimborsi spese sono anticipazioni Art. 15 e non entrano nella base di calcolo
+  della cassa forense;
+- le spese generali sono opzionali in fatturazione e, se incluse, valgono il 10%
+  del totale compensi;
+- la cassa forense 4% si applica al totale compensi più spese generali;
+- il calcolo deve congelare in fattura flag, aliquote, imponibili e totali usati.
 
 I rendiconti Excel allegati alla fattura devono replicare il formato fornito
 dal committente. La UI interna può essere diversa, ma l'output deve rispettare
@@ -522,14 +576,13 @@ Attività:
 
 1. Salvare questo piano nel repo.
 2. Aggiungere ADR 0013.
-3. Aggiungere versione stampabile del piano.
-4. Aggiornare glossario, roadmap e changelog.
-5. Allineare le regole agenti: "attività" torna termine centrale; "studio" non
+3. Aggiornare glossario, roadmap e changelog.
+4. Allineare le regole agenti: "attività" torna termine centrale; "studio" non
    è più vietata in assoluto, pur restando fuori dal posizionamento primario.
 
 Uscita fase:
 
-- piano completo e stampabile disponibili;
+- piano completo disponibile;
 - ADR accettato;
 - roadmap e changelog allineati;
 - nessuna modifica al codice applicativo.
@@ -568,8 +621,9 @@ Attività:
 1. Disegnare migration Supabase per:
    `principals`, `clients`, `principal_clients`, `counterparties`,
    `counterparty_subjects`, `cases`, `case_credit_transfers`, `price_books`,
-   `price_items`, `case_activities`, `activity_attachments`, `billing_runs`,
-   `billing_run_items`, `billing_exports`, `imports`, `import_rows`.
+   `price_items`, `case_activities`, `case_activity_hearings`,
+   `activity_attachments`, `billing_runs`, `billing_run_items`,
+   `billing_exports`, `imports`, `import_rows`.
 2. Reinterpretare o ricreare le tabelle esistenti senza preservare dati di
    test.
 3. Applicare `user_id` e RLS owner-scoped a ogni tabella user-owned.
@@ -579,7 +633,11 @@ Attività:
    - stato pratica ammesso;
    - stato attività ammesso;
    - tipo voce prezzo ammesso;
-   - snapshot prezzo su attività.
+   - snapshot prezzo su attività;
+   - prezzo annuale associato al committente;
+   - quantità, prezzo unitario e totale sulle attività di compenso;
+   - flag compensi/rimborsi sul committente;
+   - flag spese generali e basi di calcolo in fatturazione.
 5. Definire funzioni o trigger per generazione atomica del numero pratica.
 6. Aggiornare `docs/data-model.md` e `supabase/schema.sql`.
 7. Rigenerare `src/integrations/supabase/types.ts` solo con `npm run db:types`.
@@ -616,24 +674,33 @@ Uscita fase:
 - una controparte composta può contenere più soggetti selezionabili;
 - i selettori sono pronti per pratica, import e fatturazione.
 
-### Fase 4 — Prezzi annuali
+### Fase 4 — Prezzi per committente e anno
 
 **Obiettivo**: rendere configurabili le voci economiche usate dalle attività.
 
 Attività:
 
-1. Creare UI **Prezzi** con anno, stato e voci.
-2. Inserire le voci compensi/onorari estratte dal template 2025.
-3. Inserire categorie rimborsi spese estratte dal template spese.
-4. Distinguere compensi a importo fisso e rimborsi Art. 15 a importo libero.
-5. Consentire duplicazione del prezzario da anno precedente.
-6. Bloccare o avvisare sulle modifiche a voci già usate in attività.
-7. Preparare import Excel delle voci prezzo, anche se la V1 può partire con
-   inserimento manuale/seed controllato.
+1. Creare UI **Prezzi** con committente, anno, stato e voci.
+2. Aggiungere per ogni committente i flag: compensi abilitati e rimborsi spese
+   abilitati.
+3. Inserire il template comune 2025 come modello iniziale clonabile.
+4. Consentire personalizzazione per committente di elenco voci e prezzo unitario.
+5. Inserire le voci compensi/onorari estratte dal template 2025 con i nomi
+   aggiornati.
+6. Inserire categorie rimborsi spese estratte dal template spese.
+7. Distinguere compensi a importo unitario e rimborsi Art. 15 a importo libero.
+8. Consentire duplicazione dei prezzi da anno precedente per lo stesso
+   committente.
+9. Bloccare o avvisare sulle modifiche a voci già usate in attività.
+10. Preparare import Excel delle voci prezzo, anche se la V1 può partire con
+    inserimento manuale/seed controllato.
+11. Gestire la voce "Procedimenti ordinari, mediazione, esecutivi, concorsuali"
+    come voce con quantità derivata dal numero di udienze.
 
 Uscita fase:
 
-- i prezzi 2025 sono rappresentabili nel database;
+- i prezzi 2025 sono rappresentabili nel database per singolo committente;
+- un committente può usare solo compensi, solo rimborsi o entrambi;
 - la data attività seleziona il prezzo dell'anno corretto;
 - una voce prezzo usata produce snapshot nell'attività;
 - le modifiche future non alterano attività già create.
@@ -653,18 +720,23 @@ Attività:
 4. Implementare dettaglio pratica con dati principali, stato e timeline/elenco
    attività.
 5. Aggiungere attività da voce prezzo, distinguendo compenso e rimborso spese.
-6. Gestire quantità se necessaria per compensi ripetibili, mantenendo importo
-   unitario e totale chiari.
+6. Gestire sempre quantità, prezzo unitario e totale per i compensi.
 7. Gestire allegati facoltativi per attività con upload, download, anteprima,
    nome descrittivo, note e tipo documento.
-8. Gestire cessione credito cambiando il cliente corrente e mantenendo lo
-   storico tecnico.
+8. Gestire udienze sostenute per "Procedimenti ordinari, mediazione, esecutivi,
+   concorsuali", con numero udienze e data di ciascuna.
+9. Rispettare i flag del committente: se compensi o rimborsi non sono abilitati,
+   la UI non deve proporre voci non applicabili.
+10. Gestire cessione credito cambiando il cliente corrente e mantenendo lo
+    storico tecnico.
 
 Uscita fase:
 
 - l'esempio pratica 157 è inseribile end-to-end;
 - numero pratica unico, manuale o generato;
 - attività e rimborsi sono registrabili;
+- i compensi calcolano il totale come quantità x prezzo unitario;
+- le udienze sono tracciabili con date;
 - allegati collegati all'attività funzionano sul bucket privato;
 - pratica e attività mantengono stati separati.
 
@@ -679,14 +751,19 @@ Attività:
    pratica.
 3. Consentire inclusione o rinvio della singola attività.
 4. Salvare `billing_run` e `billing_run_items` con stato incluso/rinviato.
-5. Generare fattura al committente con righe coerenti.
-6. Collegare attività incluse alla fattura e impostarle come fatturate.
-7. Mantenere attività rinviate da fatturare e farle ricomparire nel periodo
-   successivo.
-8. Generare rendiconto Excel onorari/compensi nel formato del template.
-9. Generare rendiconto Excel rimborsi spese nel formato del template.
-10. Salvare i rendiconti come export collegati alla fattura.
-11. Definire comportamento bozza/emessa/eliminata secondo le regole del piano.
+5. Aggiungere flag di fatturazione per includere o escludere spese generali.
+6. Calcolare spese generali al 10% del totale compensi quando il flag è attivo.
+7. Calcolare cassa forense 4% solo su totale compensi + spese generali.
+8. Escludere sempre i rimborsi spese Art. 15 dalla base cassa forense.
+9. Generare fattura al committente con righe coerenti.
+10. Collegare attività incluse alla fattura e impostarle come fatturate.
+11. Mantenere attività rinviate da fatturare e farle ricomparire nel periodo
+    successivo.
+12. Generare rendiconto Excel onorari/compensi nel formato del template,
+    includendo quantità e prezzo unitario coerenti con il file.
+13. Generare rendiconto Excel rimborsi spese nel formato del template.
+14. Salvare i rendiconti come export collegati alla fattura.
+15. Definire comportamento bozza/emessa/eliminata secondo le regole del piano.
 
 Uscita fase:
 
@@ -694,7 +771,9 @@ Uscita fase:
 - attività incluse non vengono duplicate in fatture successive;
 - attività rinviate riappaiono nel periodo dopo;
 - i due file Excel richiesti dal committente vengono generati e collegati;
-- compensi e rimborsi restano fiscalmente distinti.
+- compensi, spese generali, cassa forense e rimborsi restano fiscalmente
+  distinti;
+- i rimborsi non entrano mai nella base di calcolo della cassa forense.
 
 ### Fase 7 — Import archivio
 
@@ -758,7 +837,11 @@ La prima evoluzione è completa quando:
 - il modulo scadenze è rimosso;
 - si possono creare committenti, clienti, controparti e pratiche;
 - una pratica ha numero numerico unico, manuale o generato;
-- i prezzi annuali condivisi guidano compensi e rimborsi;
+- i prezzi annuali del committente guidano compensi e rimborsi;
+- un committente può avere compensi, rimborsi spese o entrambi;
+- i compensi sono calcolati come quantità x prezzo unitario;
+- la fatturazione gestisce spese generali opzionali e cassa forense sulla base
+  corretta;
 - le attività possono essere registrate e allegate;
 - una fattura per committente + periodo può includere o rinviare attività;
 - la fattura può avere allegati Excel compilati nel formato del committente;

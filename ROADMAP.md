@@ -65,26 +65,26 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## 4. Funzionalità di prodotto
 
-| Stato | Voce                              | Note                                                                        |
-| ----- | --------------------------------- | --------------------------------------------------------------------------- |
-| ✅    | Pratiche, Clienti, Fatture base   | CRUD + visualizzazione                                                      |
-| ✅    | Generazione fattura PDF           | `src/lib/invoice-pdf.ts`                                                    |
-| ✅    | Generazione XML FatturaPA (TD06)  | `src/lib/invoice-xml.ts`                                                    |
-| ✅    | Piano evoluzione recupero crediti | `docs/plans/evoluzione-recupero-crediti.md`, versione stampabile + ADR-0013 |
-| ⬜    | Rimozione scadenzario             | Route, sidebar, dashboard, tab pratica e tabella `case_deadlines`           |
-| ⬜    | Committenti                       | Anagrafica soggetto fatturato                                               |
-| ⬜    | Clienti multi-committente         | Relazione molti-a-molti fra committenti e clienti                           |
-| ⬜    | Controparti strutturate           | Persone/società, gruppi di soggetti e cessioni credito                      |
-| ⬜    | Prezzi annuali condivisi          | Compensi/onorari fissi e rimborsi Art. 15 ammessi, versionati per anno      |
-| ⬜    | Attività fatturabili              | Stato da fatturare/fatturata, allegati facoltativi                          |
-| ⬜    | Fatturazione committente/periodo  | Estrazione attività, inclusione/rinvio, fattura e rendiconti Excel          |
-| ⬜    | Import archivio guidato           | Wizard manuale + Excel strutturato, anche largo, con staging e validazione  |
-| 💤    | Time tracking per pratica         | Fuori dal perimetro recupero crediti attuale                                |
-| ⬜    | Spese con allegati                | Da ricondurre alle attività/rimborsi spese                                  |
-| ⬜    | Esportazione massiva fatture      | ZIP PDF + XML per periodo                                                   |
-| ⬜    | Numerazione automatica            | Già presente? Verificare reset annuale                                      |
-| 💤    | Area cliente esterna              | Login dedicato per visione fatture/scadenze                                 |
-| 💤    | Integrazione invio SDI            | Oggi solo generazione XML; invio futuro                                     |
+| Stato | Voce                              | Note                                                                                               |
+| ----- | --------------------------------- | -------------------------------------------------------------------------------------------------- |
+| ✅    | Pratiche, Clienti, Fatture base   | CRUD + visualizzazione                                                                             |
+| ✅    | Generazione fattura PDF           | `src/lib/invoice-pdf.ts`                                                                           |
+| ✅    | Generazione XML FatturaPA (TD06)  | `src/lib/invoice-xml.ts`                                                                           |
+| ✅    | Piano evoluzione recupero crediti | `docs/plans/evoluzione-recupero-crediti.md` + ADR-0013                                             |
+| ⬜    | Rimozione scadenzario             | Route, sidebar, dashboard, tab pratica e tabella `case_deadlines`                                  |
+| ⬜    | Committenti                       | Anagrafica soggetto fatturato                                                                      |
+| ⬜    | Clienti multi-committente         | Relazione molti-a-molti fra committenti e clienti                                                  |
+| ⬜    | Controparti strutturate           | Persone/società, gruppi di soggetti e cessioni credito                                             |
+| ⬜    | Prezzi per committente            | Compensi/rimborsi abilitabili per committente, voci e prezzi unitari personalizzabili per anno     |
+| ⬜    | Attività fatturabili              | Stato da fatturare/fatturata, allegati facoltativi                                                 |
+| ⬜    | Fatturazione committente/periodo  | Estrazione attività, inclusione/rinvio, spese generali opzionali, cassa forense e rendiconti Excel |
+| ⬜    | Import archivio guidato           | Wizard manuale + Excel strutturato, anche largo, con staging e validazione                         |
+| 💤    | Time tracking per pratica         | Fuori dal perimetro recupero crediti attuale                                                       |
+| ⬜    | Spese con allegati                | Da ricondurre alle attività/rimborsi spese                                                         |
+| ⬜    | Esportazione massiva fatture      | ZIP PDF + XML per periodo                                                                          |
+| ⬜    | Numerazione automatica            | Già presente? Verificare reset annuale                                                             |
+| 💤    | Area cliente esterna              | Login dedicato per visione fatture/scadenze                                                        |
+| 💤    | Integrazione invio SDI            | Oggi solo generazione XML; invio futuro                                                            |
 
 ## 5. Account, sicurezza, dati
 
