@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.4.1] — 2026-05-03
+
+### Sotto il cofano
+
+- **Supabase Storage privato**: aggiunto il bucket `pratix-documents` con policy owner-scoped per documenti, fatture, allegati, asset profilo ed export.
+- **Observability Vercel-first**: rafforzata la guida operativa su Web Analytics, Speed Insights, runtime logs strutturati e controlli Vercel senza introdurre Sentry.
+
 ## [0.4.0] — 2026-05-03
 
 ### Novità
@@ -225,6 +232,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.4.1]: #041--2026-05-03
 [0.4.0]: #040--2026-05-03
 [0.3.9]: #039--2026-05-02
 [0.3.8]: #038--2026-05-02

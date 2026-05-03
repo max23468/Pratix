@@ -81,5 +81,8 @@ Vercel deploya automaticamente da PR/main, ma le modifiche solo documentali non 
 
 ## Stack
 
-TanStack Start + Supabase di proprietà + Vercel. Lingua italiana, `lang="it"`.
+TanStack Start + Supabase di proprietà + Vercel. Supabase Storage usa il bucket
+privato `pratix-documents` con path owner-scoped `<user_id>/<area>/...`.
+Observability resta Vercel-first: Web Analytics, Speed Insights e runtime logs
+strutturati prima di introdurre servizi esterni. Lingua italiana, `lang="it"`.
 **Mai modificare**: `src/integrations/supabase/types.ts`, `src/routeTree.gen.ts`, `.env`.

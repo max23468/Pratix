@@ -41,6 +41,8 @@ Al 2026-05-03 la filiera operativa gratuita è completa:
 Le verifiche che restano periodiche, e non bloccanti per il codice, sono:
 
 - leggere Web Analytics e Speed Insights dopo traffico reale;
+- controllare Vercel Observability dopo errori, lentezza percepita o deploy
+  runtime;
 - controllare nei log Vercel il run schedulato del cron dopo le 06:00 UTC;
 - aggiungere redirect preview in Supabase solo quando serve testare auth su una preview.
 
@@ -119,6 +121,37 @@ Per leggere i dati:
 Non aggiungere eventi custom con dati personali, nomi clienti, importi o dati di
 fatture. Per ora bastano pagine viste e metriche di performance aggregate.
 
+### Runtime logs e Observability
+
+La strategia scelta è Vercel-first: niente Sentry o altri servizi finché i log
+runtime, Web Analytics e Speed Insights bastano a diagnosticare produzione.
+
+Usa Vercel Observability per:
+
+- errori o timeout in funzioni server;
+- regressioni dopo deploy;
+- lentezza percepita in preview o produzione;
+- verifica del cron giornaliero.
+
+Le route API e le server functions che fanno lavoro non banale devono loggare
+JSON strutturato con almeno:
+
+- `level`;
+- `message`;
+- `route` o nome funzione;
+- `requestId`, quando disponibile da `x-vercel-id`;
+- `ms` durata;
+- nessun dato personale, nome cliente, importo, contenuto fattura o secret.
+
+L'endpoint `/api/cron/daily` segue già questo formato con eventi
+`cron_secret_missing`, `cron_unauthorized` e `cron_completed`. Quando aggiungi
+nuovi endpoint pubblici o cron, parti dallo stesso pattern.
+
+Se una diagnosi richiede log più ricchi, aggiungi campi tecnici a bassa
+sensibilità (`status`, `count`, `feature`, `environment`) e rimuovili quando
+non servono più. Non inviare eventi custom di analytics per azioni su pratiche,
+clienti o fatture senza una decisione esplicita privacy/prodotto.
+
 ## Cron giornaliero
 
 `vercel.json` registra un solo cron Hobby-compatible:
@@ -192,10 +225,11 @@ Checklist minima:
 
 - [ ] PR verso `main` aperta e workflow `Quality` completato
 - [ ] Preview/production Vercel verificata quando il diff tocca superfici esposte o runtime
+- [ ] Vercel Observability/log runtime controllati quando cambia codice server, cron o deploy
 - [ ] `npm run build` ok
 - [ ] `npm run lint` ok oppure issue note e non correlate alla modifica
 - [ ] `npm audit --audit-level=moderate` ok se sono cambiate dipendenze
-- [ ] Supabase advisors verificati quando cambiano schema, RLS o auth
+- [ ] Supabase advisors verificati quando cambiano schema, RLS, Storage o auth
 - [ ] Recupero password attivo
 - [ ] Pagine Privacy e Termini presenti
 - [ ] Meta tag e og:image sulle pagine pubbliche
