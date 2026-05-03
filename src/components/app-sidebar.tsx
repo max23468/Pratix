@@ -1,5 +1,15 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, Users, Briefcase, Receipt, Wallet, Settings, LogOut } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  Briefcase,
+  Receipt,
+  Wallet,
+  Settings,
+  LogOut,
+  Building2,
+  UserRoundSearch,
+} from "lucide-react";
 import {
   Sidebar,
   SidebarContent,
@@ -17,7 +27,9 @@ import { useAuth } from "@/lib/auth-context";
 
 const items = [
   { title: "Dashboard", url: "/dashboard" as const, icon: LayoutDashboard },
+  { title: "Committenti", url: "/committenti" as const, icon: Building2 },
   { title: "Clienti", url: "/clienti" as const, icon: Users },
+  { title: "Controparti", url: "/controparti" as const, icon: UserRoundSearch },
   { title: "Pratiche", url: "/pratiche" as const, icon: Briefcase },
   { title: "Spese", url: "/spese" as const, icon: Wallet },
   { title: "Fatture", url: "/fatture" as const, icon: Receipt },

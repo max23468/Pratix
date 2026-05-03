@@ -66,7 +66,13 @@ export const taxRegimeLabels: Record<string, string> = {
 
 export const clientKindLabels: Record<string, string> = {
   individual: "Privato",
-  company: "Azienda",
+  company: "Società",
+};
+
+export const counterpartyKindLabels: Record<string, string> = {
+  individual: "Persona fisica",
+  company: "Società",
+  group: "Composta",
 };
 
 export type ClientDisplayData = {
@@ -79,4 +85,19 @@ export type ClientDisplayData = {
 export const clientDisplayName = (c: ClientDisplayData): string => {
   if (c.kind === "company") return c.business_name || "—";
   return [c.first_name, c.last_name].filter(Boolean).join(" ") || "—";
+};
+
+export type CounterpartyDisplayData = {
+  kind: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  business_name?: string | null;
+};
+
+export const counterpartyDisplayName = (c: CounterpartyDisplayData): string => {
+  if (c.kind === "individual") {
+    return [c.first_name, c.last_name].filter(Boolean).join(" ") || "—";
+  }
+
+  return c.business_name || "—";
 };

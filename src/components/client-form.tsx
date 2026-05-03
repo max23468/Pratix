@@ -1,8 +1,9 @@
-import { useState, type FormEvent } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useState, type FormEvent } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -77,10 +78,46 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [form, setForm] = useState<ClientRow>({ ...empty, ...(initial ?? {}) });
+  const [selectedPrincipalIds, setSelectedPrincipalIds] = useState<string[]>([]);
 
   const isEdit = Boolean(initial?.id);
 
   const upd = (k: keyof ClientRow, v: string) => setForm((f) => ({ ...f, [k]: v }));
+
+  const { data: principals = [] } = useQuery({
+    queryKey: ["principals", "client-form"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("principals")
+        .select("id, business_name, archived_at")
+        .order("business_name", { ascending: true });
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const { data: linkedPrincipalIds } = useQuery({
+    queryKey: ["principal-clients", initial?.id],
+    enabled: Boolean(initial?.id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("principal_clients")
+        .select("principal_id")
+        .eq("client_id", initial?.id ?? "");
+      if (error) throw error;
+      return (data ?? []).map((link) => link.principal_id);
+    },
+  });
+
+  useEffect(() => {
+    if (linkedPrincipalIds) setSelectedPrincipalIds(linkedPrincipalIds);
+  }, [linkedPrincipalIds]);
+
+  const togglePrincipal = (principalId: string, checked: boolean) => {
+    setSelectedPrincipalIds((current) =>
+      checked ? [...current, principalId] : current.filter((id) => id !== principalId),
+    );
+  };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -107,29 +144,20 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
         notes: form.notes?.trim() || null,
       };
 
-      if (isEdit && initial?.id) {
-        const { data, error } = await supabase
-          .from("clients")
-          .update(payload)
-          .eq("id", initial.id)
-          .select("id")
-          .single();
-        if (error) throw error;
-        return data.id;
-      } else {
-        const { data, error } = await supabase
-          .from("clients")
-          .insert(payload)
-          .select("id")
-          .single();
-        if (error) throw error;
-        return data.id;
-      }
+      const clientId =
+        isEdit && initial?.id
+          ? await updateClient(initial.id, payload)
+          : await createClient(payload);
+
+      await syncPrincipalLinks(clientId, user.id, selectedPrincipalIds);
+
+      return clientId;
     },
     onSuccess: (id) => {
       toast.success(isEdit ? "Cliente aggiornato" : "Cliente creato");
       qc.invalidateQueries({ queryKey: ["clients"] });
       qc.invalidateQueries({ queryKey: ["client", id] });
+      qc.invalidateQueries({ queryKey: ["principal-clients", id] });
       onSaved(id);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -178,7 +206,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="individual">Privato</SelectItem>
-                  <SelectItem value="company">Azienda</SelectItem>
+                  <SelectItem value="company">Società</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -232,6 +260,37 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
               />
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Committenti collegati</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {principals.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              Aggiungi un committente per collegarlo a questo cliente.
+            </p>
+          ) : (
+            principals.map((principal) => (
+              <label
+                key={principal.id}
+                className="flex items-center justify-between gap-3 rounded-md border border-border p-3 text-sm"
+              >
+                <span className="flex flex-col">
+                  <span className="font-medium">{principal.business_name}</span>
+                  {principal.archived_at && (
+                    <span className="text-xs text-muted-foreground">Archiviato</span>
+                  )}
+                </span>
+                <Checkbox
+                  checked={selectedPrincipalIds.includes(principal.id)}
+                  onCheckedChange={(checked) => togglePrincipal(principal.id, checked === true)}
+                />
+              </label>
+            ))
+          )}
         </CardContent>
       </Card>
 
@@ -374,4 +433,78 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
       </div>
     </form>
   );
+}
+
+async function createClient(payload: {
+  kind: "individual" | "company";
+  user_id: string;
+  first_name: string | null;
+  last_name: string | null;
+  business_name: string | null;
+  tax_code: string | null;
+  vat_number: string | null;
+  email: string | null;
+  phone: string | null;
+  pec: string | null;
+  sdi_code: string | null;
+  address_street: string | null;
+  address_city: string | null;
+  address_zip: string | null;
+  address_province: string | null;
+  notes: string | null;
+}) {
+  const { data, error } = await supabase.from("clients").insert(payload).select("id").single();
+  if (error) throw error;
+  return data.id;
+}
+
+async function updateClient(
+  id: string,
+  payload: {
+    kind: "individual" | "company";
+    user_id: string;
+    first_name: string | null;
+    last_name: string | null;
+    business_name: string | null;
+    tax_code: string | null;
+    vat_number: string | null;
+    email: string | null;
+    phone: string | null;
+    pec: string | null;
+    sdi_code: string | null;
+    address_street: string | null;
+    address_city: string | null;
+    address_zip: string | null;
+    address_province: string | null;
+    notes: string | null;
+  },
+) {
+  const { data, error } = await supabase
+    .from("clients")
+    .update(payload)
+    .eq("id", id)
+    .select("id")
+    .single();
+  if (error) throw error;
+  return data.id;
+}
+
+async function syncPrincipalLinks(clientId: string, userId: string, principalIds: string[]) {
+  const { error: deleteError } = await supabase
+    .from("principal_clients")
+    .delete()
+    .eq("client_id", clientId);
+  if (deleteError) throw deleteError;
+
+  const uniquePrincipalIds = Array.from(new Set(principalIds));
+  if (uniquePrincipalIds.length === 0) return;
+
+  const { error } = await supabase.from("principal_clients").insert(
+    uniquePrincipalIds.map((principalId) => ({
+      user_id: userId,
+      client_id: clientId,
+      principal_id: principalId,
+    })),
+  );
+  if (error) throw error;
 }

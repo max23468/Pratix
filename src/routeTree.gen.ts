@@ -23,11 +23,17 @@ import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PraticheIndexRouteImport } from './routes/pratiche.index'
 import { Route as FattureIndexRouteImport } from './routes/fatture.index'
+import { Route as ContropartiIndexRouteImport } from './routes/controparti.index'
+import { Route as CommittentiIndexRouteImport } from './routes/committenti.index'
 import { Route as ClientiIndexRouteImport } from './routes/clienti.index'
 import { Route as PraticheNuovaRouteImport } from './routes/pratiche.nuova'
 import { Route as PraticheCaseIdRouteImport } from './routes/pratiche.$caseId'
 import { Route as FattureNuovaRouteImport } from './routes/fatture.nuova'
 import { Route as FattureInvoiceIdRouteImport } from './routes/fatture.$invoiceId'
+import { Route as ContropartiNuovaRouteImport } from './routes/controparti.nuova'
+import { Route as ContropartiCounterpartyIdRouteImport } from './routes/controparti.$counterpartyId'
+import { Route as CommittentiNuovoRouteImport } from './routes/committenti.nuovo'
+import { Route as CommittentiPrincipalIdRouteImport } from './routes/committenti.$principalId'
 import { Route as ClientiNuovoRouteImport } from './routes/clienti.nuovo'
 import { Route as ClientiClientIdRouteImport } from './routes/clienti.$clientId'
 import { Route as ApiCronDailyRouteImport } from './routes/api.cron.daily'
@@ -102,6 +108,16 @@ const FattureIndexRoute = FattureIndexRouteImport.update({
   path: '/fatture/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ContropartiIndexRoute = ContropartiIndexRouteImport.update({
+  id: '/controparti/',
+  path: '/controparti/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommittentiIndexRoute = CommittentiIndexRouteImport.update({
+  id: '/committenti/',
+  path: '/committenti/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ClientiIndexRoute = ClientiIndexRouteImport.update({
   id: '/clienti/',
   path: '/clienti/',
@@ -125,6 +141,27 @@ const FattureNuovaRoute = FattureNuovaRouteImport.update({
 const FattureInvoiceIdRoute = FattureInvoiceIdRouteImport.update({
   id: '/fatture/$invoiceId',
   path: '/fatture/$invoiceId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContropartiNuovaRoute = ContropartiNuovaRouteImport.update({
+  id: '/controparti/nuova',
+  path: '/controparti/nuova',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ContropartiCounterpartyIdRoute =
+  ContropartiCounterpartyIdRouteImport.update({
+    id: '/controparti/$counterpartyId',
+    path: '/controparti/$counterpartyId',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const CommittentiNuovoRoute = CommittentiNuovoRouteImport.update({
+  id: '/committenti/nuovo',
+  path: '/committenti/nuovo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CommittentiPrincipalIdRoute = CommittentiPrincipalIdRouteImport.update({
+  id: '/committenti/$principalId',
+  path: '/committenti/$principalId',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ClientiNuovoRoute = ClientiNuovoRouteImport.update({
@@ -158,11 +195,17 @@ export interface FileRoutesByFullPath {
   '/termini': typeof TerminiRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
+  '/committenti/$principalId': typeof CommittentiPrincipalIdRoute
+  '/committenti/nuovo': typeof CommittentiNuovoRoute
+  '/controparti/$counterpartyId': typeof ContropartiCounterpartyIdRoute
+  '/controparti/nuova': typeof ContropartiNuovaRoute
   '/fatture/$invoiceId': typeof FattureInvoiceIdRoute
   '/fatture/nuova': typeof FattureNuovaRoute
   '/pratiche/$caseId': typeof PraticheCaseIdRoute
   '/pratiche/nuova': typeof PraticheNuovaRoute
   '/clienti/': typeof ClientiIndexRoute
+  '/committenti/': typeof CommittentiIndexRoute
+  '/controparti/': typeof ContropartiIndexRoute
   '/fatture/': typeof FattureIndexRoute
   '/pratiche/': typeof PraticheIndexRoute
   '/api/cron/daily': typeof ApiCronDailyRoute
@@ -182,11 +225,17 @@ export interface FileRoutesByTo {
   '/termini': typeof TerminiRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
+  '/committenti/$principalId': typeof CommittentiPrincipalIdRoute
+  '/committenti/nuovo': typeof CommittentiNuovoRoute
+  '/controparti/$counterpartyId': typeof ContropartiCounterpartyIdRoute
+  '/controparti/nuova': typeof ContropartiNuovaRoute
   '/fatture/$invoiceId': typeof FattureInvoiceIdRoute
   '/fatture/nuova': typeof FattureNuovaRoute
   '/pratiche/$caseId': typeof PraticheCaseIdRoute
   '/pratiche/nuova': typeof PraticheNuovaRoute
   '/clienti': typeof ClientiIndexRoute
+  '/committenti': typeof CommittentiIndexRoute
+  '/controparti': typeof ContropartiIndexRoute
   '/fatture': typeof FattureIndexRoute
   '/pratiche': typeof PraticheIndexRoute
   '/api/cron/daily': typeof ApiCronDailyRoute
@@ -207,11 +256,17 @@ export interface FileRoutesById {
   '/termini': typeof TerminiRoute
   '/clienti/$clientId': typeof ClientiClientIdRoute
   '/clienti/nuovo': typeof ClientiNuovoRoute
+  '/committenti/$principalId': typeof CommittentiPrincipalIdRoute
+  '/committenti/nuovo': typeof CommittentiNuovoRoute
+  '/controparti/$counterpartyId': typeof ContropartiCounterpartyIdRoute
+  '/controparti/nuova': typeof ContropartiNuovaRoute
   '/fatture/$invoiceId': typeof FattureInvoiceIdRoute
   '/fatture/nuova': typeof FattureNuovaRoute
   '/pratiche/$caseId': typeof PraticheCaseIdRoute
   '/pratiche/nuova': typeof PraticheNuovaRoute
   '/clienti/': typeof ClientiIndexRoute
+  '/committenti/': typeof CommittentiIndexRoute
+  '/controparti/': typeof ContropartiIndexRoute
   '/fatture/': typeof FattureIndexRoute
   '/pratiche/': typeof PraticheIndexRoute
   '/api/cron/daily': typeof ApiCronDailyRoute
@@ -233,11 +288,17 @@ export interface FileRouteTypes {
     | '/termini'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
+    | '/committenti/$principalId'
+    | '/committenti/nuovo'
+    | '/controparti/$counterpartyId'
+    | '/controparti/nuova'
     | '/fatture/$invoiceId'
     | '/fatture/nuova'
     | '/pratiche/$caseId'
     | '/pratiche/nuova'
     | '/clienti/'
+    | '/committenti/'
+    | '/controparti/'
     | '/fatture/'
     | '/pratiche/'
     | '/api/cron/daily'
@@ -257,11 +318,17 @@ export interface FileRouteTypes {
     | '/termini'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
+    | '/committenti/$principalId'
+    | '/committenti/nuovo'
+    | '/controparti/$counterpartyId'
+    | '/controparti/nuova'
     | '/fatture/$invoiceId'
     | '/fatture/nuova'
     | '/pratiche/$caseId'
     | '/pratiche/nuova'
     | '/clienti'
+    | '/committenti'
+    | '/controparti'
     | '/fatture'
     | '/pratiche'
     | '/api/cron/daily'
@@ -281,11 +348,17 @@ export interface FileRouteTypes {
     | '/termini'
     | '/clienti/$clientId'
     | '/clienti/nuovo'
+    | '/committenti/$principalId'
+    | '/committenti/nuovo'
+    | '/controparti/$counterpartyId'
+    | '/controparti/nuova'
     | '/fatture/$invoiceId'
     | '/fatture/nuova'
     | '/pratiche/$caseId'
     | '/pratiche/nuova'
     | '/clienti/'
+    | '/committenti/'
+    | '/controparti/'
     | '/fatture/'
     | '/pratiche/'
     | '/api/cron/daily'
@@ -306,11 +379,17 @@ export interface RootRouteChildren {
   TerminiRoute: typeof TerminiRoute
   ClientiClientIdRoute: typeof ClientiClientIdRoute
   ClientiNuovoRoute: typeof ClientiNuovoRoute
+  CommittentiPrincipalIdRoute: typeof CommittentiPrincipalIdRoute
+  CommittentiNuovoRoute: typeof CommittentiNuovoRoute
+  ContropartiCounterpartyIdRoute: typeof ContropartiCounterpartyIdRoute
+  ContropartiNuovaRoute: typeof ContropartiNuovaRoute
   FattureInvoiceIdRoute: typeof FattureInvoiceIdRoute
   FattureNuovaRoute: typeof FattureNuovaRoute
   PraticheCaseIdRoute: typeof PraticheCaseIdRoute
   PraticheNuovaRoute: typeof PraticheNuovaRoute
   ClientiIndexRoute: typeof ClientiIndexRoute
+  CommittentiIndexRoute: typeof CommittentiIndexRoute
+  ContropartiIndexRoute: typeof ContropartiIndexRoute
   FattureIndexRoute: typeof FattureIndexRoute
   PraticheIndexRoute: typeof PraticheIndexRoute
   ApiCronDailyRoute: typeof ApiCronDailyRoute
@@ -416,6 +495,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof FattureIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/controparti/': {
+      id: '/controparti/'
+      path: '/controparti'
+      fullPath: '/controparti/'
+      preLoaderRoute: typeof ContropartiIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/committenti/': {
+      id: '/committenti/'
+      path: '/committenti'
+      fullPath: '/committenti/'
+      preLoaderRoute: typeof CommittentiIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/clienti/': {
       id: '/clienti/'
       path: '/clienti'
@@ -449,6 +542,34 @@ declare module '@tanstack/react-router' {
       path: '/fatture/$invoiceId'
       fullPath: '/fatture/$invoiceId'
       preLoaderRoute: typeof FattureInvoiceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/controparti/nuova': {
+      id: '/controparti/nuova'
+      path: '/controparti/nuova'
+      fullPath: '/controparti/nuova'
+      preLoaderRoute: typeof ContropartiNuovaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/controparti/$counterpartyId': {
+      id: '/controparti/$counterpartyId'
+      path: '/controparti/$counterpartyId'
+      fullPath: '/controparti/$counterpartyId'
+      preLoaderRoute: typeof ContropartiCounterpartyIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/committenti/nuovo': {
+      id: '/committenti/nuovo'
+      path: '/committenti/nuovo'
+      fullPath: '/committenti/nuovo'
+      preLoaderRoute: typeof CommittentiNuovoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/committenti/$principalId': {
+      id: '/committenti/$principalId'
+      path: '/committenti/$principalId'
+      fullPath: '/committenti/$principalId'
+      preLoaderRoute: typeof CommittentiPrincipalIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/clienti/nuovo': {
@@ -490,11 +611,17 @@ const rootRouteChildren: RootRouteChildren = {
   TerminiRoute: TerminiRoute,
   ClientiClientIdRoute: ClientiClientIdRoute,
   ClientiNuovoRoute: ClientiNuovoRoute,
+  CommittentiPrincipalIdRoute: CommittentiPrincipalIdRoute,
+  CommittentiNuovoRoute: CommittentiNuovoRoute,
+  ContropartiCounterpartyIdRoute: ContropartiCounterpartyIdRoute,
+  ContropartiNuovaRoute: ContropartiNuovaRoute,
   FattureInvoiceIdRoute: FattureInvoiceIdRoute,
   FattureNuovaRoute: FattureNuovaRoute,
   PraticheCaseIdRoute: PraticheCaseIdRoute,
   PraticheNuovaRoute: PraticheNuovaRoute,
   ClientiIndexRoute: ClientiIndexRoute,
+  CommittentiIndexRoute: CommittentiIndexRoute,
+  ContropartiIndexRoute: ContropartiIndexRoute,
   FattureIndexRoute: FattureIndexRoute,
   PraticheIndexRoute: PraticheIndexRoute,
   ApiCronDailyRoute: ApiCronDailyRoute,
