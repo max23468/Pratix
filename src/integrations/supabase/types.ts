@@ -14,50 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      case_deadlines: {
-        Row: {
-          case_id: string
-          completed: boolean
-          completed_at: string | null
-          created_at: string
-          description: string
-          due_date: string
-          id: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          case_id: string
-          completed?: boolean
-          completed_at?: string | null
-          created_at?: string
-          description: string
-          due_date: string
-          id?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          case_id?: string
-          completed?: boolean
-          completed_at?: string | null
-          created_at?: string
-          description?: string
-          due_date?: string
-          id?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "case_deadlines_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       case_status_history: {
         Row: {
           case_id: string
