@@ -4,14 +4,21 @@ Termini legali, fiscali e di prodotto usati in Pratix. Pensato per chi lavora al
 
 ## Termini di prodotto
 
-| Termine         | Significato                                                                                                                                                    | Note                                                                 |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| **Pratica**     | Incarico professionale assegnato dal cliente. Sostituisce "caso".                                                                                              | Glossario di prodotto, vedi [tono-di-voce](./guides/tono-di-voce.md) |
-| **Cliente**     | Persona fisica o azienda che conferisce l'incarico. Sostituisce "assistito".                                                                                   |                                                                      |
-| **Scadenza**    | Adempimento legato a una pratica con data limite. Sostituisce "deadline".                                                                                      |                                                                      |
-| **Spese**       | Costi sostenuti per conto del cliente, anticipi inclusi. Sostituisce "costi".                                                                                  |                                                                      |
-| **Fattura**     | Documento fiscale emesso al cliente. In Pratix sempre **parcella** (TD06).                                                                                     |                                                                      |
-| **Professione** | Termine generico per riferirsi al lavoro del professionista. Mai "studio". Preferito a "attività", che è ambigua (indica anche le voci di lavoro fatturabili). |                                                                      |
+| Termine                 | Significato                                                                                                                          | Note                                                                                        |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| **Committente**         | Società o ente a cui l'avvocato emette fattura. Nel recupero crediti ha uno o più clienti collegati.                                 | Nuovo dominio recupero crediti, vedi [ADR 0013](./decisions/0013-focus-recupero-crediti.md) |
+| **Cliente**             | Soggetto collegato a uno o più committenti, spesso titolare del credito o società veicolo del portafoglio. Sostituisce "assistito".  |                                                                                             |
+| **Controparte**         | Soggetto verso cui si svolge la pratica. Può essere persona, società o insieme di più soggetti con dati propri minimi e note.        |                                                                                             |
+| **Pratica**             | Unità centrale di lavoro, data dall'incrocio tra committente, cliente e controparte. Sostituisce "caso".                             | Glossario di prodotto, vedi [tono-di-voce](./guides/tono-di-voce.md)                        |
+| **Attività**            | Voce operativa svolta nella pratica e fatturabile all'avvocato, come precetto, notifica, pignoramento, udienza o rimborso collegato. | Termine centrale nel nuovo dominio                                                          |
+| **Compenso / Onorario** | Attività imponibile con importo definito dai prezzi annuali condivisi. "Onorario" e "compenso" sono sinonimi.                        |                                                                                             |
+| **Rimborso spese**      | Anticipazione Art. 15 ammessa dai prezzi condivisi con importo inserito dall'avvocato e allegati facoltativi.                        |                                                                                             |
+| **Prezzi**              | Insieme annuale condiviso delle voci di compenso/onorario e rimborso spese.                                                          | Label principale in UI                                                                      |
+| **Scadenza**            | Data limite o scadenza di pagamento. Il modulo scadenzario autonomo è destinato alla rimozione. Sostituisce "deadline".              |                                                                                             |
+| **Spese**               | Costi sostenuti per conto del cliente o del committente, anticipi inclusi. Sostituisce "costi".                                      |                                                                                             |
+| **Fattura**             | Documento fiscale emesso al committente. In Pratix sempre **parcella** (TD06).                                                       |                                                                                             |
+| **Rendiconto Excel**    | Allegato alla fattura compilato nel formato richiesto dal committente, distinto per onorari/compensi e rimborsi spese.               |                                                                                             |
+| **Professione**         | Termine generico per riferirsi al lavoro del professionista.                                                                         |                                                                                             |
 
 ## Fatturazione elettronica
 
@@ -23,7 +30,7 @@ Termini legali, fiscali e di prodotto usati in Pratix. Pensato per chi lavora al
 | **PEC**                           | Posta Elettronica Certificata, indirizzo legale per ricevere comunicazioni ufficiali e fatture.                    |
 | **Codice destinatario**           | Codice di 7 caratteri identificativo del canale di ricezione SDI del cliente. Se assente si usa `0000000` con PEC. |
 | **CedentePrestatore**             | Chi emette la fattura (l'avvocato in Pratix).                                                                      |
-| **CessionarioCommittente**        | Chi riceve la fattura (il cliente).                                                                                |
+| **CessionarioCommittente**        | Chi riceve la fattura (nel nuovo flusso Pratix, il committente).                                                   |
 
 ## Regimi fiscali italiani per avvocati
 

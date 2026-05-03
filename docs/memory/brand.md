@@ -10,5 +10,5 @@ Punti chiave non negoziabili:
 - Display: Inter Tight 600, mai >600. Body: Inter. Mono: JetBrains Mono. Tutti via Google Fonts in `__root.tsx`.
 - Componente `<Logo>` (direction px/bar/seal · form mark/wordmark/lockup · tone navy/inverse/mono). Mai SVG inline. Tone `navy` è **adattivo**: tile inchiostro/glifo panna in light, tile panna/glifo inchiostro in dark, gestito dai token `--logo-tile`, `--logo-glyph`, `--logo-border`, `--logo-border-opacity`, `--logo-wordmark`.
 - Button: variante `gold` per CTA premium (terracotta), `default` per primarie inchiostro.
-- Tono: tu professionale neutro, niente emoji, niente esclamativi, glossario fisso (Pratica/Cliente/Scadenza/Spese/Fattura).
+- Tono: tu professionale neutro, niente emoji, niente esclamativi, glossario recupero crediti (Committente/Cliente/Controparte/Pratica/Attività/Compenso-Onorario/Prezzi/Rimborso spese/Fattura/Rendiconto Excel).
 - Tabular-nums automatico su `.num`, `.tabular`, `.font-mono`, `td.text-right`.

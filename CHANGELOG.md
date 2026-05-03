@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Non versionato
+
+- **Piano recupero crediti**: definita e chiusa l'evoluzione di Pratix verso committenti, clienti, controparti, pratiche, attività fatturabili, prezzi annuali, rendiconti Excel e fatturazione per committente/periodo, con versione stampabile del piano.
+- **Glossario recupero crediti**: aggiornate le regole terminologiche; "attività" diventa termine centrale, "Prezzi" sostituisce listini/tariffe come label UI, "onorario" e "compenso" sono sinonimi e "studio" non è più vietata in assoluto, pur restando fuori dal posizionamento verso studi associati.
+- **Versioning documentale chiarito**: pubblicare piani, ADR e documenti interni non equivale a rilasciare una nuova versione dell'app; queste modifiche restano non versionate finché non cambiano prodotto, runtime o contenuti esposti.
+
 ## [0.4.1] — 2026-05-03
 
 ### Sotto il cofano
