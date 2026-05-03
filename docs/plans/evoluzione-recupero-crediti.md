@@ -616,6 +616,12 @@ Uscita fase:
 
 **Obiettivo**: creare la base dati del nuovo dominio.
 
+**Stato**: completata su migration
+`20260503202905_phase_2_debt_collection_schema.sql`, applicata al progetto
+Supabase collegato e con tipi TypeScript rigenerati. La migration è compatibile
+con la UI attuale: aggiunge il nuovo dominio senza rimuovere le colonne legacy
+ancora usate dalle schermate esistenti.
+
 Attività:
 
 1. Disegnare migration Supabase per:

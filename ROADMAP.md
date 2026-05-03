@@ -72,6 +72,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Generazione XML FatturaPA (TD06)  | `src/lib/invoice-xml.ts`                                                                           |
 | ✅    | Piano evoluzione recupero crediti | `docs/plans/evoluzione-recupero-crediti.md` + ADR-0013                                             |
 | ✅    | Rimozione scadenzario             | Route, sidebar, dashboard, tab pratica e tabella `case_deadlines` rimossi                          |
+| ✅    | Schema recupero crediti Fase 2    | Migration applicata, tipi Supabase rigenerati e snapshot SQL aggiornato                            |
 | ⬜    | Committenti                       | Anagrafica soggetto fatturato                                                                      |
 | ⬜    | Clienti multi-committente         | Relazione molti-a-molti fra committenti e clienti                                                  |
 | ⬜    | Controparti strutturate           | Persone/società, gruppi di soggetti e cessioni credito                                             |
@@ -162,9 +163,9 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## Prossime mosse suggerite (in ordine)
 
-1. **Disegnare e migrare il nuovo schema recupero crediti** con committenti, clienti, controparti, pratiche, prezzi e attività.
-2. **Costruire il flusso attività → fattura** per committente e periodo.
-3. **Aggiungere import guidato** manuale ed Excel con staging.
-4. **Rifinire ricerca, filtri e rendiconti Excel** dopo i primi flussi completi.
+1. **Pubblicare la Fase 2** con merge su `main` e verifica deployment production.
+2. **Costruire le anagrafiche Fase 3** per committenti, clienti multi-committente e controparti.
+3. **Costruire il flusso attività → fattura** per committente e periodo.
+4. **Aggiungere import guidato** manuale ed Excel con staging.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.

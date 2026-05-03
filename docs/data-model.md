@@ -4,7 +4,8 @@
 > verità SQL è [`../supabase/schema.sql`](../supabase/schema.sql); questo file
 > spiega **cosa** rappresentano le tabelle e **perché** sono fatte così.
 
-Aggiornato a: versione **0.4.0** + Storage privato.
+Aggiornato a: **Fase 2 recupero crediti** + migration
+`20260503202905_phase_2_debt_collection_schema`.
 
 ## Principi generali
 
@@ -24,9 +25,10 @@ Aggiornato a: versione **0.4.0** + Storage privato.
    creata automaticamente al primo signup dal trigger `handle_new_user`.
 
 4. **Foreign key dichiarate** per le relazioni operative principali. Le tabelle
-   utente referenziano `auth.users(id)`; pratiche, spese, fatture e righe
-   fattura dichiarano le relazioni fra loro per abilitare join PostgREST,
-   cancellazioni coerenti e integrità referenziale.
+   utente referenziano `auth.users(id)`; le relazioni fra committenti, clienti,
+   controparti, pratiche, prezzi, attività e fatturazione usano foreign key
+   composite `(id, user_id)` quando serve evitare collegamenti fra proprietari
+   diversi.
 
 5. **RLS resta la barriera applicativa**. Le foreign key proteggono la coerenza
    dei dati, mentre l'accesso alle righe continua a dipendere dalle policy
@@ -49,22 +51,80 @@ Contiene tre famiglie di dati:
 
 ### `clients`
 
-Rubrica clienti dell'avvocato. `kind` distingue persona fisica (`individual`)
-da soggetto giuridico (`company`); a seconda del tipo si valorizzano
-`first_name`+`last_name` o `business_name`. Indirizzo e dati fiscali servono
-per emettere fatture.
+Rubrica clienti dell'avvocato. Nel nuovo dominio recupero crediti il cliente è
+il soggetto per cui viene gestita la posizione creditoria, mentre la fattura
+viene emessa al committente. `kind` distingue persona fisica (`individual`) da
+soggetto giuridico (`company`); a seconda del tipo si valorizzano
+`first_name`+`last_name` o `business_name`.
+
+La stessa anagrafica cliente può essere collegata a più committenti tramite
+`principal_clients`.
+
+### `principals`
+
+Committenti. Sono i soggetti a cui l'avvocato emette fattura e che hanno uno o
+più clienti collegati.
+
+Oltre ai dati fiscali e di contatto, contengono:
+
+- `fees_enabled`: abilita o disabilita i compensi per quel committente;
+- `expense_reimbursements_enabled`: abilita o disabilita i rimborsi spese;
+- `default_general_expenses_rate`: percentuale spese generali, oggi 10%;
+- `default_cassa_rate`: percentuale cassa forense, oggi 4%.
+
+Il vincolo `principals_economics_at_least_one_enabled` impedisce di disattivare
+contemporaneamente compensi e rimborsi.
+
+### `principal_clients`
+
+Tabella ponte molti-a-molti fra committenti e clienti. Permette di usare
+un'unica anagrafica cliente anche quando lo stesso cliente è collegato a più
+committenti.
+
+### `counterparties`
+
+Controparti verso cui si svolge il recupero crediti o l'assistenza legale.
+`kind` distingue:
+
+- `individual`: persona fisica;
+- `company`: società;
+- `group`: controparte composta.
+
+Per le persone fisiche bastano nome e cognome; per società e gruppi basta la
+ragione sociale. Le note raccolgono informazioni aggiuntive non strutturate.
+
+### `counterparty_subjects`
+
+Soggetti interni a una controparte composta. Non hanno ruoli applicativi
+obbligatori: servono solo a poter spuntare separatamente i componenti del gruppo
+quando l'operatore deve lavorare su una controparte composta.
 
 ### `cases`
 
-Le **pratiche** legali. Una pratica appartiene a un cliente (`client_id`)
-e a un'unica materia (`matter`: civile, penale, lavoro…). Contiene:
+Le **pratiche** legali, chiamate anche posizioni. Nel recupero crediti la
+pratica è l'incrocio fra committente (`principal_id`), cliente corrente
+(`client_id`) e controparte (`counterparty_id`).
 
-- numerazione interna (`case_number`, unica per utente)
+Contiene:
+
+- numerazione interna storica (`case_number`, unica per utente);
+- numero pratica numerico (`practice_number`, positivo e unico per utente);
 - stato corrente (`status`)
 - dati di causa (autorità, RG, controparte)
 - accordo economico (`fee_type` flat/orario, `agreed_fee`, `hourly_rate`,
   `retainer`)
 - date di apertura/chiusura
+
+`case_number` resta per compatibilità con la UI attuale; il nuovo dominio usa
+`practice_number`. Il trigger `cases_assign_practice_number` consente sia
+l'inserimento manuale di un numero esistente, sia la generazione atomica del
+prossimo numero libero.
+
+### `case_credit_transfers`
+
+Storico delle cessioni del credito. Registra quando una pratica passa da un
+cliente precedente a un nuovo cliente. La pratica mostra sempre il cliente
+corrente; la tabella mantiene il fatto storico della cessione.
 
 ### `case_status_history`
 
@@ -74,13 +134,66 @@ automaticamente dal trigger `cases_log_status_change` su `INSERT` e su
 impedisce). Ha indici su `case_id` e `user_id`, così le foreign key usate dal
 trigger e dalle policy restano coperte anche al crescere dello storico.
 
-### `expenses`
+### `price_books`
+
+Prezzi annuali per committente. Ogni committente ha un set di prezzi per anno,
+con stato `draft`, `active` o `archived` e flag separati per compensi e rimborsi.
+
+Il vincolo `(user_id, principal_id, year)` garantisce un solo listino annuale
+per committente e utente.
+
+### `price_items`
+
+Voci di prezzo del committente. `kind` distingue:
+
+- `fee`: compenso/onorario a prezzo unitario;
+- `expense_reimbursement`: rimborso spese Art. 15 con importo libero sulla
+  singola attività.
+
+Per i compensi `unit_price` è obbligatorio. `requires_hearing_dates` abilita la
+raccolta del numero di udienze e della data di ciascuna udienza nei procedimenti
+ordinari, mediazione, esecutivi e concorsuali.
+
+### `case_activities`
+
+Attività economiche della pratica: compensi e rimborsi spese da fatturare o già
+fatturati al committente.
+
+Ogni riga conserva uno snapshot della voce prezzo (`snapshot_price_year`,
+`snapshot_price_code`, `snapshot_price_name`) per non cambiare lo storico quando
+i prezzi annuali vengono aggiornati. Il totale viene calcolato dal trigger
+`case_activities_set_amount` come `quantity * unit_price`.
+
+Gli stati ammessi sono:
+
+- `to_invoice`: da fatturare;
+- `invoiced`: fatturata.
+
+`postponed_until` e `postponed_count` supportano il rinvio al periodo di
+fatturazione successivo.
+
+### `case_activity_hearings`
+
+Date udienza collegate a una riga attività quando la voce prezzo le richiede.
+Servono per conteggiare udienze multiple senza perdere il dettaglio temporale.
+
+### `activity_attachments`
+
+Metadati degli allegati caricati su Supabase Storage per compensi e rimborsi:
+nome originale, nome descrittivo, tipo documento, MIME type, dimensione, note e
+flag anteprima.
+
+### `expenses` (legacy)
 
 **Spese** sostenute per conto del cliente. `is_art15` distingue le spese
 escluse dall'imponibile ex art. 15 DPR 633/72 (anticipazioni in nome e per
 conto del cliente) dalle spese imponibili. Una spesa può essere associata a
 una fattura (`invoice_id` nullabile): finché è null, la spesa è "da
 fatturare".
+
+Nel nuovo recupero crediti i rimborsi confluiscono in `case_activities` con
+`kind = expense_reimbursement`. `expenses` resta per compatibilità con la UI
+esistente fino alla migrazione delle schermate.
 
 ### `invoices`
 
@@ -94,6 +207,34 @@ importi vengono persistiti per evitare ricalcoli e per congelare il
 documento al momento dell'emissione. Aliquote di default vengono ereditate
 da `profiles` ma sono editabili per fattura.
 
+La Fase 2 aggiunge il collegamento opzionale a `principals` e `billing_runs` e
+i campi per spese generali: `include_general_expenses`,
+`general_expenses_rate`, `general_expenses_amount`, `cassa_base_amount`. La
+cassa forense si calcola solo su compensi + spese generali, non sui rimborsi
+Art. 15.
+
+### `billing_runs`
+
+Sessioni di fatturazione per committente e periodo. Raccolgono le attività da
+includere in fattura e congelano i totali del periodo:
+
+- compensi;
+- spese generali opzionali;
+- base cassa;
+- cassa forense;
+- rimborsi spese Art. 15.
+
+### `billing_run_items`
+
+Righe selezionate in una sessione di fatturazione. `status` permette di
+includere, rinviare o escludere una specifica attività dal periodo corrente.
+
+### `billing_exports`
+
+File Excel generati come rendiconto per il committente. `kind` distingue export
+onorari/compensi ed export rimborsi spese, nel formato richiesto dai template
+del committente.
+
 ### `invoice_lines`
 
 **Righe di una fattura**. `kind` distingue:
@@ -106,12 +247,41 @@ da `profiles` ma sono editabili per fattura.
 La tabella mantiene indici su `invoice_id` e `user_id`, così la cascata dalla
 fattura e le policy RLS non richiedono scansioni complete.
 
+La Fase 2 aggiunge campi snapshot di rendicontazione (`practice_number`,
+`client_name`, `counterparty_name`, `activity_date`) e il collegamento opzionale
+a `case_activities`.
+
+### `imports`
+
+Sessioni di import archivio, sia manuali guidate sia da Excel strutturato.
+Tracciano stato, file sorgente quando presente, conteggi righe e note.
+
+### `import_rows`
+
+Righe di staging dell'import. Conservano dato grezzo (`raw_data`), dato
+normalizzato (`normalized_data`), warning, errori e l'eventuale pratica creata o
+agganciata.
+
 ## Relazioni (logiche, non FK)
 
 ```
-profiles (1) ─── (N) clients ─── (N) cases ─── (N) case_status_history
-                                     │
-                                     └──── (N) expenses ─── (0..1) invoices ─── (N) invoice_lines
+profiles (1) ─── (N) principals ─── (N) price_books ─── (N) price_items
+                      │
+                      ├── (N) principal_clients ─── (N) clients
+                      │
+                      ├── (N) cases ─── (N) case_activities ─── (N) activity_attachments
+                      │       │                    │
+                      │       │                    └── (N) case_activity_hearings
+                      │       ├── (N) case_status_history
+                      │       └── (N) case_credit_transfers
+                      │
+                      └── (N) billing_runs ─── (N) billing_run_items
+                                           └── (N) billing_exports
+
+counterparties (1) ─── (N) counterparty_subjects
+cases (N) ─── (1) counterparties
+invoices (1) ─── (N) invoice_lines
+imports (1) ─── (N) import_rows
 ```
 
 ## Storage
@@ -127,6 +297,9 @@ I file sono organizzati con il primo segmento uguale all'UUID dell'utente:
 <user_id>/invoices/<invoice_id>/<file>
 <user_id>/cases/<case_id>/<file>
 <user_id>/expenses/<expense_id>/<file>
+<user_id>/activities/<activity_id>/<file>
+<user_id>/billing-exports/<billing_run_id>/<file>
+<user_id>/imports/<import_id>/<file>
 <user_id>/profile/<file>
 <user_id>/exports/<file>
 ```
@@ -139,31 +312,46 @@ quando serve.
 
 ## Enum
 
-| Enum                | Valori                                                                           |
-| ------------------- | -------------------------------------------------------------------------------- |
-| `case_matter`       | civile, penale, lavoro, famiglia, amministrativo, tributario, commerciale, altro |
-| `case_status`       | open, in_progress, suspended, closed, archived                                   |
-| `client_kind`       | individual, company                                                              |
-| `expense_category`  | contributo_unificato, marche_da_bollo, copie, trasferte, ctu, notifiche, altro   |
-| `fee_type`          | flat, hourly                                                                     |
-| `invoice_line_kind` | fee, expense_taxable, expense_art15                                              |
-| `invoice_status`    | draft, issued, paid, overdue                                                     |
-| `tax_regime`        | ordinario, forfettario                                                           |
+| Enum                      | Valori                                                                           |
+| ------------------------- | -------------------------------------------------------------------------------- |
+| `billing_export_kind`     | fees, expenses                                                                   |
+| `billing_run_item_status` | included, postponed, excluded                                                    |
+| `billing_run_status`      | draft, finalized, cancelled                                                      |
+| `case_activity_status`    | to_invoice, invoiced                                                             |
+| `case_matter`             | civile, penale, lavoro, famiglia, amministrativo, tributario, commerciale, altro |
+| `case_status`             | open, in_progress, suspended, closed, archived                                   |
+| `client_kind`             | individual, company                                                              |
+| `counterparty_kind`       | individual, company, group                                                       |
+| `expense_category`        | contributo_unificato, marche_da_bollo, copie, trasferte, ctu, notifiche, altro   |
+| `fee_type`                | flat, hourly                                                                     |
+| `import_mode`             | manual, excel                                                                    |
+| `import_row_status`       | pending, valid, warning, error, imported, skipped                                |
+| `import_status`           | draft, validated, imported, cancelled                                            |
+| `invoice_line_kind`       | fee, expense_taxable, expense_art15                                              |
+| `invoice_status`          | draft, issued, paid, overdue                                                     |
+| `price_book_status`       | draft, active, archived                                                          |
+| `price_item_kind`         | fee, expense_reimbursement                                                       |
+| `tax_regime`              | ordinario, forfettario                                                           |
 
 Convenzione: i valori enum sono in **inglese minuscolo** (perché identifier
 di codice), le label utente sono tradotte in italiano in `src/lib/labels.ts`.
 
 ## Trigger
 
-| Tabella                                                | Trigger                                      | Cosa fa                                                                        |
-| ------------------------------------------------------ | -------------------------------------------- | ------------------------------------------------------------------------------ |
-| `profiles`, `clients`, `cases`, `expenses`, `invoices` | `*_set_updated_at`                           | Aggiorna `updated_at = now()` su UPDATE                                        |
-| `cases`                                                | `cases_log_status_change`                    | Su INSERT e UPDATE (se status cambia), inserisce riga in `case_status_history` |
-| `auth.users`                                           | `on_auth_user_created` (gestito da Supabase) | Chiama `handle_new_user()` che crea la riga `profiles`                         |
+| Tabella                             | Trigger                                      | Cosa fa                                                                        |
+| ----------------------------------- | -------------------------------------------- | ------------------------------------------------------------------------------ |
+| Tabelle user-owned con `updated_at` | `*_set_updated_at`                           | Aggiorna `updated_at = now()` su UPDATE                                        |
+| `cases`                             | `cases_log_status_change`                    | Su INSERT e UPDATE (se status cambia), inserisce riga in `case_status_history` |
+| `cases`                             | `cases_assign_practice_number`               | Genera o valida `practice_number` in modo atomico                              |
+| `case_activities`                   | `case_activities_set_amount`                 | Calcola `amount = quantity * unit_price`                                       |
+| `auth.users`                        | `on_auth_user_created` (gestito da Supabase) | Chiama `handle_new_user()` che crea la riga `profiles`                         |
 
 Le funzioni usate solo dai trigger (`handle_new_user`, `log_case_status_change`
-e `set_updated_at`) non sono eseguibili via RPC da ruoli `anon` o
-`authenticated`.
+`set_updated_at`, `assign_case_practice_number` e `set_case_activity_amount`)
+non sono eseguibili via RPC da ruoli `anon` o `authenticated`. La funzione
+`get_next_practice_number` è invece eseguibile dagli utenti autenticati per
+mostrare un numero suggerito in UI; l'inserimento resta comunque protetto dal
+trigger.
 
 ## Cosa NON c'è (e perché)
 
@@ -173,9 +361,12 @@ e `set_updated_at`) non sono eseguibili via RPC da ruoli `anon` o
 - **Niente `case_deadlines`**: lo scadenzario autonomo è stato rimosso dal
   perimetro recupero crediti. Restano solo le date proprie dei documenti e
   della fatturazione, ad esempio la scadenza pagamento della fattura.
-- **Niente tabella `documents`**: lo Storage privato è predisposto, ma non c'è
-  ancora un catalogo applicativo degli allegati. Quando serviranno metadati,
-  versioning o ricerca sui file, introdurre una tabella user-owned con RLS.
+- **Niente tabella `documents` generica**: lo Storage privato è predisposto e
+  gli allegati economici hanno `activity_attachments`, ma non c'è ancora un
+  catalogo unico documentale per tutte le pratiche.
+- **Niente UI nuovo schema in Fase 2**: questa fase crea la base dati. Le
+  schermate committenti, controparti, prezzi, attività, fatturazione e import
+  arrivano nelle fasi successive.
 - **Niente tabella `tags`**: per ora etichette libere in `notes` testuali.
   Se emergerà l'esigenza di filtri strutturati, valuteremo `text[]` o
   tabella separata.
