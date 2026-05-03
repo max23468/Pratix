@@ -12,6 +12,10 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 - **Scadenzario rimosso**: tolti pagina `/scadenze`, voce sidebar, card dashboard, tab pratica e tabella `case_deadlines`, mantenendo solo le scadenze fiscali proprie delle fatture.
 
+### Sotto il cofano
+
+- **Lint CI su file cancellati**: il workflow Quality esclude dal lint i file rimossi, così le PR di eliminazione moduli non falliscono su percorsi non più presenti.
+
 ## [0.4.1] — 2026-05-03
 
 ### Sotto il cofano

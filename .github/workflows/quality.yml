@@ -55,7 +55,7 @@ jobs:
           base_ref="${GITHUB_BASE_REF:-main}"
           git fetch origin "$base_ref" --depth=1
 
-          changed_source_files="$(git diff --name-only "origin/${base_ref}...HEAD" \
+          changed_source_files="$(git diff --name-only --diff-filter=ACMR "origin/${base_ref}...HEAD" \
             | grep -E '^((src|scripts|supabase)/.*\.(ts|tsx|js|jsx|mjs|cjs)|vite\.config\.ts|eslint\.config\.js)$' \
             || true)"
 
