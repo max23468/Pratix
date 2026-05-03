@@ -179,6 +179,7 @@ Vincoli di terminologia (vedi [`docs/glossario.md`](./docs/glossario.md)):
 - Per modifiche solo documentali, non serve inventare test applicativi: rileggi il documento e verifica la coerenza delle istruzioni.
 - Non inventare risultati di test o comandi non eseguiti. Se un controllo non può essere eseguito, dichiaralo esplicitamente con motivo e rischio residuo.
 - Nelle risposte finali evita footer rituali sui test. Riporta verifiche solo quando sono utili: comando eseguito, fallimento, controllo non eseguibile, limite noto o rischio residuo.
+- Ogni volta che termini un'attività, includi sempre nelle conclusioni i prossimi passi consigliati. Devono essere concreti, ordinati e proporzionati al lavoro appena concluso; se non c'è un seguito operativo reale, dichiaralo esplicitamente.
 
 ## Documentazione, memoria, glossario
 
