@@ -6,6 +6,10 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Non versionato
+
+- **Prossimi passi a fine attività**: aggiornata la regola operativa per chiedere sempre, nelle conclusioni, i prossimi passi consigliati dopo ogni attività completata.
+
 ## [0.5.0] — 2026-05-03
 
 ### Novità
