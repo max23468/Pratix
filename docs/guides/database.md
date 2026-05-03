@@ -8,7 +8,7 @@ Postgres + Auth + Storage + Realtime.
 1. **RLS sempre attiva** su ogni tabella con dati utente.
 2. **Foreign key verso `auth.users` solo quando utili all'integrità** — restano le policy RLS a decidere l'accesso.
 3. **Mai memorizzare ruoli su `profiles`** — tabella `user_roles` separata + funzione `has_role()` `SECURITY DEFINER`.
-4. **Mai modificare schemi riservati** Supabase: `auth`, `storage`, `realtime`, `supabase_functions`, `vault`.
+4. **Mai modificare schemi riservati** Supabase: `auth`, `storage`, `realtime`, `supabase_functions`, `vault`, salvo policy Storage documentate e versionate in migration.
 5. **Validazioni con trigger**, non con `CHECK` immutabili (rompono il restore quando dipendono da `now()`).
 6. **Mai hardcodare ruoli o admin lato client** (localStorage, ecc.) — sempre verifica server-side.
 
@@ -87,6 +87,9 @@ Le policy che richiedono ruolo usano poi `public.has_role((select auth.uid()), '
 - Dopo modifiche a schema, RLS, trigger o funzioni, usa:
   - `npm run db:advisors:security`
   - `npm run db:advisors:performance`
+- Dopo modifiche a bucket o policy Storage, usa almeno:
+  - `npm run db:push:dry-run`
+  - `npm run db:advisors:security`
 - Rigenera i tipi Supabase solo con `npm run db:types`, poi controlla il diff.
 
 Non automatizzare `supabase db push` da GitHub Actions finché Pratix usa un solo
@@ -168,6 +171,46 @@ Template italiani attesi:
 
 Non inserire dati personali, importi o riferimenti a clienti nei template Auth.
 
+## Supabase Storage
+
+Pratix usa un solo bucket privato:
+
+- `pratix-documents`
+
+Il bucket ospita documenti e fatture come priorità, ma copre anche allegati
+delle pratiche, spese, asset profilo ed export. I file devono sempre stare
+sotto una cartella proprietario con UUID utente come primo segmento:
+
+```text
+<user_id>/invoices/<invoice_id>/<file>
+<user_id>/cases/<case_id>/<file>
+<user_id>/expenses/<expense_id>/<file>
+<user_id>/profile/<file>
+<user_id>/exports/<file>
+```
+
+Le costanti e i builder path vivono in `src/lib/storage-paths.ts`. Non costruire
+path Storage a mano dentro componenti o server functions, così resta più facile
+mantenere le policy allineate.
+
+Il bucket è privato, con limite file a 25 MB e MIME types comuni per PDF, XML,
+ZIP, CSV, testo, immagini e documenti office. Se serve un formato nuovo, aggiungi
+prima il MIME type nella migration Storage e poi aggiorna questa guida.
+
+Le policy su `storage.objects` sono owner-scoped:
+
+- `select` solo se il primo segmento del path è `(select auth.uid())::text`;
+- `insert` solo dentro la cartella dell'utente autenticato;
+- `update` con `using` e `with check` sulla stessa cartella;
+- `delete` solo dentro la cartella dell'utente.
+
+Per upload con upsert servono `select`, `insert` e `update`: non rimuovere una
+di queste policy pensando che basti `insert`.
+
+Non rendere pubblico il bucket. Per condivisioni temporanee usa URL firmati
+generati lato server, senza inserire nomi clienti, importi o dati personali nei
+log.
+
 ## Realtime
 
 Per attivare realtime su una tabella:
@@ -202,6 +245,10 @@ Le policy RLS continuano a valere anche sui messaggi realtime.
 - `supabase db advisors --linked --type performance` per anomalie di performance.
 - Linter pulito **non** garantisce sicurezza: review manuale delle policy obbligatoria.
 
+Per Storage, gli advisors vanno accompagnati da un controllo manuale delle
+policy su `storage.objects`: bucket privato, path owner-scoped, nessuna policy
+`to public` e nessuna condizione basata su metadata modificabili dall'utente.
+
 ### Residui advisor noti
 
 - **Security — `Leaked Password Protection Disabled`**: warning accettato nel
@@ -226,6 +273,9 @@ Pratix il backup operativo è manuale:
 3. Non salvare mai nel repo dump reali, dati clienti, fatture, email o chiavi.
 4. Quando possibile, prova il restore su ambiente locale o su un progetto
    temporaneo non produttivo.
+5. Per Storage, esporta periodicamente anche gli oggetti del bucket
+   `pratix-documents` con strumenti Supabase/S3 compatibili, sempre fuori dal
+   repository e preferibilmente in archivio cifrato.
 
 Le migrations e `supabase/schema.sql` restano in GitHub; i dati reali no.
 Se un export serve durante una migrazione, mettilo in una cartella ignorata o

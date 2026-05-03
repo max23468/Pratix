@@ -4,7 +4,7 @@
 > verità SQL è [`../supabase/schema.sql`](../supabase/schema.sql); questo file
 > spiega **cosa** rappresentano le tabelle e **perché** sono fatte così.
 
-Aggiornato a: versione **0.3.0**.
+Aggiornato a: versione **0.4.0** + Storage privato.
 
 ## Principi generali
 
@@ -120,6 +120,29 @@ profiles (1) ─── (N) clients ─── (N) cases ─── (N) case_deadli
                                      └──── (N) expenses ─── (0..1) invoices ─── (N) invoice_lines
 ```
 
+## Storage
+
+Pratix usa Supabase Storage con un bucket privato:
+
+- `pratix-documents` — documenti, fatture generate, allegati, asset profilo ed
+  export dell'utente.
+
+I file sono organizzati con il primo segmento uguale all'UUID dell'utente:
+
+```text
+<user_id>/invoices/<invoice_id>/<file>
+<user_id>/cases/<case_id>/<file>
+<user_id>/expenses/<expense_id>/<file>
+<user_id>/profile/<file>
+<user_id>/exports/<file>
+```
+
+Le policy su `storage.objects` concedono `select`, `insert`, `update` e
+`delete` solo agli utenti autenticati quando `(storage.foldername(name))[1]`
+coincide con `(select auth.uid())::text`. Il bucket resta privato: per mostrare
+o scaricare file si usano client autenticati o URL firmati generati lato server
+quando serve.
+
 ## Enum
 
 | Enum                | Valori                                                                           |
@@ -153,8 +176,9 @@ e `set_updated_at`) non sono eseguibili via RPC da ruoli `anon` o
 - **Niente `time_entries`**: il time tracking è in roadmap (vedi `ROADMAP.md`,
   area "Funzionalità di prodotto" → ⬜). Per ora le ore si registrano nelle
   righe fattura.
-- **Niente `documents` / storage**: non gestiamo ancora allegati. Quando
-  arriveranno, vivranno in Supabase Storage con bucket per-utente.
+- **Niente tabella `documents`**: lo Storage privato è predisposto, ma non c'è
+  ancora un catalogo applicativo degli allegati. Quando serviranno metadati,
+  versioning o ricerca sui file, introdurre una tabella user-owned con RLS.
 - **Niente tabella `tags`**: per ora etichette libere in `notes` testuali.
   Se emergerà l'esigenza di filtri strutturati, valuteremo `text[]` o
   tabella separata.

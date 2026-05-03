@@ -5,7 +5,7 @@
 - **Framework**: TanStack Start v1 (full-stack React 19)
 - **Build**: Vite 7
 - **Routing**: file-based in `src/routes/`, route tree auto-generato
-- **Backend**: Supabase di proprietà del progetto — Postgres, Auth, Storage, Edge Functions
+- **Backend**: Supabase di proprietà del progetto — Postgres, Auth, Storage privato, Edge Functions
 - **Deploy**: Vercel
 - **Styling**: Tailwind v4 con `@import` in `src/styles.css`
 - **UI**: shadcn/ui + Radix + lucide-react
@@ -41,6 +41,7 @@ src/
 │   ├── theme-context.tsx   ← provider tema (auto/light/dark)
 │   ├── invoice-pdf.ts      ← generazione PDF fattura
 │   ├── invoice-xml.ts      ← generazione XML FatturaPA TD06
+│   ├── storage-paths.ts    ← bucket e path Supabase Storage
 │   └── utils.ts
 ├── server/                 ← server functions (createServerFn)
 ├── integrations/supabase/
@@ -88,6 +89,8 @@ Vedi [tema-e-design](./tema-e-design.md) per il dettaglio.
 
 - **Server functions**: `createServerFn` da `@tanstack/react-start` per RPC tipato.
 - **Server routes**: file in `src/routes/api/` per HTTP grezzo (webhook, cron).
+- **Storage Supabase**: bucket privato `pratix-documents`, con path
+  owner-scoped `<user_id>/<area>/...` e policy su `storage.objects`.
 - **Edge functions Supabase**: in `supabase/functions/`, deploy via Supabase CLI.
 - **Runtime deploy**: Vercel tramite TanStack Start + Nitro.
 
