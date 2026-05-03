@@ -6,7 +6,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
-## [0.5.1] — 2026-05-03
+## [0.5.2] — 2026-05-03
 
 ### Sotto il cofano
 
@@ -263,6 +263,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.5.2]: #052--2026-05-03
 [0.5.1]: #051--2026-05-03
 [0.5.0]: #050--2026-05-03
 [0.4.1]: #041--2026-05-03
