@@ -22,7 +22,7 @@ Stato delle voci con legenda:
 5. **Funzionalità di prodotto** — focus recupero crediti, committenti/clienti/controparti/pratiche/attività/prezzi per committente/rendiconti Excel/fatture; scadenzario rimosso
 6. **Account, sicurezza, dati** — auth base ✅, area `/account` separata da Impostazioni ✅, cambio password in-app ✅, Supabase Storage privato ✅, eliminazione/GDPR/cambio email ⬜
 7. **SEO, pubblicazione, dominio** — `lang="it"` ✅, resto ⬜
-8. **Qualità e processo** — `AGENTS.md`/`BRAND.md`/`ROADMAP.md` ✅, Observability Vercel-first ✅, test critici ⬜
+8. **Qualità e processo** — `AGENTS.md`/`BRAND.md`/`ROADMAP.md` ✅, Observability Vercel-first ✅, strategia test automatizzati ⬜, test critici ⬜
 
 ## Quando aggiornare
 
