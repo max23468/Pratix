@@ -19,8 +19,23 @@ Postgres + Auth + Storage + Realtime.
 - `profiles` — anagrafica del professionista (P.IVA, CF, indirizzo, regime fiscale, IBAN, ecc.)
 - `user_roles` — ruoli applicativi (separati da `profiles`)
 - `clients` — anagrafica clienti
-- `cases` (Pratiche) — incarichi professionali
-- `expenses` (Spese) — spese sostenute per cliente
+- `principals` — committenti, cioè soggetti a cui viene emessa fattura
+- `principal_clients` — relazione molti-a-molti fra committenti e clienti
+- `counterparties` — controparti del recupero crediti
+- `counterparty_subjects` — soggetti interni a una controparte composta
+- `cases` (Pratiche) — posizioni legali, con numero pratica numerico univoco
+- `case_credit_transfers` — storico cessioni credito fra clienti
+- `price_books` — prezzi annuali per committente
+- `price_items` — voci di prezzo per compensi/onorari e rimborsi spese
+- `case_activities` — attività economiche da fatturare o fatturate
+- `case_activity_hearings` — date udienza collegate alle attività che le richiedono
+- `activity_attachments` — metadati allegati su compensi e rimborsi
+- `billing_runs` — selezioni fatturazione per committente e periodo
+- `billing_run_items` — righe incluse, rinviate o escluse da una fatturazione
+- `billing_exports` — rendiconti Excel generati
+- `imports` — sessioni import manuale o Excel
+- `import_rows` — righe di staging import
+- `expenses` (Spese) — tabella legacy finché la UI non usa `case_activities`
 - `invoices` — fatture emesse, con righe e dati FatturaPA
 - `invoice_lines` — righe fattura
 
@@ -184,6 +199,9 @@ sotto una cartella proprietario con UUID utente come primo segmento:
 <user_id>/invoices/<invoice_id>/<file>
 <user_id>/cases/<case_id>/<file>
 <user_id>/expenses/<expense_id>/<file>
+<user_id>/activities/<activity_id>/<file>
+<user_id>/billing-exports/<billing_run_id>/<file>
+<user_id>/imports/<import_id>/<file>
 <user_id>/profile/<file>
 <user_id>/exports/<file>
 ```
@@ -193,8 +211,9 @@ path Storage a mano dentro componenti o server functions, così resta più facil
 mantenere le policy allineate.
 
 Il bucket è privato, con limite file a 25 MB e MIME types comuni per PDF, XML,
-ZIP, CSV, testo, immagini e documenti office. Se serve un formato nuovo, aggiungi
-prima il MIME type nella migration Storage e poi aggiorna questa guida.
+ZIP, CSV, Excel, OpenDocument, testo, immagini e documenti office. Se serve un
+formato nuovo, aggiungi prima il MIME type nella migration Storage e poi
+aggiorna questa guida.
 
 Le policy su `storage.objects` sono owner-scoped:
 

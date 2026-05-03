@@ -1,406 +1,148 @@
--- =============================================================================
--- Pratix — Schema baseline
--- =============================================================================
--- Aggiornato: 2026-05-03 (schema Fase 2 recupero crediti, migration 20260503202905)
--- Sorgente:  introspezione del database di produzione iniziale,
---            integrata con il trigger auth richiesto per il progetto Supabase.
+-- Phase 2 recupero crediti: compatible data foundation.
 --
--- Cosa è questo file
--- ------------------
--- Snapshot dello schema corrente (solo struttura, ZERO dati). Serve come
--- riferimento leggibile a colpo d'occhio di tabelle, enum, trigger, indici e
--- policy RLS. Lo aggiorniamo manualmente quando applichiamo migrations.
---
--- Cosa NON è
--- ----------
--- - Non è eseguito automaticamente su Supabase: le migrations vere si
---   applicano via Supabase CLI e sono storicizzate in `supabase/migrations/`.
--- - Non contiene oggetti gestiti da Supabase (storage.*, realtime.*). Include
---   solo il trigger su auth.users necessario a creare profiles alla signup.
--- - Non contiene dati: per esportare dati usa Cloud → Database → Tables.
---
--- Convenzioni
--- -----------
--- - Tutti i timestamp `*_at` sono `timestamp with time zone`.
--- - Ogni tabella user-owned ha colonna `user_id uuid` + 4 policy RLS
---   (select/insert/update/delete) su `(select auth.uid()) = user_id`.
--- - `profiles.id` coincide con `auth.users.id` (riempita dal trigger
---   `on_auth_user_created` su `auth.users`).
--- =============================================================================
-
+-- This migration introduces the debt-collection domain without removing the
+-- legacy columns still used by the current UI. Later UI phases can switch to
+-- these tables progressively, then remove compatibility fields when safe.
 
 -- ============================================================================
 -- ENUM TYPES
 -- ============================================================================
 
-CREATE TYPE public.case_matter AS ENUM (
-  'civile', 'penale', 'lavoro', 'famiglia',
-  'amministrativo', 'tributario', 'commerciale', 'altro'
-);
+DO $$
+BEGIN
+  CREATE TYPE public.counterparty_kind AS ENUM ('individual', 'company', 'group');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TYPE public.case_status AS ENUM (
-  'open', 'in_progress', 'suspended', 'closed', 'archived'
-);
+DO $$
+BEGIN
+  CREATE TYPE public.price_book_status AS ENUM ('draft', 'active', 'archived');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TYPE public.client_kind AS ENUM ('individual', 'company');
+DO $$
+BEGIN
+  CREATE TYPE public.price_item_kind AS ENUM ('fee', 'expense_reimbursement');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TYPE public.expense_category AS ENUM (
-  'contributo_unificato', 'marche_da_bollo', 'copie',
-  'trasferte', 'ctu', 'notifiche', 'altro'
-);
+DO $$
+BEGIN
+  CREATE TYPE public.case_activity_status AS ENUM ('to_invoice', 'invoiced');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TYPE public.fee_type AS ENUM ('flat', 'hourly');
+DO $$
+BEGIN
+  CREATE TYPE public.billing_run_status AS ENUM ('draft', 'finalized', 'cancelled');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TYPE public.invoice_line_kind AS ENUM (
-  'fee', 'expense_taxable', 'expense_art15'
-);
+DO $$
+BEGIN
+  CREATE TYPE public.billing_run_item_status AS ENUM ('included', 'postponed', 'excluded');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TYPE public.invoice_status AS ENUM (
-  'draft', 'issued', 'paid', 'overdue'
-);
+DO $$
+BEGIN
+  CREATE TYPE public.billing_export_kind AS ENUM ('fees', 'expenses');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TYPE public.tax_regime AS ENUM ('ordinario', 'forfettario');
+DO $$
+BEGIN
+  CREATE TYPE public.import_mode AS ENUM ('manual', 'excel');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TYPE public.counterparty_kind AS ENUM ('individual', 'company', 'group');
+DO $$
+BEGIN
+  CREATE TYPE public.import_status AS ENUM ('draft', 'validated', 'imported', 'cancelled');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TYPE public.price_book_status AS ENUM ('draft', 'active', 'archived');
-
-CREATE TYPE public.price_item_kind AS ENUM ('fee', 'expense_reimbursement');
-
-CREATE TYPE public.case_activity_status AS ENUM ('to_invoice', 'invoiced');
-
-CREATE TYPE public.billing_run_status AS ENUM ('draft', 'finalized', 'cancelled');
-
-CREATE TYPE public.billing_run_item_status AS ENUM ('included', 'postponed', 'excluded');
-
-CREATE TYPE public.billing_export_kind AS ENUM ('fees', 'expenses');
-
-CREATE TYPE public.import_mode AS ENUM ('manual', 'excel');
-
-CREATE TYPE public.import_status AS ENUM ('draft', 'validated', 'imported', 'cancelled');
-
-CREATE TYPE public.import_row_status AS ENUM ('pending', 'valid', 'warning', 'error', 'imported', 'skipped');
-
+DO $$
+BEGIN
+  CREATE TYPE public.import_row_status AS ENUM ('pending', 'valid', 'warning', 'error', 'imported', 'skipped');
+EXCEPTION
+  WHEN duplicate_object THEN NULL;
+END $$;
 
 -- ============================================================================
--- FUNCTIONS
+-- COMPATIBILITY KEYS AND COLUMNS
 -- ============================================================================
 
--- Riempie `profiles` quando un nuovo utente si registra in `auth.users`.
--- Trigger associato: `on_auth_user_created` su auth.users.
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  INSERT INTO public.profiles (id, email, full_name)
-  VALUES (
-    NEW.id,
-    NEW.email,
-    COALESCE(NEW.raw_user_meta_data ->> 'full_name', '')
-  );
-  RETURN NEW;
-END;
-$$;
+ALTER TABLE public.clients
+  ADD CONSTRAINT clients_id_user_id_key UNIQUE (id, user_id);
 
--- Aggiorna automaticamente updated_at su UPDATE.
-CREATE OR REPLACE FUNCTION public.set_updated_at()
-RETURNS trigger
-LANGUAGE plpgsql
-SET search_path = public
-AS $$
-BEGIN
-  NEW.updated_at = now();
-  RETURN NEW;
-END;
-$$;
+ALTER TABLE public.cases
+  ADD CONSTRAINT cases_id_user_id_key UNIQUE (id, user_id);
 
--- Storicizza i cambi di stato di una pratica in case_status_history.
-CREATE OR REPLACE FUNCTION public.log_case_status_change()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path = public
-AS $$
-BEGIN
-  IF TG_OP = 'INSERT' THEN
-    INSERT INTO public.case_status_history (case_id, user_id, previous_status, new_status)
-    VALUES (NEW.id, NEW.user_id, NULL, NEW.status);
-  ELSIF TG_OP = 'UPDATE' AND OLD.status IS DISTINCT FROM NEW.status THEN
-    INSERT INTO public.case_status_history (case_id, user_id, previous_status, new_status)
-    VALUES (NEW.id, NEW.user_id, OLD.status, NEW.status);
-  END IF;
-  RETURN NEW;
-END;
-$$;
+ALTER TABLE public.invoices
+  ADD CONSTRAINT invoices_id_user_id_key UNIQUE (id, user_id);
 
--- Genera o valida il numero pratica numerico.
-CREATE OR REPLACE FUNCTION public.assign_case_practice_number()
-RETURNS trigger
-LANGUAGE plpgsql
-SET search_path = public
-AS $$
-DECLARE
-  next_number integer;
-BEGIN
-  IF NEW.practice_number IS NULL THEN
-    IF NEW.case_number IS NOT NULL AND btrim(NEW.case_number) ~ '^[0-9]{1,9}$' THEN
-      NEW.practice_number := btrim(NEW.case_number)::integer;
-    ELSE
-      PERFORM pg_advisory_xact_lock(hashtextextended(NEW.user_id::text, 0));
+ALTER TABLE public.cases
+  ADD COLUMN practice_number integer,
+  ADD COLUMN principal_id uuid,
+  ADD COLUMN counterparty_id uuid;
 
-      SELECT COALESCE(MAX(practice_number), 0) + 1
-      INTO next_number
-      FROM public.cases
-      WHERE user_id = NEW.user_id;
-
-      NEW.practice_number := next_number;
-    END IF;
-  END IF;
-
-  IF NEW.practice_number <= 0 THEN
-    RAISE EXCEPTION 'practice_number must be positive';
-  END IF;
-
-  IF NEW.case_number IS NULL OR length(btrim(NEW.case_number)) = 0 THEN
-    NEW.case_number := NEW.practice_number::text;
-  END IF;
-
-  RETURN NEW;
-END;
-$$;
-
--- Espone il prossimo numero pratica suggerito all'utente autenticato.
-CREATE OR REPLACE FUNCTION public.get_next_practice_number()
-RETURNS integer
-LANGUAGE plpgsql
-SECURITY INVOKER
-SET search_path = public
-AS $$
-DECLARE
-  current_user_id uuid;
-  next_number integer;
-BEGIN
-  current_user_id := (select auth.uid());
-
-  IF current_user_id IS NULL THEN
-    RAISE EXCEPTION 'authenticated user required';
-  END IF;
-
-  PERFORM pg_advisory_xact_lock(hashtextextended(current_user_id::text, 0));
-
-  SELECT COALESCE(MAX(practice_number), 0) + 1
-  INTO next_number
+WITH parsed_cases AS (
+  SELECT
+    id,
+    user_id,
+    CASE
+      WHEN btrim(case_number) ~ '^[0-9]{1,9}$' THEN btrim(case_number)::integer
+      ELSE NULL
+    END AS parsed_number,
+    row_number() OVER (PARTITION BY user_id ORDER BY created_at, id) AS fallback_number
   FROM public.cases
-  WHERE user_id = current_user_id;
+),
+user_max AS (
+  SELECT user_id, COALESCE(MAX(parsed_number), 0) AS max_number
+  FROM parsed_cases
+  GROUP BY user_id
+)
+UPDATE public.cases AS c
+SET practice_number = COALESCE(p.parsed_number, u.max_number + p.fallback_number)
+FROM parsed_cases AS p
+JOIN user_max AS u ON u.user_id = p.user_id
+WHERE c.id = p.id;
 
-  RETURN next_number;
-END;
-$$;
+ALTER TABLE public.cases
+  ALTER COLUMN practice_number SET NOT NULL,
+  ADD CONSTRAINT cases_practice_number_positive CHECK (practice_number > 0);
 
--- Calcola il totale attività come quantità x prezzo unitario.
-CREATE OR REPLACE FUNCTION public.set_case_activity_amount()
-RETURNS trigger
-LANGUAGE plpgsql
-SET search_path = public
-AS $$
-BEGIN
-  NEW.amount := round(NEW.quantity * NEW.unit_price, 2);
-  RETURN NEW;
-END;
-$$;
+CREATE UNIQUE INDEX idx_cases_user_practice_number
+  ON public.cases (user_id, practice_number);
 
+ALTER TABLE public.invoices
+  ADD COLUMN principal_id uuid,
+  ADD COLUMN billing_run_id uuid,
+  ADD COLUMN include_general_expenses boolean NOT NULL DEFAULT false,
+  ADD COLUMN general_expenses_rate numeric NOT NULL DEFAULT 10.00,
+  ADD COLUMN general_expenses_amount numeric NOT NULL DEFAULT 0,
+  ADD COLUMN cassa_base_amount numeric NOT NULL DEFAULT 0;
+
+ALTER TABLE public.invoice_lines
+  ADD COLUMN case_activity_id uuid,
+  ADD COLUMN practice_number integer,
+  ADD COLUMN client_name text,
+  ADD COLUMN counterparty_name text,
+  ADD COLUMN activity_date date;
 
 -- ============================================================================
 -- TABLES
 -- ============================================================================
-
--- Profilo professionale dell'avvocato (1:1 con auth.users).
-CREATE TABLE public.profiles (
-  id                          uuid PRIMARY KEY,
-  full_name                   text,
-  business_name               text,
-  email                       text,
-  phone                       text,
-  pec                         text,
-  tax_code                    text,
-  vat_number                  text,
-  rea                         text,
-  bar_association             text,
-  address_street              text,
-  address_city                text,
-  address_zip                 text,
-  address_province            text,
-  address_country             text DEFAULT 'IT',
-  tax_regime                  public.tax_regime NOT NULL DEFAULT 'ordinario',
-  cassa_rate                  numeric NOT NULL DEFAULT 4.00,
-  vat_rate                    numeric NOT NULL DEFAULT 22.00,
-  withholding_rate            numeric NOT NULL DEFAULT 20.00,
-  apply_withholding           boolean NOT NULL DEFAULT true,
-  iban                        text,
-  bank_name                   text,
-  invoice_number_prefix       text,
-  invoice_next_number         integer NOT NULL DEFAULT 1,
-  invoice_year                integer NOT NULL DEFAULT (EXTRACT(year FROM now()))::integer,
-  logo_url                    text,
-  onboarding_completed        boolean NOT NULL DEFAULT false,
-  last_seen_changelog_version text,
-  created_at                  timestamptz NOT NULL DEFAULT now(),
-  updated_at                  timestamptz NOT NULL DEFAULT now()
-);
-
-CREATE TABLE public.clients (
-  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id          uuid NOT NULL,
-  kind             public.client_kind NOT NULL DEFAULT 'individual',
-  first_name       text,
-  last_name        text,
-  business_name    text,
-  tax_code         text,
-  vat_number       text,
-  email            text,
-  phone            text,
-  pec              text,
-  sdi_code         text,
-  address_street   text,
-  address_city     text,
-  address_zip      text,
-  address_province text,
-  address_country  text DEFAULT 'IT',
-  notes            text,
-  created_at       timestamptz NOT NULL DEFAULT now(),
-  updated_at       timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (id, user_id)
-);
-CREATE INDEX idx_clients_user ON public.clients (user_id);
-
-CREATE TABLE public.cases (
-  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id      uuid NOT NULL,
-  client_id    uuid,
-  case_number  text NOT NULL,
-  practice_number integer NOT NULL,
-  principal_id uuid,
-  counterparty_id uuid,
-  title        text NOT NULL,
-  matter       public.case_matter NOT NULL DEFAULT 'civile',
-  status       public.case_status NOT NULL DEFAULT 'open',
-  authority    text,
-  rg_number    text,
-  counterparty text,
-  fee_type     public.fee_type NOT NULL DEFAULT 'flat',
-  agreed_fee   numeric DEFAULT 0,
-  hourly_rate  numeric,
-  retainer     numeric DEFAULT 0,
-  opened_at    date NOT NULL DEFAULT CURRENT_DATE,
-  closed_at    date,
-  notes        text,
-  created_at   timestamptz NOT NULL DEFAULT now(),
-  updated_at   timestamptz NOT NULL DEFAULT now(),
-  CONSTRAINT cases_practice_number_positive CHECK (practice_number > 0),
-  UNIQUE (user_id, case_number),
-  UNIQUE (user_id, practice_number),
-  UNIQUE (id, user_id)
-);
-CREATE INDEX idx_cases_user   ON public.cases (user_id);
-CREATE INDEX idx_cases_client ON public.cases (client_id);
-CREATE INDEX idx_cases_status ON public.cases (status);
-CREATE INDEX idx_cases_user_practice_number ON public.cases (user_id, practice_number);
-
-CREATE TABLE public.case_status_history (
-  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  case_id         uuid NOT NULL,
-  user_id         uuid NOT NULL,
-  previous_status public.case_status,
-  new_status      public.case_status NOT NULL,
-  note            text,
-  changed_at      timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX idx_case_status_history_case ON public.case_status_history (case_id);
-CREATE INDEX idx_case_status_history_user ON public.case_status_history (user_id);
-
-CREATE TABLE public.expenses (
-  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id      uuid NOT NULL,
-  case_id      uuid NOT NULL,
-  invoice_id   uuid,
-  category     public.expense_category NOT NULL DEFAULT 'altro',
-  description  text NOT NULL,
-  amount       numeric NOT NULL DEFAULT 0,
-  expense_date date NOT NULL DEFAULT CURRENT_DATE,
-  is_art15     boolean NOT NULL DEFAULT false,
-  created_at   timestamptz NOT NULL DEFAULT now(),
-  updated_at   timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX idx_expenses_user    ON public.expenses (user_id);
-CREATE INDEX idx_expenses_case    ON public.expenses (case_id);
-CREATE INDEX idx_expenses_invoice ON public.expenses (invoice_id);
-
-CREATE TABLE public.invoices (
-  id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id            uuid NOT NULL,
-  client_id          uuid NOT NULL,
-  case_id            uuid,
-  number             text NOT NULL,
-  year               integer NOT NULL,
-  issue_date         date NOT NULL DEFAULT CURRENT_DATE,
-  due_date           date,
-  status             public.invoice_status NOT NULL DEFAULT 'draft',
-  cassa_rate         numeric NOT NULL DEFAULT 4.00,
-  vat_rate           numeric NOT NULL DEFAULT 22.00,
-  withholding_rate   numeric NOT NULL DEFAULT 20.00,
-  apply_withholding  boolean NOT NULL DEFAULT true,
-  taxable_fees       numeric NOT NULL DEFAULT 0,
-  taxable_expenses   numeric NOT NULL DEFAULT 0,
-  art15_expenses     numeric NOT NULL DEFAULT 0,
-  cassa_amount       numeric NOT NULL DEFAULT 0,
-  vat_amount         numeric NOT NULL DEFAULT 0,
-  withholding_amount numeric NOT NULL DEFAULT 0,
-  stamp_amount       numeric NOT NULL DEFAULT 0,
-  total_amount       numeric NOT NULL DEFAULT 0,
-  net_to_pay         numeric NOT NULL DEFAULT 0,
-  paid_at            date,
-  payment_method     text,
-  principal_id        uuid,
-  billing_run_id      uuid,
-  include_general_expenses boolean NOT NULL DEFAULT false,
-  general_expenses_rate numeric NOT NULL DEFAULT 10.00,
-  general_expenses_amount numeric NOT NULL DEFAULT 0,
-  cassa_base_amount   numeric NOT NULL DEFAULT 0,
-  notes              text,
-  created_at         timestamptz NOT NULL DEFAULT now(),
-  updated_at         timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (user_id, year, number),
-  UNIQUE (id, user_id)
-);
-CREATE INDEX idx_invoices_user   ON public.invoices (user_id);
-CREATE INDEX idx_invoices_client ON public.invoices (client_id);
-CREATE INDEX idx_invoices_case   ON public.invoices (case_id);
-CREATE INDEX idx_invoices_status ON public.invoices (status);
-CREATE INDEX idx_invoices_principal ON public.invoices (principal_id);
-CREATE INDEX idx_invoices_billing_run ON public.invoices (billing_run_id);
-
-CREATE TABLE public.invoice_lines (
-  id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id     uuid NOT NULL,
-  invoice_id  uuid NOT NULL,
-  position    integer NOT NULL DEFAULT 0,
-  case_activity_id uuid,
-  practice_number integer,
-  client_name text,
-  counterparty_name text,
-  activity_date date,
-  kind        public.invoice_line_kind NOT NULL DEFAULT 'fee',
-  description text NOT NULL,
-  quantity    numeric NOT NULL DEFAULT 1,
-  unit_price  numeric NOT NULL DEFAULT 0,
-  amount      numeric NOT NULL DEFAULT 0,
-  created_at  timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX idx_invoice_lines_invoice ON public.invoice_lines (invoice_id);
-CREATE INDEX idx_invoice_lines_user    ON public.invoice_lines (user_id);
 
 CREATE TABLE public.principals (
   id                              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -431,6 +173,7 @@ CREATE TABLE public.principals (
   CONSTRAINT principals_economics_at_least_one_enabled CHECK (fees_enabled OR expense_reimbursements_enabled),
   UNIQUE (id, user_id)
 );
+
 CREATE INDEX idx_principals_user ON public.principals (user_id);
 CREATE INDEX idx_principals_archived ON public.principals (archived_at);
 
@@ -447,6 +190,7 @@ CREATE TABLE public.principal_clients (
   CONSTRAINT principal_clients_dates_order CHECK (active_to IS NULL OR active_from IS NULL OR active_to >= active_from),
   UNIQUE (user_id, principal_id, client_id)
 );
+
 CREATE INDEX idx_principal_clients_user ON public.principal_clients (user_id);
 CREATE INDEX idx_principal_clients_principal ON public.principal_clients (principal_id);
 CREATE INDEX idx_principal_clients_client ON public.principal_clients (client_id);
@@ -467,6 +211,7 @@ CREATE TABLE public.counterparties (
   ),
   UNIQUE (id, user_id)
 );
+
 CREATE INDEX idx_counterparties_user ON public.counterparties (user_id);
 CREATE INDEX idx_counterparties_kind ON public.counterparties (kind);
 
@@ -488,6 +233,7 @@ CREATE TABLE public.counterparty_subjects (
   ),
   UNIQUE (counterparty_id, position)
 );
+
 CREATE INDEX idx_counterparty_subjects_user ON public.counterparty_subjects (user_id);
 CREATE INDEX idx_counterparty_subjects_counterparty ON public.counterparty_subjects (counterparty_id);
 
@@ -502,6 +248,7 @@ CREATE TABLE public.case_credit_transfers (
   created_at         timestamptz NOT NULL DEFAULT now(),
   updated_at         timestamptz NOT NULL DEFAULT now()
 );
+
 CREATE INDEX idx_case_credit_transfers_user ON public.case_credit_transfers (user_id);
 CREATE INDEX idx_case_credit_transfers_case ON public.case_credit_transfers (case_id);
 CREATE INDEX idx_case_credit_transfers_new_client ON public.case_credit_transfers (new_client_id);
@@ -525,6 +272,7 @@ CREATE TABLE public.price_books (
   UNIQUE (user_id, principal_id, year),
   UNIQUE (id, user_id)
 );
+
 CREATE INDEX idx_price_books_user ON public.price_books (user_id);
 CREATE INDEX idx_price_books_principal ON public.price_books (principal_id);
 CREATE INDEX idx_price_books_status ON public.price_books (status);
@@ -550,6 +298,7 @@ CREATE TABLE public.price_items (
   UNIQUE (price_book_id, code),
   UNIQUE (id, user_id)
 );
+
 CREATE INDEX idx_price_items_user ON public.price_items (user_id);
 CREATE INDEX idx_price_items_price_book ON public.price_items (price_book_id);
 CREATE INDEX idx_price_items_kind ON public.price_items (kind);
@@ -587,6 +336,7 @@ CREATE TABLE public.case_activities (
   CONSTRAINT case_activities_invoiced_has_invoice CHECK (status <> 'invoiced' OR invoice_id IS NOT NULL),
   UNIQUE (id, user_id)
 );
+
 CREATE INDEX idx_case_activities_user ON public.case_activities (user_id);
 CREATE INDEX idx_case_activities_case ON public.case_activities (case_id);
 CREATE INDEX idx_case_activities_principal ON public.case_activities (principal_id);
@@ -608,6 +358,7 @@ CREATE TABLE public.case_activity_hearings (
   UNIQUE (activity_id, position),
   UNIQUE (activity_id, hearing_date)
 );
+
 CREATE INDEX idx_case_activity_hearings_user ON public.case_activity_hearings (user_id);
 CREATE INDEX idx_case_activity_hearings_activity ON public.case_activity_hearings (activity_id);
 
@@ -631,6 +382,7 @@ CREATE TABLE public.activity_attachments (
   UNIQUE (storage_path),
   UNIQUE (id, user_id)
 );
+
 CREATE INDEX idx_activity_attachments_user ON public.activity_attachments (user_id);
 CREATE INDEX idx_activity_attachments_activity ON public.activity_attachments (activity_id);
 
@@ -665,6 +417,7 @@ CREATE TABLE public.billing_runs (
   ),
   UNIQUE (id, user_id)
 );
+
 CREATE INDEX idx_billing_runs_user ON public.billing_runs (user_id);
 CREATE INDEX idx_billing_runs_principal_period ON public.billing_runs (principal_id, period_start, period_end);
 CREATE INDEX idx_billing_runs_invoice ON public.billing_runs (invoice_id);
@@ -681,6 +434,7 @@ CREATE TABLE public.billing_run_items (
   updated_at     timestamptz NOT NULL DEFAULT now(),
   UNIQUE (billing_run_id, activity_id)
 );
+
 CREATE INDEX idx_billing_run_items_user ON public.billing_run_items (user_id);
 CREATE INDEX idx_billing_run_items_run ON public.billing_run_items (billing_run_id);
 CREATE INDEX idx_billing_run_items_activity ON public.billing_run_items (activity_id);
@@ -705,6 +459,7 @@ CREATE TABLE public.billing_exports (
   UNIQUE (storage_path),
   UNIQUE (id, user_id)
 );
+
 CREATE INDEX idx_billing_exports_user ON public.billing_exports (user_id);
 CREATE INDEX idx_billing_exports_run ON public.billing_exports (billing_run_id);
 CREATE INDEX idx_billing_exports_invoice ON public.billing_exports (invoice_id);
@@ -725,6 +480,7 @@ CREATE TABLE public.imports (
   CONSTRAINT imports_row_counts_non_negative CHECK (total_rows >= 0 AND valid_rows >= 0 AND error_rows >= 0),
   UNIQUE (id, user_id)
 );
+
 CREATE INDEX idx_imports_user ON public.imports (user_id);
 CREATE INDEX idx_imports_status ON public.imports (status);
 
@@ -744,58 +500,14 @@ CREATE TABLE public.import_rows (
   CONSTRAINT import_rows_row_number_positive CHECK (row_number > 0),
   UNIQUE (import_id, row_number)
 );
+
 CREATE INDEX idx_import_rows_user ON public.import_rows (user_id);
 CREATE INDEX idx_import_rows_import ON public.import_rows (import_id);
 CREATE INDEX idx_import_rows_status ON public.import_rows (status);
 
-
 -- ============================================================================
 -- FOREIGN KEYS
 -- ============================================================================
-
-ALTER TABLE public.profiles
-  ADD CONSTRAINT profiles_id_fkey
-  FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE;
-
-ALTER TABLE public.clients
-  ADD CONSTRAINT clients_user_id_fkey
-  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
-
-ALTER TABLE public.cases
-  ADD CONSTRAINT cases_user_id_fkey
-  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
-  ADD CONSTRAINT cases_client_id_fkey
-  FOREIGN KEY (client_id) REFERENCES public.clients(id) ON DELETE SET NULL;
-
-ALTER TABLE public.case_status_history
-  ADD CONSTRAINT case_status_history_case_id_fkey
-  FOREIGN KEY (case_id) REFERENCES public.cases(id) ON DELETE CASCADE,
-  ADD CONSTRAINT case_status_history_user_id_fkey
-  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
-
-ALTER TABLE public.expenses
-  ADD CONSTRAINT expenses_case_id_fkey
-  FOREIGN KEY (case_id) REFERENCES public.cases(id) ON DELETE CASCADE,
-  ADD CONSTRAINT expenses_user_id_fkey
-  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
-
-ALTER TABLE public.invoices
-  ADD CONSTRAINT invoices_user_id_fkey
-  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
-  ADD CONSTRAINT invoices_client_id_fkey
-  FOREIGN KEY (client_id) REFERENCES public.clients(id) ON DELETE RESTRICT,
-  ADD CONSTRAINT invoices_case_id_fkey
-  FOREIGN KEY (case_id) REFERENCES public.cases(id) ON DELETE SET NULL;
-
-ALTER TABLE public.expenses
-  ADD CONSTRAINT expenses_invoice_fk
-  FOREIGN KEY (invoice_id) REFERENCES public.invoices(id) ON DELETE SET NULL;
-
-ALTER TABLE public.invoice_lines
-  ADD CONSTRAINT invoice_lines_invoice_id_fkey
-  FOREIGN KEY (invoice_id) REFERENCES public.invoices(id) ON DELETE CASCADE,
-  ADD CONSTRAINT invoice_lines_user_id_fkey
-  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
 ALTER TABLE public.principals
   ADD CONSTRAINT principals_user_id_fkey
@@ -923,16 +635,95 @@ ALTER TABLE public.invoice_lines
   ADD CONSTRAINT invoice_lines_case_activity_owner_fkey
   FOREIGN KEY (case_activity_id, user_id) REFERENCES public.case_activities(id, user_id) ON DELETE SET NULL (case_activity_id);
 
-
 -- ============================================================================
--- TRIGGERS
+-- FUNCTIONS AND TRIGGERS
 -- ============================================================================
 
-CREATE TRIGGER profiles_set_updated_at        BEFORE UPDATE ON public.profiles        FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER clients_set_updated_at         BEFORE UPDATE ON public.clients         FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER cases_set_updated_at           BEFORE UPDATE ON public.cases           FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER expenses_set_updated_at        BEFORE UPDATE ON public.expenses        FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER invoices_set_updated_at        BEFORE UPDATE ON public.invoices        FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE OR REPLACE FUNCTION public.assign_case_practice_number()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+DECLARE
+  next_number integer;
+BEGIN
+  IF NEW.practice_number IS NULL THEN
+    IF NEW.case_number IS NOT NULL AND btrim(NEW.case_number) ~ '^[0-9]{1,9}$' THEN
+      NEW.practice_number := btrim(NEW.case_number)::integer;
+    ELSE
+      PERFORM pg_advisory_xact_lock(hashtextextended(NEW.user_id::text, 0));
+
+      SELECT COALESCE(MAX(practice_number), 0) + 1
+      INTO next_number
+      FROM public.cases
+      WHERE user_id = NEW.user_id;
+
+      NEW.practice_number := next_number;
+    END IF;
+  END IF;
+
+  IF NEW.practice_number <= 0 THEN
+    RAISE EXCEPTION 'practice_number must be positive';
+  END IF;
+
+  IF NEW.case_number IS NULL OR length(btrim(NEW.case_number)) = 0 THEN
+    NEW.case_number := NEW.practice_number::text;
+  END IF;
+
+  RETURN NEW;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.get_next_practice_number()
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY INVOKER
+SET search_path = public
+AS $$
+DECLARE
+  current_user_id uuid;
+  next_number integer;
+BEGIN
+  current_user_id := (select auth.uid());
+
+  IF current_user_id IS NULL THEN
+    RAISE EXCEPTION 'authenticated user required';
+  END IF;
+
+  PERFORM pg_advisory_xact_lock(hashtextextended(current_user_id::text, 0));
+
+  SELECT COALESCE(MAX(practice_number), 0) + 1
+  INTO next_number
+  FROM public.cases
+  WHERE user_id = current_user_id;
+
+  RETURN next_number;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION public.set_case_activity_amount()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+BEGIN
+  NEW.amount := round(NEW.quantity * NEW.unit_price, 2);
+  RETURN NEW;
+END;
+$$;
+
+CREATE TRIGGER cases_assign_practice_number
+  BEFORE INSERT OR UPDATE OF case_number, practice_number, user_id
+  ON public.cases
+  FOR EACH ROW
+  EXECUTE FUNCTION public.assign_case_practice_number();
+
+CREATE TRIGGER case_activities_set_amount
+  BEFORE INSERT OR UPDATE OF quantity, unit_price
+  ON public.case_activities
+  FOR EACH ROW
+  EXECUTE FUNCTION public.set_case_activity_amount();
+
 CREATE TRIGGER principals_set_updated_at              BEFORE UPDATE ON public.principals              FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER principal_clients_set_updated_at       BEFORE UPDATE ON public.principal_clients       FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER counterparties_set_updated_at          BEFORE UPDATE ON public.counterparties          FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
@@ -949,53 +740,14 @@ CREATE TRIGGER billing_exports_set_updated_at         BEFORE UPDATE ON public.bi
 CREATE TRIGGER imports_set_updated_at                 BEFORE UPDATE ON public.imports                 FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER import_rows_set_updated_at             BEFORE UPDATE ON public.import_rows             FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
-CREATE TRIGGER cases_log_status_change
-  AFTER INSERT OR UPDATE ON public.cases
-  FOR EACH ROW EXECUTE FUNCTION public.log_case_status_change();
-
-CREATE TRIGGER cases_assign_practice_number
-  BEFORE INSERT OR UPDATE OF case_number, practice_number, user_id
-  ON public.cases
-  FOR EACH ROW EXECUTE FUNCTION public.assign_case_practice_number();
-
-CREATE TRIGGER case_activities_set_amount
-  BEFORE INSERT OR UPDATE OF quantity, unit_price
-  ON public.case_activities
-  FOR EACH ROW EXECUTE FUNCTION public.set_case_activity_amount();
-
-DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
-CREATE TRIGGER on_auth_user_created
-  AFTER INSERT ON auth.users
-  FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
-
--- ============================================================================
--- FUNCTION PERMISSIONS
--- ============================================================================
-
--- These functions are used by triggers only and must not be callable through
--- PostgREST RPC by anonymous or authenticated users.
-REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.log_case_status_change() FROM PUBLIC, anon, authenticated;
-REVOKE EXECUTE ON FUNCTION public.set_updated_at() FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.assign_case_practice_number() FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.set_case_activity_amount() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_next_practice_number() TO authenticated;
 
-
 -- ============================================================================
 -- ROW LEVEL SECURITY
 -- ============================================================================
--- Pattern: ogni tabella espone solo le righe dove (select auth.uid()) = user_id
--- (tranne profiles, dove la chiave è id che coincide con auth.uid()).
 
-ALTER TABLE public.profiles            ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.clients             ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.cases               ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.case_status_history ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.expenses            ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.invoices            ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.invoice_lines       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.principals             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.principal_clients      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.counterparties         ENABLE ROW LEVEL SECURITY;
@@ -1011,45 +763,6 @@ ALTER TABLE public.billing_run_items      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.billing_exports        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.imports                ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.import_rows            ENABLE ROW LEVEL SECURITY;
-
--- profiles
-CREATE POLICY profiles_select_own ON public.profiles FOR SELECT TO authenticated USING ((select auth.uid()) = id);
-CREATE POLICY profiles_insert_own ON public.profiles FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = id);
-CREATE POLICY profiles_update_own ON public.profiles FOR UPDATE TO authenticated USING ((select auth.uid()) = id) WITH CHECK ((select auth.uid()) = id);
-
--- clients
-CREATE POLICY clients_select_own ON public.clients FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
-CREATE POLICY clients_insert_own ON public.clients FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
-CREATE POLICY clients_update_own ON public.clients FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
-CREATE POLICY clients_delete_own ON public.clients FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
-
--- cases
-CREATE POLICY cases_select_own ON public.cases FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
-CREATE POLICY cases_insert_own ON public.cases FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
-CREATE POLICY cases_update_own ON public.cases FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
-CREATE POLICY cases_delete_own ON public.cases FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
-
--- case_status_history (solo select + insert; lo storico non si modifica)
-CREATE POLICY case_status_history_select_own ON public.case_status_history FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
-CREATE POLICY case_status_history_insert_own ON public.case_status_history FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
-
--- expenses
-CREATE POLICY expenses_select_own ON public.expenses FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
-CREATE POLICY expenses_insert_own ON public.expenses FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
-CREATE POLICY expenses_update_own ON public.expenses FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
-CREATE POLICY expenses_delete_own ON public.expenses FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
-
--- invoices
-CREATE POLICY invoices_select_own ON public.invoices FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
-CREATE POLICY invoices_insert_own ON public.invoices FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
-CREATE POLICY invoices_update_own ON public.invoices FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
-CREATE POLICY invoices_delete_own ON public.invoices FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
-
--- invoice_lines
-CREATE POLICY invoice_lines_select_own ON public.invoice_lines FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
-CREATE POLICY invoice_lines_insert_own ON public.invoice_lines FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
-CREATE POLICY invoice_lines_update_own ON public.invoice_lines FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
-CREATE POLICY invoice_lines_delete_own ON public.invoice_lines FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
 
 CREATE POLICY principals_select_own ON public.principals FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
 CREATE POLICY principals_insert_own ON public.principals FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
@@ -1125,3 +838,21 @@ CREATE POLICY import_rows_select_own ON public.import_rows FOR SELECT TO authent
 CREATE POLICY import_rows_insert_own ON public.import_rows FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
 CREATE POLICY import_rows_update_own ON public.import_rows FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
 CREATE POLICY import_rows_delete_own ON public.import_rows FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
+
+-- ============================================================================
+-- STORAGE MIME TYPES
+-- ============================================================================
+
+UPDATE storage.buckets
+SET allowed_mime_types = ARRAY(
+  SELECT DISTINCT mime_type
+  FROM unnest(
+    coalesce(allowed_mime_types, ARRAY[]::text[])
+    || ARRAY[
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/vnd.oasis.opendocument.spreadsheet'
+    ]::text[]
+  ) AS mime_type
+)
+WHERE id = 'pratix-documents';

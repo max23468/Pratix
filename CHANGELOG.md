@@ -6,6 +6,14 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.5.1] — 2026-05-03
+
+### Sotto il cofano
+
+- **Schema recupero crediti Fase 2**: aggiunta la migration compatibile per committenti, clienti multi-committente, controparti, numerazione pratica, prezzi annuali, attività fatturabili, allegati, fatturazione per periodo, rendiconti Excel e import guidato.
+
+## [Non versionato] — 2026-05-03
+
 ### Non versionato
 
 - **Roadmap test automatizzati**: aggiunta una voce generale per definire una strategia progressiva di unit, integration, smoke/e2e, fixture anonime e integrazione nei gate Quality/pre-push.
@@ -248,6 +256,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.5.1]: #051--2026-05-03
 [0.5.0]: #050--2026-05-03
 [0.4.1]: #041--2026-05-03
 [0.4.0]: #040--2026-05-03

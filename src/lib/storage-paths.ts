@@ -4,6 +4,9 @@ export const PRATIX_STORAGE_AREAS = {
   invoices: "invoices",
   cases: "cases",
   expenses: "expenses",
+  activities: "activities",
+  billingExports: "billing-exports",
+  imports: "imports",
   profile: "profile",
   exports: "exports",
 } as const;
