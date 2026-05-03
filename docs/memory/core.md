@@ -59,7 +59,7 @@ Da usare per logo e asset di marca che non devono invertirsi col tema.
 ✅ Committente · Cliente · Controparte · Pratica · Attività · Compenso/Onorario · Prezzi · Rimborso spese · Fattura · Rendiconto Excel
 ❌ Caso · Assistito · Deadline · Costi
 
-Pratix resta per avvocati freelance, non per studi associati o team multi-ruolo. "Studio" non è più vietata in assoluto, ma non va usata per riposizionare il prodotto verso studi associati. **Attività** è ora termine centrale: indica le voci operative e fatturabili dentro una pratica.
+Pratix resta per avvocati freelance, non per studi associati o team multi-ruolo. "Studio" non è più vietata in assoluto, ma non va usata per riposizionare il prodotto verso studi associati. **Attività** è ora termine centrale: indica le registrazioni operative e fatturabili dentro una pratica. La sezione `/attivita` è la vista globale di inserimento rapido; la tab nella pratica resta la vista contestuale delle stesse righe.
 Fallback intestazione fattura: **"Avvocato"**.
 
 ## Processo

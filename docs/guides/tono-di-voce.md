@@ -35,6 +35,11 @@ multi-ruolo. "Studio" non è più una parola vietata in assoluto, ma non va usat
 per riposizionare il prodotto come gestionale per studi associati. Vedi
 [ADR 0013](../decisions/0013-focus-recupero-crediti.md).
 
+**Attività** è una label ufficiale solo per le registrazioni operative e
+fatturabili della pratica: compensi/onorari e rimborsi spese. Per parlare della
+vita professionale o dei dati dell'utente usa ancora **Professione**. Vedi
+[ADR 0014](../decisions/0014-attivita-termine-prodotto.md).
+
 ## Tagline ufficiale
 
 **"Tutto torna."** Sempre col punto finale. Mai tradurre. **Mai dentro la UI autenticata** — vive solo in marketing, landing, footer pubblico, meta tag. Nei title e nei meta tag usa sempre il separatore `·`: `Dashboard · Pratix`. La forma `Pratix · Tutto torna.` è riservata alla home pubblica. Vedi [ADR 0004](../decisions/0004-tagline-tutto-torna.md).

@@ -1,7 +1,7 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { RefreshCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,7 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,22 +25,21 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { CounterpartySelect, PrincipalSelect } from "@/components/debt-collection-selects";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { caseMatterLabels, caseStatusLabels, clientDisplayName } from "@/lib/labels";
+import { caseStatusLabels, clientDisplayName } from "@/lib/labels";
 
 type CaseRow = {
   id?: string;
+  principal_id: string | null;
   client_id: string | null;
+  counterparty_id: string | null;
   case_number: string;
+  practice_number: number | null;
   title: string;
   matter: string;
   status: string;
-  fee_type: string;
-  hourly_rate: number | null;
-  agreed_fee: number | null;
-  retainer: number | null;
-  counterparty: string | null;
   authority: string | null;
   rg_number: string | null;
   opened_at: string;
@@ -51,16 +50,14 @@ type CaseRow = {
 const today = () => new Date().toISOString().slice(0, 10);
 
 const empty: CaseRow = {
+  principal_id: null,
   client_id: null,
+  counterparty_id: null,
   case_number: "",
+  practice_number: null,
   title: "",
   matter: "civile",
   status: "open",
-  fee_type: "flat",
-  hourly_rate: null,
-  agreed_fee: 0,
-  retainer: 0,
-  counterparty: "",
   authority: "",
   rg_number: "",
   opened_at: today(),
@@ -78,18 +75,37 @@ type Props = {
 export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const isEdit = Boolean(initial?.id);
   const [form, setForm] = useState<CaseRow>({
     ...empty,
     ...(defaultClientId ? { client_id: defaultClientId } : {}),
     ...(initial ?? {}),
   });
 
-  const isEdit = Boolean(initial?.id);
+  const upd = <K extends keyof CaseRow>(key: K, value: CaseRow[K]) =>
+    setForm((current) => ({ ...current, [key]: value }));
 
-  const upd = <K extends keyof CaseRow>(k: K, v: CaseRow[K]) => setForm((f) => ({ ...f, [k]: v }));
+  const { data: nextPracticeNumber, refetch: refetchNextPracticeNumber } = useQuery({
+    queryKey: ["cases", "next-practice-number"],
+    enabled: !isEdit,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_next_practice_number");
+      if (error) throw error;
+      return data;
+    },
+  });
 
-  const { data: clients } = useQuery({
-    queryKey: ["clients", "for-case"],
+  useEffect(() => {
+    if (isEdit || form.practice_number || !nextPracticeNumber) return;
+    setForm((current) => ({
+      ...current,
+      practice_number: nextPracticeNumber,
+      case_number: String(nextPracticeNumber),
+    }));
+  }, [form.practice_number, isEdit, nextPracticeNumber]);
+
+  const { data: clients = [] } = useQuery({
+    queryKey: ["clients", "case-form"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
@@ -100,25 +116,59 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
     },
   });
 
+  const { data: principalClientIds = [] } = useQuery({
+    queryKey: ["principal-clients", "case-form", form.principal_id],
+    enabled: Boolean(form.principal_id),
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("principal_clients")
+        .select("client_id")
+        .eq("principal_id", form.principal_id ?? "");
+      if (error) throw error;
+      return (data ?? []).map((row) => row.client_id);
+    },
+  });
+
+  const availableClients = useMemo(() => {
+    if (!form.principal_id) return clients;
+    const allowed = new Set(principalClientIds);
+    return clients.filter((client) => allowed.has(client.id) || client.id === form.client_id);
+  }, [clients, form.client_id, form.principal_id, principalClientIds]);
+
+  useEffect(() => {
+    if (!form.principal_id || !form.client_id) return;
+    if (availableClients.some((client) => client.id === form.client_id)) return;
+    upd("client_id", null);
+  }, [availableClients, form.client_id, form.principal_id]);
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Sessione non valida");
+      if (!form.principal_id) throw new Error("Seleziona un committente");
       if (!form.client_id) throw new Error("Seleziona un cliente");
-      if (!form.case_number.trim()) throw new Error("Inserisci il numero pratica");
-      if (!form.title.trim()) throw new Error("Inserisci il titolo della pratica");
+      if (!form.counterparty_id) throw new Error("Seleziona una controparte");
 
+      const practiceNumber = Number(form.practice_number);
+      if (!Number.isInteger(practiceNumber) || practiceNumber <= 0) {
+        throw new Error("Inserisci un numero pratica numerico positivo");
+      }
+
+      const title = form.title.trim() || `Pratica ${practiceNumber}`;
       const payload = {
         user_id: user.id,
+        principal_id: form.principal_id,
         client_id: form.client_id,
-        case_number: form.case_number.trim(),
-        title: form.title.trim(),
-        matter: form.matter as "civile",
+        counterparty_id: form.counterparty_id,
+        practice_number: practiceNumber,
+        case_number: String(practiceNumber),
+        title,
+        matter: "civile" as const,
         status: form.status as "open",
-        fee_type: form.fee_type as "flat",
-        hourly_rate: form.fee_type === "hourly" ? Number(form.hourly_rate ?? 0) : null,
-        agreed_fee: Number(form.agreed_fee ?? 0),
-        retainer: Number(form.retainer ?? 0),
-        counterparty: form.counterparty?.trim() || null,
+        fee_type: "flat" as const,
+        agreed_fee: 0,
+        hourly_rate: null,
+        retainer: 0,
+        counterparty: null,
         authority: form.authority?.trim() || null,
         rg_number: form.rg_number?.trim() || null,
         opened_at: form.opened_at || today(),
@@ -127,6 +177,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       };
 
       if (isEdit && initial?.id) {
+        const previousClientId = initial.client_id ?? null;
         const { data, error } = await supabase
           .from("cases")
           .update(payload)
@@ -134,21 +185,35 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
           .select("id")
           .single();
         if (error) throw error;
-        return data.id;
-      } else {
-        const { data, error } = await supabase.from("cases").insert(payload).select("id").single();
-        if (error) throw error;
+
+        if (previousClientId && previousClientId !== form.client_id) {
+          const { error: transferError } = await supabase.from("case_credit_transfers").insert({
+            user_id: user.id,
+            case_id: initial.id,
+            previous_client_id: previousClientId,
+            new_client_id: form.client_id,
+            transferred_at: new Date().toISOString(),
+            notes: null,
+          });
+          if (transferError) throw transferError;
+        }
+
         return data.id;
       }
+
+      const { data, error } = await supabase.from("cases").insert(payload).select("id").single();
+      if (error) throw error;
+      return data.id;
     },
     onSuccess: (id) => {
       toast.success(isEdit ? "Pratica aggiornata" : "Pratica creata");
       qc.invalidateQueries({ queryKey: ["cases"] });
       qc.invalidateQueries({ queryKey: ["case", id] });
+      qc.invalidateQueries({ queryKey: ["case-credit-transfers", id] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       onSaved(id);
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (error: Error) => toast.error(error.message),
   });
 
   const deleteMutation = useMutation({
@@ -162,200 +227,150 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       qc.invalidateQueries({ queryKey: ["cases"] });
       onCancel();
     },
-    onError: (e: Error) => toast.error(e.message),
+    onError: (error: Error) => toast.error(error.message),
   });
 
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault();
     saveMutation.mutate();
   };
 
+  const useNextPracticeNumber = async () => {
+    const result = await refetchNextPracticeNumber();
+    const number = result.data ?? nextPracticeNumber;
+    if (!number) return;
+    upd("practice_number", number);
+    upd("case_number", String(number));
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Dati pratica</CardTitle>
+          <CardDescription>
+            La pratica nasce dall'incrocio fra committente, cliente e controparte.
+          </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="client">Cliente</Label>
-              <Select value={form.client_id ?? ""} onValueChange={(v) => upd("client_id", v)}>
-                <SelectTrigger id="client">
-                  <SelectValue placeholder="Seleziona cliente" />
+        <CardContent className="flex flex-col gap-4">
+          <div className="grid gap-4 lg:grid-cols-3">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="principal_id">Committente</Label>
+              <PrincipalSelect
+                id="principal_id"
+                value={form.principal_id}
+                onValueChange={(value) => {
+                  upd("principal_id", value);
+                  upd("client_id", null);
+                }}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="client_id">Cliente</Label>
+              <Select
+                value={form.client_id ?? ""}
+                onValueChange={(value) => upd("client_id", value)}
+                disabled={!form.principal_id}
+              >
+                <SelectTrigger id="client_id">
+                  <SelectValue
+                    placeholder={
+                      form.principal_id ? "Seleziona cliente" : "Prima scegli il committente"
+                    }
+                  />
                 </SelectTrigger>
                 <SelectContent>
-                  {(clients ?? []).map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {clientDisplayName(c)}
+                  {availableClients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      {clientDisplayName(client)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              {form.principal_id && availableClients.length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Nessun cliente collegato a questo committente.
+                </p>
+              ) : null}
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="num">Numero pratica</Label>
-              <Input
-                id="num"
-                value={form.case_number}
-                onChange={(e) => upd("case_number", e.target.value)}
-                placeholder="es. 2026/001"
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="counterparty_id">Controparte</Label>
+              <CounterpartySelect
+                id="counterparty_id"
+                value={form.counterparty_id}
+                onValueChange={(value) => upd("counterparty_id", value)}
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="title">Titolo</Label>
-            <Input
-              id="title"
-              value={form.title}
-              onChange={(e) => upd("title", e.target.value)}
-              placeholder="Oggetto della pratica"
-            />
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="practice_number">Numero pratica</Label>
+              <div className="flex gap-2">
+                <Input
+                  id="practice_number"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={form.practice_number ?? ""}
+                  onChange={(event) => {
+                    const value = event.target.value;
+                    const numericValue = value === "" ? null : Number(value);
+                    upd("practice_number", numericValue);
+                    upd("case_number", numericValue ? String(numericValue) : "");
+                  }}
+                  placeholder="157"
+                />
+                {!isEdit && (
+                  <Button type="button" variant="outline" onClick={useNextPracticeNumber}>
+                    <RefreshCcw className="mr-1 h-4 w-4" /> Prossimo
+                  </Button>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="title">Titolo</Label>
+              <Input
+                id="title"
+                value={form.title}
+                onChange={(event) => upd("title", event.target.value)}
+                placeholder="Es. Recupero credito Gruppo 3C"
+              />
+            </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="matter">Materia</Label>
-              <Select value={form.matter} onValueChange={(v) => upd("matter", v)}>
-                <SelectTrigger id="matter">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(caseMatterLabels).map(([k, l]) => (
-                    <SelectItem key={k} value={k}>
-                      {l}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Stato</Label>
-              <Select value={form.status} onValueChange={(v) => upd("status", v)}>
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="status">Stato pratica</Label>
+              <Select value={form.status} onValueChange={(value) => upd("status", value)}>
                 <SelectTrigger id="status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(caseStatusLabels).map(([k, l]) => (
-                    <SelectItem key={k} value={k}>
-                      {l}
+                  {Object.entries(caseStatusLabels).map(([value, label]) => (
+                    <SelectItem key={value} value={value}>
+                      {label}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="opened">Data apertura</Label>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="opened_at">Data apertura</Label>
               <Input
-                id="opened"
+                id="opened_at"
                 type="date"
                 value={form.opened_at}
-                onChange={(e) => upd("opened_at", e.target.value)}
+                onChange={(event) => upd("opened_at", event.target.value)}
               />
             </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Compenso</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-3">
-            <div className="space-y-2">
-              <Label htmlFor="fee_type">Tipo compenso</Label>
-              <Select value={form.fee_type} onValueChange={(v) => upd("fee_type", v)}>
-                <SelectTrigger id="fee_type">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="flat">A forfait</SelectItem>
-                  <SelectItem value="hourly">A ore</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            {form.fee_type === "hourly" ? (
-              <div className="space-y-2">
-                <Label htmlFor="hr">Tariffa oraria (€)</Label>
-                <Input
-                  id="hr"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={form.hourly_rate ?? ""}
-                  onChange={(e) =>
-                    upd("hourly_rate", e.target.value === "" ? null : Number(e.target.value))
-                  }
-                />
-              </div>
-            ) : (
-              <div className="space-y-2">
-                <Label htmlFor="fee">Compenso pattuito (€)</Label>
-                <Input
-                  id="fee"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={form.agreed_fee ?? 0}
-                  onChange={(e) => upd("agreed_fee", Number(e.target.value))}
-                />
-              </div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="retainer">Acconto ricevuto (€)</Label>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="closed_at">Data chiusura</Label>
               <Input
-                id="retainer"
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.retainer ?? 0}
-                onChange={(e) => upd("retainer", Number(e.target.value))}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Riferimenti procedimento</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="cp">Controparte</Label>
-              <Input
-                id="cp"
-                value={form.counterparty ?? ""}
-                onChange={(e) => upd("counterparty", e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="auth">Autorità giudiziaria</Label>
-              <Input
-                id="auth"
-                value={form.authority ?? ""}
-                onChange={(e) => upd("authority", e.target.value)}
-                placeholder="es. Tribunale di Milano"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="rg">N. R.G.</Label>
-              <Input
-                id="rg"
-                value={form.rg_number ?? ""}
-                onChange={(e) => upd("rg_number", e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="closed">Data chiusura</Label>
-              <Input
-                id="closed"
+                id="closed_at"
                 type="date"
                 value={form.closed_at ?? ""}
-                onChange={(e) => upd("closed_at", e.target.value || null)}
+                onChange={(event) => upd("closed_at", event.target.value || null)}
               />
             </div>
           </div>
@@ -364,14 +379,37 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Note</CardTitle>
+          <CardTitle className="text-base">Riferimenti</CardTitle>
         </CardHeader>
-        <CardContent>
-          <Textarea
-            rows={4}
-            value={form.notes ?? ""}
-            onChange={(e) => upd("notes", e.target.value)}
-          />
+        <CardContent className="flex flex-col gap-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="authority">Autorità giudiziaria</Label>
+              <Input
+                id="authority"
+                value={form.authority ?? ""}
+                onChange={(event) => upd("authority", event.target.value)}
+                placeholder="Es. Tribunale di Milano"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="rg_number">N. R.G.</Label>
+              <Input
+                id="rg_number"
+                value={form.rg_number ?? ""}
+                onChange={(event) => upd("rg_number", event.target.value)}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="notes">Note</Label>
+            <Textarea
+              id="notes"
+              rows={4}
+              value={form.notes ?? ""}
+              onChange={(event) => upd("notes", event.target.value)}
+            />
+          </div>
         </CardContent>
       </Card>
 
@@ -388,8 +426,8 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                 <AlertDialogHeader>
                   <AlertDialogTitle>Eliminare la pratica?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    L'eliminazione riguarda anche spese e storico stati associati. L'azione non può
-                    essere annullata.
+                    L'eliminazione riguarda anche voci fatturabili, allegati e storico stati
+                    associati. L'azione non può essere annullata.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

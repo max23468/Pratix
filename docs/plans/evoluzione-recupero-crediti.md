@@ -21,6 +21,10 @@ La pratica contiene poi **Attività** fatturabili all'avvocato, distinte in
 compensi e rimborsi spese, che confluiscono nelle fatture emesse al
 committente per un periodo scelto.
 
+Nel prodotto **Attività** è anche la sezione globale di inserimento rapido:
+mostra e crea le stesse righe fatturabili visibili nella singola pratica,
+senza duplicare il modello dati.
+
 ## Decisioni già definite
 
 1. Il termine di prodotto resta **Pratica**, non "Posizione". "Posizione" può
@@ -721,6 +725,10 @@ Uscita fase:
 
 ### Fase 5 — Pratiche e attività
 
+**Stato**: implementata nella UI operativa, con migration per consentire
+l'inserimento manuale di voci storiche già fatturate senza fattura Pratix
+collegata.
+
 **Obiettivo**: costruire il cuore operativo del recupero crediti.
 
 Attività:
@@ -743,6 +751,11 @@ Attività:
    la UI non deve proporre voci non applicabili.
 10. Gestire cessione credito cambiando il cliente corrente e mantenendo lo
     storico tecnico.
+11. Rimuovere la vecchia pagina autonoma `/spese`: i rimborsi spese non sono un
+    modulo separato, ma voci fatturabili della pratica.
+12. Aggiungere la sezione globale `/attivita` in navigazione per inserire e
+    controllare rapidamente compensi/onorari e rimborsi spese su tutte le
+    pratiche.
 
 Uscita fase:
 
@@ -753,6 +766,23 @@ Uscita fase:
 - le udienze sono tracciabili con date;
 - allegati collegati all'attività funzionano sul bucket privato;
 - pratica e attività mantengono stati separati.
+- la navigazione non espone più il vecchio modulo spese basato su `expenses`.
+- la navigazione espone **Attività** come inserimento rapido globale sulle
+  stesse righe `case_activities` della pratica.
+
+Residui lasciati volutamente alla fase successiva:
+
+- il form fatture esistente usa ancora `expenses` per importare spese della
+  pratica;
+- la tabella `expenses`, le sue policy RLS, i tipi Supabase generati e la
+  cartella storage `expenses` restano finché Fase 6 non sostituisce il flusso
+  fatture con `case_activities`;
+- gli enum/campi fiscali di fattura legati a `expense_art15` e
+  `taxable_expenses` vanno rivalutati in Fase 6: i rimborsi recupero crediti
+  sono Art. 15, mentre eventuali spese imponibili non devono rientrare nel
+  nuovo flusso standard;
+- i riferimenti Lovable e `case_deadlines` nelle migration e negli ADR storici
+  restano come storia del progetto e non sono residui runtime da bonificare.
 
 ### Fase 6 — Fatturazione per committente e periodo
 
@@ -778,6 +808,12 @@ Attività:
 13. Generare rendiconto Excel rimborsi spese nel formato del template.
 14. Salvare i rendiconti come export collegati alla fattura.
 15. Definire comportamento bozza/emessa/eliminata secondo le regole del piano.
+16. Rimuovere dal form fatture l'import legacy da `expenses` e sostituirlo con
+    l'estrazione da `case_activities`.
+17. Eliminare o isolare definitivamente la tabella `expenses` quando non è più
+    usata da codice, storage e tipi generati.
+18. Aggiornare `src/integrations/supabase/types.ts`, `supabase/schema.sql` e la
+    documentazione database dopo la bonifica del vecchio flusso spese.
 
 Uscita fase:
 
@@ -788,6 +824,7 @@ Uscita fase:
 - compensi, spese generali, cassa forense e rimborsi restano fiscalmente
   distinti;
 - i rimborsi non entrano mai nella base di calcolo della cassa forense.
+- il vecchio flusso `expenses` non è più usato dal prodotto.
 
 ### Fase 7 — Import archivio
 
@@ -814,9 +851,10 @@ Uscita fase:
 - errori e avvisi sono comprensibili e correggibili;
 - il flusso riusa selettori e validazioni già usati da pratica e anagrafiche.
 
-### Fase 8 — Rifinitura operativa
+### Fase 8 — Rifinitura operativa e superfici trasversali
 
-**Obiettivo**: rendere il nuovo dominio usabile come SaaS quotidiano.
+**Obiettivo**: rendere il nuovo dominio usabile come SaaS quotidiano e
+riallineare tutte le aree rimaste fuori dalle fasi verticali.
 
 Attività:
 
@@ -824,22 +862,41 @@ Attività:
    controparte e pratica.
 2. Aggiungere viste e ordinamenti utili: pratiche aperte, da fatturare,
    fatturate, sospese, archiviate.
-3. Rifinire dashboard sul nuovo dominio, senza scadenzario.
-4. Aggiungere export dati essenziali se utile per controllo e backup.
-5. Scrivere test mirati su:
+3. Ripensare la dashboard sulla nuova struttura recupero crediti:
+   - evidenza pratiche aperte, sospese, chiuse e archiviate;
+   - pratiche con voci da fatturare;
+   - committenti con importi maturati nel periodo;
+   - rimborsi spese da completare con allegati;
+   - accessi rapidi a nuova pratica, nuova controparte, prezzi e fatturazione.
+4. Revisionare **Impostazioni** per separare chiaramente dati professionali
+   generali, preferenze di fatturazione e impostazioni collegate al recupero
+   crediti, evitando campi o copy ereditati dalla vecchia struttura.
+5. Revisionare **Account** per verificare che profilo, sicurezza, tema e
+   notifiche restino coerenti con il SaaS mono-professionista e non introducano
+   concetti di studio, team o ruoli non previsti.
+6. Revisionare **Novità** per assicurare che le release dell'evoluzione siano
+   leggibili per l'utente finale, con voci orientate a pratica, committente,
+   controparte, prezzi, fatturazione e import.
+7. Revisionare le altre aree non toccate direttamente dall'evoluzione:
+   navigazione, topbar, menu utente, onboarding, pagine pubbliche, privacy,
+   termini, stati vuoti, meta title e microcopy.
+8. Aggiungere export dati essenziali se utile per controllo e backup.
+9. Scrivere test mirati su:
    - generazione numero pratica;
    - snapshot prezzi;
    - attività rinviate;
    - blocco attività fatturate;
    - rendiconti Excel;
    - RLS.
-6. Verificare UI desktop/mobile e chiaro/scuro nelle superfici principali.
-7. Aggiornare onboarding, documentazione, roadmap e changelog in vista del
-   rilascio.
+10. Verificare UI desktop/mobile e chiaro/scuro nelle superfici principali.
+11. Aggiornare onboarding, documentazione, roadmap e changelog in vista del
+    rilascio.
 
 Uscita fase:
 
 - flussi principali usabili senza dati di test;
+- dashboard, impostazioni, account, novità e superfici trasversali coerenti con
+  il nuovo dominio;
 - verifiche tecniche passate;
 - documentazione allineata;
 - pronto per release e pubblicazione.

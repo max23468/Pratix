@@ -143,7 +143,7 @@ Vincoli di terminologia (vedi [`docs/glossario.md`](./docs/glossario.md)):
 - **Usa**: Committente, Cliente, Controparte, Pratica, Attività, Compenso/Onorario, Prezzi, Rimborso spese, Spese, Fattura, Rendiconto Excel, Professione.
 - **Vietato**: Caso, Assistito, Deadline, Costi.
 - **Studio** non è più una parola vietata in assoluto, ma Pratix resta per avvocati freelance: non usare "studio" per posizionare il prodotto come gestionale per studi associati o team multi-ruolo.
-- **Attività** è ora un termine centrale di prodotto: indica le voci operative e fatturabili dentro una pratica.
+- **Attività** è ora un termine centrale di prodotto: indica le registrazioni operative e fatturabili dentro una pratica. La sezione `/attivita` è l'inserimento rapido globale di compensi/onorari e rimborsi spese; la tab nella pratica resta la vista contestuale delle stesse righe.
 
 ## Qualità UI React
 

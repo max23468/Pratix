@@ -12,18 +12,18 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## 0. Identità e brand
 
-| Stato | Voce                                                      | Note                                                                                                                                                   |
-| ----- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| ✅    | Nome prodotto: **Pratix**                                 | Gestionale per avvocati freelance                                                                                                                      |
-| ✅    | Tagline ufficiale: **"Tutto torna."**                     | Triplo senso: contabile, narrativo, ordine. Fuori dalla UI autenticata. Nei title usa `·`: `Dashboard · Pratix`; `Pratix · Tutto torna.` solo in home  |
-| ✅    | Palette inchiostro + terracotta + panna                   | Token semantici in `src/styles.css`, mai hex inline. Differenziazione da Fineco/banche (ADR-0007). I nomi token `--brand-navy/gold` sono alias storici |
-| ✅    | Logo adattivo cross-tema                                  | Tone `navy` cambia tile/glifo fra light e dark via token `--logo-*`                                                                                    |
-| ✅    | Tipografia: Inter Tight + Inter + JetBrains Mono          | Numeri tabular-nums, display weight max 600                                                                                                            |
-| ✅    | Logo unificato `<Logo>` + favicon SVG                     | Direzione default `px`, mai SVG inline                                                                                                                 |
-| ✅    | Tono di voce "tu" professionale                           | No emoji UI, no esclamativi multipli                                                                                                                   |
-| ✅    | Glossario freelance + recupero crediti                    | Committente/Cliente/Controparte/Pratica/Attività/Compenso-Onorario/Prezzi/Rimborso spese/Fattura/Rendiconto Excel; Pratix resta per avvocati freelance |
-| ⬜    | Pagina `/brand` o sezione interna riassuntiva             | Non urgente; per ora basta `BRAND.md`                                                                                                                  |
-| 💤    | Loghi alternativi (orizzontale scuro su panna, monocromo) | Solo se serviranno per export/press                                                                                                                    |
+| Stato | Voce                                                      | Note                                                                                                                                                                           |
+| ----- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ✅    | Nome prodotto: **Pratix**                                 | Gestionale per avvocati freelance                                                                                                                                              |
+| ✅    | Tagline ufficiale: **"Tutto torna."**                     | Triplo senso: contabile, narrativo, ordine. Fuori dalla UI autenticata. Nei title usa `·`: `Dashboard · Pratix`; `Pratix · Tutto torna.` solo in home                          |
+| ✅    | Palette inchiostro + terracotta + panna                   | Token semantici in `src/styles.css`, mai hex inline. Differenziazione da Fineco/banche (ADR-0007). I nomi token `--brand-navy/gold` sono alias storici                         |
+| ✅    | Logo adattivo cross-tema                                  | Tone `navy` cambia tile/glifo fra light e dark via token `--logo-*`                                                                                                            |
+| ✅    | Tipografia: Inter Tight + Inter + JetBrains Mono          | Numeri tabular-nums, display weight max 600                                                                                                                                    |
+| ✅    | Logo unificato `<Logo>` + favicon SVG                     | Direzione default `px`, mai SVG inline                                                                                                                                         |
+| ✅    | Tono di voce "tu" professionale                           | No emoji UI, no esclamativi multipli                                                                                                                                           |
+| ✅    | Glossario freelance + recupero crediti                    | Committente/Cliente/Controparte/Pratica/Attività/Compenso-Onorario/Prezzi/Rimborso spese/Fattura/Rendiconto Excel; Attività è label ufficiale per le registrazioni fatturabili |
+| ⬜    | Pagina `/brand` o sezione interna riassuntiva             | Non urgente; per ora basta `BRAND.md`                                                                                                                                          |
+| 💤    | Loghi alternativi (orizzontale scuro su panna, monocromo) | Solo se serviranno per export/press                                                                                                                                            |
 
 ## 1. Tema e accessibilità
 
@@ -52,40 +52,41 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## 3. Esperienza prodotto (UI autenticata)
 
-| Stato | Voce                               | Note                                                                 |
-| ----- | ---------------------------------- | -------------------------------------------------------------------- |
-| ✅    | Layout app + sidebar               | `src/components/app-layout.tsx`                                      |
-| ✅    | Onboarding wizard 3 step           | Anagrafica / Fiscale / Pagamenti                                     |
-| ⬜    | Empty states uniformi              | Dashboard, Pratiche, Clienti, Fatture, Spese                         |
-| ⬜    | Microcopy review pagina per pagina | Coerenza tono, glossario, "tu"                                       |
-| ⬜    | Scorciatoie tastiera               | Almeno: nuova pratica, nuovo cliente, nuova fattura, ricerca globale |
-| ⬜    | Ricerca globale (cmd+k)            | Pratiche, clienti, fatture                                           |
-| ⬜    | Filtri persistenti per pagina      | Salvare in URL/query                                                 |
-| ⬜    | Dati di esempio opzionali          | Per esplorare l'app a freddo                                         |
+| Stato | Voce                               | Note                                                                                                                                       |
+| ----- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| ✅    | Layout app + sidebar               | `src/components/app-layout.tsx`                                                                                                            |
+| ✅    | Onboarding wizard 3 step           | Anagrafica / Fiscale / Pagamenti                                                                                                           |
+| ⬜    | Empty states uniformi              | Dashboard, Pratiche, Clienti, Fatture, Spese                                                                                               |
+| ⬜    | Revisione superfici trasversali    | Dashboard, Impostazioni, Account, Novità, onboarding, navigazione e copy da riallineare al dominio recupero crediti dopo le fasi verticali |
+| ⬜    | Microcopy review pagina per pagina | Coerenza tono, glossario, "tu"                                                                                                             |
+| ⬜    | Scorciatoie tastiera               | Almeno: nuova pratica, nuovo cliente, nuova fattura, ricerca globale                                                                       |
+| ⬜    | Ricerca globale (cmd+k)            | Pratiche, clienti, fatture                                                                                                                 |
+| ⬜    | Filtri persistenti per pagina      | Salvare in URL/query                                                                                                                       |
+| ⬜    | Dati di esempio opzionali          | Per esplorare l'app a freddo                                                                                                               |
 
 ## 4. Funzionalità di prodotto
 
-| Stato | Voce                              | Note                                                                                               |
-| ----- | --------------------------------- | -------------------------------------------------------------------------------------------------- |
-| ✅    | Pratiche, Clienti, Fatture base   | CRUD + visualizzazione                                                                             |
-| ✅    | Generazione fattura PDF           | `src/lib/invoice-pdf.ts`                                                                           |
-| ✅    | Generazione XML FatturaPA (TD06)  | `src/lib/invoice-xml.ts`                                                                           |
-| ✅    | Piano evoluzione recupero crediti | `docs/plans/evoluzione-recupero-crediti.md` + ADR-0013                                             |
-| ✅    | Rimozione scadenzario             | Route, sidebar, dashboard, tab pratica e tabella `case_deadlines` rimossi                          |
-| ✅    | Schema recupero crediti Fase 2    | Migration applicata, tipi Supabase rigenerati e snapshot SQL aggiornato                            |
-| ✅    | Committenti                       | Anagrafica soggetto fatturato e regole economiche di base                                          |
-| ✅    | Clienti multi-committente         | Relazione molti-a-molti fra committenti e clienti                                                  |
-| ✅    | Controparti strutturate           | Persone/società e gruppi di soggetti senza ruoli                                                   |
-| ✅    | Prezzi per committente            | Compensi/rimborsi abilitabili per committente, voci e prezzi unitari personalizzabili per anno     |
-| ⬜    | Attività fatturabili              | Stato da fatturare/fatturata, allegati facoltativi                                                 |
-| ⬜    | Fatturazione committente/periodo  | Estrazione attività, inclusione/rinvio, spese generali opzionali, cassa forense e rendiconti Excel |
-| ⬜    | Import archivio guidato           | Wizard manuale + Excel strutturato, anche largo, con staging e validazione                         |
-| 💤    | Time tracking per pratica         | Fuori dal perimetro recupero crediti attuale                                                       |
-| ⬜    | Spese con allegati                | Da ricondurre alle attività/rimborsi spese                                                         |
-| ⬜    | Esportazione massiva fatture      | ZIP PDF + XML per periodo                                                                          |
-| ⬜    | Numerazione automatica            | Già presente? Verificare reset annuale                                                             |
-| 💤    | Area cliente esterna              | Login dedicato per visione fatture e documenti                                                     |
-| 💤    | Integrazione invio SDI            | Oggi solo generazione XML; invio futuro                                                            |
+| Stato | Voce                              | Note                                                                                                                                                                       |
+| ----- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅    | Pratiche, Clienti, Fatture base   | CRUD + visualizzazione                                                                                                                                                     |
+| ✅    | Generazione fattura PDF           | `src/lib/invoice-pdf.ts`                                                                                                                                                   |
+| ✅    | Generazione XML FatturaPA (TD06)  | `src/lib/invoice-xml.ts`                                                                                                                                                   |
+| ✅    | Piano evoluzione recupero crediti | `docs/plans/evoluzione-recupero-crediti.md` + ADR-0013                                                                                                                     |
+| ✅    | Rimozione scadenzario             | Route, sidebar, dashboard, tab pratica e tabella `case_deadlines` rimossi                                                                                                  |
+| ✅    | Schema recupero crediti Fase 2    | Migration applicata, tipi Supabase rigenerati e snapshot SQL aggiornato                                                                                                    |
+| ✅    | Committenti                       | Anagrafica soggetto fatturato e regole economiche di base                                                                                                                  |
+| ✅    | Clienti multi-committente         | Relazione molti-a-molti fra committenti e clienti                                                                                                                          |
+| ✅    | Controparti strutturate           | Persone/società e gruppi di soggetti senza ruoli                                                                                                                           |
+| ✅    | Prezzi per committente            | Compensi/rimborsi abilitabili per committente, voci e prezzi unitari personalizzabili per anno                                                                             |
+| ✅    | Attività fatturabili              | Sezione globale `/attivita` + tab pratica; voci da Prezzi, stato da fatturare/fatturata, quantità, udienze e allegati facoltativi                                          |
+| ⬜    | Fatturazione committente/periodo  | Estrazione attività, inclusione/rinvio, spese generali opzionali, cassa forense e rendiconti Excel; deve sostituire il flusso fatture legacy basato su `expenses`          |
+| ⬜    | Import archivio guidato           | Wizard manuale + Excel strutturato, anche largo, con staging e validazione                                                                                                 |
+| 💤    | Time tracking per pratica         | Fuori dal perimetro recupero crediti attuale                                                                                                                               |
+| 🟡    | Spese con allegati                | Vecchia route `/spese` rimossa; i rimborsi sono voci fatturabili, restano da bonificare import spese in fattura, tabella `expenses`, tipi generati e storage folder legacy |
+| ⬜    | Esportazione massiva fatture      | ZIP PDF + XML per periodo                                                                                                                                                  |
+| ✅    | Numerazione automatica            | Numero pratica numerico suggerito dal database e modificabile manualmente                                                                                                  |
+| 💤    | Area cliente esterna              | Login dedicato per visione fatture e documenti                                                                                                                             |
+| 💤    | Integrazione invio SDI            | Oggi solo generazione XML; invio futuro                                                                                                                                    |
 
 ## 5. Account, sicurezza, dati
 
@@ -163,9 +164,9 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## Prossime mosse suggerite (in ordine)
 
-1. **Pubblicare la Fase 4** con release, merge su `main` e verifica deployment production.
-2. **Costruire Pratiche e Attività Fase 5**, collegando committente, cliente, controparte e voce prezzo.
-3. **Costruire il flusso attività → fattura** per committente e periodo.
-4. **Aggiungere import guidato** manuale ed Excel con staging.
+1. **Pubblicare la Fase 5** con release, merge su `main`, migration Supabase e verifica production.
+2. **Costruire il flusso attività → fattura** per committente e periodo, eliminando il residuo legacy `expenses`.
+3. **Aggiungere import guidato** manuale ed Excel con staging.
+4. **Riallineare le superfici trasversali**: dashboard, Impostazioni, Account, Novità, onboarding, navigazione e copy.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.

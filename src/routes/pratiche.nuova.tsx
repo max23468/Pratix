@@ -27,7 +27,7 @@ function NewCase() {
     <>
       <PageHeader
         title="Nuova pratica"
-        description="Compila i dati della pratica e collegala a un cliente."
+        description="Collega committente, cliente e controparte, poi assegna il numero pratica."
         actions={
           <Link to="/pratiche">
             <Button size="sm" variant="outline">

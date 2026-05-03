@@ -2,7 +2,7 @@
 
 > **Tutto torna.**
 >
-> Gestionale per avvocati freelance: pratiche, clienti, spese, fatture (FatturaPA inclusa).
+> Gestionale per avvocati freelance: pratiche, clienti, attività fatturabili, fatture (FatturaPA inclusa).
 
 [![Stack](https://img.shields.io/badge/stack-TanStack%20Start-3B82F6)](#) [![Backend](https://img.shields.io/badge/backend-Supabase-orange)](#) [![Deploy](https://img.shields.io/badge/deploy-Vercel-black)](#) [![Lingua](https://img.shields.io/badge/lingua-italiano-green)](#)
 
@@ -10,7 +10,7 @@
 
 ## Cos'è Pratix
 
-Pratix è il gestionale pensato per **avvocati freelance italiani**: nessun fronzolo, nessuna logica da grande studio associato. Solo gli strumenti che servono al singolo professionista per tenere in ordine pratiche, clienti, spese e fatture, con piena conformità FatturaPA.
+Pratix è il gestionale pensato per **avvocati freelance italiani**: nessun fronzolo, nessuna logica da grande studio associato. Solo gli strumenti che servono al singolo professionista per tenere in ordine pratiche, clienti, attività fatturabili e fatture, con piena conformità FatturaPA.
 
 Il target esplicito è il **professionista singolo**: il prodotto evita il linguaggio degli studi associati (vedi [glossario](docs/glossario.md) e [tono di voce](docs/guides/tono-di-voce.md)).
 

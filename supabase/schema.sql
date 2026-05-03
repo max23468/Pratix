@@ -584,7 +584,6 @@ CREATE TABLE public.case_activities (
   CONSTRAINT case_activities_unit_price_non_negative CHECK (unit_price >= 0),
   CONSTRAINT case_activities_amount_non_negative CHECK (amount >= 0),
   CONSTRAINT case_activities_postponed_count_non_negative CHECK (postponed_count >= 0),
-  CONSTRAINT case_activities_invoiced_has_invoice CHECK (status <> 'invoiced' OR invoice_id IS NOT NULL),
   UNIQUE (id, user_id)
 );
 CREATE INDEX idx_case_activities_user ON public.case_activities (user_id);

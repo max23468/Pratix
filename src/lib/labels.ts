@@ -95,6 +95,19 @@ export const priceItemKindLabels: Record<string, string> = {
   expense_reimbursement: "Rimborso spese",
 };
 
+export const caseActivityStatusLabels: Record<string, string> = {
+  to_invoice: "Da fatturare",
+  invoiced: "Fatturata",
+};
+
+export const caseActivityStatusVariant: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  to_invoice: "outline",
+  invoiced: "secondary",
+};
+
 export type ClientDisplayData = {
   kind: string;
   first_name?: string | null;

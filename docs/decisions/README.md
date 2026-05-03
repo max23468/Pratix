@@ -72,3 +72,4 @@ Link a issue, PR, documenti, conversazioni rilevanti.
 | [0011](./0011-gestione-settimanale-commenti-codex.md)  | Gestione settimanale commenti Codex                    | Accettato                          |
 | [0012](./0012-storage-e-observability-vercel-first.md) | Storage privato e observability Vercel-first           | Accettato                          |
 | [0013](./0013-focus-recupero-crediti.md)               | Focus recupero crediti                                 | Accettato                          |
+| [0014](./0014-attivita-termine-prodotto.md)            | Attivita come termine di prodotto                      | Accettato                          |

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { FileText, Receipt, Wallet, ShieldCheck, ArrowRight, Users } from "lucide-react";
+import { FileText, ListChecks, Receipt, ShieldCheck, ArrowRight, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -22,7 +22,7 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Pratix è il gestionale per avvocati freelance. Pratiche, clienti, spese e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
+          "Pratix è il gestionale per avvocati freelance. Pratiche, clienti, attività e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
       },
       { property: "og:title", content: "Pratix · Tutto torna." },
       {
@@ -91,8 +91,8 @@ function Landing() {
               torna<span className="text-brand-gold">.</span>
             </h1>
             <p className="mx-auto mt-7 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Pratix è il gestionale per avvocati freelance. Pratiche, clienti, spese e fatturazione
-              elettronica: ogni cosa al suo posto, ogni conto che torna.
+              Pratix è il gestionale per avvocati freelance. Pratiche, clienti, attività e
+              fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link to="/register">
@@ -125,9 +125,9 @@ function Landing() {
                 desc: "Anagrafiche e riferimenti sempre ordinati.",
               },
               {
-                icon: Wallet,
-                title: "Spese",
-                desc: "Anticipi e rimborsi pronti per la fattura.",
+                icon: ListChecks,
+                title: "Attività",
+                desc: "Compensi e rimborsi pronti per la fattura.",
               },
               {
                 icon: Receipt,

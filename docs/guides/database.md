@@ -35,7 +35,8 @@ Postgres + Auth + Storage + Realtime.
 - `billing_exports` — rendiconti Excel generati
 - `imports` — sessioni import manuale o Excel
 - `import_rows` — righe di staging import
-- `expenses` (Spese) — tabella legacy finché la UI non usa `case_activities`
+- `expenses` (Spese) — tabella legacy finché anche il flusso fatture non usa
+  `case_activities`; la route autonoma `/spese` è stata rimossa
 - `invoices` — fatture emesse, con righe e dati FatturaPA
 - `invoice_lines` — righe fattura
 

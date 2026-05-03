@@ -25,10 +25,10 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  caseMatterLabels,
   caseStatusLabels,
   caseStatusVariant,
   clientDisplayName,
+  counterpartyDisplayName,
 } from "@/lib/labels";
 import { formatDate } from "@/lib/format";
 
@@ -51,7 +51,6 @@ export const Route = createFileRoute("/pratiche/")({
 function PraticheList() {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<string>("all");
-  const [matter, setMatter] = useState<string>("all");
 
   const { data, isLoading } = useQuery({
     queryKey: ["cases"],
@@ -59,7 +58,7 @@ function PraticheList() {
       const { data, error } = await supabase
         .from("cases")
         .select(
-          "id, case_number, title, status, matter, opened_at, updated_at, client_id, clients(kind, first_name, last_name, business_name)",
+          "id, case_number, practice_number, title, status, opened_at, updated_at, client_id, principal_id, counterparty_id, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
         )
         .order("updated_at", { ascending: false });
       if (error) throw error;
@@ -72,16 +71,21 @@ function PraticheList() {
     const term = q.trim().toLowerCase();
     return data.filter((c) => {
       if (status !== "all" && c.status !== status) return false;
-      if (matter !== "all" && c.matter !== matter) return false;
       if (!term) return true;
       const clientName = c.clients ? clientDisplayName(c.clients).toLowerCase() : "";
+      const principalName = c.principals?.business_name?.toLowerCase() ?? "";
+      const counterpartyName = c.counterparties
+        ? counterpartyDisplayName(c.counterparties).toLowerCase()
+        : "";
       return (
         c.title.toLowerCase().includes(term) ||
         c.case_number.toLowerCase().includes(term) ||
-        clientName.includes(term)
+        clientName.includes(term) ||
+        principalName.includes(term) ||
+        counterpartyName.includes(term)
       );
     });
-  }, [data, q, status, matter]);
+  }, [data, q, status]);
 
   return (
     <>
@@ -101,7 +105,7 @@ function PraticheList() {
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Cerca per numero, titolo, cliente…"
+            placeholder="Cerca per numero, committente, cliente, controparte…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             className="pl-9"
@@ -120,19 +124,6 @@ function PraticheList() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={matter} onValueChange={setMatter}>
-          <SelectTrigger className="sm:w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tutte le materie</SelectItem>
-            {Object.entries(caseMatterLabels).map(([k, l]) => (
-              <SelectItem key={k} value={k}>
-                {l}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       <Card>
@@ -140,9 +131,10 @@ function PraticheList() {
           <TableHeader>
             <TableRow>
               <TableHead>Numero</TableHead>
-              <TableHead>Titolo</TableHead>
+              <TableHead>Pratica</TableHead>
+              <TableHead>Committente</TableHead>
               <TableHead>Cliente</TableHead>
-              <TableHead>Materia</TableHead>
+              <TableHead>Controparte</TableHead>
               <TableHead>Stato</TableHead>
               <TableHead>Aperta il</TableHead>
             </TableRow>
@@ -150,24 +142,20 @@ function PraticheList() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
                   Caricamento…
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  {q || status !== "all" || matter !== "all"
-                    ? "Nessun risultato."
-                    : "Nessuna pratica. Crea la prima."}
+                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
+                  {q || status !== "all" ? "Nessun risultato." : "Nessuna pratica. Crea la prima."}
                 </TableCell>
               </TableRow>
             ) : (
               filtered.map((c) => (
                 <TableRow key={c.id}>
-                  <TableCell className="font-mono text-xs text-muted-foreground">
-                    {c.case_number}
-                  </TableCell>
+                  <TableCell className="font-mono text-sm">{c.practice_number}</TableCell>
                   <TableCell>
                     <Link
                       to="/pratiche/$caseId"
@@ -178,10 +166,13 @@ function PraticheList() {
                     </Link>
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
+                    {c.principals?.business_name ?? "—"}
+                  </TableCell>
+                  <TableCell className="text-sm text-muted-foreground">
                     {c.clients ? clientDisplayName(c.clients) : "—"}
                   </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
-                    {caseMatterLabels[c.matter] ?? c.matter}
+                    {c.counterparties ? counterpartyDisplayName(c.counterparties) : "—"}
                   </TableCell>
                   <TableCell>
                     <Badge variant={caseStatusVariant[c.status] ?? "outline"}>

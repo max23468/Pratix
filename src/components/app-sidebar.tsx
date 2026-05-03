@@ -4,12 +4,12 @@ import {
   Users,
   Briefcase,
   Receipt,
-  Wallet,
   Settings,
   LogOut,
   Building2,
   UserRoundSearch,
   Tags,
+  ListChecks,
 } from "lucide-react";
 import {
   Sidebar,
@@ -33,7 +33,7 @@ const items = [
   { title: "Clienti", url: "/clienti" as const, icon: Users },
   { title: "Controparti", url: "/controparti" as const, icon: UserRoundSearch },
   { title: "Pratiche", url: "/pratiche" as const, icon: Briefcase },
-  { title: "Spese", url: "/spese" as const, icon: Wallet },
+  { title: "Attività", url: "/attivita" as const, icon: ListChecks },
   { title: "Fatture", url: "/fatture" as const, icon: Receipt },
   { title: "Impostazioni", url: "/impostazioni" as const, icon: Settings },
 ];
