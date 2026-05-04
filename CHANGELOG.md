@@ -6,6 +6,11 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Non versionato
+
+- **Commenti Codex pending tracciati in Markdown**: il workflow settimanale ora aggiorna anche `.github/codex-pr-pending-comments.md` con la checklist dei thread non risolti/non outdated sulle PR aperte, mantenendo il commento di sollecito `@codex address that feedback` ed evitando rumore di commit legato a timestamp variabili.
+- **Gate operativo pre-PR**: `AGENTS.md` richiede di verificare il file dei pending comment prima di aprire una PR o dichiarare pronta la pubblicazione.
+
 ## [0.8.0] — 2026-05-04
 
 ### Novità

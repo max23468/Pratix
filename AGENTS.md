@@ -234,6 +234,7 @@ Pratix usa **SemVer convenzionale** adattato a SaaS hostato (vedi [`docs/decisio
 ## Commit e PR
 
 - Quando crei commit, mantienili atomici e usa **Conventional Commit** coerenti con l'impatto reale (`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`, `style:`).
+- Prima di aprire una PR o dichiarare pronta la pubblicazione, controlla `.github/codex-pr-pending-comments.md`: se contiene thread pending rilevanti, pianifica e completa la loro risoluzione (o dichiara esplicitamente perché restano fuori scope) prima di procedere.
 - Non aggiungere workflow GitHub Actions, policy di deploy o flussi di release non presenti senza richiesta esplicita. Il rilascio operativo avviene tramite Vercel.
 - Nelle PR usa il template in `.github/PULL_REQUEST_TEMPLATE.md`. Riporta in modo concreto cosa è cambiato, dove, eventuali rischi residui e verifiche rilevanti. Evita footer rituali se non aggiungono valore.
 

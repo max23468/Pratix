@@ -6,6 +6,8 @@ import process from "node:process";
 const repository = process.env.GITHUB_REPOSITORY;
 const token = process.env.GITHUB_TOKEN;
 const statePath = process.env.CODEX_PR_SCAN_STATE_PATH ?? ".github/codex-pr-scan-state.json";
+const pendingCommentsPath =
+  process.env.CODEX_PENDING_COMMENTS_PATH ?? ".github/codex-pr-pending-comments.md";
 const codexLoginPattern = new RegExp(process.env.CODEX_BOT_LOGIN_PATTERN ?? "codex", "i");
 const dryRun = process.env.DRY_RUN === "true";
 const marker = "<!-- pratix-codex-pr-comment-handler -->";
@@ -28,6 +30,7 @@ if (!owner || !repo) {
 const state = readState();
 const prs = await listOpenPullRequests();
 const processedPrs = [];
+const pendingEntries = [];
 let maxPrNumber = state.lastPrNumber;
 
 for (const pr of prs) {
@@ -35,6 +38,12 @@ for (const pr of prs) {
 
   const threads = await listReviewThreads(pr.number);
   const codexThreads = threads.filter(isActionableCodexThread);
+  pendingEntries.push({
+    number: pr.number,
+    threads: codexThreads,
+    title: pr.title,
+    url: pr.html_url,
+  });
 
   if (codexThreads.length === 0) {
     processedPrs.push({
@@ -68,6 +77,8 @@ if (maxPrNumber > state.lastPrNumber) {
   });
 }
 
+writePendingCommentsReport(pendingEntries);
+
 console.log(
   JSON.stringify(
     {
@@ -97,6 +108,55 @@ function writeState(nextState) {
   if (dryRun) return;
 
   writeFileSync(statePath, `${JSON.stringify(nextState, null, 2)}\n`);
+}
+
+function writePendingCommentsReport(entries) {
+  const actionableEntries = entries.filter((entry) => entry.threads.length > 0);
+
+  const header = [
+    "# Codex pending comments",
+    "",
+    "Questo file viene aggiornato automaticamente dal workflow `Codex PR comments`.",
+    "Contiene solo thread Codex non risolti e non outdated su PR aperte.",
+    "",
+  ];
+
+  if (actionableEntries.length === 0) {
+    header.push(
+      "## Nessun commento pending",
+      "",
+      "Al momento non risultano thread da risolvere.",
+      "",
+    );
+  } else {
+    header.push(`## PR con commenti pending (${actionableEntries.length})`, "");
+
+    for (const entry of actionableEntries) {
+      header.push(`### PR #${entry.number} — ${entry.title}`);
+      header.push(`- URL: ${entry.url}`);
+      header.push(`- Thread pending: ${entry.threads.length}`);
+      header.push("");
+
+      for (const thread of entry.threads) {
+        const firstCodexComment = thread.comments.nodes.find((comment) =>
+          codexLoginPattern.test(comment.author?.login ?? ""),
+        );
+        const location = thread.line ? `${thread.path}:${thread.line}` : thread.path;
+        const summary = firstLine(firstCodexComment?.body ?? "commento Codex") ?? "commento Codex";
+        const threadUrl = firstCodexComment?.url ?? entry.url;
+        header.push(`- [ ] \`${location}\` — ${summary} ([thread](${threadUrl}))`);
+      }
+
+      header.push("");
+    }
+  }
+
+  const output = `${header.join("\n").trimEnd()}\n`;
+  if (dryRun) {
+    console.log(`DRY RUN: file pending commenti non aggiornato (${pendingCommentsPath}).`);
+    return;
+  }
+  writeFileSync(pendingCommentsPath, output);
 }
 
 async function listOpenPullRequests() {

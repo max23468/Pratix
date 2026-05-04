@@ -39,13 +39,13 @@ jobs:
       - name: Commit scan state
         if: ${{ inputs.dry_run != true }}
         run: |
-          if git diff --quiet -- .github/codex-pr-scan-state.json; then
+          if git diff --quiet -- .github/codex-pr-scan-state.json .github/codex-pr-pending-comments.md; then
             echo "No scan state changes."
             exit 0
           fi
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .github/codex-pr-scan-state.json
+          git add .github/codex-pr-scan-state.json .github/codex-pr-pending-comments.md
           git commit -m "chore: update Codex PR comment scan state"
           git push
