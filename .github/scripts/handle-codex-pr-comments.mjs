@@ -111,13 +111,10 @@ function writeState(nextState) {
 }
 
 function writePendingCommentsReport(entries) {
-  const generatedAt = new Date().toISOString();
   const actionableEntries = entries.filter((entry) => entry.threads.length > 0);
 
   const header = [
     "# Codex pending comments",
-    "",
-    `Ultimo aggiornamento (UTC): ${generatedAt}`,
     "",
     "Questo file viene aggiornato automaticamente dal workflow `Codex PR comments`.",
     "Contiene solo thread Codex non risolti e non outdated su PR aperte.",

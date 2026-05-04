@@ -1,7 +1,5 @@
 # Codex pending comments
 
-Ultimo aggiornamento (UTC): mai
-
 Questo file viene aggiornato automaticamente dal workflow `Codex PR comments`.
 Contiene solo thread Codex non risolti e non outdated su PR aperte.
 
