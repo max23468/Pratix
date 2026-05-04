@@ -1,93 +1,93 @@
 {
   "lastPrNumber": 29,
-  "lastRunAt": "2026-05-04T07:01:14.192Z",
+  "lastRunAt": "2026-05-04T09:14:35.350Z",
   "prChecks": {
     "1": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "2": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "3": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "4": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "5": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "6": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "7": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "8": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "9": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "10": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "11": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "12": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "13": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "14": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "15": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "16": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "17": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "18": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "19": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "20": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "21": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "22": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "23": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "24": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "25": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "26": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "27": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "28": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     },
     "29": {
-      "checksSinceSkip": 1
+      "checksSinceSkip": 2
     }
   },
   "processedPrs": [
