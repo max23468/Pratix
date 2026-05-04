@@ -28,7 +28,7 @@ if (!owner || !repo) {
 }
 
 const state = readState();
-const prs = await listOpenPullRequests();
+const prs = await listPullRequests();
 const processedPrs = [];
 const pendingEntries = [];
 let maxPrNumber = state.lastPrNumber;
@@ -36,8 +36,20 @@ let maxPrNumber = state.lastPrNumber;
 for (const pr of prs) {
   maxPrNumber = Math.max(maxPrNumber, pr.number);
 
+  const checksSinceSkip = state.prChecks?.[pr.number]?.checksSinceSkip ?? 0;
+  if (checksSinceSkip >= 2) {
+    upsertPrCheckState(pr.number, { checksSinceSkip: 0 });
+    processedPrs.push({
+      action: "skipped-cycle",
+      codexThreads: 0,
+      number: pr.number,
+      url: pr.html_url,
+    });
+    continue;
+  }
+
   const threads = await listReviewThreads(pr.number);
-  const codexThreads = threads.filter(isActionableCodexThread);
+  const codexThreads = threads.filter(isCodexThread);
   pendingEntries.push({
     number: pr.number,
     threads: codexThreads,
@@ -46,6 +58,7 @@ for (const pr of prs) {
   });
 
   if (codexThreads.length === 0) {
+    upsertPrCheckState(pr.number, { checksSinceSkip: checksSinceSkip + 1 });
     processedPrs.push({
       action: "none",
       codexThreads: 0,
@@ -67,15 +80,15 @@ for (const pr of prs) {
     number: pr.number,
     url: pr.html_url,
   });
+  upsertPrCheckState(pr.number, { checksSinceSkip: checksSinceSkip + 1 });
 }
 
-if (maxPrNumber > state.lastPrNumber) {
-  writeState({
-    lastPrNumber: maxPrNumber,
-    lastRunAt: new Date().toISOString(),
-    processedPrs,
-  });
-}
+writeState({
+  lastPrNumber: maxPrNumber,
+  lastRunAt: new Date().toISOString(),
+  prChecks: state.prChecks ?? {},
+  processedPrs,
+});
 
 writePendingCommentsReport(pendingEntries);
 
@@ -110,6 +123,11 @@ function writeState(nextState) {
   writeFileSync(statePath, `${JSON.stringify(nextState, null, 2)}\n`);
 }
 
+function upsertPrCheckState(prNumber, value) {
+  if (!state.prChecks) state.prChecks = {};
+  state.prChecks[prNumber] = value;
+}
+
 function writePendingCommentsReport(entries) {
   const actionableEntries = entries.filter((entry) => entry.threads.length > 0);
 
@@ -117,7 +135,7 @@ function writePendingCommentsReport(entries) {
     "# Codex pending comments",
     "",
     "Questo file viene aggiornato automaticamente dal workflow `Codex PR comments`.",
-    "Contiene solo thread Codex non risolti e non outdated su PR aperte.",
+    "Contiene tutti i thread con commenti del bot Codex (sia risolti sia non risolti), su tutte le PR.",
     "",
   ];
 
@@ -144,7 +162,10 @@ function writePendingCommentsReport(entries) {
         const location = thread.line ? `${thread.path}:${thread.line}` : thread.path;
         const summary = firstLine(firstCodexComment?.body ?? "commento Codex") ?? "commento Codex";
         const threadUrl = firstCodexComment?.url ?? entry.url;
-        header.push(`- [ ] \`${location}\` — ${summary} ([thread](${threadUrl}))`);
+        const threadState = `resolved=${thread.isResolved ? "yes" : "no"}, outdated=${
+          thread.isOutdated ? "yes" : "no"
+        }`;
+        header.push(`- [ ] \`${location}\` — ${summary} (${threadState}) ([thread](${threadUrl}))`);
       }
 
       header.push("");
@@ -159,12 +180,12 @@ function writePendingCommentsReport(entries) {
   writeFileSync(pendingCommentsPath, output);
 }
 
-async function listOpenPullRequests() {
+async function listPullRequests() {
   const results = [];
 
   for (let page = 1; page <= 10; page++) {
     const batch = await githubJson(
-      `/repos/${owner}/${repo}/pulls?state=open&sort=created&direction=asc&per_page=100&page=${page}`,
+      `/repos/${owner}/${repo}/pulls?state=all&sort=created&direction=asc&per_page=100&page=${page}`,
     );
 
     if (batch.length === 0) break;
@@ -227,9 +248,7 @@ async function listReviewThreads(prNumber) {
   return threads;
 }
 
-function isActionableCodexThread(thread) {
-  if (thread.isResolved || thread.isOutdated) return false;
-
+function isCodexThread(thread) {
   return thread.comments.nodes.some((comment) => {
     const login = comment.author?.login ?? "";
 

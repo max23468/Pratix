@@ -20,10 +20,11 @@ Il workflow:
 
 - gira ogni lunedi;
 - legge `.github/codex-pr-scan-state.json`;
-- analizza solo le PR aperte;
-- cerca thread di review Codex non risolti e non outdated;
+- analizza tutte le PR (aperte, chiuse e mergiate);
+- cerca tutti i thread di review con commenti del bot Codex, anche se risolti o
+  outdated;
 - trascrive lo stato corrente in `.github/codex-pr-pending-comments.md` con elenco
-  delle PR aperte e checklist dei thread pending;
+  delle PR analizzate e checklist dei thread Codex rilevati;
 - pubblica un commento `@codex address that feedback` sulle PR interessate;
 - aggiorna lo stato salvato nel repo con il numero massimo visto, senza usare
   quello stato per riaprire PR chiuse o mergiate.
@@ -38,6 +39,8 @@ manualmente.
 - Il controllo resta versionato e revisionabile come parte di Pratix.
 - Lo stato pending diventa leggibile in un file Markdown unico, utile come gate
   operativo prima della pubblicazione.
+- Per evitare scansioni ridondanti, ogni PR viene controllata due volte e saltata
+  automaticamente al terzo giro settimanale.
 - Il workflow produce piccoli commit di stato quando trova PR aperte nuove da
   registrare.
 - L'efficacia dell'intervento dipende dal fatto che Codex risponda al commento
