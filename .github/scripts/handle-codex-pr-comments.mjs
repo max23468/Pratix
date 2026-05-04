@@ -68,14 +68,21 @@ for (const pr of prs) {
     continue;
   }
 
-  const alreadyRequested = await hasAutomationRequest(pr.number);
+  const canRequestHandling = pr.state === "open";
+  const alreadyRequested = canRequestHandling ? await hasAutomationRequest(pr.number) : false;
 
-  if (!alreadyRequested) {
+  if (canRequestHandling && !alreadyRequested) {
     await requestCodexHandling(pr, codexThreads);
   }
 
   processedPrs.push({
-    action: alreadyRequested ? "already-requested" : dryRun ? "dry-run" : "requested-codex",
+    action: canRequestHandling
+      ? alreadyRequested
+        ? "already-requested"
+        : dryRun
+          ? "dry-run"
+          : "requested-codex"
+      : "tracked-only",
     codexThreads: codexThreads.length,
     number: pr.number,
     url: pr.html_url,
