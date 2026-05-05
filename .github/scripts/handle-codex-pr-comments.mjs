@@ -37,30 +37,22 @@ for (const pr of prs) {
   maxPrNumber = Math.max(maxPrNumber, pr.number);
 
   const checksSinceSkip = state.prChecks?.[pr.number]?.checksSinceSkip ?? 0;
-  if (checksSinceSkip >= 2) {
-    upsertPrCheckState(pr.number, { checksSinceSkip: 0 });
-    processedPrs.push({
-      action: "skipped-cycle",
-      codexThreads: 0,
-      number: pr.number,
-      url: pr.html_url,
-    });
-    continue;
-  }
+  const skippedCycle = checksSinceSkip >= 2;
 
   const threads = await listReviewThreads(pr.number);
   const codexThreads = threads.filter(isCodexThread);
   pendingEntries.push({
     number: pr.number,
+    skippedCycle,
     threads: codexThreads,
     title: pr.title,
     url: pr.html_url,
   });
 
   if (codexThreads.length === 0) {
-    upsertPrCheckState(pr.number, { checksSinceSkip: checksSinceSkip + 1 });
+    upsertPrCheckState(pr.number, { checksSinceSkip: skippedCycle ? 0 : checksSinceSkip + 1 });
     processedPrs.push({
-      action: "none",
+      action: skippedCycle ? "skipped-cycle" : "none",
       codexThreads: 0,
       number: pr.number,
       url: pr.html_url,
@@ -68,7 +60,7 @@ for (const pr of prs) {
     continue;
   }
 
-  const canRequestHandling = pr.state === "open";
+  const canRequestHandling = pr.state === "open" && !skippedCycle;
   const alreadyRequested = canRequestHandling ? await hasAutomationRequest(pr.number) : false;
 
   if (canRequestHandling && !alreadyRequested) {
@@ -87,7 +79,7 @@ for (const pr of prs) {
     number: pr.number,
     url: pr.html_url,
   });
-  upsertPrCheckState(pr.number, { checksSinceSkip: checksSinceSkip + 1 });
+  upsertPrCheckState(pr.number, { checksSinceSkip: skippedCycle ? 0 : checksSinceSkip + 1 });
 }
 
 writeState({
@@ -137,6 +129,7 @@ function upsertPrCheckState(prNumber, value) {
 
 function writePendingCommentsReport(entries) {
   const actionableEntries = entries.filter((entry) => entry.threads.length > 0);
+  const skippedEntries = entries.filter((entry) => entry.skippedCycle);
 
   const header = [
     "# Codex pending comments",
@@ -146,7 +139,7 @@ function writePendingCommentsReport(entries) {
     "",
   ];
 
-  if (actionableEntries.length === 0) {
+  if (actionableEntries.length === 0 && skippedEntries.length === 0) {
     header.push(
       "## Nessun commento pending",
       "",
@@ -177,6 +170,14 @@ function writePendingCommentsReport(entries) {
 
       header.push("");
     }
+
+    if (skippedEntries.length > 0) {
+      header.push(`## PR saltate nel ciclo (${skippedEntries.length})`, "");
+      for (const entry of skippedEntries) {
+        header.push(`- PR #${entry.number} — ${entry.title} (${entry.url})`);
+      }
+      header.push("");
+    }
   }
 
   const output = `${header.join("\n").trimEnd()}\n`;
@@ -190,19 +191,17 @@ function writePendingCommentsReport(entries) {
 async function listPullRequests() {
   const results = [];
 
-  for (let page = 1; page <= 10; page++) {
+  for (let page = 1; page <= 30; page++) {
     const batch = await githubJson(
-      `/repos/${owner}/${repo}/pulls?state=all&sort=created&direction=asc&per_page=100&page=${page}`,
+      `/repos/${owner}/${repo}/pulls?state=all&sort=created&direction=desc&per_page=100&page=${page}`,
     );
 
     if (batch.length === 0) break;
 
     results.push(...batch);
-
-    if (results.length >= 100) break;
   }
 
-  return results.slice(0, 100);
+  return results;
 }
 
 async function listReviewThreads(prNumber) {
@@ -256,6 +255,8 @@ async function listReviewThreads(prNumber) {
 }
 
 function isCodexThread(thread) {
+  if (thread.isResolved || thread.isOutdated) return false;
+
   return thread.comments.nodes.some((comment) => {
     const login = comment.author?.login ?? "";
 

@@ -56,9 +56,7 @@ function changedFiles() {
   if (base) {
     groups.push(execGit(["diff", "--name-only", `${base}...HEAD`], { cwd: root }));
   } else {
-    groups.push(
-      execGit(["diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"], { cwd: root }),
-    );
+    groups.push(execGit(["diff", "--name-only", `${resolveHistoryBase()}...HEAD`], { cwd: root }));
   }
 
   groups.push(execGit(["diff", "--cached", "--name-only"], { cwd: root }));
@@ -96,6 +94,13 @@ function resolveDefaultBase() {
   }
 
   return "";
+}
+
+function resolveHistoryBase() {
+  return execGit(["rev-list", "--max-parents=0", "HEAD"], { cwd: root })
+    .split("\n")
+    .filter(Boolean)
+    .at(-1);
 }
 
 function isExistingFile(file) {

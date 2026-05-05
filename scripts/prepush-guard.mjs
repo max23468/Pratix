@@ -107,7 +107,7 @@ function buildFingerprint() {
   const comparisonRef = resolveComparisonRef();
   const committedChanges = comparisonRef
     ? execGit(["diff", "--name-only", `${comparisonRef}...HEAD`], { cwd: root })
-    : execGit(["diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"], { cwd: root });
+    : execGit(["diff", "--name-only", `${resolveHistoryBase()}...HEAD`], { cwd: root });
   const stagedChanges = execGit(["diff", "--cached", "--name-only"], { cwd: root });
   const unstagedChanges = execGit(["diff", "--name-only"], { cwd: root });
   const status = execGit(["status", "--porcelain", "--untracked-files=no"], { cwd: root });
@@ -146,6 +146,13 @@ function resolveDefaultBase() {
   }
 
   return "";
+}
+
+function resolveHistoryBase() {
+  return execGit(["rev-list", "--max-parents=0", "HEAD"], { cwd: root })
+    .split("\n")
+    .filter(Boolean)
+    .at(-1);
 }
 
 function readCache() {

@@ -108,8 +108,9 @@ type CaseOption = CaseActivityContext & {
 const today = () => new Date().toISOString().slice(0, 10);
 
 const currentYearFromDate = (value: string) => {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? new Date().getFullYear() : date.getFullYear();
+  const [yearPart] = value.split("-");
+  const parsedYear = Number(yearPart);
+  return Number.isInteger(parsedYear) && parsedYear > 0 ? parsedYear : new Date().getFullYear();
 };
 
 export function CaseActivitiesTab({ caseRow }: { caseRow: CaseActivityContext }) {

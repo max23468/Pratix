@@ -74,6 +74,13 @@ function ResetPasswordPage() {
           setReady(true);
           return;
         }
+        const { data } = await supabase.auth.getSession();
+        if (!mounted) return;
+        if (data.session) {
+          setLinkError(null);
+          setReady(true);
+          return;
+        }
         setLinkError("Il link di recupero non è valido o è scaduto.");
         return;
       }

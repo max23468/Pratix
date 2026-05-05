@@ -104,7 +104,10 @@ WITH parsed_cases AS (
       WHEN btrim(case_number) ~ '^[0-9]{1,9}$' THEN btrim(case_number)::integer
       ELSE NULL
     END AS parsed_number,
-    row_number() OVER (PARTITION BY user_id ORDER BY created_at, id) AS fallback_number
+    CASE
+      WHEN btrim(case_number) ~ '^[0-9]{1,9}$' THEN NULL
+      ELSE row_number() OVER (PARTITION BY user_id ORDER BY created_at, id)
+    END AS fallback_number
   FROM public.cases
 ),
 user_max AS (

@@ -426,19 +426,7 @@ async function updateCounterparty(
   return data.id;
 }
 
-async function deleteSubjects(counterpartyId: string) {
-  const { error } = await supabase
-    .from("counterparty_subjects")
-    .delete()
-    .eq("counterparty_id", counterpartyId);
-  if (error) throw error;
-}
-
 async function syncSubjects(counterpartyId: string, userId: string, subjects: SubjectRow[]) {
-  await deleteSubjects(counterpartyId);
-
-  if (subjects.length === 0) return;
-
   const payload = subjects.map((subject, index) => ({
     user_id: userId,
     counterparty_id: counterpartyId,
@@ -450,6 +438,20 @@ async function syncSubjects(counterpartyId: string, userId: string, subjects: Su
     position: index,
   }));
 
-  const { error } = await supabase.from("counterparty_subjects").insert(payload);
-  if (error) throw error;
+  if (payload.length > 0) {
+    const { error: upsertError } = await supabase
+      .from("counterparty_subjects")
+      .upsert(payload, { onConflict: "counterparty_id,position" });
+    if (upsertError) throw upsertError;
+  }
+
+  const deleteQuery = supabase
+    .from("counterparty_subjects")
+    .delete()
+    .eq("counterparty_id", counterpartyId);
+
+  const { error: deleteError } =
+    payload.length > 0 ? await deleteQuery.gte("position", payload.length) : await deleteQuery;
+
+  if (deleteError) throw deleteError;
 }

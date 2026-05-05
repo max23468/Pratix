@@ -34,7 +34,13 @@ jobs:
         env:
           DRY_RUN: ${{ inputs.dry_run && 'true' || 'false' }}
           GITHUB_TOKEN: ${{ github.token }}
+          NODE_USE_ENV_PROXY: "1"
         run: node .github/scripts/handle-codex-pr-comments.mjs
+
+      - name: Report unresolved Codex threads
+        run: |
+          unresolved=$(grep -o "resolved=no" .github/codex-pr-pending-comments.md | wc -l | tr -d ' ')
+          echo "Unresolved Codex threads: ${unresolved}"
 
       - name: Commit scan state
         if: ${{ inputs.dry_run != true }}

@@ -490,21 +490,35 @@ async function updateClient(
 }
 
 async function syncPrincipalLinks(clientId: string, userId: string, principalIds: string[]) {
-  const { error: deleteError } = await supabase
-    .from("principal_clients")
-    .delete()
-    .eq("client_id", clientId);
-  if (deleteError) throw deleteError;
-
   const uniquePrincipalIds = Array.from(new Set(principalIds));
-  if (uniquePrincipalIds.length === 0) return;
 
-  const { error } = await supabase.from("principal_clients").insert(
-    uniquePrincipalIds.map((principalId) => ({
-      user_id: userId,
-      client_id: clientId,
-      principal_id: principalId,
-    })),
-  );
-  if (error) throw error;
+  if (uniquePrincipalIds.length > 0) {
+    const { error: upsertError } = await supabase.from("principal_clients").upsert(
+      uniquePrincipalIds.map((principalId) => ({
+        user_id: userId,
+        client_id: clientId,
+        principal_id: principalId,
+      })),
+      { onConflict: "user_id,principal_id,client_id" },
+    );
+    if (upsertError) throw upsertError;
+  }
+
+  const { data: existingLinks, error: existingLinksError } = await supabase
+    .from("principal_clients")
+    .select("id, principal_id")
+    .eq("client_id", clientId);
+  if (existingLinksError) throw existingLinksError;
+
+  const deleteIds = (existingLinks ?? [])
+    .filter((link) => !uniquePrincipalIds.includes(link.principal_id))
+    .map((link) => link.id);
+
+  if (deleteIds.length > 0) {
+    const { error: deleteError } = await supabase
+      .from("principal_clients")
+      .delete()
+      .in("id", deleteIds);
+    if (deleteError) throw deleteError;
+  }
 }

@@ -683,12 +683,21 @@ async function syncPriceItems({
     .filter((item) => item.id && !currentIds.has(item.id) && !item.usedCount)
     .map((item) => item.id as string);
 
-  if (deleteIds.length > 0) {
-    const { error } = await supabase.from("price_items").delete().in("id", deleteIds);
+  const updates = items.filter((item): item is PriceItemDraft & { id: string } => Boolean(item.id));
+  const codeChangedUpdates = updates.filter((item) => {
+    const initial = initialItems.find((candidate) => candidate.id === item.id);
+    return initial && initial.code !== item.code;
+  });
+
+  for (const item of codeChangedUpdates) {
+    const { error } = await supabase
+      .from("price_items")
+      .update({ code: `__tmp__${item.id}` })
+      .eq("id", item.id)
+      .eq("price_book_id", priceBookId);
     if (error) throw error;
   }
 
-  const updates = items.filter((item) => item.id);
   for (const item of updates) {
     const { error } = await supabase
       .from("price_items")
@@ -702,26 +711,32 @@ async function syncPriceItems({
         requires_hearing_dates: item.requires_hearing_dates,
         sort_order: item.sort_order,
       })
-      .eq("id", item.id as string);
+      .eq("id", item.id)
+      .eq("price_book_id", priceBookId);
     if (error) throw error;
   }
 
   const inserts = items.filter((item) => !item.id);
-  if (inserts.length === 0) return;
+  if (inserts.length > 0) {
+    const { error } = await supabase.from("price_items").insert(
+      inserts.map((item) => ({
+        user_id: userId,
+        price_book_id: priceBookId,
+        kind: item.kind,
+        code: item.code,
+        name: item.name,
+        invoice_description: item.invoice_description,
+        unit_price: item.unit_price,
+        is_enabled: item.is_enabled,
+        requires_hearing_dates: item.requires_hearing_dates,
+        sort_order: item.sort_order,
+      })),
+    );
+    if (error) throw error;
+  }
 
-  const { error } = await supabase.from("price_items").insert(
-    inserts.map((item) => ({
-      user_id: userId,
-      price_book_id: priceBookId,
-      kind: item.kind,
-      code: item.code,
-      name: item.name,
-      invoice_description: item.invoice_description,
-      unit_price: item.unit_price,
-      is_enabled: item.is_enabled,
-      requires_hearing_dates: item.requires_hearing_dates,
-      sort_order: item.sort_order,
-    })),
-  );
-  if (error) throw error;
+  if (deleteIds.length > 0) {
+    const { error } = await supabase.from("price_items").delete().in("id", deleteIds);
+    if (error) throw error;
+  }
 }
