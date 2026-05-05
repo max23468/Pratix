@@ -1,269 +1,278 @@
 {
-  "lastPrNumber": 29,
-  "lastRunAt": "2026-05-05T05:31:43.344Z",
+  "lastPrNumber": 30,
+  "lastRunAt": "2026-05-05T05:46:54.581Z",
   "prChecks": {
     "1": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "2": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "3": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "4": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "5": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "6": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "7": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "8": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "9": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "10": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "11": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "12": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "13": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "14": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "15": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "16": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "17": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "18": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "19": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "20": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "21": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "22": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "23": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "24": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "25": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "26": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "27": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "28": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
     },
     "29": {
-      "checksSinceSkip": 0
+      "checksSinceSkip": 1
+    },
+    "30": {
+      "checksSinceSkip": 1
     }
   },
   "processedPrs": [
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 1,
       "url": "https://github.com/max23468/Pratix/pull/1"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 2,
       "url": "https://github.com/max23468/Pratix/pull/2"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 3,
       "url": "https://github.com/max23468/Pratix/pull/3"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 4,
       "url": "https://github.com/max23468/Pratix/pull/4"
     },
     {
-      "action": "skipped-cycle",
-      "codexThreads": 0,
+      "action": "tracked-only",
+      "codexThreads": 2,
       "number": 5,
       "url": "https://github.com/max23468/Pratix/pull/5"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 6,
       "url": "https://github.com/max23468/Pratix/pull/6"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 7,
       "url": "https://github.com/max23468/Pratix/pull/7"
     },
     {
-      "action": "skipped-cycle",
-      "codexThreads": 0,
+      "action": "tracked-only",
+      "codexThreads": 1,
       "number": 8,
       "url": "https://github.com/max23468/Pratix/pull/8"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 9,
       "url": "https://github.com/max23468/Pratix/pull/9"
     },
     {
-      "action": "skipped-cycle",
-      "codexThreads": 0,
+      "action": "tracked-only",
+      "codexThreads": 1,
       "number": 10,
       "url": "https://github.com/max23468/Pratix/pull/10"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 11,
       "url": "https://github.com/max23468/Pratix/pull/11"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 12,
       "url": "https://github.com/max23468/Pratix/pull/12"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 13,
       "url": "https://github.com/max23468/Pratix/pull/13"
     },
     {
-      "action": "skipped-cycle",
-      "codexThreads": 0,
+      "action": "tracked-only",
+      "codexThreads": 1,
       "number": 14,
       "url": "https://github.com/max23468/Pratix/pull/14"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 15,
       "url": "https://github.com/max23468/Pratix/pull/15"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 16,
       "url": "https://github.com/max23468/Pratix/pull/16"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 17,
       "url": "https://github.com/max23468/Pratix/pull/17"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 18,
       "url": "https://github.com/max23468/Pratix/pull/18"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 19,
       "url": "https://github.com/max23468/Pratix/pull/19"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 20,
       "url": "https://github.com/max23468/Pratix/pull/20"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 21,
       "url": "https://github.com/max23468/Pratix/pull/21"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 22,
       "url": "https://github.com/max23468/Pratix/pull/22"
     },
     {
-      "action": "skipped-cycle",
-      "codexThreads": 0,
+      "action": "tracked-only",
+      "codexThreads": 1,
       "number": 23,
       "url": "https://github.com/max23468/Pratix/pull/23"
     },
     {
-      "action": "skipped-cycle",
-      "codexThreads": 0,
+      "action": "tracked-only",
+      "codexThreads": 2,
       "number": 24,
       "url": "https://github.com/max23468/Pratix/pull/24"
     },
     {
-      "action": "skipped-cycle",
-      "codexThreads": 0,
+      "action": "tracked-only",
+      "codexThreads": 1,
       "number": 25,
       "url": "https://github.com/max23468/Pratix/pull/25"
     },
     {
-      "action": "skipped-cycle",
-      "codexThreads": 0,
+      "action": "tracked-only",
+      "codexThreads": 1,
       "number": 26,
       "url": "https://github.com/max23468/Pratix/pull/26"
     },
     {
-      "action": "skipped-cycle",
+      "action": "none",
       "codexThreads": 0,
       "number": 27,
       "url": "https://github.com/max23468/Pratix/pull/27"
     },
     {
-      "action": "skipped-cycle",
-      "codexThreads": 0,
+      "action": "tracked-only",
+      "codexThreads": 3,
       "number": 28,
       "url": "https://github.com/max23468/Pratix/pull/28"
     },
     {
-      "action": "skipped-cycle",
-      "codexThreads": 0,
+      "action": "tracked-only",
+      "codexThreads": 1,
       "number": 29,
       "url": "https://github.com/max23468/Pratix/pull/29"
+    },
+    {
+      "action": "already-requested",
+      "codexThreads": 1,
+      "number": 30,
+      "url": "https://github.com/max23468/Pratix/pull/30"
     }
   ]
 }
