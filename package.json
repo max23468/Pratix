@@ -15,6 +15,7 @@
     "db:advisors:security": "npx supabase db advisors --linked --type security",
     "db:advisors:performance": "npx supabase db advisors --linked --type performance",
     "db:push:dry-run": "npx supabase db push --linked --dry-run",
+    "db:verify": "node scripts/db-verify.mjs",
     "db:types": "npx supabase gen types typescript --linked --schema public > src/integrations/supabase/types.ts",
     "prepush:guard": "node scripts/prepush-guard.mjs",
     "preview": "vite preview",
