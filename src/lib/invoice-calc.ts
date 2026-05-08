@@ -20,12 +20,18 @@ export type InvoiceCalcOptions = {
   applyWithholding: boolean;
   /** Regime fiscale del cedente. In forfettario non si applicano IVA né cassa addebitata. */
   taxRegime?: "ordinario" | "forfettario";
+  /** Applica le spese generali ai compensi imponibili. */
+  includeGeneralExpenses?: boolean;
+  /** Percentuale spese generali. Per il recupero crediti il default operativo è 10%. */
+  generalExpensesRate?: number;
 };
 
 export type InvoiceCalcResult = {
   taxableFees: number;
   taxableExpenses: number;
   art15Expenses: number;
+  generalExpensesAmount: number;
+  cassaBaseAmount: number;
   cassaAmount: number;
   vatBase: number;
   vatAmount: number;
@@ -46,10 +52,11 @@ const lineAmount = (l: InvoiceLineInput): number =>
  * Calcola tutti i totali fiscali della fattura.
  *
  * Schema:
- *  - Imponibile compensi = somma righe `fee` + `expense_taxable`
- *  - Cassa = imponibile × cassaRate%   (solo regime ordinario)
- *  - IVA = (imponibile + cassa) × vatRate%   (solo regime ordinario)
- *  - Ritenuta = imponibile × withholdingRate%  (solo se applyWithholding e ordinario)
+ *  - Compensi = somma righe `fee`
+ *  - Spese generali = compensi × generalExpensesRate% quando abilitate
+ *  - Cassa = (compensi + spese generali) × cassaRate%   (solo regime ordinario)
+ *  - IVA = (compensi + spese generali + eventuali spese imponibili legacy + cassa) × vatRate%
+ *  - Ritenuta = (compensi + spese generali + eventuali spese imponibili legacy) × withholdingRate%
  *  - Spese Art. 15 = anticipazioni in nome e per conto (escluse IVA, escluse ritenuta)
  *  - Bollo €2 se Art. 15 > €77,47 oppure (in forfettario) se totale > €77,47
  *  - Totale = imponibile + cassa + IVA + Art.15 + bollo
@@ -76,9 +83,14 @@ export function computeInvoice(
   taxableExpenses = round2(taxableExpenses);
   art15Expenses = round2(art15Expenses);
 
-  const taxableTotal = round2(taxableFees + taxableExpenses);
+  const generalExpensesAmount =
+    options.includeGeneralExpenses && taxableFees > 0
+      ? round2(taxableFees * ((options.generalExpensesRate ?? 10) / 100))
+      : 0;
+  const cassaBaseAmount = round2(taxableFees + generalExpensesAmount);
+  const taxableTotal = round2(cassaBaseAmount + taxableExpenses);
 
-  const cassaAmount = isForfettario ? 0 : round2(taxableTotal * (options.cassaRate / 100));
+  const cassaAmount = isForfettario ? 0 : round2(cassaBaseAmount * (options.cassaRate / 100));
 
   const vatBase = round2(taxableTotal + cassaAmount);
   const vatAmount = isForfettario ? 0 : round2(vatBase * (options.vatRate / 100));
@@ -104,6 +116,8 @@ export function computeInvoice(
     taxableFees,
     taxableExpenses,
     art15Expenses,
+    generalExpensesAmount,
+    cassaBaseAmount,
     cassaAmount,
     vatBase,
     vatAmount,

@@ -6,8 +6,22 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.9.0] — 2026-05-08
+
+### Novità
+
+- **Fatturazione committente/periodo Fase 6**: il nuovo flusso fatture estrae le attività da fatturare per committente e periodo, permette di includerle, rinviarle o escluderle, genera la fattura verso il committente e salva i rendiconti Excel compensi/rimborsi.
+- **Calcolo fiscale recupero crediti**: aggiunto il flag spese generali, calcolate come 10% configurabile sui compensi, con cassa forense applicata solo a compensi + spese generali e rimborsi sempre trattati come anticipazioni Art. 15.
+
+### Sotto il cofano
+
+- **Bonifica legacy spese**: rimosso l'import fattura basato su `expenses`, aggiunta la migration di dismissione della tabella legacy e ricondotti gli export al bucket `billing-exports`.
+
+## [Non versionato] — 2026-05-08
+
 ### Non versionato
 
+- **Pulizia branch post-pubblicazione**: chiarite le regole operative per eliminare branch locali e remoti già assorbiti dopo merge, pubblicazione o chiusura PR.
 - **Ottimizzazione inbox Codex**: la inbox chiude automaticamente eventuali issue duplicate, compatta lo storico mostrato, limita le scansioni event-driven alle PR aperte/recenti e usa eventi PR in contesto trusted, mantenendo la scansione completa su schedule, dispatch manuale e commenti sulla inbox.
 - **Hardening inbox Codex**: il workflow dei commenti Codex ora esegue lo script dalla default branch trusted e mantiene una scansione di riallineamento ogni 6 ore per ripulire i thread risolti o riaperti.
 - **Codex feedback inbox event-driven**: sostituito il workflow settimanale dei commenti Codex con una scansione immediata su nuove review/commenti, issue GitHub unica `Codex feedback inbox`, controllo di tutte le PR e sollecito `@codex address that feedback` solo per thread actionable.
@@ -301,6 +315,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.9.0]: #090--2026-05-08
 [0.8.0]: #080--2026-05-04
 [0.7.0]: #070--2026-05-03
 [0.6.0]: #060--2026-05-03

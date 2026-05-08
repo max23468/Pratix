@@ -8,7 +8,7 @@ mirror_of: mem://process/versioning
 
 Pratix usa **SemVer convenzionale** adattato a SaaS hostato (no `npm publish`, no tag git manuale). "Rilasciare" = `npm run release` + verifica diff + promozione deployment Vercel.
 
-"Pubblicare" / "tutto pubblicato" = merge su `main` + deployment production Vercel completato e verificato + branch dedicato chiuso/eliminato se esiste. Una PR aperta, un push sul branch o una preview Vercel non bastano.
+"Pubblicare" / "tutto pubblicato" = merge su `main` + deployment production Vercel completato e verificato + branch dedicato chiuso/eliminato, sia remoto sia locale nel checkout usato, se esiste. Una PR aperta, un push sul branch o una preview Vercel non bastano.
 
 **Single source of truth**: `src/lib/version.ts` esporta `APP_VERSION` e `BUILD_DATE`. Mai duplicare la stringa di versione altrove.
 

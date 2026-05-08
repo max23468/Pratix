@@ -9,9 +9,12 @@ export const Route = createFileRoute("/fatture/nuova")({
   head: () => ({
     meta: [
       { title: "Nuova fattura · Pratix" },
-      { name: "description", content: "Crea una nuova fattura." },
+      { name: "description", content: "Genera una fattura da attività per committente e periodo." },
       { property: "og:title", content: "Nuova fattura · Pratix" },
-      { property: "og:description", content: "Crea una nuova fattura." },
+      {
+        property: "og:description",
+        content: "Genera una fattura da attività per committente e periodo.",
+      },
     ],
   }),
   component: NewInvoicePage,
@@ -22,7 +25,7 @@ function NewInvoicePage() {
     <AppLayout>
       <PageHeader
         title="Nuova fattura"
-        description="Compila righe, parametri fiscali e crea la fattura. Il numero verrà assegnato automaticamente."
+        description="Estrai attività, decidi inclusioni e rinvii, poi genera fattura e rendiconti Excel."
         actions={
           <Button asChild variant="outline">
             <Link to="/fatture">

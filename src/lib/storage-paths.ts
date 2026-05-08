@@ -3,7 +3,6 @@ export const PRATIX_DOCUMENTS_BUCKET = "pratix-documents";
 export const PRATIX_STORAGE_AREAS = {
   invoices: "invoices",
   cases: "cases",
-  expenses: "expenses",
   activities: "activities",
   billingExports: "billing-exports",
   imports: "imports",
@@ -62,6 +61,19 @@ export function buildActivityAttachmentStoragePath(
     userId,
     area: PRATIX_STORAGE_AREAS.activities,
     ownerRecordId: activityId,
+    fileName,
+  });
+}
+
+export function buildBillingExportStoragePath(
+  userId: string,
+  billingRunId: string,
+  fileName: string,
+) {
+  return buildPratixStoragePath({
+    userId,
+    area: PRATIX_STORAGE_AREAS.billingExports,
+    ownerRecordId: billingRunId,
     fileName,
   });
 }

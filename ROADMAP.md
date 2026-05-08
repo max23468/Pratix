@@ -66,27 +66,27 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## 4. Funzionalità di prodotto
 
-| Stato | Voce                              | Note                                                                                                                                                                       |
-| ----- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ✅    | Pratiche, Clienti, Fatture base   | CRUD + visualizzazione                                                                                                                                                     |
-| ✅    | Generazione fattura PDF           | `src/lib/invoice-pdf.ts`                                                                                                                                                   |
-| ✅    | Generazione XML FatturaPA (TD06)  | `src/lib/invoice-xml.ts`                                                                                                                                                   |
-| ✅    | Piano evoluzione recupero crediti | `docs/plans/evoluzione-recupero-crediti.md` + ADR-0013                                                                                                                     |
-| ✅    | Rimozione scadenzario             | Route, sidebar, dashboard, tab pratica e tabella `case_deadlines` rimossi                                                                                                  |
-| ✅    | Schema recupero crediti Fase 2    | Migration applicata, tipi Supabase rigenerati e snapshot SQL aggiornato                                                                                                    |
-| ✅    | Committenti                       | Anagrafica soggetto fatturato e regole economiche di base                                                                                                                  |
-| ✅    | Clienti multi-committente         | Relazione molti-a-molti fra committenti e clienti                                                                                                                          |
-| ✅    | Controparti strutturate           | Persone/società e gruppi di soggetti senza ruoli                                                                                                                           |
-| ✅    | Prezzi per committente            | Compensi/rimborsi abilitabili per committente, voci e prezzi unitari personalizzabili per anno                                                                             |
-| ✅    | Attività fatturabili              | Sezione globale `/attivita` + tab pratica; voci da Prezzi, stato da fatturare/fatturata, quantità, udienze e allegati facoltativi                                          |
-| ⬜    | Fatturazione committente/periodo  | Estrazione attività, inclusione/rinvio, spese generali opzionali, cassa forense e rendiconti Excel; deve sostituire il flusso fatture legacy basato su `expenses`          |
-| ⬜    | Import archivio guidato           | Wizard manuale + Excel strutturato, anche largo, con staging e validazione                                                                                                 |
-| 💤    | Time tracking per pratica         | Fuori dal perimetro recupero crediti attuale                                                                                                                               |
-| 🟡    | Spese con allegati                | Vecchia route `/spese` rimossa; i rimborsi sono voci fatturabili, restano da bonificare import spese in fattura, tabella `expenses`, tipi generati e storage folder legacy |
-| ⬜    | Esportazione massiva fatture      | ZIP PDF + XML per periodo                                                                                                                                                  |
-| ✅    | Numerazione automatica            | Numero pratica numerico suggerito dal database e modificabile manualmente                                                                                                  |
-| 💤    | Area cliente esterna              | Login dedicato per visione fatture e documenti                                                                                                                             |
-| 💤    | Integrazione invio SDI            | Oggi solo generazione XML; invio futuro                                                                                                                                    |
+| Stato | Voce                              | Note                                                                                                                                                                 |
+| ----- | --------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅    | Pratiche, Clienti, Fatture base   | CRUD + visualizzazione                                                                                                                                               |
+| ✅    | Generazione fattura PDF           | `src/lib/invoice-pdf.ts`                                                                                                                                             |
+| ✅    | Generazione XML FatturaPA (TD06)  | `src/lib/invoice-xml.ts`                                                                                                                                             |
+| ✅    | Piano evoluzione recupero crediti | `docs/plans/evoluzione-recupero-crediti.md` + ADR-0013                                                                                                               |
+| ✅    | Rimozione scadenzario             | Route, sidebar, dashboard, tab pratica e tabella `case_deadlines` rimossi                                                                                            |
+| ✅    | Schema recupero crediti Fase 2    | Migration applicata, tipi Supabase rigenerati e snapshot SQL aggiornato                                                                                              |
+| ✅    | Committenti                       | Anagrafica soggetto fatturato e regole economiche di base                                                                                                            |
+| ✅    | Clienti multi-committente         | Relazione molti-a-molti fra committenti e clienti                                                                                                                    |
+| ✅    | Controparti strutturate           | Persone/società e gruppi di soggetti senza ruoli                                                                                                                     |
+| ✅    | Prezzi per committente            | Compensi/rimborsi abilitabili per committente, voci e prezzi unitari personalizzabili per anno                                                                       |
+| ✅    | Attività fatturabili              | Sezione globale `/attivita` + tab pratica; voci da Prezzi, stato da fatturare/fatturata, quantità, udienze e allegati facoltativi                                    |
+| ✅    | Fatturazione committente/periodo  | Estrazione attività per committente/periodo, inclusione/rinvio/esclusione, spese generali opzionali, cassa forense su compensi + spese generali e rendiconti Excel   |
+| ⬜    | Import archivio guidato           | Wizard manuale + Excel strutturato, anche largo, con staging e validazione                                                                                           |
+| 💤    | Time tracking per pratica         | Fuori dal perimetro recupero crediti attuale                                                                                                                         |
+| ✅    | Spese con allegati                | I rimborsi sono attività fatturabili Art. 15 con allegati; il flusso fatture usa `case_activities` e la tabella legacy `expenses` è in dismissione tramite migration |
+| ⬜    | Esportazione massiva fatture      | ZIP PDF + XML per periodo                                                                                                                                            |
+| ✅    | Numerazione automatica            | Numero pratica numerico suggerito dal database e modificabile manualmente                                                                                            |
+| 💤    | Area cliente esterna              | Login dedicato per visione fatture e documenti                                                                                                                       |
+| 💤    | Integrazione invio SDI            | Oggi solo generazione XML; invio futuro                                                                                                                              |
 
 ## 5. Account, sicurezza, dati
 
@@ -164,9 +164,9 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## Prossime mosse suggerite (in ordine)
 
-1. **Pubblicare la Fase 5** con release, merge su `main`, migration Supabase e verifica production.
-2. **Costruire il flusso attività → fattura** per committente e periodo, eliminando il residuo legacy `expenses`.
-3. **Aggiungere import guidato** manuale ed Excel con staging.
-4. **Riallineare le superfici trasversali**: dashboard, Impostazioni, Account, Novità, onboarding, navigazione e copy.
+1. **Pubblicare la Fase 6** con release, migration Supabase, merge su `main` e verifica production.
+2. **Aggiungere import guidato** manuale ed Excel con staging.
+3. **Riallineare le superfici trasversali**: dashboard, Impostazioni, Account, Novità, onboarding, navigazione e copy.
+4. **Esportazione massiva fatture**: ZIP PDF + XML per periodo.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.

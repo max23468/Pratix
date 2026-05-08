@@ -30,16 +30,6 @@ export const caseMatterLabels: Record<string, string> = {
   altro: "Altro",
 };
 
-export const expenseCategoryLabels: Record<string, string> = {
-  contributo_unificato: "Contributo unificato",
-  marche_da_bollo: "Marche da bollo",
-  copie: "Copie",
-  trasferte: "Trasferte",
-  ctu: "CTU",
-  notifiche: "Notifiche",
-  altro: "Altro",
-};
-
 export type InvoiceStatus = "draft" | "issued" | "paid" | "overdue";
 
 export const invoiceStatusLabels: Record<InvoiceStatus, string> = {

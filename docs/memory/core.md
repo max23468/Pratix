@@ -68,6 +68,8 @@ Ogni decisione di prodotto/brand/tecnica condivisa in chat deve confluire in [`R
 
 Se il worktree contiene modifiche non collegate alla richiesta, non mescolare filoni diversi: per interventi non minuscoli usa un branch/worktree dedicato da base pulita; per interventi piccoli lavora nello stesso checkout solo se i file non si sovrappongono e segnala l'assunzione.
 
+Quando un lavoro su PR/branch dedicato viene mergeato, pubblicato o chiuso, pulire anche il checkout locale: controllare `git branch -vv`, eliminare i branch con upstream `gone` o già assorbiti e non lasciare branch `codex/*` stale. Usare prima `git branch -d <branch>`; se Git rifiuta perché il branch non è antenato diretto ma `git log --cherry-pick --right-only --oneline main...<branch>` non mostra commit unici, è ammesso `git branch -D <branch>`. Ogni branch remoto o locale lasciato aperto deve avere un motivo esplicito nel riepilogo.
+
 Pratix resta un gestionale leggero per avvocati freelance, ora focalizzato prevalentemente sul recupero crediti. Nuove funzionalità devono rafforzare committenti, clienti, controparti, pratiche, attività fatturabili, compensi/onorari, prezzi per committente, rimborsi spese Art. 15, rendiconti Excel, fatture, sicurezza dati, qualità operativa o affidabilità del SaaS. Evita espansioni verso studi associati, CRM generalista, suite contabile completa, piattaforme enterprise, bot Telegram o VPS-first senza decisione esplicita e ADR.
 
 Per modifiche UI sostanziali verifica quando praticabile desktop/mobile e chiaro/scuro. Nelle risposte finali cita verifiche solo quando aggiungono valore: fallimenti, limiti, rischi residui o comandi rilevanti.

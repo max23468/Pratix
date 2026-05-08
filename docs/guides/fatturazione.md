@@ -37,28 +37,36 @@ Pratix oggi **genera** il file XML; **non** lo invia ancora a SDI (vedi roadmap)
 
 ## Cassa Forense
 
-- **Contributo integrativo (CPA) 4%** in fattura, applicato sull'imponibile, addebitato al cliente.
+- **Contributo integrativo (CPA) 4%** in fattura, applicato a compensi +
+  spese generali quando abilitate, addebitato al committente.
 - Concorre alla base imponibile IVA nel regime ordinario; nel forfettario non c'è IVA.
+- I rimborsi spese del flusso recupero crediti sono sempre anticipazioni
+  Art. 15 e non entrano nella base cassa.
 - Il **contributo soggettivo** è del professionista, **non** entra in fattura.
 
 ## Calcoli (regime ordinario)
 
 ```
-imponibile         = somma righe parcella
-contributo_cpa     = imponibile * 0.04
-base_iva           = imponibile + contributo_cpa
+compensi           = somma attività di tipo compenso
+spese_generali     = compensi * 0.10           (solo se flag attivo)
+base_cassa         = compensi + spese_generali
+contributo_cpa     = base_cassa * 0.04
+base_iva           = base_cassa + contributo_cpa
 iva                = base_iva * 0.22
-ritenuta_acconto   = imponibile * 0.20         (se cliente sostituto d'imposta)
-totale_documento   = base_iva + iva
+ritenuta_acconto   = base_cassa * 0.20         (se committente sostituto d'imposta)
+rimborsi_art15     = somma rimborsi spese
+totale_documento   = base_iva + iva + rimborsi_art15
 netto_a_pagare     = totale_documento - ritenuta_acconto
 ```
 
 ## Calcoli (regime forfettario)
 
 ```
-imponibile         = somma righe parcella
-contributo_cpa     = imponibile * 0.04
-totale_documento   = imponibile + contributo_cpa
+compensi           = somma attività di tipo compenso
+spese_generali     = compensi * 0.10           (solo se flag attivo)
+contributo_cpa     = 0                         (non addebitato nel calcolo Pratix)
+rimborsi_art15     = somma rimborsi spese
+totale_documento   = compensi + spese_generali + rimborsi_art15
 netto_a_pagare     = totale_documento
 ```
 
@@ -75,22 +83,24 @@ netto_a_pagare     = totale_documento
 
 ## Cosa Pratix oggi fa
 
-| Capacità                        | Stato           |
-| ------------------------------- | --------------- |
-| Generazione XML FatturaPA TD06  | ✅              |
-| Generazione PDF di cortesia     | ✅              |
-| Calcoli forfettario / ordinario | ✅              |
-| Cassa Forense 4%                | ✅              |
-| Ritenuta d'acconto condizionata | ✅              |
-| Numerazione progressiva         | ✅              |
-| Esportazione massiva ZIP        | ⬜              |
-| Invio diretto SDI               | ⬜ (ADR aperto) |
+| Capacità                         | Stato           |
+| -------------------------------- | --------------- |
+| Generazione XML FatturaPA TD06   | ✅              |
+| Generazione PDF di cortesia      | ✅              |
+| Calcoli forfettario / ordinario  | ✅              |
+| Cassa Forense 4%                 | ✅              |
+| Ritenuta d'acconto condizionata  | ✅              |
+| Numerazione progressiva          | ✅              |
+| Fatturazione committente/periodo | ✅              |
+| Rendiconti Excel compensi/spese  | ✅              |
+| Esportazione massiva ZIP         | ⬜              |
+| Invio diretto SDI                | ⬜ (ADR aperto) |
 
 ## File rilevanti
 
 - `src/lib/invoice-xml.ts` — costruzione XML
 - `src/lib/invoice-pdf.ts` — generazione PDF (jsPDF)
-- `src/components/invoice-form.tsx` — UI editor fattura
+- `src/components/invoice-form.tsx` — generazione fattura da attività
 - `src/routes/fatture.*.tsx` — UI lista e dettaglio
 
 ## Errori frequenti

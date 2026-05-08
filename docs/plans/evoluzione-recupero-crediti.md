@@ -770,13 +770,13 @@ Uscita fase:
 - la navigazione espone **Attività** come inserimento rapido globale sulle
   stesse righe `case_activities` della pratica.
 
-Residui lasciati volutamente alla fase successiva:
+Residui lasciati volutamente alla fase successiva, poi chiusi in Fase 6:
 
-- il form fatture esistente usa ancora `expenses` per importare spese della
+- il form fatture esistente usava ancora `expenses` per importare spese della
   pratica;
-- la tabella `expenses`, le sue policy RLS, i tipi Supabase generati e la
-  cartella storage `expenses` restano finché Fase 6 non sostituisce il flusso
-  fatture con `case_activities`;
+- la tabella `expenses`, le sue policy RLS e la cartella storage `expenses`
+  restavano finché Fase 6 non sostituisse il flusso fatture con
+  `case_activities`;
 - gli enum/campi fiscali di fattura legati a `expense_art15` e
   `taxable_expenses` vanno rivalutati in Fase 6: i rimborsi recupero crediti
   sono Art. 15, mentre eventuali spese imponibili non devono rientrare nel
@@ -825,6 +825,17 @@ Uscita fase:
   distinti;
 - i rimborsi non entrano mai nella base di calcolo della cassa forense.
 - il vecchio flusso `expenses` non è più usato dal prodotto.
+
+Stato implementazione:
+
+- completata nel codice con flusso `/fatture/nuova` basato su committente,
+  periodo e `case_activities`;
+- `billing_runs`, `billing_run_items` e `billing_exports` vengono popolati al
+  momento della generazione fattura;
+- le attività incluse passano a `fatturata`, le rinviate conservano stato
+  `da fatturare` e una data di ricomparsa dal periodo successivo;
+- la migration `20260508120000_drop_legacy_expenses.sql` dismette la tabella
+  legacy `expenses`.
 
 ### Fase 7 — Import archivio
 

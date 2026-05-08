@@ -44,11 +44,6 @@ CREATE TYPE public.case_status AS ENUM (
 
 CREATE TYPE public.client_kind AS ENUM ('individual', 'company');
 
-CREATE TYPE public.expense_category AS ENUM (
-  'contributo_unificato', 'marche_da_bollo', 'copie',
-  'trasferte', 'ctu', 'notifiche', 'altro'
-);
-
 CREATE TYPE public.fee_type AS ENUM ('flat', 'hourly');
 
 CREATE TYPE public.invoice_line_kind AS ENUM (
@@ -320,23 +315,6 @@ CREATE TABLE public.case_status_history (
 );
 CREATE INDEX idx_case_status_history_case ON public.case_status_history (case_id);
 CREATE INDEX idx_case_status_history_user ON public.case_status_history (user_id);
-
-CREATE TABLE public.expenses (
-  id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id      uuid NOT NULL,
-  case_id      uuid NOT NULL,
-  invoice_id   uuid,
-  category     public.expense_category NOT NULL DEFAULT 'altro',
-  description  text NOT NULL,
-  amount       numeric NOT NULL DEFAULT 0,
-  expense_date date NOT NULL DEFAULT CURRENT_DATE,
-  is_art15     boolean NOT NULL DEFAULT false,
-  created_at   timestamptz NOT NULL DEFAULT now(),
-  updated_at   timestamptz NOT NULL DEFAULT now()
-);
-CREATE INDEX idx_expenses_user    ON public.expenses (user_id);
-CREATE INDEX idx_expenses_case    ON public.expenses (case_id);
-CREATE INDEX idx_expenses_invoice ON public.expenses (invoice_id);
 
 CREATE TABLE public.invoices (
   id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -772,12 +750,6 @@ ALTER TABLE public.case_status_history
   ADD CONSTRAINT case_status_history_user_id_fkey
   FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
-ALTER TABLE public.expenses
-  ADD CONSTRAINT expenses_case_id_fkey
-  FOREIGN KEY (case_id) REFERENCES public.cases(id) ON DELETE CASCADE,
-  ADD CONSTRAINT expenses_user_id_fkey
-  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
-
 ALTER TABLE public.invoices
   ADD CONSTRAINT invoices_user_id_fkey
   FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -785,10 +757,6 @@ ALTER TABLE public.invoices
   FOREIGN KEY (client_id) REFERENCES public.clients(id) ON DELETE RESTRICT,
   ADD CONSTRAINT invoices_case_id_fkey
   FOREIGN KEY (case_id) REFERENCES public.cases(id) ON DELETE SET NULL;
-
-ALTER TABLE public.expenses
-  ADD CONSTRAINT expenses_invoice_fk
-  FOREIGN KEY (invoice_id) REFERENCES public.invoices(id) ON DELETE SET NULL;
 
 ALTER TABLE public.invoice_lines
   ADD CONSTRAINT invoice_lines_invoice_id_fkey
@@ -930,7 +898,6 @@ ALTER TABLE public.invoice_lines
 CREATE TRIGGER profiles_set_updated_at        BEFORE UPDATE ON public.profiles        FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER clients_set_updated_at         BEFORE UPDATE ON public.clients         FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER cases_set_updated_at           BEFORE UPDATE ON public.cases           FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER expenses_set_updated_at        BEFORE UPDATE ON public.expenses        FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER invoices_set_updated_at        BEFORE UPDATE ON public.invoices        FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER principals_set_updated_at              BEFORE UPDATE ON public.principals              FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER principal_clients_set_updated_at       BEFORE UPDATE ON public.principal_clients       FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
@@ -992,7 +959,6 @@ ALTER TABLE public.profiles            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.clients             ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cases               ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.case_status_history ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.expenses            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invoices            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invoice_lines       ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.principals             ENABLE ROW LEVEL SECURITY;
@@ -1031,12 +997,6 @@ CREATE POLICY cases_delete_own ON public.cases FOR DELETE TO authenticated USING
 -- case_status_history (solo select + insert; lo storico non si modifica)
 CREATE POLICY case_status_history_select_own ON public.case_status_history FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
 CREATE POLICY case_status_history_insert_own ON public.case_status_history FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
-
--- expenses
-CREATE POLICY expenses_select_own ON public.expenses FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
-CREATE POLICY expenses_insert_own ON public.expenses FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
-CREATE POLICY expenses_update_own ON public.expenses FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
-CREATE POLICY expenses_delete_own ON public.expenses FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
 
 -- invoices
 CREATE POLICY invoices_select_own ON public.invoices FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
