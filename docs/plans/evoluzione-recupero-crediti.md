@@ -862,6 +862,18 @@ Uscita fase:
 - errori e avvisi sono comprensibili e correggibili;
 - il flusso riusa selettori e validazioni già usati da pratica e anagrafiche.
 
+Stato implementazione:
+
+- avviata con route `/import-archivio`, accessibile dal menu Account e non
+  dalla sidebar principale;
+- la procedura manuale consente di selezionare o creare inline committente,
+  cliente e controparte, compilare i dati pratica e aggiungere attività
+  storiche da Prezzi configurati;
+- l'anteprima viene salvata nelle tabelle di staging `imports` e
+  `import_rows`; le tabelle operative vengono scritte solo alla conferma;
+- resta da completare l'import Excel con parser, mappatura colonne,
+  validazione massiva e allegati nel flusso guidato.
+
 ### Fase 8 — Rifinitura operativa e superfici trasversali
 
 **Obiettivo**: rendere il nuovo dominio usabile come SaaS quotidiano e

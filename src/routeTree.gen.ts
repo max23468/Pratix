@@ -17,6 +17,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as NovitaRouteImport } from './routes/novita'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImpostazioniRouteImport } from './routes/impostazioni'
+import { Route as ImportArchivioRouteImport } from './routes/import-archivio'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
@@ -79,6 +80,11 @@ const LoginRoute = LoginRouteImport.update({
 const ImpostazioniRoute = ImpostazioniRouteImport.update({
   id: '/impostazioni',
   path: '/impostazioni',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImportArchivioRoute = ImportArchivioRouteImport.update({
+  id: '/import-archivio',
+  path: '/import-archivio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -202,6 +208,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/dashboard': typeof DashboardRoute
+  '/import-archivio': typeof ImportArchivioRoute
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/novita': typeof NovitaRoute
@@ -235,6 +242,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/dashboard': typeof DashboardRoute
+  '/import-archivio': typeof ImportArchivioRoute
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/novita': typeof NovitaRoute
@@ -269,6 +277,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
   '/dashboard': typeof DashboardRoute
+  '/import-archivio': typeof ImportArchivioRoute
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/novita': typeof NovitaRoute
@@ -304,6 +313,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/dashboard'
+    | '/import-archivio'
     | '/impostazioni'
     | '/login'
     | '/novita'
@@ -337,6 +347,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/dashboard'
+    | '/import-archivio'
     | '/impostazioni'
     | '/login'
     | '/novita'
@@ -370,6 +381,7 @@ export interface FileRouteTypes {
     | '/'
     | '/account'
     | '/dashboard'
+    | '/import-archivio'
     | '/impostazioni'
     | '/login'
     | '/novita'
@@ -404,6 +416,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
   DashboardRoute: typeof DashboardRoute
+  ImportArchivioRoute: typeof ImportArchivioRoute
   ImpostazioniRoute: typeof ImpostazioniRoute
   LoginRoute: typeof LoginRoute
   NovitaRoute: typeof NovitaRoute
@@ -490,6 +503,13 @@ declare module '@tanstack/react-router' {
       path: '/impostazioni'
       fullPath: '/impostazioni'
       preLoaderRoute: typeof ImpostazioniRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/import-archivio': {
+      id: '/import-archivio'
+      path: '/import-archivio'
+      fullPath: '/import-archivio'
+      preLoaderRoute: typeof ImportArchivioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -660,6 +680,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
   DashboardRoute: DashboardRoute,
+  ImportArchivioRoute: ImportArchivioRoute,
   ImpostazioniRoute: ImpostazioniRoute,
   LoginRoute: LoginRoute,
   NovitaRoute: NovitaRoute,
