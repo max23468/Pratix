@@ -150,6 +150,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | **Pre-push intelligente**                     | `.githooks/pre-push` usa `scripts/prepush-guard.mjs` per selezionare build/lint/audit in base al diff, ignorare file non tracciati e usare `origin/main` se la branch non ha upstream                                                         |
 | ✅    | **Gate Prettier esplicito**                   | `format:changed:check` verifica i file tracciati cambiati in locale e in PR prima di build/lint; `format:changed` corregge solo il diff senza riscrivere tutto il repo                                                                        |
 | ✅    | **Verifica Vercel proporzionata**             | Le docs interne non esposte non bloccano su Vercel; release, testi pubblici, UI e runtime richiedono verifica deployment proporzionata                                                                                                        |
+| ✅    | **Update latest dipendenze e toolchain**      | Dipendenze, toolchain, runtime Node/npm, workflow CI e CLI operative aggiornati o verificati; piano e residui tracciati in `docs/plans/update-latest-dipendenze.md`                                                                           |
 | ✅    | **Web Analytics + Speed Insights Vercel**     | Componenti ufficiali caricati in produzione; dashboard da leggere dopo traffico reale senza eventi custom                                                                                                                                     |
 | ✅    | **Observability Vercel-first**                | Runtime logs strutturati, Web Analytics e Speed Insights come baseline; niente Sentry finché la diagnostica Vercel basta                                                                                                                      |
 | ✅    | **Cron Vercel giornaliero protetto**          | `/api/cron/daily` schedulato via `vercel.json`, protetto da `CRON_SECRET`; endpoint e log di protezione verificati, run schedulato da controllare dopo il prossimo giro                                                                       |
@@ -166,9 +167,9 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## Prossime mosse suggerite (in ordine)
 
-1. **Provare un import archivio reale o semi-reale**: verificare staging, conferma, allegati e successiva fatturazione.
-2. **Esportazione massiva fatture**: ZIP PDF + XML per periodo.
-3. **Test recupero crediti**: partire da numero pratica, snapshot prezzi, rinvii, attività fatturate, rendiconti Excel e RLS.
-4. **Strategia test automatizzati progressiva**: definire lo stack e poi integrare i test in Quality/pre-push.
+1. **Strategia test automatizzati progressiva**: definire un set minimo di fixture anonime e smoke autenticati per coprire dashboard, pratiche, attività, fatture PDF/XML, import archivio e impostazioni account.
+2. **Provare un import archivio reale o semi-reale**: verificare staging, conferma, allegati e successiva fatturazione.
+3. **Esportazione massiva fatture**: ZIP PDF + XML per periodo.
+4. **Test recupero crediti**: partire da numero pratica, snapshot prezzi, rinvii, attività fatturate, rendiconti Excel e RLS.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.

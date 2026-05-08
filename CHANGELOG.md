@@ -6,11 +6,28 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.12.5] — 2026-05-09
+
+### Correzioni
+
+- **Novità**: esclusi i blocchi `Non versionato` dalla lista pubblica delle release mostrate nella pagina `/novita`.
+
+### Sotto il cofano
+
+- Aggiornate le prime dipendenze latest e la toolchain Vite/TypeScript/ESLint; rimossa la dipendenza `vite-tsconfig-paths` ora coperta dalla risoluzione nativa di Vite.
+- Aggiornati i major runtime/UI di supporto (`zod`, `react-day-picker`, `recharts` e `lucide-react`) alle versioni latest, mantenendo compatibili validazioni, calendari, grafici e icone.
+- Resi cross-platform gli script npm `dev`, `build`, `build:dev` e `preview` tramite wrapper Node per Vite.
+
 ## [Non versionato] — 2026-05-08
 
 ### Non versionato
 
 - **Chiusura piano recupero crediti**: aggiornato il piano di evoluzione per segnare la chiusura lato prodotto delle Fasi 1-8 e spostare in roadmap i residui non bloccanti.
+- **Piano update latest dipendenze**: definito il percorso operativo per aggiornare Pratix alle versioni latest assolute di dipendenze, toolchain, CLI e runtime, con verifica Node 24/26 e gate Vercel/Supabase.
+- **Verifica shadcn/Radix update latest**: completata la Fase 4 del piano senza overwrite massivo dei componenti, perché la registry latest propone diff non funzionali e dipendenze non coerenti con l'update già applicato.
+- **Verifica CLI Supabase/Vercel latest**: completata la Fase 5 del piano mantenendo le CLI operative via `npx`, senza pinning in `devDependencies`, e tracciando il warning Vercel CLI su Node 26 come punto da chiudere con la verifica Node 24/Vercel.
+- **Allineamento CI Node 24**: completata la Fase 5B del piano dichiarando `packageManager`/`engines`, portando i workflow GitHub a Node 24 e verificando build/lint anche con Node 24 reale.
+- **Verifiche applicative update latest**: completata la Fase 6 del piano con gate locali, preview browser, smoke pubblico/mobile, tema chiaro/scuro, form auth pubblici e redirect delle route protette non autenticate.
 
 ## [0.12.4] — 2026-05-08
 
@@ -375,6 +392,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.12.5]: #0125--2026-05-09
 [0.12.4]: #0124--2026-05-08
 [0.12.3]: #0123--2026-05-08
 [0.12.2]: #0122--2026-05-08

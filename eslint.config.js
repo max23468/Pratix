@@ -28,6 +28,11 @@ export default tseslint.config(
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
+      // React Hooks 7 enables React Compiler checks by default. Keep them out
+      // until Pratix adopts a deliberate React Compiler refactor.
+      "react-hooks/purity": "off",
+      "react-hooks/set-state-in-effect": "off",
+      "react-hooks/static-components": "off",
       "react-refresh/only-export-components": [
         "warn",
         {
@@ -38,6 +43,7 @@ export default tseslint.config(
             "getRouter",
             "navigationMenuTriggerStyle",
             "NO_FLASH_SCRIPT",
+            "Route",
             "toggleVariants",
             "useAuth",
             "useFormField",
@@ -47,6 +53,12 @@ export default tseslint.config(
         },
       ],
       "@typescript-eslint/no-unused-vars": "off",
+    },
+  },
+  {
+    files: ["src/routes/**/*.tsx"],
+    rules: {
+      "react-refresh/only-export-components": "off",
     },
   },
   eslintPluginPrettier,

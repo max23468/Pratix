@@ -16,6 +16,8 @@ export type ChangelogEntry = {
   date: string | null;
   /** True se la voce è "Non rilasciato" */
   unreleased: boolean;
+  /** True se la voce contiene note interne non pubblicabili in `/novita` */
+  nonVersioned: boolean;
   /** Eventuale paragrafo introduttivo (riga di descrizione sotto al titolo) */
   intro?: string;
   /** Sezioni "### Aggiunto", "### Modificato", ecc. */
@@ -54,6 +56,7 @@ export function parseChangelog(raw: string): ChangelogEntry[] {
     const version = m[1].trim();
     const date = m[2] ?? null;
     const unreleased = /non\s+rilasciato/i.test(version);
+    const nonVersioned = /non\s+versionato/i.test(version);
 
     // Trova le sezioni `### Titolo`
     const sectionRegex = /^###\s+(.+)$/gm;
@@ -77,7 +80,7 @@ export function parseChangelog(raw: string): ChangelogEntry[] {
       return { title: sm[1].trim(), items };
     });
 
-    entries.push({ version, date, unreleased, intro, sections });
+    entries.push({ version, date, unreleased, nonVersioned, intro, sections });
   }
 
   return entries;
@@ -86,8 +89,10 @@ export function parseChangelog(raw: string): ChangelogEntry[] {
 /** Versioni del changelog, già parsate. */
 export const changelog: ChangelogEntry[] = parseChangelog(changelogRaw);
 
-/** Versioni effettivamente rilasciate (esclude "Non rilasciato"). */
-export const releasedChangelog: ChangelogEntry[] = changelog.filter((e) => !e.unreleased);
+/** Versioni effettivamente rilasciate nella UI (esclude bozze e note interne). */
+export const releasedChangelog: ChangelogEntry[] = changelog.filter(
+  (e) => !e.unreleased && !e.nonVersioned,
+);
 
 /**
  * Confronto SemVer base (a > b → 1, a < b → -1, uguali → 0).
