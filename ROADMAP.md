@@ -80,7 +80,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Prezzi per committente            | Compensi/rimborsi abilitabili per committente, voci e prezzi unitari personalizzabili per anno                                                                       |
 | ✅    | Attività fatturabili              | Sezione globale `/attivita` + tab pratica; voci da Prezzi, stato da fatturare/fatturata, quantità, udienze e allegati facoltativi                                    |
 | ✅    | Fatturazione committente/periodo  | Estrazione attività per committente/periodo, inclusione/rinvio/esclusione, spese generali opzionali, cassa forense su compensi + spese generali e rendiconti Excel   |
-| 🟡    | Import archivio guidato           | Procedura manuale avviata dal menu Account con staging/anteprima e conferma finale; Excel strutturato da completare                                                  |
+| ✅    | Import archivio guidato           | Procedura manuale ed Excel strutturato dal menu Account con staging/anteprima, conferma transazionale e allegati sulle attività storiche                             |
 | 💤    | Time tracking per pratica         | Fuori dal perimetro recupero crediti attuale                                                                                                                         |
 | ✅    | Spese con allegati                | I rimborsi sono attività fatturabili Art. 15 con allegati; il flusso fatture usa `case_activities` e la tabella legacy `expenses` è in dismissione tramite migration |
 | ⬜    | Esportazione massiva fatture      | ZIP PDF + XML per periodo                                                                                                                                            |
@@ -164,9 +164,8 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## Prossime mosse suggerite (in ordine)
 
-1. **Completare la Fase 7 Import archivio**: parser Excel, mappatura colonne, validazione massiva, allegati nel flusso e gestione più robusta degli errori di conferma.
-2. **Pubblicare la tranche manuale della Fase 7** se il wizard manuale viene validato.
-3. **Riallineare le superfici trasversali**: dashboard, Impostazioni, Account, Novità, onboarding, navigazione e copy.
-4. **Esportazione massiva fatture**: ZIP PDF + XML per periodo.
+1. **Pubblicare la Fase 7 completata**: applicare migration Supabase, aprire/mergeare PR, verificare produzione e provare un import reale.
+2. **Riallineare le superfici trasversali**: dashboard, Impostazioni, Account, Novità, onboarding, navigazione e copy.
+3. **Esportazione massiva fatture**: ZIP PDF + XML per periodo.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.

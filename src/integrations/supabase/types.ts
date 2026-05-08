@@ -1432,6 +1432,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      apply_import_row: { Args: { p_import_row_id: string }; Returns: string }
       get_next_practice_number: { Args: never; Returns: number }
     }
     Enums: {

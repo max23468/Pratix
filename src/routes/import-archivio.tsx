@@ -7,6 +7,7 @@ import {
   CheckCircle2,
   FileInput,
   FileSpreadsheet,
+  Paperclip,
   Plus,
   Trash2,
 } from "lucide-react";
@@ -48,6 +49,8 @@ import {
   counterpartyKindLabels,
   priceItemKindLabels,
 } from "@/lib/labels";
+import { buildActivityAttachmentStoragePath, PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
+import { parseFirstXlsxSheet } from "@/lib/xlsx";
 
 export const Route = createFileRoute("/import-archivio")({
   head: () => ({
@@ -102,6 +105,7 @@ type CounterpartyRow = {
 
 type PriceBookRow = {
   id: string;
+  principal_id: string;
   year: number;
   status: string;
   fees_enabled: boolean;
@@ -120,6 +124,7 @@ type PriceItemRow = {
 };
 
 type PriceOption = PriceItemRow & {
+  principal_id: string;
   price_book_year: number;
   price_book_status: string;
   book_fees_enabled: boolean;
@@ -128,6 +133,7 @@ type PriceOption = PriceItemRow & {
 
 type ActivityDraft = {
   localId: string;
+  activityId: string;
   activityDate: string;
   priceItemId: string;
   description: string;
@@ -136,6 +142,10 @@ type ActivityDraft = {
   status: ActivityStatus;
   notes: string;
   hearingDates: string[];
+  attachmentFile: File | null;
+  attachmentName: string;
+  attachmentType: string;
+  attachmentNotes: string;
 };
 
 type ImportDraft = {
@@ -173,6 +183,45 @@ type StagedImport = {
   warnings: string[];
 };
 
+type ExcelColumnKey =
+  | "ignore"
+  | "principalName"
+  | "clientName"
+  | "counterpartyName"
+  | "practiceNumber"
+  | "title"
+  | "status"
+  | "openedAt"
+  | "closedAt"
+  | "authority"
+  | "rgNumber"
+  | "notes"
+  | "activityDate"
+  | "priceCode"
+  | "priceName"
+  | "quantity"
+  | "amount"
+  | "activityStatus"
+  | "activityNotes"
+  | "hearingDates";
+
+type ExcelPreviewRow = {
+  rowNumber: number;
+  rawData: Record<string, string>;
+  normalized: NormalizedImport | null;
+  errors: string[];
+  warnings: string[];
+};
+
+type ExcelStagedRow = {
+  rowId: string;
+  rowNumber: number;
+  status: "valid" | "warning" | "error";
+  normalized: NormalizedImport | null;
+  errors: string[];
+  warnings: string[];
+};
+
 type NormalizedImport = {
   principal: {
     mode: ExistingMode;
@@ -207,6 +256,7 @@ type NormalizedImport = {
     notes: string | null;
   };
   activities: Array<{
+    id: string;
     activityDate: string;
     priceBookId: string;
     priceBookYear: number;
@@ -227,6 +277,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 const makeActivity = (): ActivityDraft => ({
   localId: crypto.randomUUID(),
+  activityId: crypto.randomUUID(),
   activityDate: today(),
   priceItemId: "",
   description: "",
@@ -235,6 +286,10 @@ const makeActivity = (): ActivityDraft => ({
   status: "to_invoice",
   notes: "",
   hearingDates: [],
+  attachmentFile: null,
+  attachmentName: "",
+  attachmentType: "",
+  attachmentNotes: "",
 });
 
 const initialDraft = (): ImportDraft => ({
@@ -355,7 +410,7 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
     queryFn: async () => {
       const { data, error } = await supabase
         .from("price_books")
-        .select("id, year, status, fees_enabled, expense_reimbursements_enabled")
+        .select("id, principal_id, year, status, fees_enabled, expense_reimbursements_enabled")
         .eq("principal_id", principalId)
         .in("status", ["active", "draft"])
         .order("year", { ascending: false });
@@ -391,6 +446,7 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
         if (!book) return null;
         return {
           ...item,
+          principal_id: book.principal_id,
           price_book_year: book.year,
           price_book_status: book.status,
           book_fees_enabled: book.fees_enabled,
@@ -467,7 +523,7 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
           import_id: importRow.id,
           row_number: 1,
           status: prepared.warnings.length > 0 ? "warning" : "valid",
-          raw_data: draft as unknown as Json,
+          raw_data: serializeImportDraft(draft) as unknown as Json,
           normalized_data: prepared.normalized as unknown as Json,
           warning_messages: prepared.warnings,
         })
@@ -489,10 +545,20 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
     mutationFn: async () => {
       if (!user) throw new Error("Sessione non valida");
       if (!staged) throw new Error("Prepara prima l'anteprima");
-      return applyStagedImport(user.id, staged);
+      const caseId = await applyImportRow(staged.rowId);
+      const attachmentErrors = await uploadImportActivityAttachments(
+        user.id,
+        prepared.normalized.activities,
+        draft.activities,
+      );
+      return { caseId, attachmentErrors };
     },
-    onSuccess: async (caseId) => {
-      toast.success("Pratica importata");
+    onSuccess: async ({ caseId, attachmentErrors }) => {
+      if (attachmentErrors.length > 0) {
+        toast.error(`Pratica importata, ${attachmentErrors.length} allegati non caricati.`);
+      } else {
+        toast.success("Pratica importata");
+      }
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["imports"] }),
         qc.invalidateQueries({ queryKey: ["cases"] }),
@@ -1107,6 +1173,57 @@ function ActivityEditor({
             onChange={(event) => updateActivity(activity.localId, "notes", event.target.value)}
           />
         </div>
+        <div className="space-y-4 rounded-md border border-border p-4 md:col-span-2">
+          <div className="flex items-center gap-2">
+            <Paperclip className="h-4 w-4 text-muted-foreground" />
+            <Label htmlFor={`attachment_${activity.localId}`}>Allegato attività</Label>
+          </div>
+          <Input
+            id={`attachment_${activity.localId}`}
+            type="file"
+            onChange={(event) => {
+              const nextFile = event.target.files?.[0] ?? null;
+              updateActivity(activity.localId, "attachmentFile", nextFile);
+              if (nextFile && !activity.attachmentName) {
+                updateActivity(activity.localId, "attachmentName", nextFile.name);
+              }
+            }}
+          />
+          <div className="grid gap-3 md:grid-cols-2">
+            <div className="space-y-2">
+              <Label>Nome descrittivo</Label>
+              <Input
+                value={activity.attachmentName}
+                disabled={!activity.attachmentFile}
+                onChange={(event) =>
+                  updateActivity(activity.localId, "attachmentName", event.target.value)
+                }
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Tipo documento</Label>
+              <Input
+                value={activity.attachmentType}
+                disabled={!activity.attachmentFile}
+                placeholder="Es. giustificativo"
+                onChange={(event) =>
+                  updateActivity(activity.localId, "attachmentType", event.target.value)
+                }
+              />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Note allegato</Label>
+            <Textarea
+              rows={2}
+              value={activity.attachmentNotes}
+              disabled={!activity.attachmentFile}
+              onChange={(event) =>
+                updateActivity(activity.localId, "attachmentNotes", event.target.value)
+              }
+            />
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -1285,6 +1402,244 @@ function ReviewStep({
 }
 
 function ExcelImportPanel() {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const [fileName, setFileName] = useState("");
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [rows, setRows] = useState<string[][]>([]);
+  const [columnMap, setColumnMap] = useState<Record<number, ExcelColumnKey>>({});
+  const [previewRows, setPreviewRows] = useState<ExcelPreviewRow[]>([]);
+  const [stagedRows, setStagedRows] = useState<ExcelStagedRow[]>([]);
+
+  const { data: principals = [] } = useQuery({
+    queryKey: ["principals", "import-archive", "excel"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("principals")
+        .select("id, business_name, fees_enabled, expense_reimbursements_enabled")
+        .is("archived_at", null)
+        .order("business_name", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as PrincipalRow[];
+    },
+  });
+
+  const { data: clients = [] } = useQuery({
+    queryKey: ["clients", "import-archive", "excel"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("clients")
+        .select("id, kind, first_name, last_name, business_name")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as ClientRow[];
+    },
+  });
+
+  const { data: counterparties = [] } = useQuery({
+    queryKey: ["counterparties", "import-archive", "excel"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("counterparties")
+        .select("id, kind, first_name, last_name, business_name")
+        .order("updated_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as CounterpartyRow[];
+    },
+  });
+
+  const { data: priceBooks = [] } = useQuery({
+    queryKey: ["price-books", "import-archive", "excel"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("price_books")
+        .select("id, principal_id, year, status, fees_enabled, expense_reimbursements_enabled")
+        .in("status", ["active", "draft"])
+        .order("year", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as PriceBookRow[];
+    },
+  });
+
+  const priceBookIds = useMemo(() => priceBooks.map((book) => book.id), [priceBooks]);
+
+  const { data: priceItems = [] } = useQuery({
+    queryKey: ["price-items", "import-archive", "excel", priceBookIds],
+    enabled: priceBookIds.length > 0,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("price_items")
+        .select(
+          "id, price_book_id, kind, code, name, invoice_description, unit_price, requires_hearing_dates",
+        )
+        .in("price_book_id", priceBookIds)
+        .eq("is_enabled", true)
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as PriceItemRow[];
+    },
+  });
+
+  const priceOptions = useMemo(() => {
+    const booksById = new Map(priceBooks.map((book) => [book.id, book]));
+    return priceItems
+      .map((item) => {
+        const book = booksById.get(item.price_book_id);
+        if (!book) return null;
+        return {
+          ...item,
+          principal_id: book.principal_id,
+          price_book_year: book.year,
+          price_book_status: book.status,
+          book_fees_enabled: book.fees_enabled,
+          book_expense_reimbursements_enabled: book.expense_reimbursements_enabled,
+        };
+      })
+      .filter((item): item is PriceOption => Boolean(item))
+      .filter((item) =>
+        item.kind === "fee" ? item.book_fees_enabled : item.book_expense_reimbursements_enabled,
+      );
+  }, [priceBooks, priceItems]);
+
+  const stats = useMemo(() => {
+    const valid = previewRows.filter((row) => row.errors.length === 0).length;
+    const errors = previewRows.length - valid;
+    return { valid, errors };
+  }, [previewRows]);
+
+  const handleFile = async (file: File | null) => {
+    if (!file) return;
+    try {
+      const sheet = await parseFirstXlsxSheet(file);
+      if (sheet.headers.length === 0) throw new Error("Il file non contiene intestazioni.");
+      setFileName(file.name);
+      setHeaders(sheet.headers);
+      setRows(sheet.rows);
+      setColumnMap(autoMapExcelColumns(sheet.headers));
+      setPreviewRows([]);
+      setStagedRows([]);
+      toast.success("File letto");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "File Excel non leggibile");
+    }
+  };
+
+  const buildPreview = () => {
+    const preview = rows.map((row, index) =>
+      normalizeExcelRow(
+        index + 2,
+        row,
+        headers,
+        columnMap,
+        principals,
+        clients,
+        counterparties,
+        priceOptions,
+      ),
+    );
+    setPreviewRows(preview);
+    setStagedRows([]);
+    toast.success("Validazione completata");
+  };
+
+  const stageMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Sessione non valida");
+      if (previewRows.length === 0) throw new Error("Valida prima il file Excel.");
+      if (stats.valid === 0) throw new Error("Non ci sono righe valide da preparare.");
+
+      const { data: importRow, error: importError } = await supabase
+        .from("imports")
+        .insert({
+          user_id: user.id,
+          mode: "excel",
+          status: stats.errors > 0 ? "draft" : "validated",
+          source_file_name: fileName || null,
+          total_rows: previewRows.length,
+          valid_rows: stats.valid,
+          error_rows: stats.errors,
+          notes: "Archivio preparato da Excel strutturato.",
+        })
+        .select("id")
+        .single();
+      if (importError) throw importError;
+
+      const rowsToInsert = previewRows.map((row) => ({
+        user_id: user.id,
+        import_id: importRow.id,
+        row_number: row.rowNumber,
+        status: row.errors.length > 0 ? "error" : row.warnings.length > 0 ? "warning" : "valid",
+        raw_data: row.rawData as unknown as Json,
+        normalized_data: (row.normalized ?? {}) as unknown as Json,
+        error_messages: row.errors,
+        warning_messages: row.warnings,
+      }));
+
+      const { data, error: rowsError } = await supabase
+        .from("import_rows")
+        .insert(rowsToInsert)
+        .select("id, row_number, status");
+      if (rowsError) throw rowsError;
+
+      const rowIds = new Map((data ?? []).map((row) => [row.row_number, row.id]));
+      return previewRows.map((row) => ({
+        rowId: rowIds.get(row.rowNumber) ?? "",
+        rowNumber: row.rowNumber,
+        status: row.errors.length > 0 ? "error" : row.warnings.length > 0 ? "warning" : "valid",
+        normalized: row.normalized,
+        errors: row.errors,
+        warnings: row.warnings,
+      })) satisfies ExcelStagedRow[];
+    },
+    onSuccess: (staged) => {
+      setStagedRows(staged);
+      toast.success("Staging pronto");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const confirmMutation = useMutation({
+    mutationFn: async () => {
+      const importableRows = stagedRows.filter(
+        (row) => row.rowId && row.normalized && row.status !== "error",
+      );
+      if (importableRows.length === 0) throw new Error("Non ci sono righe pronte da importare.");
+
+      const failures: string[] = [];
+      const importedCaseIds: string[] = [];
+      for (const row of importableRows) {
+        try {
+          importedCaseIds.push(await applyImportRow(row.rowId));
+        } catch (error) {
+          const message = error instanceof Error ? error.message : "Errore sconosciuto";
+          failures.push(`Riga ${row.rowNumber}: ${message}`);
+          await supabase
+            .from("import_rows")
+            .update({ status: "error", error_messages: [message] })
+            .eq("id", row.rowId);
+        }
+      }
+      return { importedCaseIds, failures };
+    },
+    onSuccess: async ({ importedCaseIds, failures }) => {
+      await Promise.all([
+        qc.invalidateQueries({ queryKey: ["imports"] }),
+        qc.invalidateQueries({ queryKey: ["cases"] }),
+        qc.invalidateQueries({ queryKey: ["activities"] }),
+        qc.invalidateQueries({ queryKey: ["principals"] }),
+        qc.invalidateQueries({ queryKey: ["clients"] }),
+        qc.invalidateQueries({ queryKey: ["counterparties"] }),
+        qc.invalidateQueries({ queryKey: ["dashboard"] }),
+      ]);
+      if (failures.length > 0) {
+        toast.error(`${importedCaseIds.length} righe importate, ${failures.length} con errore.`);
+      } else {
+        toast.success(`${importedCaseIds.length} righe importate.`);
+      }
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
   return (
     <Card>
       <CardHeader>
@@ -1293,21 +1648,344 @@ function ExcelImportPanel() {
           <div>
             <CardTitle className="text-base">Import Excel strutturato</CardTitle>
             <CardDescription>
-              La fase Excel userà lo stesso staging della procedura manuale: upload, mappatura
-              colonne, validazione, anteprima e conferma.
+              Carica un file .xlsx, mappa le colonne, valida le righe e conferma solo quelle pronte.
             </CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-3">
-        <p className="text-sm text-muted-foreground">
-          Il parser Excel resta il prossimo passaggio della Fase 7. Per ora puoi usare la procedura
-          guidata per trascrivere voce per voce senza scrivere dati operativi prima della conferma.
-        </p>
-        <Input type="file" accept=".xlsx,.xls" disabled />
+      <CardContent className="space-y-5">
+        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+          <div className="space-y-2">
+            <Label htmlFor="archive_excel">File Excel</Label>
+            <Input
+              id="archive_excel"
+              type="file"
+              accept=".xlsx"
+              onChange={(event) => void handleFile(event.target.files?.[0] ?? null)}
+            />
+          </div>
+          <Button type="button" disabled={rows.length === 0} onClick={buildPreview}>
+            Valida file
+          </Button>
+        </div>
+
+        {headers.length > 0 ? (
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <p className="text-sm font-medium">{fileName}</p>
+                <p className="text-sm text-muted-foreground">
+                  {rows.length} righe lette. Controlla la mappatura prima dello staging.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Badge variant="outline">{headers.length} colonne</Badge>
+                {previewRows.length > 0 ? (
+                  <>
+                    <Badge variant="outline">{stats.valid} valide</Badge>
+                    <Badge variant={stats.errors > 0 ? "destructive" : "outline"}>
+                      {stats.errors} errori
+                    </Badge>
+                  </>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="rounded-md border border-border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Colonna Excel</TableHead>
+                    <TableHead>Campo Pratix</TableHead>
+                    <TableHead>Esempio</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {headers.map((header, index) => (
+                    <TableRow key={`${header}-${index}`}>
+                      <TableCell className="font-medium">
+                        {header || `Colonna ${index + 1}`}
+                      </TableCell>
+                      <TableCell>
+                        <Select
+                          value={columnMap[index] ?? "ignore"}
+                          onValueChange={(value) => {
+                            setColumnMap((current) => ({
+                              ...current,
+                              [index]: value as ExcelColumnKey,
+                            }));
+                            setPreviewRows([]);
+                            setStagedRows([]);
+                          }}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {excelColumnOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </TableCell>
+                      <TableCell className="max-w-[18rem] truncate text-muted-foreground">
+                        {rows.find((row) => row[index])?.[index] ?? "—"}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        ) : null}
+
+        {previewRows.length > 0 ? (
+          <div className="space-y-3">
+            <div className="rounded-md border border-border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Riga</TableHead>
+                    <TableHead>Pratica</TableHead>
+                    <TableHead>Committente</TableHead>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Controparte</TableHead>
+                    <TableHead>Esito</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {previewRows.slice(0, 20).map((row) => (
+                    <TableRow key={row.rowNumber}>
+                      <TableCell>{row.rowNumber}</TableCell>
+                      <TableCell>{row.normalized?.practice.practiceNumber ?? "—"}</TableCell>
+                      <TableCell>{row.normalized?.principal.name ?? "—"}</TableCell>
+                      <TableCell>
+                        {row.normalized ? displayNormalizedClient(row.normalized.client) : "—"}
+                      </TableCell>
+                      <TableCell>
+                        {row.normalized
+                          ? displayNormalizedCounterparty(row.normalized.counterparty)
+                          : "—"}
+                      </TableCell>
+                      <TableCell>
+                        {row.errors.length > 0 ? (
+                          <Badge variant="destructive">{row.errors[0]}</Badge>
+                        ) : row.warnings.length > 0 ? (
+                          <Badge variant="outline">{row.warnings[0]}</Badge>
+                        ) : (
+                          <Badge variant="outline">Valida</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+            {previewRows.length > 20 ? (
+              <p className="text-sm text-muted-foreground">
+                Anteprima limitata alle prime 20 righe. Lo staging considera tutte le righe.
+              </p>
+            ) : null}
+          </div>
+        ) : null}
+
+        <div className="flex flex-wrap justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={stageMutation.isPending || previewRows.length === 0 || stats.valid === 0}
+            onClick={() => stageMutation.mutate()}
+          >
+            {stageMutation.isPending ? "Preparazione…" : "Prepara staging"}
+          </Button>
+          <Button
+            type="button"
+            disabled={
+              confirmMutation.isPending ||
+              stagedRows.filter((row) => row.status !== "error").length === 0
+            }
+            onClick={() => confirmMutation.mutate()}
+          >
+            <CheckCircle2 className="mr-1 h-4 w-4" />
+            {confirmMutation.isPending ? "Importazione…" : "Importa righe valide"}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
+}
+
+const excelColumnOptions: Array<{ value: ExcelColumnKey; label: string }> = [
+  { value: "ignore", label: "Ignora" },
+  { value: "principalName", label: "Committente" },
+  { value: "clientName", label: "Cliente" },
+  { value: "counterpartyName", label: "Controparte" },
+  { value: "practiceNumber", label: "Numero pratica" },
+  { value: "title", label: "Titolo pratica" },
+  { value: "status", label: "Stato pratica" },
+  { value: "openedAt", label: "Data apertura" },
+  { value: "closedAt", label: "Data chiusura" },
+  { value: "authority", label: "Autorità" },
+  { value: "rgNumber", label: "N. R.G." },
+  { value: "notes", label: "Note pratica" },
+  { value: "activityDate", label: "Data attività" },
+  { value: "priceCode", label: "Codice prezzo" },
+  { value: "priceName", label: "Voce prezzo" },
+  { value: "quantity", label: "Quantità" },
+  { value: "amount", label: "Importo rimborso" },
+  { value: "activityStatus", label: "Stato attività" },
+  { value: "activityNotes", label: "Note attività" },
+  { value: "hearingDates", label: "Date udienza" },
+];
+
+function autoMapExcelColumns(headers: string[]) {
+  return headers.reduce<Record<number, ExcelColumnKey>>((map, header, index) => {
+    const normalized = normalizeText(header);
+    if (/committente|mandante/.test(normalized)) map[index] = "principalName";
+    else if (/cliente/.test(normalized)) map[index] = "clientName";
+    else if (/controparte|debitore/.test(normalized)) map[index] = "counterpartyName";
+    else if (/numero.*pratica|n.*pratica|pratica/.test(normalized)) map[index] = "practiceNumber";
+    else if (/titolo|oggetto/.test(normalized)) map[index] = "title";
+    else if (/stato.*pratica/.test(normalized)) map[index] = "status";
+    else if (/data.*apertura|apertura/.test(normalized)) map[index] = "openedAt";
+    else if (/data.*chiusura|chiusura/.test(normalized)) map[index] = "closedAt";
+    else if (/autorita|tribunale|giudice/.test(normalized)) map[index] = "authority";
+    else if (/r\.?g\.?|ruolo/.test(normalized)) map[index] = "rgNumber";
+    else if (/data.*attivita|data.*prestazione/.test(normalized)) map[index] = "activityDate";
+    else if (/codice.*prezzo|codice.*voce|codice/.test(normalized)) map[index] = "priceCode";
+    else if (/voce|prezzo|attivita|prestazione|compenso|onorario|rimborso/.test(normalized))
+      map[index] = "priceName";
+    else if (/quantita|qta|numero/.test(normalized)) map[index] = "quantity";
+    else if (/importo|spesa/.test(normalized)) map[index] = "amount";
+    else if (/stato.*attivita|fatturat/.test(normalized)) map[index] = "activityStatus";
+    else if (/udienz/.test(normalized)) map[index] = "hearingDates";
+    else if (/note.*attivita/.test(normalized)) map[index] = "activityNotes";
+    else if (/note/.test(normalized)) map[index] = "notes";
+    else map[index] = "ignore";
+    return map;
+  }, {});
+}
+
+function normalizeExcelRow(
+  rowNumber: number,
+  row: string[],
+  headers: string[],
+  columnMap: Record<number, ExcelColumnKey>,
+  principals: PrincipalRow[],
+  clients: ClientRow[],
+  counterparties: CounterpartyRow[],
+  priceOptions: PriceOption[],
+): ExcelPreviewRow {
+  const rawData = headers.reduce<Record<string, string>>((data, header, index) => {
+    data[header || `Colonna ${index + 1}`] = row[index] ?? "";
+    return data;
+  }, {});
+  const value = (key: ExcelColumnKey) => {
+    const index = Number(Object.entries(columnMap).find(([, mapped]) => mapped === key)?.[0]);
+    return Number.isInteger(index) ? (row[index] ?? "").trim() : "";
+  };
+
+  const principalName = value("principalName");
+  const clientName = value("clientName");
+  const counterpartyName = value("counterpartyName");
+  const selectedPrincipal = findByName(
+    principals,
+    principalName,
+    (principal) => principal.business_name,
+  );
+  const selectedClient = findByName(clients, clientName, clientDisplayName);
+  const selectedCounterparty = findByName(
+    counterparties,
+    counterpartyName,
+    counterpartyDisplayName,
+  );
+  const openedAt = parseExcelDate(value("openedAt")) || today();
+  const activityDate = parseExcelDate(value("activityDate"));
+  const practiceStatus = parseCaseStatus(value("status"));
+  const activityStatus = parseActivityStatus(value("activityStatus"));
+  const priceOptionsForPrincipal = selectedPrincipal
+    ? selectPriceOptionsForPrincipal(
+        priceOptions,
+        selectedPrincipal.id,
+        Number((activityDate || openedAt).slice(0, 4)),
+      )
+    : [];
+  const priceOption = findPriceOption(
+    priceOptionsForPrincipal,
+    value("priceCode"),
+    value("priceName"),
+  );
+  const quantity = parseExcelNumber(value("quantity")) || 1;
+  const amount = parseExcelNumber(value("amount"));
+
+  const draft: ImportDraft = {
+    ...initialDraft(),
+    principalMode: selectedPrincipal ? "existing" : "new",
+    principalId: selectedPrincipal?.id ?? "",
+    principalName,
+    clientMode: selectedClient ? "existing" : "new",
+    clientId: selectedClient?.id ?? "",
+    clientKind: "company",
+    clientBusinessName: clientName,
+    counterpartyMode: selectedCounterparty ? "existing" : "new",
+    counterpartyId: selectedCounterparty?.id ?? "",
+    counterpartyKind: "company",
+    counterpartyBusinessName: counterpartyName,
+    practiceNumber: value("practiceNumber"),
+    title: value("title"),
+    status: practiceStatus,
+    openedAt,
+    closedAt: parseExcelDate(value("closedAt")),
+    authority: value("authority"),
+    rgNumber: value("rgNumber"),
+    notes: value("notes"),
+    activities:
+      value("priceCode") || value("priceName")
+        ? [
+            {
+              localId: `${rowNumber}`,
+              activityId: crypto.randomUUID(),
+              activityDate: activityDate || openedAt,
+              priceItemId: priceOption?.id ?? "",
+              description:
+                priceOption?.invoice_description || priceOption?.name || value("priceName"),
+              quantity,
+              freeAmount: amount,
+              status: activityStatus,
+              notes: value("activityNotes"),
+              hearingDates: parseHearingDates(value("hearingDates")),
+              attachmentFile: null,
+              attachmentName: "",
+              attachmentType: "",
+              attachmentNotes: "",
+            },
+          ]
+        : [],
+  };
+
+  const prepared = buildNormalizedImport(
+    draft,
+    principals,
+    clients,
+    counterparties,
+    priceOptionsForPrincipal,
+  );
+
+  if ((value("priceCode") || value("priceName")) && !priceOption) {
+    prepared.errors.push(
+      `Riga ${rowNumber}: voce prezzo non trovata per il committente e l'anno attività.`,
+    );
+  }
+
+  return {
+    rowNumber,
+    rawData,
+    normalized: prepared.errors.length > 0 ? null : prepared.normalized,
+    errors: prepared.errors,
+    warnings: prepared.warnings,
+  };
 }
 
 function ModeSelect({
@@ -1482,8 +2160,13 @@ function buildNormalizedImport(
     if (item.requires_hearing_dates && activity.hearingDates.some((date) => !date)) {
       errors.push(`Attività ${index + 1}: completa tutte le date udienza.`);
     }
+    const hearingDates = activity.hearingDates.filter(Boolean);
+    if (item.requires_hearing_dates && new Set(hearingDates).size !== hearingDates.length) {
+      errors.push(`Attività ${index + 1}: rimuovi le date udienza duplicate.`);
+    }
 
     return {
+      id: activity.activityId,
       activityDate: activity.activityDate,
       priceBookId: item.price_book_id,
       priceBookYear: item.price_book_year,
@@ -1496,7 +2179,7 @@ function buildNormalizedImport(
       unitPrice,
       status: activity.status,
       notes: activity.notes.trim() || null,
-      hearingDates: item.requires_hearing_dates ? activity.hearingDates.filter(Boolean) : [],
+      hearingDates: item.requires_hearing_dates ? hearingDates : [],
     };
   });
 
@@ -1551,163 +2234,154 @@ function buildNormalizedImport(
   return { normalized, errors, warnings };
 }
 
-async function applyStagedImport(userId: string, staged: StagedImport) {
-  const normalized = staged.normalized;
-  const principalId =
-    normalized.principal.mode === "existing" && normalized.principal.id
-      ? normalized.principal.id
-      : await createPrincipal(userId, normalized.principal.name);
-  const clientId =
-    normalized.client.mode === "existing" && normalized.client.id
-      ? normalized.client.id
-      : await createClient(userId, normalized.client);
-  const counterpartyId =
-    normalized.counterparty.mode === "existing" && normalized.counterparty.id
-      ? normalized.counterparty.id
-      : await createCounterparty(userId, normalized.counterparty);
+async function applyImportRow(rowId: string) {
+  const { data, error } = await supabase.rpc("apply_import_row", { p_import_row_id: rowId });
+  if (error) throw error;
+  if (!data) throw new Error("Import non completato.");
+  return data;
+}
 
-  const { error: linkError } = await supabase.from("principal_clients").upsert(
-    {
-      user_id: userId,
-      principal_id: principalId,
-      client_id: clientId,
-      active_from: normalized.practice.openedAt,
-    },
-    { onConflict: "user_id,principal_id,client_id" },
-  );
-  if (linkError) throw linkError;
+function serializeImportDraft(draft: ImportDraft) {
+  return {
+    ...draft,
+    activities: draft.activities.map((activity) => ({
+      ...activity,
+      attachmentFile: activity.attachmentFile
+        ? {
+            name: activity.attachmentFile.name,
+            type: activity.attachmentFile.type,
+            size: activity.attachmentFile.size,
+          }
+        : null,
+    })),
+  };
+}
 
-  const { data: caseRow, error: caseError } = await supabase
-    .from("cases")
-    .insert({
-      user_id: userId,
-      principal_id: principalId,
-      client_id: clientId,
-      counterparty_id: counterpartyId,
-      practice_number: normalized.practice.practiceNumber,
-      case_number: String(normalized.practice.practiceNumber),
-      title: normalized.practice.title,
-      matter: "civile",
-      status: normalized.practice.status,
-      fee_type: "flat",
-      agreed_fee: 0,
-      hourly_rate: null,
-      retainer: 0,
-      counterparty: null,
-      authority: normalized.practice.authority,
-      rg_number: normalized.practice.rgNumber,
-      opened_at: normalized.practice.openedAt,
-      closed_at: normalized.practice.closedAt,
-      notes: normalized.practice.notes,
-    })
-    .select("id")
-    .single();
-  if (caseError) throw caseError;
+async function uploadImportActivityAttachments(
+  userId: string,
+  normalizedActivities: NormalizedImport["activities"],
+  draftActivities: ActivityDraft[],
+) {
+  const errors: string[] = [];
+  const activitiesById = new Map(normalizedActivities.map((activity) => [activity.id, activity]));
 
-  for (const activity of normalized.activities) {
-    const { data: activityRow, error: activityError } = await supabase
-      .from("case_activities")
-      .insert({
-        user_id: userId,
-        case_id: caseRow.id,
-        principal_id: principalId,
-        client_id: clientId,
-        counterparty_id: counterpartyId,
-        price_book_id: activity.priceBookId,
-        price_item_id: activity.priceItemId,
-        activity_date: activity.activityDate,
-        kind: activity.kind,
-        status: activity.status,
-        snapshot_price_year: activity.priceBookYear,
-        snapshot_price_code: activity.code,
-        snapshot_price_name: activity.name,
-        description: activity.description,
-        quantity: activity.quantity,
-        unit_price: activity.unitPrice,
-        notes: activity.notes,
-      })
-      .select("id")
-      .single();
-    if (activityError) throw activityError;
+  for (const draftActivity of draftActivities) {
+    const file = draftActivity.attachmentFile;
+    const normalizedActivity = activitiesById.get(draftActivity.activityId);
+    if (!file || !normalizedActivity) continue;
 
-    if (activity.hearingDates.length > 0) {
-      const { error: hearingsError } = await supabase.from("case_activity_hearings").insert(
-        activity.hearingDates.map((hearingDate, index) => ({
-          user_id: userId,
-          activity_id: activityRow.id,
-          hearing_date: hearingDate,
-          position: index + 1,
-        })),
+    try {
+      const storagePath = buildActivityAttachmentStoragePath(
+        userId,
+        normalizedActivity.id,
+        `${Date.now()}-${file.name}`,
       );
-      if (hearingsError) throw hearingsError;
+      const { error: uploadError } = await supabase.storage
+        .from(PRATIX_DOCUMENTS_BUCKET)
+        .upload(storagePath, file, { contentType: file.type || undefined, upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { error: attachmentError } = await supabase.from("activity_attachments").insert({
+        user_id: userId,
+        activity_id: normalizedActivity.id,
+        storage_path: storagePath,
+        original_file_name: file.name,
+        display_name: draftActivity.attachmentName.trim() || file.name,
+        document_type: draftActivity.attachmentType.trim() || null,
+        mime_type: file.type || null,
+        size_bytes: file.size,
+        preview_available: file.type.startsWith("image/") || file.type === "application/pdf",
+        notes: draftActivity.attachmentNotes.trim() || null,
+      });
+      if (attachmentError) throw attachmentError;
+    } catch (error) {
+      errors.push(error instanceof Error ? error.message : "Errore allegato");
     }
   }
 
-  const { error: rowError } = await supabase
-    .from("import_rows")
-    .update({ status: "imported", applied_case_id: caseRow.id })
-    .eq("id", staged.rowId);
-  if (rowError) throw rowError;
-
-  const { error: importError } = await supabase
-    .from("imports")
-    .update({ status: "imported" })
-    .eq("id", staged.importId);
-  if (importError) throw importError;
-
-  return caseRow.id;
+  return errors;
 }
 
-async function createPrincipal(userId: string, name: string) {
-  const { data, error } = await supabase
-    .from("principals")
-    .insert({
-      user_id: userId,
-      business_name: name,
-      fees_enabled: true,
-      expense_reimbursements_enabled: true,
-      default_general_expenses_rate: 10,
-      default_cassa_rate: 4,
-      address_country: "IT",
-    })
-    .select("id")
-    .single();
-  if (error) throw error;
-  return data.id;
+function normalizeText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
 }
 
-async function createClient(userId: string, client: NormalizedImport["client"]) {
-  const { data, error } = await supabase
-    .from("clients")
-    .insert({
-      user_id: userId,
-      kind: client.kind,
-      first_name: client.kind === "individual" ? client.firstName : null,
-      last_name: client.kind === "individual" ? client.lastName : null,
-      business_name: client.kind === "company" ? client.businessName : null,
-      address_country: "IT",
-    })
-    .select("id")
-    .single();
-  if (error) throw error;
-  return data.id;
+function findByName<T>(items: T[], name: string, display: (item: T) => string) {
+  const normalizedName = normalizeText(name);
+  if (!normalizedName) return null;
+  return items.find((item) => normalizeText(display(item)) === normalizedName) ?? null;
 }
 
-async function createCounterparty(userId: string, counterparty: NormalizedImport["counterparty"]) {
-  const { data, error } = await supabase
-    .from("counterparties")
-    .insert({
-      user_id: userId,
-      kind: counterparty.kind,
-      first_name: counterparty.kind === "individual" ? counterparty.firstName : null,
-      last_name: counterparty.kind === "individual" ? counterparty.lastName : null,
-      business_name: counterparty.kind === "individual" ? null : counterparty.businessName,
-      notes: counterparty.notes,
-    })
-    .select("id")
-    .single();
-  if (error) throw error;
-  return data.id;
+function parseExcelDate(value: string) {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
+
+  const serial = Number(trimmed.replace(",", "."));
+  if (Number.isFinite(serial) && serial > 20000 && serial < 80000) {
+    return new Date((serial - 25569) * 86400 * 1000).toISOString().slice(0, 10);
+  }
+
+  const match = trimmed.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
+  if (!match) return "";
+  const [, day, month, year] = match;
+  const fullYear = year.length === 2 ? `20${year}` : year;
+  return `${fullYear}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+}
+
+function parseExcelNumber(value: string) {
+  const normalized = value.replace(/\./g, "").replace(",", ".").trim();
+  const number = Number(normalized);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function parseCaseStatus(value: string): CaseStatus {
+  const normalized = normalizeText(value);
+  if (/chius|definit/.test(normalized)) return "closed";
+  if (/archiv/.test(normalized)) return "archived";
+  if (/sosp/.test(normalized)) return "suspended";
+  if (/corso|lavor/.test(normalized)) return "in_progress";
+  return "open";
+}
+
+function parseActivityStatus(value: string): ActivityStatus {
+  return /fatturat|emess/.test(normalizeText(value)) ? "invoiced" : "to_invoice";
+}
+
+function parseHearingDates(value: string) {
+  return value
+    .split(/[;,|]/)
+    .map((date) => parseExcelDate(date))
+    .filter(Boolean);
+}
+
+function selectPriceOptionsForPrincipal(
+  priceOptions: PriceOption[],
+  principalId: string,
+  preferredYear: number,
+) {
+  const principalOptions = priceOptions.filter((option) => option.principal_id === principalId);
+  const sameYear = principalOptions.filter((option) => option.price_book_year === preferredYear);
+  return sameYear.length > 0 ? sameYear : principalOptions;
+}
+
+function findPriceOption(priceOptions: PriceOption[], code: string, name: string) {
+  const normalizedCode = normalizeText(code);
+  const normalizedName = normalizeText(name);
+  if (normalizedCode) {
+    const byCode = priceOptions.find((option) => normalizeText(option.code) === normalizedCode);
+    if (byCode) return byCode;
+  }
+  if (!normalizedName) return null;
+  return (
+    priceOptions.find((option) => normalizeText(option.name) === normalizedName) ??
+    priceOptions.find((option) => normalizeText(option.name).includes(normalizedName)) ??
+    null
+  );
 }
 
 function displayDraftClient(draft: ImportDraft) {

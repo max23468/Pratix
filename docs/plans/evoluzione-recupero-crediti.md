@@ -871,8 +871,14 @@ Stato implementazione:
   storiche da Prezzi configurati;
 - l'anteprima viene salvata nelle tabelle di staging `imports` e
   `import_rows`; le tabelle operative vengono scritte solo alla conferma;
-- resta da completare l'import Excel con parser, mappatura colonne,
-  validazione massiva e allegati nel flusso guidato.
+- l'import Excel legge file `.xlsx`, consente mappatura colonne, validazione
+  massiva, staging e conferma delle righe valide;
+- la conferma usa una RPC Postgres transazionale per creare pratica,
+  collegamenti, attività e udienze in modo atomico per riga;
+- la procedura guidata consente di allegare documenti alle attività storiche
+  con nome descrittivo, tipo documento e note;
+- la Fase 7 è completa lato prodotto e resta da pubblicare/applicare in
+  produzione.
 
 ### Fase 8 — Rifinitura operativa e superfici trasversali
 

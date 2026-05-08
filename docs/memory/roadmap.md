@@ -19,7 +19,7 @@ Stato delle voci con legenda:
 2. **Tema e accessibilità** — base ✅, audit accessibilità ⬜
 3. **Landing pubblica** — hero ✅, resto ⬜
 4. **Esperienza prodotto** (UI autenticata) — base ✅, rifinitura ⬜
-5. **Funzionalità di prodotto** — focus recupero crediti, schema Fase 2 completato, committenti/clienti/controparti/pratiche/attività/prezzi per committente/fatturazione per committente e periodo/rendiconti Excel; import archivio guidato 🟡 con procedura manuale avviata e Excel da completare; scadenzario e vecchio modulo spese rimossi
+5. **Funzionalità di prodotto** — focus recupero crediti, schema Fase 2 completato, committenti/clienti/controparti/pratiche/attività/prezzi per committente/fatturazione per committente e periodo/rendiconti Excel; import archivio guidato ✅ con procedura manuale, Excel strutturato, staging, conferma transazionale e allegati attività; scadenzario e vecchio modulo spese rimossi
 6. **Account, sicurezza, dati** — auth base ✅, area `/account` separata da Impostazioni ✅, cambio password in-app ✅, Supabase Storage privato ✅, eliminazione/GDPR/cambio email ⬜
 7. **SEO, pubblicazione, dominio** — `lang="it"` ✅, resto ⬜
 8. **Qualità e processo** — `AGENTS.md`/`BRAND.md`/`ROADMAP.md` ✅, Observability Vercel-first ✅, strategia test automatizzati ⬜, test critici ⬜
