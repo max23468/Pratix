@@ -8,6 +8,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ### Non versionato
 
+- **Ottimizzazione inbox Codex**: la inbox chiude automaticamente eventuali issue duplicate, compatta lo storico mostrato, limita le scansioni event-driven alle PR aperte/recenti e usa eventi PR in contesto trusted, mantenendo la scansione completa su schedule, dispatch manuale e commenti sulla inbox.
 - **Hardening inbox Codex**: il workflow dei commenti Codex ora esegue lo script dalla default branch trusted e mantiene una scansione di riallineamento ogni 6 ore per ripulire i thread risolti o riaperti.
 - **Codex feedback inbox event-driven**: sostituito il workflow settimanale dei commenti Codex con una scansione immediata su nuove review/commenti, issue GitHub unica `Codex feedback inbox`, controllo di tutte le PR e sollecito `@codex address that feedback` solo per thread actionable.
 - **Stato commenti Codex fuori dal repo**: rimossi i file committati `.github/codex-pr-pending-comments.md` e `.github/codex-pr-scan-state.json`; la fonte di verità torna ai review thread GitHub e alla issue inbox.

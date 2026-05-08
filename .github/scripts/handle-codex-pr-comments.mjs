@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { readFile } from "node:fs/promises";
 import process from "node:process";
 
 const repository = process.env.GITHUB_REPOSITORY;
@@ -10,6 +11,14 @@ const codexCommand = process.env.CODEX_AUTOFIX_COMMENT ?? "@codex address that f
 const inboxMarker = "<!-- pratix-codex-feedback-inbox -->";
 const requestMarker = "<!-- pratix-codex-feedback-request -->";
 const dryRun = process.env.DRY_RUN === "true";
+const eventName = process.env.GITHUB_EVENT_NAME ?? "";
+const eventPayload = await readGitHubEventPayload();
+const fullScan = shouldRunFullScan();
+const eventPullRequestNumber = getEventPullRequestNumber(eventPayload);
+const recentPrLimit = parsePositiveInteger(process.env.CODEX_RECENT_PR_LIMIT, 50);
+const recentPrDays = parsePositiveInteger(process.env.CODEX_RECENT_PR_DAYS, 30);
+const historyPrLimit = parsePositiveInteger(process.env.CODEX_HISTORY_PR_LIMIT, 8);
+const historyThreadLimit = parsePositiveInteger(process.env.CODEX_HISTORY_THREAD_LIMIT, 5);
 
 if (!repository) {
   fail("GITHUB_REPOSITORY non impostato.");
@@ -63,8 +72,11 @@ const inboxIssue = await upsertInboxIssue(inboxEntries);
 console.log(
   JSON.stringify(
     {
+      closedDuplicateInboxIssues: inboxIssue.closedDuplicateNumbers,
       dryRun,
-      inboxIssue: inboxIssue?.html_url ?? null,
+      eventName,
+      fullScan,
+      inboxIssue: inboxIssue.issue?.html_url ?? null,
       prsScanned: prs.length,
       prsWithCodexThreads: inboxEntries.length,
       requestedPrs,
@@ -83,24 +95,70 @@ console.log(
 );
 
 async function listPullRequests() {
+  if (fullScan) return listAllPullRequests();
+
+  const prsByNumber = new Map();
+
+  for (const pr of await listOpenPullRequests()) {
+    prsByNumber.set(pr.number, pr);
+  }
+
+  for (const pr of await listRecentPullRequests()) {
+    prsByNumber.set(pr.number, pr);
+  }
+
+  if (eventPullRequestNumber && !prsByNumber.has(eventPullRequestNumber)) {
+    const eventPr = await githubJson(`/repos/${owner}/${repo}/pulls/${eventPullRequestNumber}`);
+    prsByNumber.set(eventPr.number, eventPr);
+  }
+
+  return [...prsByNumber.values()].sort(
+    (left, right) => new Date(right.updated_at) - new Date(left.updated_at),
+  );
+}
+
+async function listAllPullRequests() {
+  return listPullRequestPages({ state: "all" });
+}
+
+async function listOpenPullRequests() {
+  return listPullRequestPages({ state: "open" });
+}
+
+async function listRecentPullRequests() {
+  const cutoff = Date.now() - recentPrDays * 24 * 60 * 60 * 1000;
+
+  return listPullRequestPages({
+    limit: recentPrLimit,
+    state: "all",
+    stopAfterBatch: (batch) => {
+      const oldestPr = batch.at(-1);
+      return oldestPr ? new Date(oldestPr.updated_at).getTime() < cutoff : true;
+    },
+  });
+}
+
+async function listPullRequestPages({ limit = Infinity, state, stopAfterBatch } = {}) {
   const results = [];
 
-  for (let page = 1; ; page++) {
+  for (let page = 1; results.length < limit; page++) {
     const query = new URLSearchParams({
       direction: "desc",
       page: String(page),
       per_page: "100",
       sort: "updated",
-      state: "all",
+      state,
     });
     const batch = await githubJson(`/repos/${owner}/${repo}/pulls?${query}`);
 
     if (batch.length === 0) break;
 
     results.push(...batch);
+
+    if (stopAfterBatch?.(batch)) break;
   }
 
-  return results;
+  return results.slice(0, limit);
 }
 
 async function listReviewThreads(prNumber) {
@@ -207,38 +265,108 @@ Risolvi i problemi segnalati, controlla anche la issue "${inboxIssueTitle}" per 
 
 async function upsertInboxIssue(entries) {
   const body = buildInboxBody(entries);
-  const existingIssue = await findInboxIssue();
+  const inboxIssues = await findInboxIssues();
+  const existingIssue = chooseCanonicalInboxIssue(inboxIssues);
+  const duplicateIssues = inboxIssues.filter(
+    (issue) => issue.state === "open" && issue.number !== existingIssue?.number,
+  );
+  const closedDuplicateNumbers = await closeDuplicateInboxIssues(duplicateIssues, existingIssue);
 
   if (dryRun) {
     console.log(`DRY RUN: issue inbox non aggiornata.\n${body}`);
-    return existingIssue;
+    return {
+      closedDuplicateNumbers,
+      issue: existingIssue,
+    };
   }
 
   if (existingIssue) {
-    return githubJson(
-      `/repos/${owner}/${repo}/issues/${existingIssue.number}`,
-      {
-        body,
-        state: "open",
-        title: inboxIssueTitle,
-      },
-      "PATCH",
-    );
+    return {
+      closedDuplicateNumbers,
+      issue: await githubJson(
+        `/repos/${owner}/${repo}/issues/${existingIssue.number}`,
+        {
+          body,
+          state: "open",
+          title: inboxIssueTitle,
+        },
+        "PATCH",
+      ),
+    };
   }
 
-  return githubJson(`/repos/${owner}/${repo}/issues`, {
-    body,
-    title: inboxIssueTitle,
-  });
+  return {
+    closedDuplicateNumbers,
+    issue: await githubJson(`/repos/${owner}/${repo}/issues`, {
+      body,
+      title: inboxIssueTitle,
+    }),
+  };
 }
 
-async function findInboxIssue() {
+async function findInboxIssues() {
   const query = new URLSearchParams({
+    per_page: "100",
     q: `repo:${owner}/${repo} is:issue in:title "${inboxIssueTitle}"`,
   });
   const result = await githubJson(`/search/issues?${query}`);
+  const exactTitleIssues = result.items.filter((issue) => issue.title === inboxIssueTitle);
+  const issues = [];
 
-  return result.items.find((issue) => issue.title === inboxIssueTitle) ?? null;
+  for (const issue of exactTitleIssues) {
+    const issueDetails = await githubJson(`/repos/${owner}/${repo}/issues/${issue.number}`);
+
+    if (isManagedInboxIssue(issueDetails)) {
+      issues.push(issueDetails);
+    }
+  }
+
+  return issues;
+}
+
+function isManagedInboxIssue(issue) {
+  return (
+    issue.title === inboxIssueTitle && (issue.body?.includes(inboxMarker) || issue.state === "open")
+  );
+}
+
+function chooseCanonicalInboxIssue(issues) {
+  return (
+    issues
+      .filter((issue) => issue.state === "open")
+      .sort((left, right) => new Date(right.updated_at) - new Date(left.updated_at))[0] ?? null
+  );
+}
+
+async function closeDuplicateInboxIssues(issues, canonicalIssue) {
+  const closedDuplicateNumbers = [];
+
+  for (const issue of issues) {
+    const body = canonicalIssue
+      ? `Chiudo come duplicato della inbox attiva #${canonicalIssue.number}.`
+      : `Chiudo come duplicato: il workflow ricreerà la inbox canonica "${inboxIssueTitle}".`;
+
+    if (dryRun) {
+      console.log(`DRY RUN: chiuderei la issue inbox duplicata #${issue.number}.`);
+      closedDuplicateNumbers.push(issue.number);
+      continue;
+    }
+
+    await githubJson(`/repos/${owner}/${repo}/issues/${issue.number}/comments`, {
+      body,
+    });
+    await githubJson(
+      `/repos/${owner}/${repo}/issues/${issue.number}`,
+      {
+        state: "closed",
+        state_reason: "not_planned",
+      },
+      "PATCH",
+    );
+    closedDuplicateNumbers.push(issue.number);
+  }
+
+  return closedDuplicateNumbers;
 }
 
 function buildInboxBody(entries) {
@@ -286,18 +414,34 @@ function buildInboxBody(entries) {
   if (totalHistorical === 0) {
     lines.push("Nessun thread Codex storico da mostrare.", "");
   } else {
-    lines.push(`Thread storici: ${totalHistorical}`, "");
-    appendEntrySection(lines, historicalEntries, false);
+    const compactHistoricalEntries = compactHistoricalEntriesForInbox(historicalEntries);
+    const displayedHistorical = compactHistoricalEntries.reduce(
+      (total, entry) => total + entry.threads.length,
+      0,
+    );
+
+    lines.push(
+      `Thread storici totali: ${totalHistorical}. Mostro ${displayedHistorical} thread recenti in ${compactHistoricalEntries.length} PR.`,
+      "",
+    );
+    appendEntrySection(lines, compactHistoricalEntries, false);
   }
 
   lines.push(
     "## Regola operativa",
     "",
-    "Quando questa issue segnala thread actionable, Codex deve risolvere prima i commenti nuovi e poi controllare anche lo storico ancora rilevante. La inbox si aggiorna su nuove review, commenti PR, sincronizzazioni/chiusure PR e commenti issue; se un thread viene solo marcato come risolto nella UI GitHub senza push o commenti, lascia un commento sulla inbox o avvia il workflow manuale per forzare il refresh. I thread pending non pubblicati da GitHub non sono leggibili via API finché la review non viene inviata.",
+    "Quando questa issue segnala thread actionable, Codex deve risolvere prima i commenti nuovi e poi controllare anche lo storico ancora rilevante. La inbox si aggiorna su eventi PR trusted, commenti issue, dispatch manuale e scansione programmata; se un thread viene solo marcato come risolto nella UI GitHub senza push o commenti, lascia un commento sulla inbox o avvia il workflow manuale per forzare il refresh. I thread pending non pubblicati da GitHub non sono leggibili via API finché la review non viene inviata.",
     "",
   );
 
   return `${lines.join("\n").trimEnd()}\n`;
+}
+
+function compactHistoricalEntriesForInbox(entries) {
+  return entries.slice(0, historyPrLimit).map((entry) => ({
+    ...entry,
+    threads: entry.threads.slice(0, historyThreadLimit),
+  }));
 }
 
 function appendEntrySection(lines, entries, actionable) {
@@ -366,6 +510,40 @@ function firstLine(value) {
     .map((line) => line.replace(/<[^>]+>/g, "").trim())
     .find(Boolean)
     ?.slice(0, 160);
+}
+
+async function readGitHubEventPayload() {
+  const eventPath = process.env.GITHUB_EVENT_PATH;
+
+  if (!eventPath) return null;
+
+  try {
+    return JSON.parse(await readFile(eventPath, "utf8"));
+  } catch (error) {
+    console.warn(`Impossibile leggere GITHUB_EVENT_PATH: ${error.message}`);
+    return null;
+  }
+}
+
+function shouldRunFullScan() {
+  if (process.env.CODEX_FULL_SCAN === "true") return true;
+  if (!eventName) return true;
+  if (eventName === "schedule" || eventName === "workflow_dispatch") return true;
+
+  return eventName === "issue_comment" && eventPayload?.issue?.title === inboxIssueTitle;
+}
+
+function getEventPullRequestNumber(payload) {
+  if (payload?.pull_request?.number) return payload.pull_request.number;
+  if (payload?.issue?.pull_request) return payload.issue.number;
+
+  return null;
+}
+
+function parsePositiveInteger(value, fallback) {
+  const parsed = Number.parseInt(value ?? "", 10);
+
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
 async function githubJson(path, body, method) {
