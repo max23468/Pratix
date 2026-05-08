@@ -52,17 +52,17 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## 3. Esperienza prodotto (UI autenticata)
 
-| Stato | Voce                               | Note                                                                                                                                       |
-| ----- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| ✅    | Layout app + sidebar               | `src/components/app-layout.tsx`                                                                                                            |
-| ✅    | Onboarding wizard 3 step           | Anagrafica / Fiscale / Pagamenti                                                                                                           |
-| ⬜    | Empty states uniformi              | Dashboard, Pratiche, Clienti, Fatture, Spese                                                                                               |
-| ⬜    | Revisione superfici trasversali    | Dashboard, Impostazioni, Account, Novità, onboarding, navigazione e copy da riallineare al dominio recupero crediti dopo le fasi verticali |
-| ⬜    | Microcopy review pagina per pagina | Coerenza tono, glossario, "tu"                                                                                                             |
-| ⬜    | Scorciatoie tastiera               | Almeno: nuova pratica, nuovo cliente, nuova fattura, ricerca globale                                                                       |
-| ⬜    | Ricerca globale (cmd+k)            | Pratiche, clienti, fatture                                                                                                                 |
-| ⬜    | Filtri persistenti per pagina      | Salvare in URL/query                                                                                                                       |
-| ⬜    | Dati di esempio opzionali          | Per esplorare l'app a freddo                                                                                                               |
+| Stato | Voce                               | Note                                                                                                                                                                     |
+| ----- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ✅    | Layout app + sidebar               | `src/components/app-layout.tsx`                                                                                                                                          |
+| ✅    | Onboarding wizard 3 step           | Anagrafica / Fiscale / Pagamenti                                                                                                                                         |
+| ⬜    | Empty states uniformi              | Dashboard, Pratiche, Clienti, Fatture, Spese                                                                                                                             |
+| ✅    | Revisione superfici trasversali    | Dashboard, filtri/empty state, viste pratiche, Impostazioni, Account, Novità, onboarding, landing, privacy/termini e audit visuale allineati al dominio recupero crediti |
+| ⬜    | Microcopy review pagina per pagina | Coerenza tono, glossario, "tu"                                                                                                                                           |
+| ⬜    | Scorciatoie tastiera               | Almeno: nuova pratica, nuovo cliente, nuova fattura, ricerca globale                                                                                                     |
+| ⬜    | Ricerca globale (cmd+k)            | Pratiche, clienti, fatture                                                                                                                                               |
+| ⬜    | Filtri persistenti per pagina      | Salvare in URL/query                                                                                                                                                     |
+| ⬜    | Dati di esempio opzionali          | Per esplorare l'app a freddo                                                                                                                                             |
 
 ## 4. Funzionalità di prodotto
 
@@ -164,8 +164,8 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## Prossime mosse suggerite (in ordine)
 
-1. **Pubblicare la Fase 7 completata**: applicare migration Supabase, aprire/mergeare PR, verificare produzione e provare un import reale.
-2. **Riallineare le superfici trasversali**: dashboard, Impostazioni, Account, Novità, onboarding, navigazione e copy.
-3. **Esportazione massiva fatture**: ZIP PDF + XML per periodo.
+1. **Provare un import archivio reale o semi-reale**: verificare staging, conferma, allegati e successiva fatturazione.
+2. **Esportazione massiva fatture**: ZIP PDF + XML per periodo.
+3. **Strategia test automatizzati progressiva**: definire i primi test unit/integration/smoke sui flussi critici.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.

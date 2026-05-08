@@ -24,7 +24,7 @@ import { useAuth } from "@/lib/auth-context";
 
 /**
  * Wizard mostrato al primo accesso: raccoglie i dati essenziali della professione
- * (anagrafici, fiscali, IBAN). Tutto modificabile in seguito da Impostazioni.
+ * per fatturazione e rendicontazione. Tutto modificabile in seguito da Impostazioni.
  */
 export function OnboardingDialog() {
   const { user } = useAuth();
@@ -107,7 +107,8 @@ export function OnboardingDialog() {
         <DialogHeader>
           <DialogTitle>Benvenuto in Pratix</DialogTitle>
           <DialogDescription>
-            Configura la tua professione in tre brevi passaggi. Potrai modificare tutto in seguito.
+            Configura i dati professionali in tre brevi passaggi. Potrai modificare tutto in
+            seguito.
           </DialogDescription>
         </DialogHeader>
 
@@ -257,11 +258,7 @@ export function OnboardingDialog() {
               <div />
             )}
             <Button type="submit" disabled={mutation.isPending}>
-              {step < 3
-                ? "Continua"
-                : mutation.isPending
-                  ? "Salvataggio…"
-                  : "Inizia ad usare Pratix"}
+              {step < 3 ? "Continua" : mutation.isPending ? "Salvataggio…" : "Apri dashboard"}
             </Button>
           </div>
         </form>

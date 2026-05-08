@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
-import { FileText, ListChecks, Receipt, ShieldCheck, ArrowRight, Users } from "lucide-react";
+import { Building2, FileText, ListChecks, Receipt, ShieldCheck, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -22,13 +22,12 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "Pratix è il gestionale per avvocati freelance. Pratiche, clienti, attività e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
+          "Pratix è il gestionale per avvocati freelance che seguono recupero crediti: committenti, clienti, controparti, attività e fatturazione.",
       },
       { property: "og:title", content: "Pratix · Tutto torna." },
       {
         property: "og:description",
-        content:
-          "Il gestionale per avvocati freelance. Ogni pratica al suo posto, ogni conto che torna.",
+        content: "Il gestionale per avvocati freelance che seguono recupero crediti.",
       },
       { name: "twitter:title", content: "Pratix · Tutto torna." },
     ],
@@ -91,8 +90,8 @@ function Landing() {
               torna<span className="text-brand-gold">.</span>
             </h1>
             <p className="mx-auto mt-7 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              Pratix è il gestionale per avvocati freelance. Pratiche, clienti, attività e
-              fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.
+              Pratix è il gestionale per avvocati freelance che seguono recupero crediti:
+              committenti, clienti, controparti, attività e fatturazione.
             </p>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link to="/register">
@@ -115,14 +114,14 @@ function Landing() {
           <div className="mt-24 grid gap-px overflow-hidden rounded-2xl border border-border bg-border shadow-elegant sm:grid-cols-2 lg:grid-cols-4">
             {[
               {
-                icon: FileText,
-                title: "Pratiche",
-                desc: "Stato, parti e note in un solo posto.",
+                icon: Building2,
+                title: "Committenti",
+                desc: "Prezzi, clienti collegati e regole economiche.",
               },
               {
-                icon: Users,
-                title: "Clienti",
-                desc: "Anagrafiche e riferimenti sempre ordinati.",
+                icon: FileText,
+                title: "Pratiche",
+                desc: "Committente, cliente e controparte in un solo posto.",
               },
               {
                 icon: ListChecks,

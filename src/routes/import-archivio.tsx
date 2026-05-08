@@ -179,6 +179,7 @@ type ImportDraft = {
 type StagedImport = {
   importId: string;
   rowId: string;
+  status: "valid" | "warning" | "imported";
   normalized: NormalizedImport;
   warnings: string[];
 };
@@ -216,7 +217,7 @@ type ExcelPreviewRow = {
 type ExcelStagedRow = {
   rowId: string;
   rowNumber: number;
-  status: "valid" | "warning" | "error";
+  status: "valid" | "warning" | "error" | "imported";
   normalized: NormalizedImport | null;
   errors: string[];
   warnings: string[];
@@ -534,7 +535,12 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
       return { importId: importRow.id, rowId: row.id };
     },
     onSuccess: (row) => {
-      setStaged({ ...row, normalized: prepared.normalized, warnings: prepared.warnings });
+      setStaged({
+        ...row,
+        status: prepared.warnings.length > 0 ? "warning" : "valid",
+        normalized: prepared.normalized,
+        warnings: prepared.warnings,
+      });
       setStep(3);
       toast.success("Anteprima pronta");
     },
@@ -545,6 +551,7 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
     mutationFn: async () => {
       if (!user) throw new Error("Sessione non valida");
       if (!staged) throw new Error("Prepara prima l'anteprima");
+      if (staged.status === "imported") throw new Error("Questa riga è già stata importata.");
       const caseId = await applyImportRow(staged.rowId);
       const attachmentErrors = await uploadImportActivityAttachments(
         user.id,
@@ -568,6 +575,7 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
         qc.invalidateQueries({ queryKey: ["counterparties"] }),
         qc.invalidateQueries({ queryKey: ["dashboard"] }),
       ]);
+      setStaged((current) => (current ? { ...current, status: "imported" } : current));
       onImported(caseId);
     },
     onError: (error: Error) => toast.error(error.message),
@@ -646,10 +654,18 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
           ) : staged ? (
             <Button
               type="submit"
-              disabled={confirmMutation.isPending || prepared.errors.length > 0}
+              disabled={
+                confirmMutation.isPending ||
+                prepared.errors.length > 0 ||
+                staged.status === "imported"
+              }
             >
               <CheckCircle2 className="mr-1 h-4 w-4" />
-              {confirmMutation.isPending ? "Importazione…" : "Conferma import"}
+              {staged.status === "imported"
+                ? "Import completato"
+                : confirmMutation.isPending
+                  ? "Importazione…"
+                  : "Conferma import"}
             </Button>
           ) : (
             <Button
@@ -1329,7 +1345,9 @@ function ReviewStep({
                 Nessun dato operativo viene scritto prima della conferma finale.
               </CardDescription>
             </div>
-            {staged ? (
+            {staged?.status === "imported" ? (
+              <Badge variant="secondary">Import completato</Badge>
+            ) : staged ? (
               <Badge variant="secondary">Anteprima salvata</Badge>
             ) : isPreparing ? (
               <Badge variant="outline">Preparazione</Badge>
@@ -1601,27 +1619,32 @@ function ExcelImportPanel() {
   const confirmMutation = useMutation({
     mutationFn: async () => {
       const importableRows = stagedRows.filter(
-        (row) => row.rowId && row.normalized && row.status !== "error",
+        (row) =>
+          row.rowId && row.normalized && (row.status === "valid" || row.status === "warning"),
       );
       if (importableRows.length === 0) throw new Error("Non ci sono righe pronte da importare.");
 
       const failures: string[] = [];
       const importedCaseIds: string[] = [];
+      const importedRowIds: string[] = [];
+      const failedRowIds: string[] = [];
       for (const row of importableRows) {
         try {
           importedCaseIds.push(await applyImportRow(row.rowId));
+          importedRowIds.push(row.rowId);
         } catch (error) {
           const message = error instanceof Error ? error.message : "Errore sconosciuto";
           failures.push(`Riga ${row.rowNumber}: ${message}`);
+          failedRowIds.push(row.rowId);
           await supabase
             .from("import_rows")
             .update({ status: "error", error_messages: [message] })
             .eq("id", row.rowId);
         }
       }
-      return { importedCaseIds, failures };
+      return { importedCaseIds, importedRowIds, failedRowIds, failures };
     },
-    onSuccess: async ({ importedCaseIds, failures }) => {
+    onSuccess: async ({ importedCaseIds, importedRowIds, failedRowIds, failures }) => {
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["imports"] }),
         qc.invalidateQueries({ queryKey: ["cases"] }),
@@ -1631,6 +1654,17 @@ function ExcelImportPanel() {
         qc.invalidateQueries({ queryKey: ["counterparties"] }),
         qc.invalidateQueries({ queryKey: ["dashboard"] }),
       ]);
+      const imported = new Set(importedRowIds);
+      const failed = new Set(failedRowIds);
+      setStagedRows((current) =>
+        current.map((row) =>
+          imported.has(row.rowId)
+            ? { ...row, status: "imported" }
+            : failed.has(row.rowId)
+              ? { ...row, status: "error" }
+              : row,
+        ),
+      );
       if (failures.length > 0) {
         toast.error(`${importedCaseIds.length} righe importate, ${failures.length} con errore.`);
       } else {
@@ -1804,7 +1838,8 @@ function ExcelImportPanel() {
             type="button"
             disabled={
               confirmMutation.isPending ||
-              stagedRows.filter((row) => row.status !== "error").length === 0
+              stagedRows.filter((row) => row.status === "valid" || row.status === "warning")
+                .length === 0
             }
             onClick={() => confirmMutation.mutate()}
           >

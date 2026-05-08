@@ -10,6 +10,9 @@ import { ThemeProvider, NO_FLASH_SCRIPT } from "@/lib/theme-context";
 
 import appCss from "../styles.css?url";
 
+const DEFAULT_DESCRIPTION =
+  "Pratix è il gestionale per avvocati freelance che seguono pratiche di recupero crediti: committenti, clienti, controparti, attività e fatturazione.";
+
 function NotFoundComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -44,15 +47,13 @@ export const Route = createRootRoute({
       { title: "Pratix" },
       {
         name: "description",
-        content:
-          "Pratix è il gestionale per avvocati freelance. Pratiche, clienti, attività e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
+        content: DEFAULT_DESCRIPTION,
       },
       { name: "author", content: "Pratix" },
       { property: "og:title", content: "Pratix" },
       {
         property: "og:description",
-        content:
-          "Il gestionale per avvocati freelance. Ogni pratica al suo posto, ogni conto che torna.",
+        content: DEFAULT_DESCRIPTION,
       },
       { property: "og:type", content: "website" },
       { property: "og:locale", content: "it_IT" },
@@ -69,8 +70,7 @@ export const Route = createRootRoute({
       { name: "twitter:title", content: "Pratix" },
       {
         name: "twitter:description",
-        content:
-          "Il gestionale per avvocati freelance. Ogni pratica al suo posto, ogni conto che torna.",
+        content: DEFAULT_DESCRIPTION,
       },
       {
         name: "twitter:image",
@@ -79,18 +79,15 @@ export const Route = createRootRoute({
       },
       {
         name: "description",
-        content:
-          "Pratix è il gestionale per avvocati freelance. Pratiche, clienti, attività e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
+        content: DEFAULT_DESCRIPTION,
       },
       {
         property: "og:description",
-        content:
-          "Pratix è il gestionale per avvocati freelance. Pratiche, clienti, attività e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
+        content: DEFAULT_DESCRIPTION,
       },
       {
         name: "twitter:description",
-        content:
-          "Pratix è il gestionale per avvocati freelance. Pratiche, clienti, attività e fatturazione elettronica: ogni cosa al suo posto, ogni conto che torna.",
+        content: DEFAULT_DESCRIPTION,
       },
     ],
     links: [

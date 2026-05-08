@@ -9,6 +9,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { TableEmptyState } from "@/components/table-empty-state";
+import {
   Table,
   TableBody,
   TableCell,
@@ -37,6 +45,8 @@ export const Route = createFileRoute("/clienti/")({
 
 function ClientiList() {
   const [q, setQ] = useState("");
+  const [kind, setKind] = useState("all");
+  const [principalId, setPrincipalId] = useState("all");
 
   const { data, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -86,10 +96,17 @@ function ClientiList() {
   const filtered = useMemo(() => {
     if (!data) return [];
     const term = q.trim().toLowerCase();
-    if (!term) return data;
     return data.filter((c) => {
+      if (kind !== "all" && c.kind !== kind) return false;
+      if (
+        principalId !== "all" &&
+        !principalLinks.some((link) => link.client_id === c.id && link.principal_id === principalId)
+      ) {
+        return false;
+      }
       const name = clientDisplayName(c).toLowerCase();
       const principalNames = principalNamesByClient[c.id]?.join(" ").toLowerCase() ?? "";
+      if (!term) return true;
       return (
         name.includes(term) ||
         principalNames.includes(term) ||
@@ -98,7 +115,7 @@ function ClientiList() {
         (c.email ?? "").toLowerCase().includes(term)
       );
     });
-  }, [data, principalNamesByClient, q]);
+  }, [data, kind, principalId, principalLinks, principalNamesByClient, q]);
 
   return (
     <>
@@ -114,7 +131,7 @@ function ClientiList() {
         }
       />
 
-      <div className="mb-4 flex items-center gap-2">
+      <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -124,6 +141,33 @@ function ClientiList() {
             className="pl-9"
           />
         </div>
+        <Select value={kind} onValueChange={setKind}>
+          <SelectTrigger className="lg:w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutti i tipi</SelectItem>
+            {Object.entries(clientKindLabels).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select value={principalId} onValueChange={setPrincipalId}>
+          <SelectTrigger className="lg:w-56">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutti i committenti</SelectItem>
+            {principals.map((principal) => (
+              <SelectItem key={principal.id} value={principal.id}>
+                {principal.business_name}
+                {principal.archived_at ? " (archiviato)" : ""}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <Card>
@@ -148,7 +192,25 @@ function ClientiList() {
             ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  {q ? "Nessun risultato." : "Nessun cliente. Aggiungi il primo."}
+                  <TableEmptyState
+                    title={
+                      q || kind !== "all" || principalId !== "all"
+                        ? "Nessun cliente trovato"
+                        : "Nessun cliente"
+                    }
+                    description={
+                      q || kind !== "all" || principalId !== "all"
+                        ? "Modifica ricerca o filtri per ampliare i risultati."
+                        : "Aggiungi il primo cliente e collegalo a uno o più committenti."
+                    }
+                    action={
+                      !q && kind === "all" && principalId === "all" ? (
+                        <Button size="sm" asChild>
+                          <Link to="/clienti/nuovo">Nuovo cliente</Link>
+                        </Button>
+                      ) : undefined
+                    }
+                  />
                 </TableCell>
               </TableRow>
             ) : (
