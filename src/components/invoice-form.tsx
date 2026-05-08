@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileSpreadsheet, Loader2 } from "lucide-react";
@@ -33,6 +34,31 @@ import { counterpartyDisplayName, clientDisplayName } from "@/lib/labels";
 import { createBillingInvoiceFn } from "@/server/invoices.functions";
 
 type BillingItemStatus = "included" | "postponed" | "excluded";
+
+const EMPTY_ACTIVITIES: ActivityRow[] = [];
+
+type CreateBillingInvoiceResult = {
+  invoiceId: string;
+  billingRunId: string;
+  number: string;
+  year: number;
+  exports: Array<{ id: string; file_name: string }>;
+};
+
+const unwrapServerResult = <T,>(result: T | { data: T }) =>
+  "data" in Object(result) ? (result as { data: T }).data : (result as T);
+
+const readServerResult = async <T,>(result: T | { data: T } | Response) => {
+  if (result instanceof Response) {
+    if (!result.ok) throw new Error(await result.text());
+    const contentType = result.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      return unwrapServerResult<T>(await result.json());
+    }
+    throw new Error("Risposta server non valida");
+  }
+  return unwrapServerResult<T>(result);
+};
 
 type PrincipalRow = {
   id: string;
@@ -88,6 +114,7 @@ const billingStatusLabels: Record<BillingItemStatus, string> = {
 export function InvoiceForm() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const createBillingInvoice = useServerFn(createBillingInvoiceFn);
   const qc = useQueryClient();
   const quarter = useMemo(() => currentQuarter(), []);
   const [principalId, setPrincipalId] = useState("");
@@ -112,7 +139,7 @@ export function InvoiceForm() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("default_cassa_rate, default_vat_rate, default_withholding_rate, tax_regime")
+        .select("cassa_rate, vat_rate, withholding_rate, tax_regime")
         .eq("id", user!.id)
         .single();
       if (error) throw error;
@@ -138,9 +165,9 @@ export function InvoiceForm() {
 
   useEffect(() => {
     if (!profile) return;
-    setCassaRate(Number(profile.default_cassa_rate ?? 4));
-    setVatRate(Number(profile.default_vat_rate ?? 22));
-    setWithholdingRate(Number(profile.default_withholding_rate ?? 20));
+    setCassaRate(Number(profile.cassa_rate ?? 4));
+    setVatRate(Number(profile.vat_rate ?? 22));
+    setWithholdingRate(Number(profile.withholding_rate ?? 20));
     setApplyWithholding(profile.tax_regime !== "forfettario");
   }, [profile]);
 
@@ -150,7 +177,7 @@ export function InvoiceForm() {
     setCassaRate(Number(selectedPrincipal.default_cassa_rate ?? 4));
   }, [selectedPrincipal]);
 
-  const { data: activities = [], isLoading: activitiesLoading } = useQuery({
+  const { data: activities = EMPTY_ACTIVITIES, isLoading: activitiesLoading } = useQuery({
     queryKey: ["billing-activities", principalId, periodStart, periodEnd],
     enabled: Boolean(user && principalId && periodStart && periodEnd),
     queryFn: async () => {
@@ -176,6 +203,14 @@ export function InvoiceForm() {
       activities.forEach((activity) => {
         next[activity.id] = current[activity.id] ?? "included";
       });
+      const nextKeys = Object.keys(next);
+      const currentKeys = Object.keys(current);
+      if (
+        nextKeys.length === currentKeys.length &&
+        nextKeys.every((key) => current[key] === next[key])
+      ) {
+        return current;
+      }
       return next;
     });
   }, [activities]);
@@ -212,8 +247,11 @@ export function InvoiceForm() {
   ]);
 
   const createInvoice = useMutation({
-    mutationFn: async () =>
-      createBillingInvoiceFn({
+    mutationFn: async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error("Sessione non valida. Accedi di nuovo.");
+      const result = await createBillingInvoice({
         data: {
           principalId,
           periodStart,
@@ -234,12 +272,15 @@ export function InvoiceForm() {
             status: selection[activity.id] ?? "excluded",
           })),
         },
-      }),
-    onSuccess: (result) => {
-      toast.success(`Fattura ${result.number}/${result.year} generata`);
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return readServerResult<CreateBillingInvoiceResult>(result);
+    },
+    onSuccess: (invoice) => {
+      toast.success(`Fattura ${invoice.number}/${invoice.year} generata`);
       qc.invalidateQueries({ queryKey: ["invoices"] });
       qc.invalidateQueries({ queryKey: ["activities"] });
-      navigate({ to: "/fatture/$invoiceId", params: { invoiceId: result.invoiceId } });
+      navigate({ to: "/fatture/$invoiceId", params: { invoiceId: invoice.invoiceId } });
     },
     onError: (error: Error) => toast.error(error.message),
   });
