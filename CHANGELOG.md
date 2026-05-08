@@ -6,6 +6,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.12.4] — 2026-05-08
+
 ### Sotto il cofano
 
 - Aggiornate le dipendenze Tailwind/TanStack/Vite entro major compatibili e aggiunto uno shim Node per evitare il warning `DEP0205` sul loader Tailwind con Node 26.
@@ -367,6 +369,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.12.4]: #0124--2026-05-08
 [0.12.3]: #0123--2026-05-08
 [0.12.2]: #0122--2026-05-08
 [0.12.1]: #0121--2026-05-08
