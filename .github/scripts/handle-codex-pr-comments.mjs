@@ -1,17 +1,15 @@
 #!/usr/bin/env node
 
-import { readFileSync, writeFileSync } from "node:fs";
 import process from "node:process";
 
 const repository = process.env.GITHUB_REPOSITORY;
 const token = process.env.GITHUB_TOKEN;
-const statePath = process.env.CODEX_PR_SCAN_STATE_PATH ?? ".github/codex-pr-scan-state.json";
-const pendingCommentsPath =
-  process.env.CODEX_PENDING_COMMENTS_PATH ?? ".github/codex-pr-pending-comments.md";
 const codexLoginPattern = new RegExp(process.env.CODEX_BOT_LOGIN_PATTERN ?? "codex", "i");
-const dryRun = process.env.DRY_RUN === "true";
-const marker = "<!-- pratix-codex-pr-comment-handler -->";
+const inboxIssueTitle = process.env.CODEX_INBOX_ISSUE_TITLE ?? "Codex feedback inbox";
 const codexCommand = process.env.CODEX_AUTOFIX_COMMENT ?? "@codex address that feedback";
+const inboxMarker = "<!-- pratix-codex-feedback-inbox -->";
+const requestMarker = "<!-- pratix-codex-feedback-request -->";
+const dryRun = process.env.DRY_RUN === "true";
 
 if (!repository) {
   fail("GITHUB_REPOSITORY non impostato.");
@@ -27,182 +25,82 @@ if (!owner || !repo) {
   fail(`GITHUB_REPOSITORY non valido: ${repository}`);
 }
 
-const state = readState();
 const prs = await listPullRequests();
-const processedPrs = [];
-const pendingEntries = [];
-let maxPrNumber = state.lastPrNumber;
+const inboxEntries = [];
+const requestedPrs = [];
 
 for (const pr of prs) {
-  maxPrNumber = Math.max(maxPrNumber, pr.number);
-
-  const checksSinceSkip = state.prChecks?.[pr.number]?.checksSinceSkip ?? 0;
-  if (checksSinceSkip >= 2) {
-    upsertPrCheckState(pr.number, { checksSinceSkip: 0 });
-    processedPrs.push({
-      action: "skipped-cycle",
-      codexThreads: 0,
-      number: pr.number,
-      url: pr.html_url,
-    });
-    continue;
-  }
-
   const threads = await listReviewThreads(pr.number);
   const codexThreads = threads.filter(isCodexThread);
-  pendingEntries.push({
+
+  if (codexThreads.length === 0) continue;
+
+  const actionableThreads = codexThreads.filter(isActionableThread);
+  const historicalThreads = codexThreads.filter((thread) => !isActionableThread(thread));
+
+  inboxEntries.push({
+    actionableThreads,
+    historicalThreads,
     number: pr.number,
-    threads: codexThreads,
+    state: pr.state,
     title: pr.title,
     url: pr.html_url,
+    wasMerged: Boolean(pr.merged_at),
   });
 
-  if (codexThreads.length === 0) {
-    upsertPrCheckState(pr.number, { checksSinceSkip: checksSinceSkip + 1 });
-    processedPrs.push({
-      action: "none",
-      codexThreads: 0,
-      number: pr.number,
-      url: pr.html_url,
-    });
-    continue;
+  if (actionableThreads.length === 0) continue;
+
+  const alreadyRequested = await hasAutomationRequest(pr.number, actionableThreads);
+
+  if (!alreadyRequested) {
+    const posted = await requestCodexHandling(pr, actionableThreads);
+    if (posted) requestedPrs.push(pr.number);
   }
-
-  const canRequestHandling = pr.state === "open";
-  const alreadyRequested = canRequestHandling ? await hasAutomationRequest(pr.number) : false;
-
-  if (canRequestHandling && !alreadyRequested) {
-    await requestCodexHandling(pr, codexThreads);
-  }
-
-  processedPrs.push({
-    action: canRequestHandling
-      ? alreadyRequested
-        ? "already-requested"
-        : dryRun
-          ? "dry-run"
-          : "requested-codex"
-      : "tracked-only",
-    codexThreads: codexThreads.length,
-    number: pr.number,
-    url: pr.html_url,
-  });
-  upsertPrCheckState(pr.number, { checksSinceSkip: checksSinceSkip + 1 });
 }
 
-writeState({
-  lastPrNumber: maxPrNumber,
-  lastRunAt: new Date().toISOString(),
-  prChecks: state.prChecks ?? {},
-  processedPrs,
-});
-
-writePendingCommentsReport(pendingEntries);
+const inboxIssue = await upsertInboxIssue(inboxEntries);
 
 console.log(
   JSON.stringify(
     {
       dryRun,
-      lastPrNumberBefore: state.lastPrNumber,
-      lastPrNumberAfter: maxPrNumber,
-      processedPrs,
+      inboxIssue: inboxIssue?.html_url ?? null,
+      prsScanned: prs.length,
+      prsWithCodexThreads: inboxEntries.length,
+      requestedPrs,
+      totalActionableThreads: inboxEntries.reduce(
+        (total, entry) => total + entry.actionableThreads.length,
+        0,
+      ),
+      totalHistoricalThreads: inboxEntries.reduce(
+        (total, entry) => total + entry.historicalThreads.length,
+        0,
+      ),
     },
     null,
     2,
   ),
 );
 
-function readState() {
-  try {
-    return JSON.parse(readFileSync(statePath, "utf8"));
-  } catch {
-    return {
-      lastPrNumber: 0,
-      lastRunAt: null,
-      processedPrs: [],
-    };
-  }
-}
-
-function writeState(nextState) {
-  if (dryRun) return;
-
-  writeFileSync(statePath, `${JSON.stringify(nextState, null, 2)}\n`);
-}
-
-function upsertPrCheckState(prNumber, value) {
-  if (!state.prChecks) state.prChecks = {};
-  state.prChecks[prNumber] = value;
-}
-
-function writePendingCommentsReport(entries) {
-  const actionableEntries = entries.filter((entry) => entry.threads.length > 0);
-
-  const header = [
-    "# Codex pending comments",
-    "",
-    "Questo file viene aggiornato automaticamente dal workflow `Codex PR comments`.",
-    "Contiene tutti i thread con commenti del bot Codex (sia risolti sia non risolti), su tutte le PR.",
-    "",
-  ];
-
-  if (actionableEntries.length === 0) {
-    header.push(
-      "## Nessun commento pending",
-      "",
-      "Al momento non risultano thread da risolvere.",
-      "",
-    );
-  } else {
-    header.push(`## PR con commenti pending (${actionableEntries.length})`, "");
-
-    for (const entry of actionableEntries) {
-      header.push(`### PR #${entry.number} — ${entry.title}`);
-      header.push(`- URL: ${entry.url}`);
-      header.push(`- Thread pending: ${entry.threads.length}`);
-      header.push("");
-
-      for (const thread of entry.threads) {
-        const firstCodexComment = thread.comments.nodes.find((comment) =>
-          codexLoginPattern.test(comment.author?.login ?? ""),
-        );
-        const location = thread.line ? `${thread.path}:${thread.line}` : thread.path;
-        const summary = firstLine(firstCodexComment?.body ?? "commento Codex") ?? "commento Codex";
-        const threadUrl = firstCodexComment?.url ?? entry.url;
-        const threadState = `resolved=${thread.isResolved ? "yes" : "no"}, outdated=${
-          thread.isOutdated ? "yes" : "no"
-        }`;
-        header.push(`- [ ] \`${location}\` — ${summary} (${threadState}) ([thread](${threadUrl}))`);
-      }
-
-      header.push("");
-    }
-  }
-
-  const output = `${header.join("\n").trimEnd()}\n`;
-  if (dryRun) {
-    console.log(`DRY RUN: file pending commenti non aggiornato (${pendingCommentsPath}).`);
-    return;
-  }
-  writeFileSync(pendingCommentsPath, output);
-}
-
 async function listPullRequests() {
   const results = [];
 
-  for (let page = 1; page <= 10; page++) {
-    const batch = await githubJson(
-      `/repos/${owner}/${repo}/pulls?state=all&sort=created&direction=asc&per_page=100&page=${page}`,
-    );
+  for (let page = 1; ; page++) {
+    const query = new URLSearchParams({
+      direction: "desc",
+      page: String(page),
+      per_page: "100",
+      sort: "updated",
+      state: "all",
+    });
+    const batch = await githubJson(`/repos/${owner}/${repo}/pulls?${query}`);
 
     if (batch.length === 0) break;
 
     results.push(...batch);
-
-    if (results.length >= 100) break;
   }
 
-  return results.slice(0, 100);
+  return results;
 }
 
 async function listReviewThreads(prNumber) {
@@ -220,6 +118,7 @@ async function listReviewThreads(prNumber) {
             isOutdated
             path
             line
+            originalLine
             comments(first: 50) {
               nodes {
                 author {
@@ -256,49 +155,209 @@ async function listReviewThreads(prNumber) {
 }
 
 function isCodexThread(thread) {
-  return thread.comments.nodes.some((comment) => {
-    const login = comment.author?.login ?? "";
-
-    return codexLoginPattern.test(login);
-  });
+  return thread.comments.nodes.some((comment) =>
+    codexLoginPattern.test(comment.author?.login ?? ""),
+  );
 }
 
-async function hasAutomationRequest(prNumber) {
+function isActionableThread(thread) {
+  return isCodexThread(thread) && !thread.isResolved && !thread.isOutdated;
+}
+
+async function hasAutomationRequest(prNumber, threads) {
   const comments = await githubJson(
     `/repos/${owner}/${repo}/issues/${prNumber}/comments?per_page=100`,
   );
+  const threadUrls = threads.map(getCodexThreadUrl).filter(Boolean);
 
-  return comments.some((comment) => comment.body.includes(marker));
+  return comments.some((comment) => {
+    if (!comment.body?.includes(requestMarker)) return false;
+    if (threadUrls.length === 0) return true;
+
+    return threadUrls.every((url) => comment.body.includes(url));
+  });
 }
 
 async function requestCodexHandling(pr, threads) {
-  const threadList = threads
-    .map((thread) => {
-      const firstCodexComment = thread.comments.nodes.find((comment) =>
-        codexLoginPattern.test(comment.author?.login ?? ""),
-      );
-      const location = thread.line ? `${thread.path}:${thread.line}` : thread.path;
-
-      return `- ${location}: ${firstLine(firstCodexComment?.body ?? "commento Codex") ?? "commento Codex"}`;
-    })
-    .join("\n");
-
-  const body = `${marker}
+  const threadList = threads.map(renderThreadForRequest).join("\n");
+  const prState = pr.state === "open" ? "aperta" : pr.merged_at ? "mergiata" : "chiusa";
+  const body = `${requestMarker}
 ${codexCommand}
 
-Ho trovato ${threads.length} thread Codex non risolti in questa PR:
+Ho trovato ${threads.length} thread Codex actionable in questa PR (${prState}):
 ${threadList}
 
-Per favore applica le correzioni richieste, esegui le verifiche pertinenti e aggiorna la PR.`;
+Risolvi i problemi segnalati, controlla anche la issue "${inboxIssueTitle}" per il backlog completo dei commenti Codex e aggiorna la PR o apri un follow-up se questa PR non è più modificabile.`;
 
   if (dryRun) {
     console.log(`DRY RUN: commento non pubblicato su PR #${pr.number}:\n${body}`);
-    return;
+    return true;
   }
 
-  await githubJson(`/repos/${owner}/${repo}/issues/${pr.number}/comments`, {
+  try {
+    await githubJson(`/repos/${owner}/${repo}/issues/${pr.number}/comments`, {
+      body,
+    });
+    return true;
+  } catch (error) {
+    console.warn(`Impossibile commentare la PR #${pr.number}: ${error.message}`);
+    return false;
+  }
+}
+
+async function upsertInboxIssue(entries) {
+  const body = buildInboxBody(entries);
+  const existingIssue = await findInboxIssue();
+
+  if (dryRun) {
+    console.log(`DRY RUN: issue inbox non aggiornata.\n${body}`);
+    return existingIssue;
+  }
+
+  if (existingIssue) {
+    return githubJson(
+      `/repos/${owner}/${repo}/issues/${existingIssue.number}`,
+      {
+        body,
+        state: "open",
+        title: inboxIssueTitle,
+      },
+      "PATCH",
+    );
+  }
+
+  return githubJson(`/repos/${owner}/${repo}/issues`, {
     body,
+    title: inboxIssueTitle,
   });
+}
+
+async function findInboxIssue() {
+  const query = new URLSearchParams({
+    q: `repo:${owner}/${repo} is:issue in:title "${inboxIssueTitle}"`,
+  });
+  const result = await githubJson(`/search/issues?${query}`);
+
+  return result.items.find((issue) => issue.title === inboxIssueTitle) ?? null;
+}
+
+function buildInboxBody(entries) {
+  const actionableEntries = entries
+    .map((entry) => ({
+      ...entry,
+      threads: entry.actionableThreads,
+    }))
+    .filter((entry) => entry.threads.length > 0);
+  const historicalEntries = entries
+    .map((entry) => ({
+      ...entry,
+      threads: entry.historicalThreads,
+    }))
+    .filter((entry) => entry.threads.length > 0);
+  const totalActionable = actionableEntries.reduce(
+    (total, entry) => total + entry.threads.length,
+    0,
+  );
+  const totalHistorical = historicalEntries.reduce(
+    (total, entry) => total + entry.threads.length,
+    0,
+  );
+
+  const lines = [
+    inboxMarker,
+    "# Codex feedback inbox",
+    "",
+    "Issue aggiornata automaticamente dal workflow `Codex PR comments`.",
+    "Fonte di verità: review thread GitHub su tutte le PR, aperte, chiuse e mergiate.",
+    "",
+    "## Da risolvere ora",
+    "",
+  ];
+
+  if (totalActionable === 0) {
+    lines.push("Nessun thread Codex actionable al momento.", "");
+  } else {
+    lines.push(`Thread actionable: ${totalActionable}`, "");
+    appendEntrySection(lines, actionableEntries, true);
+  }
+
+  lines.push("## Storico e audit", "");
+
+  if (totalHistorical === 0) {
+    lines.push("Nessun thread Codex storico da mostrare.", "");
+  } else {
+    lines.push(`Thread storici: ${totalHistorical}`, "");
+    appendEntrySection(lines, historicalEntries, false);
+  }
+
+  lines.push(
+    "## Regola operativa",
+    "",
+    "Quando questa issue segnala thread actionable, Codex deve risolvere prima i commenti nuovi e poi controllare anche lo storico ancora rilevante. I thread pending non pubblicati da GitHub non sono leggibili via API finché la review non viene inviata.",
+    "",
+  );
+
+  return `${lines.join("\n").trimEnd()}\n`;
+}
+
+function appendEntrySection(lines, entries, actionable) {
+  for (const entry of entries) {
+    lines.push(`### PR #${entry.number} - ${entry.title}`);
+    lines.push(`- URL: ${entry.url}`);
+    lines.push(`- Stato: ${renderPrState(entry)}`);
+    lines.push(`- Thread: ${entry.threads.length}`);
+    lines.push("");
+
+    for (const thread of entry.threads) {
+      const checkbox = actionable ? "[ ]" : "[x]";
+      lines.push(`- ${checkbox} ${renderThread(thread)}`);
+    }
+
+    lines.push("");
+  }
+}
+
+function renderPrState(entry) {
+  if (entry.state === "open") return "aperta";
+  return entry.wasMerged ? "mergiata" : "chiusa";
+}
+
+function renderThread(thread) {
+  const firstCodexComment = getFirstCodexComment(thread);
+  const location = renderThreadLocation(thread);
+  const summary = firstLine(firstCodexComment?.body ?? "commento Codex") ?? "commento Codex";
+  const threadUrl = firstCodexComment?.url;
+  const state = `resolved=${thread.isResolved ? "yes" : "no"}, outdated=${
+    thread.isOutdated ? "yes" : "no"
+  }`;
+  const link = threadUrl ? ` ([thread](${threadUrl}))` : "";
+
+  return `\`${location}\` - ${summary} (${state})${link}`;
+}
+
+function renderThreadForRequest(thread) {
+  const firstCodexComment = getFirstCodexComment(thread);
+  const summary = firstLine(firstCodexComment?.body ?? "commento Codex") ?? "commento Codex";
+  const threadUrl = firstCodexComment?.url;
+  const link = threadUrl ? ` - ${threadUrl}` : "";
+
+  return `- ${renderThreadLocation(thread)}: ${summary}${link}`;
+}
+
+function renderThreadLocation(thread) {
+  const line = thread.line ?? thread.originalLine;
+
+  return line ? `${thread.path}:${line}` : thread.path;
+}
+
+function getCodexThreadUrl(thread) {
+  return getFirstCodexComment(thread)?.url;
+}
+
+function getFirstCodexComment(thread) {
+  return thread.comments.nodes.find((comment) =>
+    codexLoginPattern.test(comment.author?.login ?? ""),
+  );
 }
 
 function firstLine(value) {
@@ -309,7 +368,7 @@ function firstLine(value) {
     ?.slice(0, 160);
 }
 
-async function githubJson(path, body) {
+async function githubJson(path, body, method) {
   const response = await fetch(`https://api.github.com${path}`, {
     body: body ? JSON.stringify(body) : undefined,
     headers: {
@@ -318,12 +377,12 @@ async function githubJson(path, body) {
       "Content-Type": "application/json",
       "X-GitHub-Api-Version": "2022-11-28",
     },
-    method: body ? "POST" : "GET",
+    method: method ?? (body ? "POST" : "GET"),
   });
 
   if (!response.ok) {
     const text = await response.text();
-    fail(`GitHub REST ${path} ha risposto ${response.status}: ${text}`);
+    throw new Error(`GitHub REST ${path} ha risposto ${response.status}: ${text}`);
   }
 
   return response.json();

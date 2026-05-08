@@ -69,7 +69,8 @@ Link a issue, PR, documenti, conversazioni rilevanti.
 | [0008](./0008-versioning-e-changelog.md)               | Versioning e changelog                                 | Accettato                          |
 | [0009](./0009-uscita-completa-da-lovable.md)           | Uscita completa da Lovable                             | Accettato                          |
 | [0010](./0010-release-automatizzata.md)                | Release automatizzata locale                           | Accettato                          |
-| [0011](./0011-gestione-settimanale-commenti-codex.md)  | Gestione settimanale commenti Codex                    | Accettato                          |
+| [0011](./0011-gestione-settimanale-commenti-codex.md)  | Gestione settimanale commenti Codex                    | Sostituito da ADR 0015             |
 | [0012](./0012-storage-e-observability-vercel-first.md) | Storage privato e observability Vercel-first           | Accettato                          |
 | [0013](./0013-focus-recupero-crediti.md)               | Focus recupero crediti                                 | Accettato                          |
 | [0014](./0014-attivita-termine-prodotto.md)            | Attivita come termine di prodotto                      | Accettato                          |
+| [0015](./0015-inbox-event-driven-commenti-codex.md)    | Inbox event-driven commenti Codex                      | Accettato                          |
