@@ -124,7 +124,7 @@ function InvoicesIndex() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="mb-6 grid gap-4 sm:grid-cols-3">
         <Card>
           <CardContent className="pt-6">
             <div className="text-xs text-muted-foreground">Totale documenti</div>

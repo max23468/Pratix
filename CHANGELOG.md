@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.12.1] — 2026-05-08
+
+### Correzioni
+
+- **Fatture**: aumentato lo spazio tra i riepiloghi degli importi e la tabella sottostante.
+
 ## [0.12.0] — 2026-05-08
 
 ### Novità
@@ -345,6 +351,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.12.1]: #0121--2026-05-08
 [0.12.0]: #0120--2026-05-08
 [0.11.0]: #0110--2026-05-08
 [0.10.0]: #0100--2026-05-08
