@@ -56,7 +56,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ----- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | ✅    | Layout app + sidebar               | `src/components/app-layout.tsx`                                                                                                                                          |
 | ✅    | Onboarding wizard 3 step           | Anagrafica / Fiscale / Pagamenti                                                                                                                                         |
-| ⬜    | Empty states uniformi              | Dashboard, Pratiche, Clienti, Fatture, Spese                                                                                                                             |
+| ⬜    | Empty states uniformi              | Dashboard, Pratiche, Clienti, Fatture, Attività                                                                                                                          |
 | ✅    | Revisione superfici trasversali    | Dashboard, filtri/empty state, viste pratiche, Impostazioni, Account, Novità, onboarding, landing, privacy/termini e audit visuale allineati al dominio recupero crediti |
 | ⬜    | Microcopy review pagina per pagina | Coerenza tono, glossario, "tu"                                                                                                                                           |
 | ⬜    | Scorciatoie tastiera               | Almeno: nuova pratica, nuovo cliente, nuova fattura, ricerca globale                                                                                                     |
@@ -71,7 +71,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Pratiche, Clienti, Fatture base   | CRUD + visualizzazione                                                                                                                                               |
 | ✅    | Generazione fattura PDF           | `src/lib/invoice-pdf.ts`                                                                                                                                             |
 | ✅    | Generazione XML FatturaPA (TD06)  | `src/lib/invoice-xml.ts`                                                                                                                                             |
-| ✅    | Piano evoluzione recupero crediti | `docs/plans/evoluzione-recupero-crediti.md` + ADR-0013                                                                                                               |
+| ✅    | Piano evoluzione recupero crediti | Piano chiuso lato prodotto il 2026-05-08 in `docs/plans/evoluzione-recupero-crediti.md`; residui non bloccanti tracciati in roadmap                                  |
 | ✅    | Rimozione scadenzario             | Route, sidebar, dashboard, tab pratica e tabella `case_deadlines` rimossi                                                                                            |
 | ✅    | Schema recupero crediti Fase 2    | Migration applicata, tipi Supabase rigenerati e snapshot SQL aggiornato                                                                                              |
 | ✅    | Committenti                       | Anagrafica soggetto fatturato e regole economiche di base                                                                                                            |
@@ -81,6 +81,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Attività fatturabili              | Sezione globale `/attivita` + tab pratica; voci da Prezzi, stato da fatturare/fatturata, quantità, udienze e allegati facoltativi                                    |
 | ✅    | Fatturazione committente/periodo  | Estrazione attività per committente/periodo, inclusione/rinvio/esclusione, spese generali opzionali, cassa forense su compensi + spese generali e rendiconti Excel   |
 | ✅    | Import archivio guidato           | Procedura manuale ed Excel strutturato dal menu Account con staging/anteprima, conferma transazionale e allegati sulle attività storiche                             |
+| ⬜    | Collaudo import reale/semi-reale  | Test manuale con dati anonimizzati o inventati ma aderenti all'archivio cartaceo: staging, conferma, allegati e fatturazione successiva                              |
 | 💤    | Time tracking per pratica         | Fuori dal perimetro recupero crediti attuale                                                                                                                         |
 | ✅    | Spese con allegati                | I rimborsi sono attività fatturabili Art. 15 con allegati; il flusso fatture usa `case_activities` e la tabella legacy `expenses` è in dismissione tramite migration |
 | ⬜    | Esportazione massiva fatture      | ZIP PDF + XML per periodo                                                                                                                                            |
@@ -156,6 +157,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | **Governance Supabase free**                  | Un solo progetto Supabase; migrations manuali con dry-run/advisors, hardening free completato, secret nei provider e backup logico manuale fuori repo                                                                                         |
 | ✅    | **Guida uscita Lovable**                      | Migrazione tecnica completata; la guida resta come storico e checklist di eventuale dismissione Lovable                                                                                                                                       |
 | ⬜    | **Strategia test automatizzati progressiva**  | Definire stack e perimetro test: unit test su logica pura, integration test su server functions/parser/calcoli, smoke/e2e sui flussi auth, pratiche e fatture, fixture anonime, script `npm test` e integrazione graduale in Quality/pre-push |
+| ⬜    | Test automatici recupero crediti              | Numero pratica, snapshot prezzi, attività rinviate, blocco attività fatturate, rendiconti Excel e RLS                                                                                                                                         |
 | ⬜    | Test minimi su funzioni critiche              | XML FatturaPA, calcoli IVA/ritenuta, cassa forense                                                                                                                                                                                            |
 | ✅    | Linter pulito su tutto il repo                | `npm run lint`                                                                                                                                                                                                                                |
 | ⬜    | `npm audit --audit-level=moderate` periodico  |                                                                                                                                                                                                                                               |
@@ -166,6 +168,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 1. **Provare un import archivio reale o semi-reale**: verificare staging, conferma, allegati e successiva fatturazione.
 2. **Esportazione massiva fatture**: ZIP PDF + XML per periodo.
-3. **Strategia test automatizzati progressiva**: definire i primi test unit/integration/smoke sui flussi critici.
+3. **Test recupero crediti**: partire da numero pratica, snapshot prezzi, rinvii, attività fatturate, rendiconti Excel e RLS.
+4. **Strategia test automatizzati progressiva**: definire lo stack e poi integrare i test in Quality/pre-push.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.

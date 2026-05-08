@@ -1,7 +1,8 @@
 # Piano — Evoluzione recupero crediti
 
-- **Stato**: piano di prodotto approvato per la fase di progettazione
+- **Stato**: implementato e chiuso lato prodotto; residui non bloccanti spostati in roadmap
 - **Data**: 2026-05-03
+- **Chiusura**: 2026-05-08
 - **Ambito**: evoluzione funzionale di Pratix dopo la migrazione GitHub + Vercel + Supabase
 - **Riferimento ADR**: [ADR 0013](../decisions/0013-focus-recupero-crediti.md)
 
@@ -135,18 +136,22 @@ la fatturazione.
 
 ## Punti rinviati all'implementazione
 
-Non bloccano il piano, ma vanno definiti mentre si costruiscono le singole
-fasi:
+Questi punti erano stati rinviati alla costruzione delle singole fasi. Alla
+chiusura del piano risultano assorbiti dalle implementazioni verticali oppure
+spostati in roadmap come residui post-evoluzione non bloccanti.
 
-1. Campi esatti del wizard di import guidato e ordine definitivo degli step.
-2. Validazioni dettagliate per import Excel e rendiconti Excel generati.
+1. Campi esatti del wizard di import guidato e ordine definitivo degli step:
+   assorbiti in Fase 7.
+2. Validazioni dettagliate per import Excel e rendiconti Excel generati:
+   assorbite in Fase 6 e Fase 7; collaudo su archivio reale o semi-reale
+   tracciato in roadmap.
 3. Template vuoti del committente, se in futuro saranno forniti oltre agli
    esempi già compilati.
-4. Regole fiscali di dettaglio sulla gestione di fatture emesse e poi
-   annullate, da trattare con conferma esplicita prima di implementare
-   cancellazioni distruttive.
+4. Regole fiscali di dettaglio sulla gestione di fatture emesse e poi annullate:
+   da trattare con conferma esplicita prima di implementare cancellazioni
+   distruttive.
 5. Priorità operative fra rimozione scadenzario, modello dati, anagrafiche,
-   prezzi, pratiche, attività, fatturazione e import.
+   prezzi, pratiche, attività, fatturazione e import: chiuse con Fasi 1-8.
 
 ## Glossario operativo
 
@@ -877,8 +882,8 @@ Stato implementazione:
   collegamenti, attività e udienze in modo atomico per riga;
 - la procedura guidata consente di allegare documenti alle attività storiche
   con nome descrittivo, tipo documento e note;
-- la Fase 7 è completa lato prodotto e resta da pubblicare/applicare in
-  produzione.
+- la Fase 7 è completa lato prodotto, pubblicata e rifinita con le correzioni
+  successive su import parziali e guardie anti-duplicazione.
 
 ### Fase 8 — Rifinitura operativa e superfici trasversali
 
@@ -957,6 +962,41 @@ La prima evoluzione è completa quando:
 - l'import guidato manuale è disponibile;
 - l'import Excel ha almeno staging, validazione e anteprima;
 - RLS, build e lint sono verificati sulle aree toccate.
+
+Stato di chiusura 2026-05-08:
+
+- criteri funzionali completati tramite Fasi 1-8;
+- scadenzario rimosso dal prodotto attivo;
+- dominio recupero crediti operativo su committenti, clienti, controparti,
+  pratiche, attività, prezzi, fatturazione e import archivio;
+- rendiconti Excel e logica fiscale della fatturazione riallineati al modello
+  committente + periodo;
+- dashboard, Account, Impostazioni, Novità, onboarding, landing, privacy,
+  termini e navigazione rivisti rispetto al nuovo dominio;
+- audit visuale desktop/mobile e chiaro/scuro eseguito sulle superfici
+  principali e sulle route autenticate con redirect;
+- test manuale di import con archivio reale o semi-reale escluso dalla chiusura
+  per scelta operativa e mantenuto come prossimo passo in roadmap;
+- test automatici progressivi, audit accessibilità approfondito, esportazione
+  massiva fatture e funzioni account/GDPR restano residui post-evoluzione
+  tracciati in roadmap, non blocchi della prima evoluzione.
+
+## Residui post-evoluzione
+
+Questi elementi non impediscono di chiudere il piano recupero crediti, ma
+restano priorità successive perché aumentano affidabilità, collaudo e
+completezza operativa:
+
+1. Collaudare un import archivio reale o semi-reale, includendo staging,
+   conferma, allegati e fatturazione successiva.
+2. Introdurre test automatici progressivi su generazione numero pratica,
+   snapshot prezzi, attività rinviate, blocco attività fatturate, rendiconti
+   Excel e RLS.
+3. Completare audit accessibilità su contrasto, focus da tastiera e
+   `prefers-reduced-motion`.
+4. Valutare le feature successive non core della prima evoluzione: export
+   massivo fatture, ricerca globale, filtri persistenti, cambio email,
+   eliminazione account ed esportazione dati personali.
 
 ## Rischi e attenzioni
 
