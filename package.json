@@ -4,9 +4,9 @@
   "sideEffects": false,
   "type": "module",
   "scripts": {
-    "dev": "vite dev",
-    "build": "vite build",
-    "build:dev": "vite build --mode development",
+    "dev": "NODE_OPTIONS=\"${NODE_OPTIONS:+$NODE_OPTIONS }--import=./scripts/tailwind-register-hooks-compat.mjs\" vite dev",
+    "build": "NODE_OPTIONS=\"${NODE_OPTIONS:+$NODE_OPTIONS }--import=./scripts/tailwind-register-hooks-compat.mjs\" vite build",
+    "build:dev": "NODE_OPTIONS=\"${NODE_OPTIONS:+$NODE_OPTIONS }--import=./scripts/tailwind-register-hooks-compat.mjs\" vite build --mode development",
     "ci:local": "npm run build && npm run lint && npm audit --audit-level=moderate",
     "codex:comments": "GITHUB_REPOSITORY=max23468/Pratix node .github/scripts/handle-codex-pr-comments.mjs",
     "codex:comments:dry-run": "DRY_RUN=true GITHUB_REPOSITORY=max23468/Pratix node .github/scripts/handle-codex-pr-comments.mjs",
@@ -18,7 +18,7 @@
     "db:verify": "node scripts/db-verify.mjs",
     "db:types": "npx supabase gen types typescript --linked --schema public > src/integrations/supabase/types.ts",
     "prepush:guard": "node scripts/prepush-guard.mjs",
-    "preview": "vite preview",
+    "preview": "NODE_OPTIONS=\"${NODE_OPTIONS:+$NODE_OPTIONS }--import=./scripts/tailwind-register-hooks-compat.mjs\" vite preview",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -54,11 +54,11 @@
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@supabase/supabase-js": "^2.105.1",
-    "@tailwindcss/vite": "^4.2.1",
-    "@tanstack/react-query": "^5.100.6",
-    "@tanstack/react-router": "^1.168.0",
-    "@tanstack/react-start": "^1.167.14",
-    "@tanstack/router-plugin": "^1.167.10",
+    "@tailwindcss/vite": "^4.3.0",
+    "@tanstack/react-query": "^5.100.9",
+    "@tanstack/react-router": "^1.169.2",
+    "@tanstack/react-start": "^1.167.65",
+    "@tanstack/router-plugin": "^1.167.35",
     "@vercel/analytics": "^2.0.1",
     "@vercel/speed-insights": "^2.0.0",
     "class-variance-authority": "^0.7.1",
@@ -78,7 +78,7 @@
     "recharts": "^2.15.4",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
-    "tailwindcss": "^4.2.1",
+    "tailwindcss": "^4.3.0",
     "tw-animate-css": "^1.3.4",
     "vaul": "^1.1.2",
     "vite-tsconfig-paths": "^6.0.2",
@@ -100,6 +100,9 @@
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "^7.3.1"
+    "vite": "^7.3.3"
+  },
+  "overrides": {
+    "encoding-sniffer": "^1.0.2"
   }
 }
