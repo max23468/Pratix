@@ -1,8 +1,11 @@
 # ADR 0011 — Gestione settimanale commenti Codex
 
-- **Stato**: Accettato
+- **Stato**: Sostituito da [ADR 0015](./0015-inbox-event-driven-commenti-codex.md)
 - **Data**: 2026-05-02
 - **Decisori**: Matteo / Codex
+
+> Decisione storica. Il workflow settimanale con stato committato nel repo è stato
+> sostituito dall'inbox event-driven descritta in ADR 0015.
 
 ## Contesto
 
@@ -59,5 +62,6 @@ manualmente.
 
 - [`.github/workflows/codex-pr-comments.yml`](../../.github/workflows/codex-pr-comments.yml)
 - [`.github/scripts/handle-codex-pr-comments.mjs`](../../.github/scripts/handle-codex-pr-comments.mjs)
-- [`.github/codex-pr-scan-state.json`](../../.github/codex-pr-scan-state.json)
-- [`.github/codex-pr-pending-comments.md`](../../.github/codex-pr-pending-comments.md)
+
+I file storici `.github/codex-pr-scan-state.json` e
+`.github/codex-pr-pending-comments.md` sono stati rimossi da ADR 0015.

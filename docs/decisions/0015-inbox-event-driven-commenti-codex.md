@@ -1,0 +1,61 @@
+# ADR 0015 — Inbox event-driven commenti Codex
+
+- **Stato**: Accettato
+- **Data**: 2026-05-08
+- **Decisori**: Matteo / Codex
+
+## Contesto
+
+Il workflow settimanale dei commenti Codex creava un ritardo operativo e
+manteneva stato committato nel repository. Questo produceva rumore su `main` e
+rendeva poco chiara la differenza fra commenti actionable, commenti già risolti
+e thread outdated.
+
+Serve un flusso immediato: quando arriva feedback Codex su GitHub, il progetto
+deve trasformarlo subito in lavoro operativo e, nello stesso passaggio,
+controllare anche i commenti Codex storici.
+
+## Decisione
+
+Sostituiamo la gestione settimanale con un workflow GitHub Actions event-driven.
+
+Il workflow:
+
+- parte su nuove review e nuovi commenti inline di PR, oltre che manualmente via
+  `workflow_dispatch`;
+- analizza tutte le PR del repository, aperte, chiuse e mergiate;
+- usa i review thread GitHub come fonte di verità;
+- aggiorna una issue unica chiamata `Codex feedback inbox`;
+- separa i thread actionable (`resolved=no`, `outdated=no`) dallo storico;
+- pubblica `@codex address that feedback` sulle PR con thread actionable, senza
+  duplicare richieste gia pubblicate per gli stessi thread;
+- non committa più file di stato o report Markdown nel repository.
+
+La issue inbox e il punto operativo da controllare prima di dichiarare pronta una
+PR o una pubblicazione.
+
+## Conseguenze
+
+- I commenti Codex vengono intercettati appena arrivano, senza attendere il
+  lunedì.
+- `main` non riceve più commit automatici di solo stato.
+- Il backlog storico resta visibile, ma non viene confuso con il lavoro da fare
+  subito.
+- Le PR chiuse o mergiate vengono comunque analizzate; se contengono thread
+  actionable, Codex viene richiamato e potrà aprire un follow-up se la PR non è
+  più modificabile.
+- I commenti GitHub in stato pending non pubblicato restano fuori portata delle
+  API finché la review non viene inviata.
+
+## Alternative considerate
+
+- **Mantenere il workflow settimanale** — Scartata: troppo lento e rumoroso.
+- **File Markdown committato come inbox** — Scartata: lo stato GitHub non deve
+  sporcare il repository.
+- **Solo commento sticky su ogni PR** — Scartata: non offre una vista unica del
+  backlog storico.
+
+## Riferimenti
+
+- [`.github/workflows/codex-pr-comments.yml`](../../.github/workflows/codex-pr-comments.yml)
+- [`.github/scripts/handle-codex-pr-comments.mjs`](../../.github/scripts/handle-codex-pr-comments.mjs)

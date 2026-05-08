@@ -8,6 +8,8 @@
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "ci:local": "npm run build && npm run lint && npm audit --audit-level=moderate",
+    "codex:comments": "GITHUB_REPOSITORY=max23468/Pratix node .github/scripts/handle-codex-pr-comments.mjs",
+    "codex:comments:dry-run": "DRY_RUN=true GITHUB_REPOSITORY=max23468/Pratix node .github/scripts/handle-codex-pr-comments.mjs",
     "release": "node scripts/release.mjs",
     "release:dry-run": "node scripts/release.mjs --dry-run",
     "db:advisors:security": "npx supabase db advisors --linked --type security",
