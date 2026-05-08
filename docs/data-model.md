@@ -257,6 +257,15 @@ Righe di staging dell'import. Conservano dato grezzo (`raw_data`), dato
 normalizzato (`normalized_data`), warning, errori e l'eventuale pratica creata o
 agganciata.
 
+La conferma operativa passa dalla funzione RPC `apply_import_row`, che legge una
+riga `valid` o `warning` dell'utente autenticato e crea in una sola transazione
+committente/cliente/controparte mancanti, relazione committente-cliente,
+pratica, attività e udienze collegate.
+
+Gli allegati caricati durante l'import guidato vengono salvati subito dopo la
+conferma, usando gli ID attività pre-generati nello staging e i metadati in
+`activity_attachments`.
+
 ## Relazioni (logiche, non FK)
 
 ```

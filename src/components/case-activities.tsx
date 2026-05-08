@@ -429,6 +429,12 @@ export function CaseActivityDialog({
       if (selectedItem.requires_hearing_dates && hearingDates.some((date) => !date)) {
         throw new Error("Completa tutte le date udienza");
       }
+      if (
+        selectedItem.requires_hearing_dates &&
+        new Set(hearingDates).size !== hearingDates.length
+      ) {
+        throw new Error("Rimuovi le date udienza duplicate");
+      }
 
       const { data: activity, error } = await supabase
         .from("case_activities")

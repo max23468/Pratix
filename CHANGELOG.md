@@ -6,6 +6,17 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.11.0] — 2026-05-08
+
+### Novità
+
+- **Import archivio Fase 7 completato**: aggiunti upload `.xlsx`, mappatura colonne, validazione massiva, staging, import delle righe valide e allegati sulle attività storiche dalla procedura guidata.
+
+### Sotto il cofano
+
+- **Conferma import transazionale**: spostata la conferma delle righe di import in RPC Postgres `apply_import_row`, così pratica, collegamenti, attività e udienze vengono create in un'unica transazione per riga.
+- **Validazione date udienza**: bloccate date udienza duplicate prima del salvataggio di attività e import, evitando errori sui vincoli database.
+
 ## [0.10.0] — 2026-05-08
 
 ### Novità
@@ -322,6 +333,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.11.0]: #0110--2026-05-08
 [0.10.0]: #0100--2026-05-08
 [0.9.0]: #090--2026-05-08
 [0.8.0]: #080--2026-05-04
