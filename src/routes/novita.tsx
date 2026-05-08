@@ -119,7 +119,10 @@ function NovitaPage() {
 
   return (
     <AppLayout>
-      <PageHeader title="Novità" description="Le ultime modifiche pubblicate in Pratix." />
+      <PageHeader
+        title="Novità"
+        description="Le ultime modifiche pubblicate per pratiche, attività, fatture e impostazioni."
+      />
 
       <div className="space-y-6">
         {series.map((s, sIdx) => {

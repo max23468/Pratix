@@ -8,6 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { TableEmptyState } from "@/components/table-empty-state";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -42,6 +50,8 @@ export const Route = createFileRoute("/committenti/")({
 
 function CommittentiList() {
   const [q, setQ] = useState("");
+  const [status, setStatus] = useState("active");
+  const [economics, setEconomics] = useState("all");
 
   const { data, isLoading } = useQuery({
     queryKey: ["principals"],
@@ -60,9 +70,25 @@ function CommittentiList() {
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     if (!data) return [];
-    if (!term) return data;
-    return data.filter((principal) =>
-      [
+    return data.filter((principal) => {
+      if (status === "active" && principal.archived_at) return false;
+      if (status === "archived" && !principal.archived_at) return false;
+      if (economics === "fees" && !principal.fees_enabled) return false;
+      if (economics === "expenses" && !principal.expense_reimbursements_enabled) return false;
+      if (
+        economics === "fees_only" &&
+        (!principal.fees_enabled || principal.expense_reimbursements_enabled)
+      ) {
+        return false;
+      }
+      if (
+        economics === "expenses_only" &&
+        (principal.fees_enabled || !principal.expense_reimbursements_enabled)
+      ) {
+        return false;
+      }
+      if (!term) return true;
+      return [
         principal.business_name,
         principal.tax_code,
         principal.vat_number,
@@ -70,9 +96,9 @@ function CommittentiList() {
         principal.address_city,
       ]
         .filter(Boolean)
-        .some((value) => value?.toLowerCase().includes(term)),
-    );
-  }, [data, q]);
+        .some((value) => value?.toLowerCase().includes(term));
+    });
+  }, [data, economics, q, status]);
 
   return (
     <>
@@ -88,7 +114,7 @@ function CommittentiList() {
         }
       />
 
-      <div className="mb-4 flex items-center gap-2">
+      <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -98,6 +124,28 @@ function CommittentiList() {
             className="pl-9"
           />
         </div>
+        <Select value={status} onValueChange={setStatus}>
+          <SelectTrigger className="lg:w-44">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutti gli stati</SelectItem>
+            <SelectItem value="active">Attivi</SelectItem>
+            <SelectItem value="archived">Archiviati</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={economics} onValueChange={setEconomics}>
+          <SelectTrigger className="lg:w-56">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutte le regole</SelectItem>
+            <SelectItem value="fees">Con compensi</SelectItem>
+            <SelectItem value="expenses">Con rimborsi</SelectItem>
+            <SelectItem value="fees_only">Solo compensi</SelectItem>
+            <SelectItem value="expenses_only">Solo rimborsi</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       <Card>
@@ -122,7 +170,25 @@ function CommittentiList() {
             ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  {q ? "Nessun risultato." : "Nessun committente. Aggiungi il primo."}
+                  <TableEmptyState
+                    title={
+                      q || status !== "active" || economics !== "all"
+                        ? "Nessun committente trovato"
+                        : "Nessun committente"
+                    }
+                    description={
+                      q || status !== "active" || economics !== "all"
+                        ? "Modifica ricerca o filtri per ampliare i risultati."
+                        : "Aggiungi il primo committente per configurare prezzi, clienti e pratiche."
+                    }
+                    action={
+                      !q && status === "active" && economics === "all" ? (
+                        <Button size="sm" asChild>
+                          <Link to="/committenti/nuovo">Nuovo committente</Link>
+                        </Button>
+                      ) : undefined
+                    }
+                  />
                 </TableCell>
               </TableRow>
             ) : (

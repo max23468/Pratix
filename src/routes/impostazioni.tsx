@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Save } from "lucide-react";
+import { Building2, Save, Tags } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -173,7 +173,7 @@ function SettingsPage() {
     <AppLayout>
       <PageHeader
         title="Impostazioni"
-        description="I tuoi dati professionali, fiscalità, IBAN e numerazione. Per profilo, accesso e tema vai ad Account."
+        description="Dati professionali, fiscalità, pagamenti e fatturazione. Account resta dedicato a profilo, accesso e tema."
         actions={
           <Button
             onClick={() => saveMutation.mutate()}
@@ -190,7 +190,7 @@ function SettingsPage() {
           <TabsTrigger value="professione">Professione</TabsTrigger>
           <TabsTrigger value="fiscale">Fiscale</TabsTrigger>
           <TabsTrigger value="pagamenti">Pagamenti</TabsTrigger>
-          <TabsTrigger value="numerazione">Numerazione</TabsTrigger>
+          <TabsTrigger value="fatturazione">Fatturazione</TabsTrigger>
         </TabsList>
 
         <TabsContent value="professione" className="space-y-4">
@@ -351,7 +351,7 @@ function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="numerazione" className="space-y-4">
+        <TabsContent value="fatturazione" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Numerazione fatture</CardTitle>
@@ -379,6 +379,26 @@ function SettingsPage() {
                 Esempio: con prefisso "FT-" e prossimo numero 7, la prossima fattura sarà{" "}
                 <strong>FT-7</strong>. L'anno si resetta automaticamente al cambio di anno solare.
               </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Recupero crediti</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-3 sm:grid-cols-2">
+              <Button variant="outline" asChild className="justify-start">
+                <Link to="/committenti">
+                  <Building2 className="mr-2 h-4 w-4" />
+                  Committenti
+                </Link>
+              </Button>
+              <Button variant="outline" asChild className="justify-start">
+                <Link to="/prezzi">
+                  <Tags className="mr-2 h-4 w-4" />
+                  Prezzi
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         </TabsContent>

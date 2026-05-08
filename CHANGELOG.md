@@ -6,9 +6,16 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
-### Non versionato
+## [0.12.0] — 2026-05-08
 
-- **Verifica Supabase seriale**: aggiunto `npm run db:verify` per eseguire dry-run e advisor in sequenza, riducendo il rischio di blocchi temporanei `ECIRCUITBREAKER` del pooler.
+### Novità
+
+- **Fase 8 superfici trasversali completata**: dashboard riallineata a pratiche, attività da fatturare, committenti e rimborsi senza allegato; filtri, viste operative, empty state, Account, Impostazioni, Novità, onboarding, landing e documenti pubblici aggiornati al dominio recupero crediti.
+- **Export dati essenziali**: dall'Account si può scaricare un archivio JSON con anagrafiche, pratiche, attività, prezzi e fatture.
+
+### Correzioni
+
+- **Import archivio Excel**: dopo la conferma le righe già importate non possono essere importate una seconda volta dalla stessa anteprima.
 
 ## [0.11.0] — 2026-05-08
 
@@ -42,6 +49,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ### Non versionato
 
+- **Verifica Supabase seriale**: aggiunto `npm run db:verify` per eseguire dry-run e advisor in sequenza, riducendo il rischio di blocchi temporanei `ECIRCUITBREAKER` del pooler.
 - **Lockfile npm riallineato alla CI**: rigenerato `package-lock.json` con npm 10 per rendere `npm ci` compatibile con il workflow Quality su Node 22.
 - **Pulizia branch post-pubblicazione**: chiarite le regole operative per eliminare branch locali e remoti già assorbiti dopo merge, pubblicazione o chiusura PR.
 - **Ottimizzazione inbox Codex**: la inbox chiude automaticamente eventuali issue duplicate, compatta lo storico mostrato, limita le scansioni event-driven alle PR aperte/recenti e usa eventi PR in contesto trusted, mantenendo la scansione completa su schedule, dispatch manuale e commenti sulla inbox.
@@ -337,6 +345,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.12.0]: #0120--2026-05-08
 [0.11.0]: #0110--2026-05-08
 [0.10.0]: #0100--2026-05-08
 [0.9.0]: #090--2026-05-08

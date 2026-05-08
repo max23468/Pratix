@@ -67,8 +67,8 @@ function PrivacyPage() {
             <p className="mt-2 text-muted-foreground">
               Pratix tratta due categorie di dati: i dati dell'avvocato che usa il servizio
               (anagrafica, partita IVA, codice fiscale, dati fiscali, email, recapiti, credenziali
-              di accesso) e i dati dei clienti che l'avvocato sceglie di registrare nel sistema
-              (anagrafica, recapiti, dati fiscali, contenuti delle pratiche, fatture).
+              di accesso) e i dati che l'avvocato sceglie di registrare nel sistema per committenti,
+              clienti, controparti, pratiche, attività, allegati e fatture.
             </p>
           </section>
 

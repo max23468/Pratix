@@ -1,6 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Briefcase, Receipt, Plus, TrendingUp, AlertTriangle, Users } from "lucide-react";
+import {
+  AlertTriangle,
+  Briefcase,
+  FileWarning,
+  ListChecks,
+  Plus,
+  Receipt,
+  Tags,
+} from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,15 +17,28 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { formatCurrency } from "@/lib/format";
-import { caseStatusLabels, caseStatusVariant, clientDisplayName } from "@/lib/labels";
+import {
+  caseStatusLabels,
+  caseStatusVariant,
+  clientDisplayName,
+  counterpartyDisplayName,
+  type ClientDisplayData,
+  type CounterpartyDisplayData,
+} from "@/lib/labels";
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
       { title: "Dashboard · Pratix" },
-      { name: "description", content: "Una visione d'insieme della tua professione." },
+      {
+        name: "description",
+        content: "Pratiche, attività da fatturare e committenti da tenere sotto controllo.",
+      },
       { property: "og:title", content: "Dashboard · Pratix" },
-      { property: "og:description", content: "Una visione d'insieme della tua professione." },
+      {
+        property: "og:description",
+        content: "Pratiche, attività da fatturare e committenti da tenere sotto controllo.",
+      },
     ],
   }),
   component: () => (
@@ -35,62 +56,87 @@ function DashboardContent() {
     enabled: !!userId,
     queryKey: ["dashboard", userId],
     queryFn: async () => {
-      const now = new Date();
-      const today = now.toISOString().slice(0, 10);
-      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10);
-      const yearStart = new Date(now.getFullYear(), 0, 1).toISOString().slice(0, 10);
-
-      const [casesRes, invoicesRes, recentCasesRes, clientsRes] = await Promise.all([
+      const [casesRes, activitiesRes, recentCasesRes, principalsRes] = await Promise.all([
+        supabase.from("cases").select("id, status"),
         supabase
-          .from("cases")
-          .select("id, status", { count: "exact" })
-          .in("status", ["open", "in_progress"]),
-        supabase
-          .from("invoices")
-          .select(
-            "id, status, total_amount, net_to_pay, issue_date, due_date, paid_at, number, year",
-          ),
+          .from("case_activities")
+          .select("id, kind, amount, principal_id")
+          .eq("status", "to_invoice"),
         supabase
           .from("cases")
           .select(
-            "id, case_number, title, status, updated_at, client_id, clients(kind, first_name, last_name, business_name)",
+            "id, case_number, practice_number, title, status, updated_at, principal:principals(business_name), client:clients(kind, first_name, last_name, business_name), counterparty:counterparties(kind, first_name, last_name, business_name)",
           )
           .order("updated_at", { ascending: false })
           .limit(5),
-        supabase.from("clients").select("id", { count: "exact", head: true }),
+        supabase.from("principals").select("id, business_name"),
       ]);
 
       if (casesRes.error) throw casesRes.error;
-      if (invoicesRes.error) throw invoicesRes.error;
+      if (activitiesRes.error) throw activitiesRes.error;
       if (recentCasesRes.error) throw recentCasesRes.error;
-      if (clientsRes.error) throw clientsRes.error;
+      if (principalsRes.error) throw principalsRes.error;
 
-      const activeCases = casesRes.count ?? casesRes.data?.length ?? 0;
-      const totalClients = clientsRes.count ?? 0;
-      const invoices = invoicesRes.data ?? [];
-      const unpaid = invoices
-        .filter((i) => i.status === "issued" || i.status === "overdue")
-        .reduce((sum, i) => sum + Number(i.net_to_pay ?? 0), 0);
-      const overdue = invoices.filter(
-        (i) =>
-          (i.status === "issued" || i.status === "overdue") && i.due_date && i.due_date < today,
+      const cases = casesRes.data ?? [];
+      const activities = activitiesRes.data ?? [];
+      const expenseActivityIds = activities
+        .filter((activity) => activity.kind === "expense_reimbursement")
+        .map((activity) => activity.id);
+      const attachmentsRes =
+        expenseActivityIds.length > 0
+          ? await supabase
+              .from("activity_attachments")
+              .select("activity_id")
+              .in("activity_id", expenseActivityIds)
+          : { data: [], error: null };
+      if (attachmentsRes.error) throw attachmentsRes.error;
+
+      const attachedActivityIds = new Set(
+        (attachmentsRes.data ?? []).map((item) => item.activity_id),
       );
-      const overdueTotal = overdue.reduce((sum, i) => sum + Number(i.net_to_pay ?? 0), 0);
-      const collectedMonth = invoices
-        .filter((i) => i.status === "paid" && i.paid_at && i.paid_at >= monthStart)
-        .reduce((sum, i) => sum + Number(i.total_amount ?? 0), 0);
-      const revenueYear = invoices
-        .filter((i) => i.status !== "draft" && i.issue_date >= yearStart)
-        .reduce((sum, i) => sum + Number(i.total_amount ?? 0), 0);
+      const openCases = cases.filter((c) => c.status === "open" || c.status === "in_progress");
+      const suspendedCases = cases.filter((c) => c.status === "suspended");
+      const closedCases = cases.filter((c) => c.status === "closed");
+      const archivedCases = cases.filter((c) => c.status === "archived");
+      const toInvoiceAmount = activities.reduce(
+        (sum, activity) => sum + Number(activity.amount ?? 0),
+        0,
+      );
+      const expenseWithoutAttachment = activities.filter(
+        (activity) =>
+          activity.kind === "expense_reimbursement" && !attachedActivityIds.has(activity.id),
+      );
+      const principalNames = new Map(
+        (principalsRes.data ?? []).map((principal) => [principal.id, principal.business_name]),
+      );
+      const principalSummaries = Array.from(
+        activities
+          .reduce((map, activity) => {
+            const current = map.get(activity.principal_id) ?? {
+              principalId: activity.principal_id,
+              name: principalNames.get(activity.principal_id) ?? "Committente non disponibile",
+              amount: 0,
+              count: 0,
+            };
+            current.amount += Number(activity.amount ?? 0);
+            current.count += 1;
+            map.set(activity.principal_id, current);
+            return map;
+          }, new Map<string, { principalId: string; name: string; amount: number; count: number }>())
+          .values(),
+      )
+        .sort((a, b) => b.amount - a.amount)
+        .slice(0, 4);
 
       return {
-        activeCases,
-        totalClients,
-        unpaid,
-        overdueCount: overdue.length,
-        overdueTotal,
-        collectedMonth,
-        revenueYear,
+        openCases: openCases.length,
+        suspendedCases: suspendedCases.length,
+        closedCases: closedCases.length,
+        archivedCases: archivedCases.length,
+        toInvoiceCount: activities.length,
+        toInvoiceAmount,
+        expenseWithoutAttachmentCount: expenseWithoutAttachment.length,
+        principalSummaries,
         recentCases: recentCasesRes.data ?? [],
       };
     },
@@ -100,17 +146,22 @@ function DashboardContent() {
     <>
       <PageHeader
         title="Dashboard"
-        description="Una visione d'insieme della tua professione."
+        description="Pratiche, attività da fatturare e committenti da tenere sotto controllo."
         actions={
           <>
-            <Link to="/clienti/nuovo">
+            <Link to="/prezzi">
               <Button size="sm" variant="outline">
-                <Plus className="mr-1 h-4 w-4" /> Cliente
+                <Tags className="mr-1 h-4 w-4" /> Prezzi
               </Button>
             </Link>
             <Link to="/fatture/nuova">
               <Button size="sm" variant="outline">
-                <Plus className="mr-1 h-4 w-4" /> Fattura
+                <Receipt className="mr-1 h-4 w-4" /> Fattura
+              </Button>
+            </Link>
+            <Link to="/attivita">
+              <Button size="sm" variant="outline">
+                <ListChecks className="mr-1 h-4 w-4" /> Attività
               </Button>
             </Link>
             <Link to="/pratiche/nuova">
@@ -125,44 +176,40 @@ function DashboardContent() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <StatCard
           icon={Briefcase}
-          label="Pratiche attive"
-          value={isLoading ? "—" : String(data?.activeCases ?? 0)}
-        />
-        <StatCard
-          icon={Users}
-          label="Clienti"
-          value={isLoading ? "—" : String(data?.totalClients ?? 0)}
-        />
-        <StatCard
-          icon={Receipt}
-          label="Da incassare"
-          value={isLoading ? "—" : formatCurrency(data?.unpaid ?? 0)}
+          label="Pratiche aperte"
+          value={isLoading ? "—" : String(data?.openCases ?? 0)}
         />
         <StatCard
           icon={AlertTriangle}
-          label="Fatture scadute"
-          value={
-            isLoading
-              ? "—"
-              : `${data?.overdueCount ?? 0} · ${formatCurrency(data?.overdueTotal ?? 0)}`
-          }
-          tone={data && data.overdueCount > 0 ? "danger" : "default"}
+          label="Pratiche sospese"
+          value={isLoading ? "—" : String(data?.suspendedCases ?? 0)}
+          tone={data && data.suspendedCases > 0 ? "danger" : "default"}
         />
         <StatCard
-          icon={TrendingUp}
-          label="Incassato (mese)"
-          value={isLoading ? "—" : formatCurrency(data?.collectedMonth ?? 0)}
+          icon={Briefcase}
+          label="Chiuse / archiviate"
+          value={isLoading ? "—" : `${data?.closedCases ?? 0} / ${data?.archivedCases ?? 0}`}
+        />
+        <StatCard
+          icon={ListChecks}
+          label="Attività da fatturare"
+          value={isLoading ? "—" : String(data?.toInvoiceCount ?? 0)}
+        />
+        <StatCard
+          icon={Receipt}
+          label="Maturato da fatturare"
+          value={isLoading ? "—" : formatCurrency(data?.toInvoiceAmount ?? 0)}
           tone="gold"
         />
         <StatCard
-          icon={TrendingUp}
-          label={`Fatturato ${new Date().getFullYear()}`}
-          value={isLoading ? "—" : formatCurrency(data?.revenueYear ?? 0)}
-          tone="gold"
+          icon={FileWarning}
+          label="Rimborsi senza allegato"
+          value={isLoading ? "—" : String(data?.expenseWithoutAttachmentCount ?? 0)}
+          tone={data && data.expenseWithoutAttachmentCount > 0 ? "danger" : "default"}
         />
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Pratiche recenti</CardTitle>
@@ -180,7 +227,11 @@ function DashboardContent() {
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{c.title}</p>
                         <p className="truncate text-xs text-muted-foreground">
-                          {c.case_number} ·{c.clients ? clientDisplayName(c.clients) : "—"}
+                          {c.practice_number} · {c.principal?.business_name ?? "—"} ·{" "}
+                          {c.client ? clientDisplayName(c.client as ClientDisplayData) : "—"} ·{" "}
+                          {c.counterparty
+                            ? counterpartyDisplayName(c.counterparty as CounterpartyDisplayData)
+                            : "—"}
                         </p>
                       </div>
                       <Badge variant={caseStatusVariant[c.status] ?? "outline"}>
@@ -197,6 +248,38 @@ function DashboardContent() {
                   Crea la prima
                 </Link>
                 .
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Committenti da fatturare</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {data?.principalSummaries.length ? (
+              <ul className="divide-y">
+                {data.principalSummaries.map((principal) => (
+                  <li key={principal.principalId} className="py-2.5">
+                    <Link to="/fatture/nuova" className="flex items-center justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium">{principal.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {principal.count} {principal.count === 1 ? "attività" : "attività"} da
+                          fatturare
+                        </p>
+                      </div>
+                      <span className="shrink-0 text-sm font-semibold tabular-nums">
+                        {formatCurrency(principal.amount)}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Nessuna attività da fatturare. Quando registri compensi o rimborsi, li vedrai qui.
               </p>
             )}
           </CardContent>

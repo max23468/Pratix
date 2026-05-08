@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { TableEmptyState } from "@/components/table-empty-state";
 import {
   Select,
   SelectContent,
@@ -184,7 +185,29 @@ function ActivitiesList() {
             ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  Nessuna attività registrata.
+                  <TableEmptyState
+                    title={
+                      q || status !== "all" || kind !== "all"
+                        ? "Nessuna attività trovata"
+                        : "Nessuna attività"
+                    }
+                    description={
+                      q || status !== "all" || kind !== "all"
+                        ? "Modifica ricerca o filtri per ampliare i risultati."
+                        : "Registra compensi e rimborsi spese dalla pratica o da inserimento rapido."
+                    }
+                    action={
+                      !q && status === "all" && kind === "all" ? (
+                        <CaseActivityDialog
+                          trigger={
+                            <Button size="sm">
+                              <Plus className="mr-1 h-4 w-4" /> Nuova attività
+                            </Button>
+                          }
+                        />
+                      ) : undefined
+                    }
+                  />
                 </TableCell>
               </TableRow>
             ) : (

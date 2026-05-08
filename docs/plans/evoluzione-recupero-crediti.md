@@ -885,6 +885,14 @@ Stato implementazione:
 **Obiettivo**: rendere il nuovo dominio usabile come SaaS quotidiano e
 riallineare tutte le aree rimaste fuori dalle fasi verticali.
 
+Stato 2026-05-08: fase completata lato prodotto. La dashboard è stata
+riallineata a pratiche, attività da fatturare, importi maturati per committente
+e rimborsi senza allegato; le liste principali hanno filtri, viste operative ed
+empty state più coerenti; Account, Impostazioni, Novità, onboarding, landing e
+documenti pubblici sono stati aggiornati nel copy e nei collegamenti principali.
+L'audit visuale desktop/mobile e chiaro/scuro è stato eseguito sulle superfici
+pubbliche e sulle route autenticate per caricamento/redirect.
+
 Attività:
 
 1. Uniformare empty state, filtri e ricerca su committente, cliente,

@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Save, KeyRound, ShieldCheck } from "lucide-react";
+import { Download, FileUp, KeyRound, Save, ShieldCheck } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -86,7 +86,7 @@ function AccountPage() {
     <AppLayout>
       <PageHeader
         title="Account"
-        description="Il tuo profilo Pratix, l'accesso e le preferenze personali."
+        description="Profilo, accesso, sicurezza e preferenze personali del professionista."
       />
 
       <Tabs defaultValue="profilo" className="space-y-4">
@@ -95,6 +95,7 @@ function AccountPage() {
           <TabsTrigger value="sicurezza">Accesso e sicurezza</TabsTrigger>
           <TabsTrigger value="aspetto">Aspetto</TabsTrigger>
           <TabsTrigger value="notifiche">Notifiche</TabsTrigger>
+          <TabsTrigger value="dati">Dati</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profilo" className="space-y-4">
@@ -205,8 +206,99 @@ function AccountPage() {
             </CardContent>
           </Card>
         </TabsContent>
+
+        <TabsContent value="dati" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileUp className="h-4 w-4 text-muted-foreground" />
+                Import archivio
+              </CardTitle>
+              <CardDescription>
+                Trascrivi pratiche da archivio cartaceo o importa un Excel strutturato.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" asChild>
+                <Link to="/import-archivio">Apri import archivio</Link>
+              </Button>
+            </CardContent>
+          </Card>
+
+          <DataExportCard />
+        </TabsContent>
       </Tabs>
     </AppLayout>
+  );
+}
+
+function DataExportCard() {
+  const exportMutation = useMutation({
+    mutationFn: async () => {
+      const tables = [
+        "principals",
+        "principal_clients",
+        "clients",
+        "counterparties",
+        "counterparty_subjects",
+        "cases",
+        "case_activities",
+        "case_activity_hearings",
+        "activity_attachments",
+        "price_books",
+        "price_items",
+        "invoices",
+        "invoice_lines",
+      ] as const;
+
+      const entries = await Promise.all(
+        tables.map(async (table) => {
+          const { data, error } = await supabase.from(table).select("*");
+          if (error) throw error;
+          return [table, data ?? []] as const;
+        }),
+      );
+
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        product: "Pratix",
+        data: Object.fromEntries(entries),
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: "application/json;charset=utf-8",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `pratix-export-${new Date().toISOString().slice(0, 10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    },
+    onSuccess: () => toast.success("Export dati generato"),
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Download className="h-4 w-4 text-muted-foreground" />
+          Export dati
+        </CardTitle>
+        <CardDescription>
+          Scarica un archivio JSON con anagrafiche, pratiche, attività, prezzi e fatture.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Button
+          variant="outline"
+          onClick={() => exportMutation.mutate()}
+          disabled={exportMutation.isPending}
+        >
+          {exportMutation.isPending ? "Preparazione…" : "Scarica export JSON"}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 

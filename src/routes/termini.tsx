@@ -58,7 +58,8 @@ function TerminiPage() {
             <p className="mt-2 text-muted-foreground">
               I presenti termini disciplinano l'uso di Pratix, applicazione web destinata agli
               avvocati che esercitano la professione in forma individuale (freelance) per la
-              gestione di pratiche, clienti, attività fatturabili e fatturazione elettronica.
+              gestione di pratiche di recupero crediti, committenti, clienti, controparti, attività
+              fatturabili e fatturazione elettronica.
             </p>
           </section>
 
@@ -84,9 +85,9 @@ function TerminiPage() {
           <section>
             <h2 className="font-display text-xl font-semibold">4. Contenuti dell'utente</h2>
             <p className="mt-2 text-muted-foreground">
-              I dati e i contenuti inseriti dall'utente (anagrafiche clienti, pratiche, fatture,
-              allegati) restano di proprietà dell'utente. Pratix li tratta nei limiti necessari
-              all'erogazione del servizio, come descritto nell'
+              I dati e i contenuti inseriti dall'utente (committenti, clienti, controparti,
+              pratiche, attività, fatture, allegati) restano di proprietà dell'utente. Pratix li
+              tratta nei limiti necessari all'erogazione del servizio, come descritto nell'
               <Link to="/privacy" className="text-primary hover:underline">
                 Informativa sulla privacy
               </Link>

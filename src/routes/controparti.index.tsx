@@ -8,6 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { TableEmptyState } from "@/components/table-empty-state";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -43,6 +51,7 @@ export const Route = createFileRoute("/controparti/")({
 
 function ContropartiList() {
   const [q, setQ] = useState("");
+  const [kind, setKind] = useState("all");
 
   const { data: counterparties, isLoading } = useQuery({
     queryKey: ["counterparties"],
@@ -77,12 +86,13 @@ function ContropartiList() {
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     if (!counterparties) return [];
-    if (!term) return counterparties;
     return counterparties.filter((counterparty) => {
+      if (kind !== "all" && counterparty.kind !== kind) return false;
+      if (!term) return true;
       const name = counterpartyDisplayName(counterparty).toLowerCase();
       return name.includes(term) || (counterparty.notes ?? "").toLowerCase().includes(term);
     });
-  }, [counterparties, q]);
+  }, [counterparties, kind, q]);
 
   return (
     <>
@@ -98,7 +108,7 @@ function ContropartiList() {
         }
       />
 
-      <div className="mb-4 flex items-center gap-2">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -108,6 +118,19 @@ function ContropartiList() {
             className="pl-9"
           />
         </div>
+        <Select value={kind} onValueChange={setKind}>
+          <SelectTrigger className="sm:w-52">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutti i tipi</SelectItem>
+            {Object.entries(counterpartyKindLabels).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <Card>
@@ -130,7 +153,23 @@ function ContropartiList() {
             ) : filtered.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="py-10 text-center text-sm text-muted-foreground">
-                  {q ? "Nessun risultato." : "Nessuna controparte. Aggiungi la prima."}
+                  <TableEmptyState
+                    title={
+                      q || kind !== "all" ? "Nessuna controparte trovata" : "Nessuna controparte"
+                    }
+                    description={
+                      q || kind !== "all"
+                        ? "Modifica ricerca o filtro per ampliare i risultati."
+                        : "Aggiungi la prima controparte per collegarla alle pratiche."
+                    }
+                    action={
+                      !q && kind === "all" ? (
+                        <Button size="sm" asChild>
+                          <Link to="/controparti/nuova">Nuova controparte</Link>
+                        </Button>
+                      ) : undefined
+                    }
+                  />
                 </TableCell>
               </TableRow>
             ) : (

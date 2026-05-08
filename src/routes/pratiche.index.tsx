@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { TableEmptyState } from "@/components/table-empty-state";
 import {
   Table,
   TableBody,
@@ -50,7 +51,8 @@ export const Route = createFileRoute("/pratiche/")({
 
 function PraticheList() {
   const [q, setQ] = useState("");
-  const [status, setStatus] = useState<string>("all");
+  const [view, setView] = useState<string>("open");
+  const [sort, setSort] = useState<string>("updated_desc");
 
   const { data, isLoading } = useQuery({
     queryKey: ["cases"],
@@ -66,11 +68,47 @@ function PraticheList() {
     },
   });
 
+  const { data: activities = [] } = useQuery({
+    queryKey: ["case-activity-statuses", "case-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("case_activities")
+        .select("case_id, status, amount");
+      if (error) throw error;
+      return data ?? [];
+    },
+  });
+
+  const activitySummaryByCase = useMemo(() => {
+    return activities.reduce<
+      Record<string, { toInvoice: number; invoiced: number; toInvoiceAmount: number }>
+    >((acc, activity) => {
+      const current = acc[activity.case_id] ?? { toInvoice: 0, invoiced: 0, toInvoiceAmount: 0 };
+      if (activity.status === "to_invoice") {
+        current.toInvoice += 1;
+        current.toInvoiceAmount += Number(activity.amount ?? 0);
+      }
+      if (activity.status === "invoiced") current.invoiced += 1;
+      acc[activity.case_id] = current;
+      return acc;
+    }, {});
+  }, [activities]);
+
   const filtered = useMemo(() => {
     if (!data) return [];
     const term = q.trim().toLowerCase();
-    return data.filter((c) => {
-      if (status !== "all" && c.status !== status) return false;
+    const result = data.filter((c) => {
+      const summary = activitySummaryByCase[c.id] ?? {
+        toInvoice: 0,
+        invoiced: 0,
+        toInvoiceAmount: 0,
+      };
+      if (view === "open" && c.status !== "open" && c.status !== "in_progress") return false;
+      if (view === "to_invoice" && summary.toInvoice === 0) return false;
+      if (view === "invoiced" && summary.invoiced === 0) return false;
+      if (view === "suspended" && c.status !== "suspended") return false;
+      if (view === "closed" && c.status !== "closed") return false;
+      if (view === "archived" && c.status !== "archived") return false;
       if (!term) return true;
       const clientName = c.clients ? clientDisplayName(c.clients).toLowerCase() : "";
       const principalName = c.principals?.business_name?.toLowerCase() ?? "";
@@ -85,7 +123,16 @@ function PraticheList() {
         counterpartyName.includes(term)
       );
     });
-  }, [data, q, status]);
+
+    return [...result].sort((a, b) => {
+      const aSummary = activitySummaryByCase[a.id]?.toInvoiceAmount ?? 0;
+      const bSummary = activitySummaryByCase[b.id]?.toInvoiceAmount ?? 0;
+      if (sort === "practice_asc") return a.practice_number - b.practice_number;
+      if (sort === "practice_desc") return b.practice_number - a.practice_number;
+      if (sort === "to_invoice_desc") return bSummary - aSummary;
+      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+    });
+  }, [activitySummaryByCase, data, q, sort, view]);
 
   return (
     <>
@@ -101,7 +148,7 @@ function PraticheList() {
         }
       />
 
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -111,17 +158,29 @@ function PraticheList() {
             className="pl-9"
           />
         </div>
-        <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="sm:w-44">
+        <Select value={view} onValueChange={setView}>
+          <SelectTrigger className="lg:w-52">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Tutti gli stati</SelectItem>
-            {Object.entries(caseStatusLabels).map(([k, l]) => (
-              <SelectItem key={k} value={k}>
-                {l}
-              </SelectItem>
-            ))}
+            <SelectItem value="all">Tutte le pratiche</SelectItem>
+            <SelectItem value="open">Aperte e in corso</SelectItem>
+            <SelectItem value="to_invoice">Con attività da fatturare</SelectItem>
+            <SelectItem value="invoiced">Con attività fatturate</SelectItem>
+            <SelectItem value="suspended">Sospese</SelectItem>
+            <SelectItem value="closed">Chiuse</SelectItem>
+            <SelectItem value="archived">Archiviate</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select value={sort} onValueChange={setSort}>
+          <SelectTrigger className="lg:w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="updated_desc">Aggiornate di recente</SelectItem>
+            <SelectItem value="practice_desc">Numero pratica decrescente</SelectItem>
+            <SelectItem value="practice_asc">Numero pratica crescente</SelectItem>
+            <SelectItem value="to_invoice_desc">Da fatturare</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -136,54 +195,85 @@ function PraticheList() {
               <TableHead>Cliente</TableHead>
               <TableHead>Controparte</TableHead>
               <TableHead>Stato</TableHead>
+              <TableHead>Fatturazione</TableHead>
               <TableHead>Aperta il</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
                   Caricamento…
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                  {q || status !== "all" ? "Nessun risultato." : "Nessuna pratica. Crea la prima."}
+                <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
+                  <TableEmptyState
+                    title={
+                      q || view !== "open" ? "Nessuna pratica trovata" : "Nessuna pratica aperta"
+                    }
+                    description={
+                      q || view !== "open"
+                        ? "Modifica ricerca, vista o ordinamento per ampliare i risultati."
+                        : "Crea la prima pratica collegando committente, cliente e controparte."
+                    }
+                    action={
+                      !q && view === "open" ? (
+                        <Button size="sm" asChild>
+                          <Link to="/pratiche/nuova">Nuova pratica</Link>
+                        </Button>
+                      ) : undefined
+                    }
+                  />
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((c) => (
-                <TableRow key={c.id}>
-                  <TableCell className="font-mono text-sm">{c.practice_number}</TableCell>
-                  <TableCell>
-                    <Link
-                      to="/pratiche/$caseId"
-                      params={{ caseId: c.id }}
-                      className="font-medium hover:underline"
-                    >
-                      {c.title}
-                    </Link>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {c.principals?.business_name ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {c.clients ? clientDisplayName(c.clients) : "—"}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {c.counterparties ? counterpartyDisplayName(c.counterparties) : "—"}
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={caseStatusVariant[c.status] ?? "outline"}>
-                      {caseStatusLabels[c.status] ?? c.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {formatDate(c.opened_at)}
-                  </TableCell>
-                </TableRow>
-              ))
+              filtered.map((c) => {
+                const summary = activitySummaryByCase[c.id] ?? {
+                  toInvoice: 0,
+                  invoiced: 0,
+                  toInvoiceAmount: 0,
+                };
+                return (
+                  <TableRow key={c.id}>
+                    <TableCell className="font-mono text-sm">{c.practice_number}</TableCell>
+                    <TableCell>
+                      <Link
+                        to="/pratiche/$caseId"
+                        params={{ caseId: c.id }}
+                        className="font-medium hover:underline"
+                      >
+                        {c.title}
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {c.principals?.business_name ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {c.clients ? clientDisplayName(c.clients) : "—"}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {c.counterparties ? counterpartyDisplayName(c.counterparties) : "—"}
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={caseStatusVariant[c.status] ?? "outline"}>
+                        {caseStatusLabels[c.status] ?? c.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {summary.toInvoice > 0
+                        ? `${summary.toInvoice} da fatturare`
+                        : summary.invoiced > 0
+                          ? `${summary.invoiced} fatturate`
+                          : "—"}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {formatDate(c.opened_at)}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>
