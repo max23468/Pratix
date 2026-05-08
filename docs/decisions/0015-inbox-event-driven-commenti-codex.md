@@ -21,20 +21,27 @@ Sostituiamo la gestione settimanale con un workflow GitHub Actions event-driven.
 
 Il workflow:
 
-- parte su nuove review, nuovi commenti inline di PR, sincronizzazioni/chiusure
-  PR e commenti issue, oltre che manualmente via `workflow_dispatch`;
+- parte su eventi PR in contesto trusted, sincronizzazioni/chiusure PR e
+  commenti issue, oltre che manualmente via `workflow_dispatch`;
 - mantiene una scansione programmata ogni 6 ore per riallineare la inbox quando
   lo stato dei review thread cambia senza creare o modificare commenti, per
   esempio dopo una risoluzione o riapertura;
 - analizza tutte le PR del repository, aperte, chiuse e mergiate;
 - usa i review thread GitHub come fonte di verità;
 - aggiorna una issue unica chiamata `Codex feedback inbox`;
+- chiude automaticamente eventuali issue inbox duplicate, mantenendo una sola
+  issue canonica;
 - separa i thread actionable (`resolved=no`, `outdated=no`) dallo storico;
+- mostra lo storico in forma compatta, con limiti configurabili, per evitare che
+  la issue diventi rumorosa;
 - pubblica `@codex address that feedback` sulle PR con thread actionable, senza
   duplicare richieste già pubblicate per gli stessi thread;
 - esegue sempre lo script dalla default branch, non dal merge ref della PR che ha
   generato l'evento, così il token con `issues: write` non esegue codice proposto
   nella PR;
+- usa scansioni mirate su eventi ordinari (PR aperte, PR recenti e PR
+  dell'evento) e conserva la scansione completa per schedule, dispatch manuale e
+  commenti sulla inbox;
 - non committa più file di stato o report Markdown nel repository.
 
 La issue inbox è il punto operativo da controllare prima di dichiarare pronta una
@@ -47,9 +54,19 @@ PR o una pubblicazione.
 - La inbox viene ripulita dopo la risoluzione o riapertura dei thread anche se
   GitHub Actions non espone un trigger valido per quello stato: la scansione
   programmata ogni 6 ore riallinea `isResolved`.
+- La issue inbox resta unica anche dopo run ravvicinati: eventuali duplicati
+  aperti vengono commentati e chiusi come duplicati della canonica.
+- Lo storico resta disponibile ma non cresce senza controllo nel corpo della
+  issue.
+- Gli eventi ordinari consumano meno API perché non attraversano sempre tutto lo
+  storico PR; la scansione completa resta disponibile nei punti di
+  riallineamento.
 - Il workflow sacrifica la possibilità di testare modifiche allo script dalla PR
   stessa in cambio dell'esecuzione di codice trusted con permessi di scrittura
   sulla issue inbox.
+- I commenti inline di review non attivano più un workflow con token write da
+  YAML della PR: vengono intercettati dal successivo evento trusted, dal dispatch
+  manuale o dalla scansione programmata.
 - `main` non riceve più commit automatici di solo stato.
 - Il backlog storico resta visibile, ma non viene confuso con il lavoro da fare
   subito.
