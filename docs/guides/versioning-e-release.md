@@ -35,7 +35,7 @@ In Pratix, quando il proprietario chiede "pubblica", "pubblica tutto" o
 
 1. branch di lavoro mergiato su `main`;
 2. deployment production Vercel completato e verificato;
-3. branch dedicato chiuso/eliminato, se esiste e non serve più.
+3. branch dedicato chiuso/eliminato, sia remoto sia locale nel checkout usato, se esiste e non serve più.
 
 Una PR aperta, un push sul branch o una preview Vercel non bastano. Se uno di
 questi passaggi non è possibile, va dichiarato esplicitamente come residuo

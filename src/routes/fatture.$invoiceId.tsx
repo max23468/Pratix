@@ -1,10 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, FileDown, FileText, Trash2, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, CheckCircle2, FileDown, FileSpreadsheet, FileText, Trash2 } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,21 +18,34 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { InvoiceForm } from "@/components/invoice-form";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type { InvoiceLineKind } from "@/lib/invoice-calc";
+import { invoiceLineKindLabels } from "@/lib/invoice-calc";
 import type { InvoicePdfData } from "@/lib/invoice-pdf";
-import type { InvoiceStatus } from "@/lib/labels";
+import { invoiceStatusLabels, invoiceStatusVariant } from "@/lib/labels";
+import { PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
 import { generateInvoiceXmlFn } from "@/server/invoices.functions";
 
 export const Route = createFileRoute("/fatture/$invoiceId")({
   head: () => ({
     meta: [
       { title: "Fattura · Pratix" },
-      { name: "description", content: "Dettaglio fattura, PDF e XML SdI." },
+      { name: "description", content: "Dettaglio fattura, PDF, XML SdI e rendiconti Excel." },
       { property: "og:title", content: "Fattura · Pratix" },
-      { property: "og:description", content: "Dettaglio fattura, PDF e XML SdI." },
+      {
+        property: "og:description",
+        content: "Dettaglio fattura, PDF, XML SdI e rendiconti Excel.",
+      },
     ],
   }),
   component: InvoiceDetailPage,
@@ -53,27 +68,83 @@ function InvoiceDetailPage() {
         .single();
       if (error) throw error;
 
-      const [{ data: lines }, { data: client }, { data: profile }] = await Promise.all([
+      const [
+        { data: lines },
+        { data: principal },
+        { data: client },
+        { data: profile },
+        { data: exports },
+      ] = await Promise.all([
         supabase
           .from("invoice_lines")
           .select("*")
           .eq("invoice_id", invoiceId)
           .order("position", { ascending: true }),
-        supabase.from("clients").select("*").eq("id", invoice.client_id).single(),
+        invoice.principal_id
+          ? supabase.from("principals").select("*").eq("id", invoice.principal_id).single()
+          : Promise.resolve({ data: null }),
+        supabase.from("clients").select("*").eq("id", invoice.client_id).maybeSingle(),
         supabase.from("profiles").select("*").eq("id", user!.id).single(),
+        invoice.billing_run_id
+          ? supabase
+              .from("billing_exports")
+              .select("*")
+              .eq("billing_run_id", invoice.billing_run_id)
+              .order("kind", { ascending: true })
+          : Promise.resolve({ data: [] }),
       ]);
-      return { invoice, lines: lines || [], client, profile };
+      return {
+        invoice,
+        lines: lines || [],
+        principal,
+        client,
+        profile,
+        exports: exports || [],
+      };
     },
   });
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
+      const { data: invoice, error: invoiceError } = await supabase
+        .from("invoices")
+        .select("id, billing_run_id")
+        .eq("id", invoiceId)
+        .single();
+      if (invoiceError) throw invoiceError;
+
+      const { error: activityError } = await supabase
+        .from("case_activities")
+        .update({ status: "to_invoice", invoice_id: null })
+        .eq("invoice_id", invoiceId);
+      if (activityError) throw activityError;
+
+      if (invoice.billing_run_id) {
+        const { data: exports } = await supabase
+          .from("billing_exports")
+          .select("storage_path")
+          .eq("billing_run_id", invoice.billing_run_id);
+        const paths = (exports ?? []).map((item) => item.storage_path);
+        if (paths.length > 0) {
+          const { error: storageError } = await supabase.storage
+            .from(PRATIX_DOCUMENTS_BUCKET)
+            .remove(paths);
+          if (storageError) throw storageError;
+        }
+        const { error: runError } = await supabase
+          .from("billing_runs")
+          .update({ status: "cancelled", invoice_id: null })
+          .eq("id", invoice.billing_run_id);
+        if (runError) throw runError;
+      }
+
       const { error } = await supabase.from("invoices").delete().eq("id", invoiceId);
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Fattura eliminata");
+      toast.success("Fattura eliminata e attività riaperte");
       qc.invalidateQueries({ queryKey: ["invoices"] });
+      qc.invalidateQueries({ queryKey: ["activities"] });
       navigate({ to: "/fatture" });
     },
     onError: (err: Error) => toast.error(err.message),
@@ -115,6 +186,20 @@ function InvoiceDetailPage() {
   const handleDownloadPdf = async () => {
     if (!data) return;
     const { downloadInvoicePdf } = await import("@/lib/invoice-pdf");
+    const billedParty = data.principal
+      ? {
+          kind: "company",
+          business_name: data.principal.business_name,
+          first_name: null,
+          last_name: null,
+          tax_code: data.principal.tax_code,
+          vat_number: data.principal.vat_number,
+          address_street: data.principal.address_street,
+          address_zip: data.principal.address_zip,
+          address_city: data.principal.address_city,
+          address_province: data.principal.address_province,
+        }
+      : data.client;
 
     downloadInvoicePdf({
       invoice: {
@@ -126,6 +211,7 @@ function InvoiceDetailPage() {
         taxable_fees: Number(data.invoice.taxable_fees),
         taxable_expenses: Number(data.invoice.taxable_expenses),
         art15_expenses: Number(data.invoice.art15_expenses),
+        general_expenses_amount: Number(data.invoice.general_expenses_amount),
         cassa_amount: Number(data.invoice.cassa_amount),
         vat_amount: Number(data.invoice.vat_amount),
         withholding_amount: Number(data.invoice.withholding_amount),
@@ -137,16 +223,27 @@ function InvoiceDetailPage() {
         withholding_rate: Number(data.invoice.withholding_rate),
         apply_withholding: data.invoice.apply_withholding,
       },
-      lines: data.lines.map((l) => ({
-        kind: l.kind as InvoiceLineKind,
-        description: l.description,
-        quantity: Number(l.quantity),
-        unit_price: Number(l.unit_price),
-        amount: Number(l.amount),
+      lines: data.lines.map((line) => ({
+        kind: line.kind as InvoiceLineKind,
+        description: line.description,
+        quantity: Number(line.quantity),
+        unit_price: Number(line.unit_price),
+        amount: Number(line.amount),
       })),
-      client: data.client as InvoicePdfData["client"],
+      client: billedParty as InvoicePdfData["client"],
       profile: data.profile as InvoicePdfData["profile"],
     });
+  };
+
+  const downloadExport = async (storagePath: string, fileName: string) => {
+    const { data: signed, error } = await supabase.storage
+      .from(PRATIX_DOCUMENTS_BUCKET)
+      .createSignedUrl(storagePath, 60, { download: fileName });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    if (signed?.signedUrl) window.open(signed.signedUrl, "_blank", "noopener,noreferrer");
   };
 
   if (isLoading || !data) {
@@ -157,11 +254,13 @@ function InvoiceDetailPage() {
     );
   }
 
+  const billedName = data.principal?.business_name ?? data.client?.business_name ?? "—";
+
   return (
     <AppLayout>
       <PageHeader
         title={`Fattura ${data.invoice.number}/${data.invoice.year}`}
-        description="Modifica dati, scarica PDF di cortesia o XML SdI."
+        description={`Committente: ${billedName}`}
         actions={
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline">
@@ -198,7 +297,8 @@ function InvoiceDetailPage() {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Eliminare la fattura?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    L'operazione è irreversibile. Verranno rimosse anche tutte le righe associate.
+                    Le attività collegate torneranno da fatturare e i rendiconti Excel verranno
+                    rimossi dallo storage.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
@@ -216,33 +316,128 @@ function InvoiceDetailPage() {
         }
       />
 
-      <InvoiceForm
-        invoiceId={invoiceId}
-        initialInvoice={{
-          id: data.invoice.id,
-          client_id: data.invoice.client_id,
-          case_id: data.invoice.case_id,
-          number: data.invoice.number,
-          year: data.invoice.year,
-          issue_date: data.invoice.issue_date,
-          due_date: data.invoice.due_date,
-          status: data.invoice.status as InvoiceStatus,
-          cassa_rate: Number(data.invoice.cassa_rate),
-          vat_rate: Number(data.invoice.vat_rate),
-          withholding_rate: Number(data.invoice.withholding_rate),
-          apply_withholding: data.invoice.apply_withholding,
-          payment_method: data.invoice.payment_method,
-          notes: data.invoice.notes,
-          paid_at: data.invoice.paid_at,
-        }}
-        initialLines={data.lines.map((l) => ({
-          id: l.id,
-          kind: l.kind as InvoiceLineKind,
-          description: l.description,
-          quantity: Number(l.quantity),
-          unit_price: Number(l.unit_price),
-        }))}
-      />
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <Card>
+          <CardHeader>
+            <CardTitle>Righe fattura</CardTitle>
+          </CardHeader>
+          <CardContent className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Data</TableHead>
+                  <TableHead>Pratica</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Controparte</TableHead>
+                  <TableHead>Descrizione</TableHead>
+                  <TableHead className="text-right">Q.tà</TableHead>
+                  <TableHead className="text-right">Prezzo</TableHead>
+                  <TableHead className="text-right">Totale</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {data.lines.map((line) => (
+                  <TableRow key={line.id}>
+                    <TableCell>{formatDate(line.activity_date)}</TableCell>
+                    <TableCell>
+                      {line.practice_number ? `N. ${line.practice_number}` : "—"}
+                    </TableCell>
+                    <TableCell>{line.client_name || "—"}</TableCell>
+                    <TableCell>{line.counterparty_name || "—"}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <span>{line.description}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {invoiceLineKindLabels[line.kind as InvoiceLineKind]}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">{Number(line.quantity)}</TableCell>
+                    <TableCell className="text-right">
+                      {formatCurrency(Number(line.unit_price))}
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {formatCurrency(Number(line.amount))}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Totali</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Badge variant={invoiceStatusVariant[data.invoice.status] ?? "outline"}>
+                {invoiceStatusLabels[data.invoice.status] ?? data.invoice.status}
+              </Badge>
+              <SummaryRow label="Data" value={formatDate(data.invoice.issue_date)} />
+              <SummaryRow
+                label="Compensi"
+                value={formatCurrency(Number(data.invoice.taxable_fees))}
+              />
+              {Number(data.invoice.general_expenses_amount) > 0 && (
+                <SummaryRow
+                  label="Spese generali"
+                  value={formatCurrency(Number(data.invoice.general_expenses_amount))}
+                />
+              )}
+              <SummaryRow label="Cassa" value={formatCurrency(Number(data.invoice.cassa_amount))} />
+              <SummaryRow label="IVA" value={formatCurrency(Number(data.invoice.vat_amount))} />
+              <SummaryRow
+                label="Rimborsi Art. 15"
+                value={formatCurrency(Number(data.invoice.art15_expenses))}
+              />
+              <SummaryRow
+                label="Totale"
+                value={formatCurrency(Number(data.invoice.total_amount))}
+                strong
+              />
+              <SummaryRow
+                label="Netto"
+                value={formatCurrency(Number(data.invoice.net_to_pay))}
+                strong
+              />
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Rendiconti Excel</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {data.exports.length === 0 && (
+                <p className="text-sm text-muted-foreground">Nessun rendiconto salvato.</p>
+              )}
+              {data.exports.map((item) => (
+                <Button
+                  key={item.id}
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => downloadExport(item.storage_path, item.file_name)}
+                >
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  {item.file_name}
+                </Button>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </AppLayout>
+  );
+}
+
+function SummaryRow({ label, value, strong }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <div className={strong ? "flex justify-between font-semibold" : "flex justify-between text-sm"}>
+      <span>{label}</span>
+      <span className="tabular-nums">{value}</span>
+    </div>
   );
 }

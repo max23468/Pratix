@@ -187,19 +187,6 @@ Metadati degli allegati caricati su Supabase Storage per compensi e rimborsi:
 nome originale, nome descrittivo, tipo documento, MIME type, dimensione, note e
 flag anteprima.
 
-### `expenses` (legacy)
-
-**Spese** sostenute per conto del cliente. `is_art15` distingue le spese
-escluse dall'imponibile ex art. 15 DPR 633/72 (anticipazioni in nome e per
-conto del cliente) dalle spese imponibili. Una spesa può essere associata a
-una fattura (`invoice_id` nullabile): finché è null, la spesa è "da
-fatturare".
-
-Nel nuovo recupero crediti i rimborsi confluiscono in `case_activities` con
-`kind = expense_reimbursement`. La vecchia route autonoma `/spese` non fa più
-parte della navigazione; `expenses` resta solo come tabella legacy finché il
-flusso fatture precedente non sarà ricondotto al nuovo modello.
-
 ### `invoices`
 
 **Fatture / parcelle**. Contengono numerazione (`number` + `year`, unica per
@@ -212,11 +199,13 @@ importi vengono persistiti per evitare ricalcoli e per congelare il
 documento al momento dell'emissione. Aliquote di default vengono ereditate
 da `profiles` ma sono editabili per fattura.
 
-La Fase 2 aggiunge il collegamento opzionale a `principals` e `billing_runs` e
-i campi per spese generali: `include_general_expenses`,
-`general_expenses_rate`, `general_expenses_amount`, `cassa_base_amount`. La
-cassa forense si calcola solo su compensi + spese generali, non sui rimborsi
-Art. 15.
+Le fatture di recupero crediti vengono generate da attività incluse in una
+sessione `billing_runs`: il soggetto fatturato è il committente
+(`principal_id`), mentre `client_id` resta compilato come ancora tecnica
+compatibile con lo schema storico. I campi `include_general_expenses`,
+`general_expenses_rate`, `general_expenses_amount`, `cassa_base_amount`
+congelano le spese generali opzionali. La cassa forense si calcola solo su
+compensi + spese generali, non sui rimborsi Art. 15.
 
 ### `billing_runs`
 
@@ -237,15 +226,16 @@ includere, rinviare o escludere una specifica attività dal periodo corrente.
 ### `billing_exports`
 
 File Excel generati come rendiconto per il committente. `kind` distingue export
-onorari/compensi ed export rimborsi spese, nel formato richiesto dai template
-del committente.
+onorari/compensi ed export rimborsi spese. I file sono salvati in Supabase
+Storage e collegati alla fattura tramite `invoice_id`.
 
 ### `invoice_lines`
 
 **Righe di una fattura**. `kind` distingue:
 
 - `fee`: onorario imponibile
-- `expense_taxable`: spesa imponibile
+- `expense_taxable`: spesa imponibile legacy, non generata dal nuovo flusso
+  recupero crediti
 - `expense_art15`: anticipazione fuori imponibile
 
 `position` ordina le righe nel documento.
@@ -301,7 +291,6 @@ I file sono organizzati con il primo segmento uguale all'UUID dell'utente:
 ```text
 <user_id>/invoices/<invoice_id>/<file>
 <user_id>/cases/<case_id>/<file>
-<user_id>/expenses/<expense_id>/<file>
 <user_id>/activities/<activity_id>/<file>
 <user_id>/billing-exports/<billing_run_id>/<file>
 <user_id>/imports/<import_id>/<file>
@@ -327,7 +316,6 @@ quando serve.
 | `case_status`             | open, in_progress, suspended, closed, archived                                   |
 | `client_kind`             | individual, company                                                              |
 | `counterparty_kind`       | individual, company, group                                                       |
-| `expense_category`        | contributo_unificato, marche_da_bollo, copie, trasferte, ctu, notifiche, altro   |
 | `fee_type`                | flat, hourly                                                                     |
 | `import_mode`             | manual, excel                                                                    |
 | `import_row_status`       | pending, valid, warning, error, imported, skipped                                |

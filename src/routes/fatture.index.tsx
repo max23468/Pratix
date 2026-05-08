@@ -33,6 +33,19 @@ import {
 } from "@/lib/labels";
 import { formatCurrency, formatDate } from "@/lib/format";
 
+type InvoiceListRow = {
+  id: string;
+  number: string;
+  year: number;
+  issue_date: string;
+  due_date: string | null;
+  status: string;
+  total_amount: number;
+  net_to_pay: number;
+  client: ClientDisplayData | null;
+  principal: { id: string; business_name: string } | null;
+};
+
 export const Route = createFileRoute("/fatture/")({
   head: () => ({
     meta: [
@@ -58,11 +71,11 @@ function InvoicesIndex() {
       const { data, error } = await supabase
         .from("invoices")
         .select(
-          "id, number, year, issue_date, due_date, status, total_amount, net_to_pay, client:clients(id, kind, first_name, last_name, business_name)",
+          "id, number, year, issue_date, due_date, status, total_amount, net_to_pay, client:clients(id, kind, first_name, last_name, business_name), principal:principals(id, business_name)",
         )
         .order("issue_date", { ascending: false });
       if (error) throw error;
-      return data || [];
+      return (data || []) as InvoiceListRow[];
     },
   });
 
@@ -78,7 +91,9 @@ function InvoicesIndex() {
       if (status !== "all" && i.status !== status) return false;
       if (year !== "all" && String(i.year) !== year) return false;
       if (!q) return true;
-      const name = clientDisplayName(i.client as ClientDisplayData).toLowerCase();
+      const name = (
+        i.principal?.business_name || clientDisplayName(i.client as ClientDisplayData)
+      ).toLowerCase();
       return i.number.toLowerCase().includes(q) || name.includes(q);
     });
   }, [data, search, status, year]);
@@ -136,7 +151,7 @@ function InvoicesIndex() {
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <Input
-                placeholder="Cerca per numero o cliente"
+                placeholder="Cerca per numero o committente"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 className="pl-9"
@@ -176,7 +191,7 @@ function InvoicesIndex() {
                 <TableRow>
                   <TableHead>Numero</TableHead>
                   <TableHead>Data</TableHead>
-                  <TableHead>Cliente</TableHead>
+                  <TableHead>Committente</TableHead>
                   <TableHead>Scadenza</TableHead>
                   <TableHead>Stato</TableHead>
                   <TableHead className="text-right">Totale</TableHead>
@@ -213,7 +228,10 @@ function InvoicesIndex() {
                         </Link>
                       </TableCell>
                       <TableCell>{formatDate(i.issue_date)}</TableCell>
-                      <TableCell>{clientDisplayName(i.client as ClientDisplayData)}</TableCell>
+                      <TableCell>
+                        {i.principal?.business_name ||
+                          clientDisplayName(i.client as ClientDisplayData)}
+                      </TableCell>
                       <TableCell className={isOverdue ? "font-medium text-destructive" : ""}>
                         {formatDate(i.due_date)}
                       </TableCell>

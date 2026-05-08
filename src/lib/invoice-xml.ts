@@ -34,6 +34,8 @@ export type InvoiceXmlData = {
     taxable_fees: number;
     taxable_expenses: number;
     art15_expenses: number;
+    general_expenses_amount: number;
+    cassa_base_amount: number;
     cassa_amount: number;
     vat_amount: number;
     withholding_amount: number;
@@ -119,7 +121,10 @@ export function buildInvoiceXml(data: InvoiceXmlData): XmlBuildResult {
 
   // Riepilogo IVA
   const imponibileIvato =
-    data.invoice.taxable_fees + data.invoice.taxable_expenses + data.invoice.cassa_amount;
+    data.invoice.taxable_fees +
+    data.invoice.general_expenses_amount +
+    data.invoice.taxable_expenses +
+    data.invoice.cassa_amount;
   const aliquotaIva = isForfettario ? 0 : data.invoice.vat_rate;
 
   const riepilogoBlocks: string[] = [];
@@ -179,7 +184,7 @@ export function buildInvoiceXml(data: InvoiceXmlData): XmlBuildResult {
         <TipoCassa>TC07</TipoCassa>
         <AlCassa>${num(data.invoice.cassa_rate)}</AlCassa>
         <ImportoContributoCassa>${num(data.invoice.cassa_amount)}</ImportoContributoCassa>
-        <ImponibileCassa>${num(data.invoice.taxable_fees + data.invoice.taxable_expenses)}</ImponibileCassa>
+        <ImponibileCassa>${num(data.invoice.cassa_base_amount)}</ImponibileCassa>
         <AliquotaIVA>${num(aliquotaIva)}</AliquotaIVA>
         ${isForfettario ? `<Natura>${naturaForfettario}</Natura>` : ""}
       </DatiCassaPrevidenziale>`

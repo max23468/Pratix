@@ -782,63 +782,6 @@ export type Database = {
           },
         ]
       }
-      expenses: {
-        Row: {
-          amount: number
-          case_id: string
-          category: Database["public"]["Enums"]["expense_category"]
-          created_at: string
-          description: string
-          expense_date: string
-          id: string
-          invoice_id: string | null
-          is_art15: boolean
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          amount?: number
-          case_id: string
-          category?: Database["public"]["Enums"]["expense_category"]
-          created_at?: string
-          description: string
-          expense_date?: string
-          id?: string
-          invoice_id?: string | null
-          is_art15?: boolean
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          amount?: number
-          case_id?: string
-          category?: Database["public"]["Enums"]["expense_category"]
-          created_at?: string
-          description?: string
-          expense_date?: string
-          id?: string
-          invoice_id?: string | null
-          is_art15?: boolean
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "expenses_case_id_fkey"
-            columns: ["case_id"]
-            isOneToOne: false
-            referencedRelation: "cases"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "expenses_invoice_fk"
-            columns: ["invoice_id"]
-            isOneToOne: false
-            referencedRelation: "invoices"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       import_rows: {
         Row: {
           applied_case_id: string | null
@@ -1508,14 +1451,6 @@ export type Database = {
       case_status: "open" | "in_progress" | "suspended" | "closed" | "archived"
       client_kind: "individual" | "company"
       counterparty_kind: "individual" | "company" | "group"
-      expense_category:
-        | "contributo_unificato"
-        | "marche_da_bollo"
-        | "copie"
-        | "trasferte"
-        | "ctu"
-        | "notifiche"
-        | "altro"
       fee_type: "flat" | "hourly"
       import_mode: "manual" | "excel"
       import_row_status:
@@ -1675,15 +1610,6 @@ export const Constants = {
       case_status: ["open", "in_progress", "suspended", "closed", "archived"],
       client_kind: ["individual", "company"],
       counterparty_kind: ["individual", "company", "group"],
-      expense_category: [
-        "contributo_unificato",
-        "marche_da_bollo",
-        "copie",
-        "trasferte",
-        "ctu",
-        "notifiche",
-        "altro",
-      ],
       fee_type: ["flat", "hourly"],
       import_mode: ["manual", "excel"],
       import_row_status: [

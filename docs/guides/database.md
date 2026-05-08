@@ -35,8 +35,6 @@ Postgres + Auth + Storage + Realtime.
 - `billing_exports` — rendiconti Excel generati
 - `imports` — sessioni import manuale o Excel
 - `import_rows` — righe di staging import
-- `expenses` (Spese) — tabella legacy finché anche il flusso fatture non usa
-  `case_activities`; la route autonoma `/spese` è stata rimossa
 - `invoices` — fatture emesse, con righe e dati FatturaPA
 - `invoice_lines` — righe fattura
 
@@ -192,14 +190,13 @@ Pratix usa un solo bucket privato:
 
 - `pratix-documents`
 
-Il bucket ospita documenti e fatture come priorità, ma copre anche allegati
-delle pratiche, spese, asset profilo ed export. I file devono sempre stare
-sotto una cartella proprietario con UUID utente come primo segmento:
+Il bucket ospita documenti, fatture, allegati delle attività, asset profilo ed
+export. I file devono sempre stare sotto una cartella proprietario con UUID
+utente come primo segmento:
 
 ```text
 <user_id>/invoices/<invoice_id>/<file>
 <user_id>/cases/<case_id>/<file>
-<user_id>/expenses/<expense_id>/<file>
 <user_id>/activities/<activity_id>/<file>
 <user_id>/billing-exports/<billing_run_id>/<file>
 <user_id>/imports/<import_id>/<file>
@@ -277,9 +274,9 @@ policy su `storage.objects`: bucket privato, path owner-scoped, nessuna policy
   `case_status_history.user_id` e `invoice_lines.user_id` sono stati chiusi con
   la migration `20260502173000_add_fk_supporting_indexes.sql`.
 - **Performance — indici unused**: gli indici segnalati come non usati su
-  `cases`, `expenses`, `invoices` e `invoice_lines` non vanno rimossi alla
-  cieca. Rivalutarli solo dopo traffico reale, query osservate e conferma che
-  non servano a filtri, join, ordinamenti o policy RLS.
+  `cases`, `invoices` e `invoice_lines` non vanno rimossi alla cieca.
+  Rivalutarli solo dopo traffico reale, query osservate e conferma che non
+  servano a filtri, join, ordinamenti o policy RLS.
 
 ## Backup gratuito
 

@@ -14,6 +14,7 @@ export type InvoicePdfData = {
     taxable_fees: number;
     taxable_expenses: number;
     art15_expenses: number;
+    general_expenses_amount: number;
     cassa_amount: number;
     vat_amount: number;
     withholding_amount: number;
@@ -123,13 +124,13 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
 
   y = Math.max(y, MARGIN + 22) + 6;
 
-  // Cliente
+  // Committente
   doc.setDrawColor(220);
   doc.line(MARGIN, y, pageWidth - MARGIN, y);
   y += 5;
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  doc.text("Cliente", MARGIN, y);
+  doc.text("Committente", MARGIN, y);
   y += 5;
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
@@ -211,6 +212,8 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
   doc.setFontSize(9);
   if (data.invoice.taxable_fees > 0)
     row("Imponibile compensi", formatCurrency(data.invoice.taxable_fees));
+  if (data.invoice.general_expenses_amount > 0)
+    row("Spese generali", formatCurrency(data.invoice.general_expenses_amount));
   if (data.invoice.taxable_expenses > 0)
     row("Spese imponibili", formatCurrency(data.invoice.taxable_expenses));
   if (data.invoice.cassa_amount > 0)
