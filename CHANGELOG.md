@@ -6,6 +6,10 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Non versionato
+
+- **Lockfile npm riallineato alla CI**: rigenerato `package-lock.json` con npm 10 per rendere `npm ci` compatibile con il workflow Quality su Node 22.
+
 ## [0.9.0] — 2026-05-08
 
 ### Novità
