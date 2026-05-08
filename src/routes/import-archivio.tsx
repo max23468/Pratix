@@ -1525,9 +1525,12 @@ function ExcelImportPanel() {
     return { valid, errors };
   }, [previewRows]);
   const hasImportedStagedRows = stagedRows.some((row) => row.status === "imported");
+  const hasFailedStagedRows = stagedRows.some((row) => row.status === "error");
   const importableStagedRowsCount = stagedRows.filter(
     (row) => row.status === "valid" || row.status === "warning",
   ).length;
+  const isPartialImportComplete =
+    hasImportedStagedRows && hasFailedStagedRows && importableStagedRowsCount === 0;
 
   const handleFile = async (file: File | null) => {
     if (!file) return;
@@ -1856,13 +1859,20 @@ function ExcelImportPanel() {
             onClick={() => confirmMutation.mutate()}
           >
             <CheckCircle2 className="mr-1 h-4 w-4" />
-            {hasImportedStagedRows && importableStagedRowsCount === 0
-              ? "Import completato"
-              : confirmMutation.isPending
-                ? "Importazione…"
-                : "Importa righe valide"}
+            {isPartialImportComplete
+              ? "Import parziale"
+              : hasImportedStagedRows && importableStagedRowsCount === 0
+                ? "Import completato"
+                : confirmMutation.isPending
+                  ? "Importazione…"
+                  : "Importa righe valide"}
           </Button>
         </div>
+        {isPartialImportComplete ? (
+          <p className="text-right text-sm text-muted-foreground">
+            Alcune righe non sono state importate. Valida di nuovo il file dopo le correzioni.
+          </p>
+        ) : null}
       </CardContent>
     </Card>
   );
