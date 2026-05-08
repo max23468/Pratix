@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { UserCircle, LogOut, Settings, KeyRound } from "lucide-react";
+import { UserCircle, LogOut, Settings, KeyRound, FileInput } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -56,6 +56,12 @@ export function UserMenu() {
           <Link to="/impostazioni">
             <Settings className="mr-2 h-4 w-4" />
             Impostazioni professione
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/import-archivio">
+            <FileInput className="mr-2 h-4 w-4" />
+            Import archivio
           </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
