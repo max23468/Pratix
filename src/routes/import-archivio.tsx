@@ -1524,6 +1524,10 @@ function ExcelImportPanel() {
     const errors = previewRows.length - valid;
     return { valid, errors };
   }, [previewRows]);
+  const hasImportedStagedRows = stagedRows.some((row) => row.status === "imported");
+  const importableStagedRowsCount = stagedRows.filter(
+    (row) => row.status === "valid" || row.status === "warning",
+  ).length;
 
   const handleFile = async (file: File | null) => {
     if (!file) return;
@@ -1565,6 +1569,9 @@ function ExcelImportPanel() {
       if (!user) throw new Error("Sessione non valida");
       if (previewRows.length === 0) throw new Error("Valida prima il file Excel.");
       if (stats.valid === 0) throw new Error("Non ci sono righe valide da preparare.");
+      if (hasImportedStagedRows) {
+        throw new Error("Questa anteprima è già stata importata. Valida di nuovo il file.");
+      }
 
       const { data: importRow, error: importError } = await supabase
         .from("imports")
@@ -1829,22 +1836,31 @@ function ExcelImportPanel() {
           <Button
             type="button"
             variant="outline"
-            disabled={stageMutation.isPending || previewRows.length === 0 || stats.valid === 0}
+            disabled={
+              stageMutation.isPending ||
+              previewRows.length === 0 ||
+              stats.valid === 0 ||
+              hasImportedStagedRows
+            }
             onClick={() => stageMutation.mutate()}
           >
-            {stageMutation.isPending ? "Preparazione…" : "Prepara staging"}
+            {hasImportedStagedRows
+              ? "Staging importato"
+              : stageMutation.isPending
+                ? "Preparazione…"
+                : "Prepara staging"}
           </Button>
           <Button
             type="button"
-            disabled={
-              confirmMutation.isPending ||
-              stagedRows.filter((row) => row.status === "valid" || row.status === "warning")
-                .length === 0
-            }
+            disabled={confirmMutation.isPending || importableStagedRowsCount === 0}
             onClick={() => confirmMutation.mutate()}
           >
             <CheckCircle2 className="mr-1 h-4 w-4" />
-            {confirmMutation.isPending ? "Importazione…" : "Importa righe valide"}
+            {hasImportedStagedRows && importableStagedRowsCount === 0
+              ? "Import completato"
+              : confirmMutation.isPending
+                ? "Importazione…"
+                : "Importa righe valide"}
           </Button>
         </div>
       </CardContent>
