@@ -78,7 +78,7 @@ Il pre-push usa `npm run prepush:guard`: seleziona i controlli in base al diff t
 
 Prettier è un gate esplicito: `npm run format:changed:check` verifica solo i file tracciati cambiati e `npm run format:changed` corregge solo quei file. Il workflow GitHub usa lo stesso controllo sui file modificati prima di build/lint, così gli errori di formattazione emergono subito e non come rumore dentro ESLint.
 
-I commenti del bot Codex si gestiscono tramite la issue GitHub `Codex feedback inbox`: il workflow event-driven la aggiorna quando arrivano review/commenti PR, controlla tutte le PR e commenta `@codex address that feedback` sui thread actionable. Non usare più file Markdown di stato committati nel repo per questa inbox.
+I commenti del bot Codex si gestiscono tramite la issue GitHub `Codex feedback inbox`: il workflow event-driven la aggiorna quando arrivano review/commenti PR, esegue sempre lo script dalla default branch trusted, ha una scansione di riallineamento ogni 6 ore per ripulire i thread risolti/riaperti, controlla tutte le PR e commenta `@codex address that feedback` sui thread actionable. Non usare più file Markdown di stato committati nel repo per questa inbox.
 
 Vercel deploya automaticamente da PR/main, ma le modifiche solo documentali non esposte all'app non devono bloccare la chiusura su una verifica Vercel. Per `CHANGELOG.md`, `src/lib/version.ts`, testi pubblici o runtime verifica invece almeno deployment `READY` e pagina interessata.
 

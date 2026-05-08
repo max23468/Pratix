@@ -293,7 +293,7 @@ function buildInboxBody(entries) {
   lines.push(
     "## Regola operativa",
     "",
-    "Quando questa issue segnala thread actionable, Codex deve risolvere prima i commenti nuovi e poi controllare anche lo storico ancora rilevante. I thread pending non pubblicati da GitHub non sono leggibili via API finché la review non viene inviata.",
+    "Quando questa issue segnala thread actionable, Codex deve risolvere prima i commenti nuovi e poi controllare anche lo storico ancora rilevante. La inbox si aggiorna su nuove review, commenti PR, sincronizzazioni/chiusure PR e commenti issue; se un thread viene solo marcato come risolto nella UI GitHub senza push o commenti, lascia un commento sulla inbox o avvia il workflow manuale per forzare il refresh. I thread pending non pubblicati da GitHub non sono leggibili via API finché la review non viene inviata.",
     "",
   );
 
