@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { ArrowLeft, CheckCircle2, FileDown, FileSpreadsheet, FileText, Trash2 } from "lucide-react";
@@ -36,6 +37,26 @@ import { invoiceStatusLabels, invoiceStatusVariant } from "@/lib/labels";
 import { PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
 import { generateInvoiceXmlFn } from "@/server/invoices.functions";
 
+type GenerateInvoiceXmlResult = {
+  xml: string;
+  filename: string;
+};
+
+const unwrapServerResult = <T,>(result: T | { data: T }) =>
+  "data" in Object(result) ? (result as { data: T }).data : (result as T);
+
+const readServerResult = async <T,>(result: T | { data: T } | Response) => {
+  if (result instanceof Response) {
+    if (!result.ok) throw new Error(await result.text());
+    const contentType = result.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      return unwrapServerResult<T>(await result.json());
+    }
+    throw new Error("Risposta server non valida");
+  }
+  return unwrapServerResult<T>(result);
+};
+
 export const Route = createFileRoute("/fatture/$invoiceId")({
   head: () => ({
     meta: [
@@ -55,6 +76,7 @@ function InvoiceDetailPage() {
   const { invoiceId } = Route.useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const generateInvoiceXml = useServerFn(generateInvoiceXmlFn);
   const qc = useQueryClient();
 
   const { data, isLoading } = useQuery({
@@ -167,13 +189,22 @@ function InvoiceDetailPage() {
   });
 
   const downloadXmlMutation = useMutation({
-    mutationFn: async () => generateInvoiceXmlFn({ data: { invoiceId } }),
-    onSuccess: (result) => {
-      const blob = new Blob([result.xml], { type: "application/xml" });
+    mutationFn: async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error("Sessione non valida. Accedi di nuovo.");
+      const result = await generateInvoiceXml({
+        data: { invoiceId },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return readServerResult<GenerateInvoiceXmlResult>(result);
+    },
+    onSuccess: (payload) => {
+      const blob = new Blob([payload.xml], { type: "application/xml" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = result.filename;
+      a.download = payload.filename;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);

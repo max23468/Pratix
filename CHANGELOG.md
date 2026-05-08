@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.12.6] — 2026-05-09
+
+### Correzioni
+
+- **Fatture**: corretta l'apertura di `/fatture/nuova`, evitando un ciclo di rendering quando non è ancora selezionato un committente, leggendo le aliquote fiscali dai campi profilo corretti e inviando l'autorizzazione alle server function di generazione fattura/XML.
+
 ## [0.12.5] — 2026-05-09
 
 ### Correzioni
@@ -392,6 +398,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.12.6]: #0126--2026-05-09
 [0.12.5]: #0125--2026-05-09
 [0.12.4]: #0124--2026-05-08
 [0.12.3]: #0123--2026-05-08
