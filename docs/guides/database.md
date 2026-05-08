@@ -100,6 +100,9 @@ Le policy che richiedono ruolo usano poi `public.has_role((select auth.uid()), '
 - Dopo modifiche a schema, RLS, trigger o funzioni, usa:
   - `npm run db:advisors:security`
   - `npm run db:advisors:performance`
+- Per eseguire tutti i controlli Supabase collegati, preferisci
+  `npm run db:verify`: lancia dry-run e advisor in sequenza, evitando più
+  connessioni simultanee al pooler.
 - Dopo modifiche a bucket o policy Storage, usa almeno:
   - `npm run db:push:dry-run`
   - `npm run db:advisors:security`
@@ -116,6 +119,8 @@ Impostazioni operative desiderate nel dashboard Supabase:
 - Registrazione aperta: `Allow new users to sign up` attivo.
 - Conferma email attiva per le nuove registrazioni.
 - Secure Email Change non attivo per scelta di prodotto attuale.
+- Leaked Password Protection: attivare se il progetto Supabase passa a un piano
+  Pro o superiore; sul piano gratuito l'advisor security continuerà a segnalarla.
 - Policy password standard: minimo applicativo 8 caratteri; non rafforzare i
   requisiti Supabase finché il percorso resta volutamente leggero.
 - Anonymous sign-ins disattivati.

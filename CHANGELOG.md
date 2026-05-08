@@ -6,6 +6,10 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Non versionato
+
+- **Verifica Supabase seriale**: aggiunto `npm run db:verify` per eseguire dry-run e advisor in sequenza, riducendo il rischio di blocchi temporanei `ECIRCUITBREAKER` del pooler.
+
 ## [0.11.0] — 2026-05-08
 
 ### Novità
