@@ -21,29 +21,46 @@ Sostituiamo la gestione settimanale con un workflow GitHub Actions event-driven.
 
 Il workflow:
 
-- parte su nuove review e nuovi commenti inline di PR, oltre che manualmente via
-  `workflow_dispatch`;
+- parte su nuove review, nuovi commenti inline di PR, sincronizzazioni/chiusure
+  PR e commenti issue, oltre che manualmente via `workflow_dispatch`;
+- mantiene una scansione programmata ogni 6 ore per riallineare la inbox quando
+  lo stato dei review thread cambia senza creare o modificare commenti, per
+  esempio dopo una risoluzione o riapertura;
 - analizza tutte le PR del repository, aperte, chiuse e mergiate;
 - usa i review thread GitHub come fonte di verità;
 - aggiorna una issue unica chiamata `Codex feedback inbox`;
 - separa i thread actionable (`resolved=no`, `outdated=no`) dallo storico;
 - pubblica `@codex address that feedback` sulle PR con thread actionable, senza
-  duplicare richieste gia pubblicate per gli stessi thread;
+  duplicare richieste già pubblicate per gli stessi thread;
+- esegue sempre lo script dalla default branch, non dal merge ref della PR che ha
+  generato l'evento, così il token con `issues: write` non esegue codice proposto
+  nella PR;
 - non committa più file di stato o report Markdown nel repository.
 
-La issue inbox e il punto operativo da controllare prima di dichiarare pronta una
+La issue inbox è il punto operativo da controllare prima di dichiarare pronta una
 PR o una pubblicazione.
 
 ## Conseguenze
 
 - I commenti Codex vengono intercettati appena arrivano, senza attendere il
   lunedì.
+- La inbox viene ripulita dopo la risoluzione o riapertura dei thread anche se
+  GitHub Actions non espone un trigger valido per quello stato: la scansione
+  programmata ogni 6 ore riallinea `isResolved`.
+- Il workflow sacrifica la possibilità di testare modifiche allo script dalla PR
+  stessa in cambio dell'esecuzione di codice trusted con permessi di scrittura
+  sulla issue inbox.
 - `main` non riceve più commit automatici di solo stato.
 - Il backlog storico resta visibile, ma non viene confuso con il lavoro da fare
   subito.
 - Le PR chiuse o mergiate vengono comunque analizzate; se contengono thread
   actionable, Codex viene richiamato e potrà aprire un follow-up se la PR non è
   più modificabile.
+- Il checkout del workflow resta fissato al default branch, così il token con
+  permesso `issues: write` non esegue script modificati dentro una PR.
+- GitHub Actions non espone un trigger dedicato al solo click "Resolve
+  conversation"; se un thread viene risolto senza push o commenti, la inbox si
+  aggiorna al successivo evento o con dispatch/commento manuale.
 - I commenti GitHub in stato pending non pubblicato restano fuori portata delle
   API finché la review non viene inviata.
 

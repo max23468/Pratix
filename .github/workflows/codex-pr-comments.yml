@@ -1,10 +1,16 @@
 name: Codex PR comments
 
 on:
+  issue_comment:
+    types: [created, edited]
+  pull_request:
+    types: [opened, reopened, synchronize, closed]
   pull_request_review:
     types: [submitted, edited]
   pull_request_review_comment:
     types: [created, edited]
+  schedule:
+    - cron: "17 */6 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
@@ -29,11 +35,14 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - name: Checkout
+      - name: Checkout trusted workflow code
         uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
 
       - name: Sync Codex feedback inbox
         env:
-          DRY_RUN: ${{ inputs.dry_run && 'true' || 'false' }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && 'true' || 'false' }}
           GITHUB_TOKEN: ${{ github.token }}
         run: node .github/scripts/handle-codex-pr-comments.mjs
