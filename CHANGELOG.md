@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [Non versionato] — 2026-05-08
+
+### Non versionato
+
+- **Chiusura piano recupero crediti**: aggiornato il piano di evoluzione per segnare la chiusura lato prodotto delle Fasi 1-8 e spostare in roadmap i residui non bloccanti.
+
 ## [0.12.4] — 2026-05-08
 
 ### Sotto il cofano
