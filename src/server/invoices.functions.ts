@@ -7,6 +7,11 @@ import { buildBillingWorkbook, type BillingExportRow } from "@/lib/billing-xlsx"
 import { computeInvoice, type InvoiceLineInput } from "@/lib/invoice-calc";
 import { buildInvoiceXml } from "@/lib/invoice-xml";
 import { buildBillingExportStoragePath, PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
+import {
+  billingDatePattern,
+  billingPartyName,
+  nextBillingPeriodStart,
+} from "@/server/invoice-billing.helpers";
 
 type BillingItemStatus = "included" | "postponed" | "excluded";
 
@@ -32,29 +37,6 @@ type CreateBillingInvoiceInput = {
   paymentMethod?: string | null;
   notes?: string | null;
   selections: BillingSelectionInput[];
-};
-
-type PartyDisplay = {
-  kind?: string | null;
-  first_name?: string | null;
-  last_name?: string | null;
-  business_name?: string | null;
-};
-
-const datePattern = /^\d{4}-\d{2}-\d{2}$/;
-
-const partyName = (party?: PartyDisplay | null) => {
-  if (!party) return "—";
-  if (party.kind === "individual") {
-    return [party.first_name, party.last_name].filter(Boolean).join(" ") || "—";
-  }
-  return party.business_name || "—";
-};
-
-const nextPeriodStart = (periodEnd: string) => {
-  const date = new Date(`${periodEnd}T00:00:00.000Z`);
-  date.setUTCDate(date.getUTCDate() + 1);
-  return date.toISOString().slice(0, 10);
 };
 
 async function reserveNextInvoiceNumber(supabase: SupabaseClient<Database>, userId: string) {
@@ -96,14 +78,16 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input: CreateBillingInvoiceInput) => {
     if (!input?.principalId) throw new Error("Seleziona un committente");
-    if (!datePattern.test(input.periodStart) || !datePattern.test(input.periodEnd)) {
+    if (!billingDatePattern.test(input.periodStart) || !billingDatePattern.test(input.periodEnd)) {
       throw new Error("Periodo di fatturazione non valido");
     }
     if (input.periodEnd < input.periodStart) {
       throw new Error("La data fine periodo deve essere successiva alla data inizio");
     }
-    if (!datePattern.test(input.issueDate)) throw new Error("Data fattura non valida");
-    if (input.dueDate && !datePattern.test(input.dueDate)) throw new Error("Scadenza non valida");
+    if (!billingDatePattern.test(input.issueDate)) throw new Error("Data fattura non valida");
+    if (input.dueDate && !billingDatePattern.test(input.dueDate)) {
+      throw new Error("Scadenza non valida");
+    }
     if (!Array.isArray(input.selections) || input.selections.length === 0) {
       throw new Error("Seleziona almeno un'attività");
     }
@@ -246,8 +230,8 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
       position: index + 1,
       case_activity_id: activity.id,
       practice_number: activity.cases?.practice_number ?? null,
-      client_name: partyName(activity.clients),
-      counterparty_name: partyName(activity.counterparties),
+      client_name: billingPartyName(activity.clients),
+      counterparty_name: billingPartyName(activity.counterparties),
       activity_date: activity.activity_date,
       kind: activity.kind === "fee" ? "fee" : "expense_art15",
       description: activity.description,
@@ -302,7 +286,7 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
       if (includedError) throw includedError;
     }
 
-    const postponedUntil = nextPeriodStart(data.periodEnd);
+    const postponedUntil = nextBillingPeriodStart(data.periodEnd);
     for (const activity of postponed) {
       const { error: postponedError } = await supabase
         .from("case_activities")
@@ -319,8 +303,8 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
         .filter((activity) => activity.kind === kind)
         .map((activity) => ({
           practiceNumber: activity.cases?.practice_number ?? null,
-          clientName: partyName(activity.clients),
-          counterpartyName: partyName(activity.counterparties),
+          clientName: billingPartyName(activity.clients),
+          counterpartyName: billingPartyName(activity.counterparties),
           activityDate: activity.activity_date,
           description: activity.description,
           quantity: Number(activity.quantity),
