@@ -1,6 +1,7 @@
 import { renderToString } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { buildCaseTimelineItems } from "@/lib/case-timeline";
+import { buildDebtCollectionWorkflow, summarizeCaseOperations } from "@/lib/case-workflow";
 import { CaseTimeline } from "./case-operations-panel";
 
 describe("case operations timeline", () => {
@@ -69,5 +70,39 @@ describe("case operations timeline", () => {
     expect(html).toContain("Udienza");
     expect(html).toContain("Verbale.pdf");
     expect(html).toContain("In corso");
+  });
+
+  it("assegna priorità alta alle Attività maturate da fatturare", () => {
+    const activities = [
+      {
+        id: "activity-1",
+        activity_date: "2026-05-03",
+        kind: "fee",
+        status: "to_invoice",
+        description: "Udienza",
+        quantity: 1,
+        unit_price: 120,
+        amount: 120,
+        notes: null,
+        case_activity_hearings: [],
+        activity_attachments: [{ id: "attachment-1", display_name: "Verbale.pdf" }],
+      },
+    ] as never;
+    const invoices = [] as never;
+    const workflow = buildDebtCollectionWorkflow({
+      caseRow: {
+        status: "in_progress",
+      },
+      activities,
+      invoices,
+      totals: summarizeCaseOperations(activities, invoices),
+      qualityChecks: [{ severity: "ok" }],
+    });
+
+    expect(workflow).toMatchObject({
+      stage: "Preparazione Fattura",
+      priority: "Alta",
+      action: "Prepara la Fattura per le Attività maturate.",
+    });
   });
 });

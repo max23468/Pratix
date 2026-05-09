@@ -28,8 +28,8 @@ describe("import preview plan", () => {
     );
 
     expect(planned.map((row) => row.importPlan.action)).toEqual(["create", "update", "ignore"]);
-    expect(planned[1].normalized).toBeNull();
-    expect(planned[1].errors[0]).toContain("già presente");
+    expect(planned[1].normalized?.practice.existingCaseId).toBe("case-20");
+    expect(planned[1].warnings[0]).toContain("verrà aggiornata");
     expect(planned[2].errors[0]).toContain("duplicata");
     expect(summarizeImportPreviewPlan(planned)).toEqual({ create: 1, update: 1, ignore: 1 });
   });
