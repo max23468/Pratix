@@ -45,6 +45,19 @@ async function removeStoragePaths(paths: string[]) {
   }
 }
 
+async function tryRemoveStoragePaths(paths: string[]) {
+  if (paths.length === 0) {
+    return { removedStorageObjects: 0, storageCleanupCompleted: true };
+  }
+
+  try {
+    await removeStoragePaths(paths);
+    return { removedStorageObjects: paths.length, storageCleanupCompleted: true };
+  } catch {
+    return { removedStorageObjects: 0, storageCleanupCompleted: false };
+  }
+}
+
 async function knownStoragePaths(userId: string) {
   const [attachmentsResult, exportsResult, importsResult] = await Promise.all([
     supabaseAdmin.from("activity_attachments").select("storage_path").eq("user_id", userId),
@@ -88,12 +101,8 @@ export const deleteAccountFn = createServerFn({ method: "POST" })
 
     await deleteAccountData(userId);
 
-    if (paths.length > 0) {
-      await removeStoragePaths(paths);
-    }
-
     const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
     if (error) throw error;
 
-    return { deleted: true, removedStorageObjects: paths.length };
+    return { deleted: true, ...(await tryRemoveStoragePaths(paths)) };
   });

@@ -282,6 +282,7 @@ function DataExportCard() {
       const { data, error } = await supabase
         .from(table)
         .select("*")
+        .order("id", { ascending: true })
         .range(from, from + pageSize - 1);
       if (error) throw error;
 
