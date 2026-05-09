@@ -1,6 +1,6 @@
 # Piano — Strategia test automatizzati progressiva
 
-- **Stato**: avviato con baseline unit test
+- **Stato**: target ideale operativo raggiunto
 - **Data**: 2026-05-09
 - **Ambito**: introdurre test automatici proporzionati ai rischi reali di Pratix
 - **Tipo modifica attesa**: non versionato finché aggiunge solo copertura e processo
@@ -179,12 +179,50 @@ hook, componenti applicativi non-ui, route UI e soprattutto
 `src/server/invoices.functions.ts`, che richiede integration test o ulteriore
 estrazione di helper puri per essere coperto in modo utile.
 
+## Incremento 2026-05-09 — coverage recupero crediti
+
+Questo incremento ha portato la suite a 107 test distribuiti su 37 file,
+aggiungendo:
+
+- test PDF fattura, inclusi regime forfettario fallback e output multipagina;
+- test parser Excel su shared strings, inline strings, celle numeriche, foglio
+  fallback e input non validi;
+- smoke render SSR per form, navigazione, onboarding, Turnstile e tab Attività;
+- test interattivi jsdom sulle validazioni principali di Committenti, Clienti,
+  Controparti, Pratiche, Prezzi e Fatture;
+- test su AuthProvider, hook novità, layout app, onboarding, menu utente, tema,
+  apertura allegati e registrazione di una voce Attività;
+- test smoke su componenti presentazionali globali, logo, route privacy/termini,
+  configurazione router e QueryClient;
+- helper puri per la logica di fatturazione committente/periodo, coprendo
+  selezione attività, rinvii, blocco attività già fatturate, righe fattura,
+  righe rendiconto e fallback del soggetto fatturato.
+
+Coverage V8 operativa dopo l'incremento:
+
+- Statements: 79,11% (1413/1786)
+- Branches: 70,81% (1053/1487)
+- Functions: 70,23% (354/504)
+- Lines: 84,36% (1300/1541)
+
+Coverage V8 globale secondaria dopo l'incremento:
+
+- Statements: 42,18% (1477/3501)
+- Branches: 35,75% (1123/3141)
+- Functions: 35,73% (377/1055)
+- Lines: 45,12% (1362/3018)
+
+Il target ideale operativo e il target globale secondario sono raggiunti.
+Restano fuori dal perimetro di questa tranche i test end-to-end su import con
+allegati, fatturazione successiva e integrazione Supabase/RLS: vanno trattati
+come prossimi incrementi con fixture anonime e ambiente dedicato.
+
 ## Prossimi incrementi
 
-1. Estrarre altra logica pura da `src/server/invoices.functions.ts`, se serve
-   aumentare copertura server senza mockare Supabase.
-2. Estrarre helper import testabili da `src/routes/import-archivio.tsx`, se
+1. Estrarre helper import testabili da `src/routes/import-archivio.tsx`, se
    serve coprire parsing e validazioni senza browser.
+2. Coprire numero pratica, snapshot prezzi e conferma import con fixture
+   anonime.
 3. Aggiungere fixture anonime per flussi recupero crediti.
 4. Definire il perimetro integration Supabase, distinguendo test locali,
    remoto controllato e smoke production.

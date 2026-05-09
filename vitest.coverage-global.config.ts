@@ -10,6 +10,7 @@ export default defineConfig({
       include: ["src/**/*.{ts,tsx}"],
       exclude: [
         "src/**/*.test.ts",
+        "src/**/*.test.tsx",
         "src/routeTree.gen.ts",
         "src/integrations/supabase/types.ts",
         "src/lib/version.ts",
@@ -21,6 +22,6 @@ export default defineConfig({
       reportsDirectory: "coverage/global",
     },
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
   },
 });

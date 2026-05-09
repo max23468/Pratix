@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.12.9] — 2026-05-09
+
+### Correzioni
+
+- **Import archivio Excel**: normalizzate le colonne vuote intermedie come celle vuote, evitando righe sparse nella mappatura dell'anteprima.
+- **Prezzi**: assegnati id univoci agli switch di visibilità delle voci non ancora salvate.
+
 ## [0.12.8] — 2026-05-09
 
 ### Sotto il cofano
@@ -24,6 +31,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 - **Gate React Doctor major release**: aggiunto un controllo React Doctor offline e bloccante solo per diagnostiche `error` quando si prepara una release major.
 - **Strategia test automatizzati**: aggiunto Vitest, `npm test`, `npm run test:coverage`, `npm run test:coverage:global`, target coverage progressivi, piano operativo e prima copertura su calcoli fiscali, XML FatturaPA, path Storage, template Prezzi, rendiconti Excel, changelog, formattazione, label operative, schemi auth e helper server di fatturazione.
+- **Incremento coverage recupero crediti**: estesa la suite Vitest a PDF fatture, parser Excel, logica server di fatturazione, auth, onboarding, attività, form recupero crediti, smoke render dei componenti applicativi e route pubbliche, raggiungendo i target coverage definiti in roadmap.
 - **Roadmap collaudo import**: segnato come parzialmente completato il test semi-reale del flusso import, mantenendo allegati e fatturazione successiva come residui espliciti.
 - **Piano update latest dipendenze**: allineati stato finale e prossimi passi del piano dopo la pubblicazione delle release e la verifica produzione.
 - **Chiusura piano update latest dipendenze**: aggiornato il piano con PR mergeate, release `0.12.5`/`0.12.6`, produzione Vercel verificata e smoke autenticati Browser Use completati.
@@ -420,6 +428,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.12.9]: #0129--2026-05-09
 [0.12.8]: #0128--2026-05-09
 [0.12.7]: #0127--2026-05-09
 [0.12.6]: #0126--2026-05-09
