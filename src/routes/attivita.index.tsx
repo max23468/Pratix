@@ -217,7 +217,7 @@ function ActivitiesList() {
                     description={
                       q || status !== "all" || kind !== "all"
                         ? "Modifica ricerca o filtri per ampliare i risultati."
-                        : "Registra compensi e rimborsi spese dalla pratica o da inserimento rapido."
+                        : "Registra compensi o rimborsi spese dalla pratica o da inserimento rapido."
                     }
                     action={
                       !q && status === "all" && kind === "all" ? (

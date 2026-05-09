@@ -40,16 +40,16 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## 2. Landing pubblica
 
-| Stato | Voce                                           | Note                                                           |
-| ----- | ---------------------------------------------- | -------------------------------------------------------------- |
-| ✅    | Hero con tagline + CTA                         | "Tutto torna." come ancora visiva                              |
-| ⬜    | Sezione "Perché Pratix" orientata al freelance | Tre/quattro promesse concrete                                  |
-| ⬜    | Mockup/screenshot di prodotto                  | Dashboard, fattura, pratica                                    |
-| ⬜    | Pricing                                        | Decidere modello: free/trial/pro, mensile/annuale              |
-| ⬜    | FAQ                                            | Domande tipiche: regime forfettario, FatturaPA, sicurezza dati |
-| ✅    | Footer con Privacy e Termini                   | Pagine `/privacy` e `/termini` linkate                         |
-| ✅    | Meta + og:image dedicati alla landing          | og + twitter cards in root, immagine `/og-image.jpg`           |
-| ⬜    | Footer completo con contatti e P.IVA           | Da aggiungere quando definiti gli estremi del titolare         |
+| Stato | Voce                                           | Note                                                                                  |
+| ----- | ---------------------------------------------- | ------------------------------------------------------------------------------------- |
+| ✅    | Hero con tagline + CTA                         | "Tutto torna." come ancora visiva                                                     |
+| ✅    | Sezione "Perché Pratix" orientata al freelance | Promesse concrete su recupero crediti, soggetti, attività, fatture e rendiconti       |
+| ✅    | Mockup/screenshot di prodotto                  | Mockup prodotto in landing con pratica, soggetti, attività e maturato da fatturare    |
+| ✅    | Pricing                                        | Fase iniziale gratuita; piano a pagamento da definire prima dell'apertura commerciale |
+| ✅    | FAQ                                            | Domande essenziali su contabilità, recupero crediti, export dati e carta di pagamento |
+| ✅    | Footer con Privacy e Termini                   | Pagine `/privacy` e `/termini` linkate                                                |
+| ✅    | Meta + og:image dedicati alla landing          | og + twitter cards in root, immagine `/og-image.jpg`                                  |
+| ⬜    | Footer completo con contatti e P.IVA           | Da aggiungere quando definiti gli estremi del titolare                                |
 
 ## 3. Esperienza prodotto (UI autenticata)
 
@@ -57,10 +57,10 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ----- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | ✅    | Layout app + sidebar               | `src/components/app-layout.tsx`                                                                                                                                          |
 | ✅    | Onboarding wizard 3 step           | Anagrafica / Fiscale / Pagamenti                                                                                                                                         |
-| ⬜    | Empty states uniformi              | Dashboard, Pratiche, Clienti, Fatture, Attività                                                                                                                          |
+| ✅    | Empty states uniformi              | Dashboard, Pratiche, Clienti, Fatture e Attività con messaggi e azioni contestuali coerenti                                                                              |
 | ✅    | Revisione superfici trasversali    | Dashboard, filtri/empty state, viste pratiche, Impostazioni, Account, Novità, onboarding, landing, privacy/termini e audit visuale allineati al dominio recupero crediti |
 | ✅    | Azioni operative in dashboard      | Collegamenti rapidi verso Attività, nuova Fattura e Import archivio con dati già maturati                                                                                |
-| ⬜    | Microcopy review pagina per pagina | Coerenza tono, glossario, "tu"                                                                                                                                           |
+| ✅    | Microcopy review pagina per pagina | Passata sulle superfici principali e sulla landing; testi allineati a tono, glossario e "tu" professionale                                                               |
 | ⬜    | Scorciatoie tastiera               | Almeno: nuova pratica, nuovo cliente, nuova fattura, ricerca globale                                                                                                     |
 | ⬜    | Ricerca globale (cmd+k)            | Pratiche, clienti, fatture                                                                                                                                               |
 | ✅    | Filtri persistenti per pagina      | `/attivita` e `/fatture` salvano ricerca e filtri in URL/query per riprendere il lavoro operativo                                                                        |
@@ -163,14 +163,14 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Test automatici recupero crediti              | Target roadmap raggiunti: `npm run test:coverage` a 84,36% lines, 79,11% statements, 70,81% branches, 70,23% functions; `npm run test:coverage:global` a 45,12% lines. Coperti template Prezzi, rendiconti Excel, calcoli/XML/PDF fattura, export ZIP fatture, export JSON/CSV dati personali, parser Excel, label Attività, schemi auth, helper fatturazione server, rinvii/blocco già fatturate come logica pura, contratti schema/RPC/RLS/Storage, auth/onboarding, attività, form Pratiche/Clienti/Controparti/Committenti/Prezzi/Fatture, selector e superfici globali; smoke autenticato 2026-05-09 chiuso con account `codex.pratix.test.20260509@gmail.com`, pratica importata `5093212`, allegato attività, fattura `TST1/2026` e rendiconti Excel                                                                              |
 | ✅    | Test minimi su funzioni critiche              | Coperti XML FatturaPA, calcoli IVA/ritenuta, cassa forense e regime forfettario                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | ✅    | Linter pulito su tutto il repo                | `npm run lint`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ⬜    | `npm audit --audit-level=moderate` periodico  |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ✅    | `npm audit --audit-level=moderate` periodico  | Eseguito il 2026-05-09: 0 vulnerabilità                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 
 ---
 
 ## Prossime mosse suggerite (in ordine)
 
-1. **Monitorare smoke WebKit**: usare `npm run smoke:a11y` sulle modifiche UI sostanziali e aggiornare la lista route solo quando cresce il rischio.
-2. **Empty states uniformi**: allineare Dashboard, Pratiche, Clienti, Fatture e Attività con azioni contestuali coerenti.
-3. **Microcopy review pagina per pagina**: rifinire tono, glossario e messaggi vuoti senza aprire nuovi domini di prodotto.
+1. **Rilasciare la fase quando pronta per produzione**: il blocco `[Non rilasciato]` contiene modifiche utente-visibili, quindi prima di pubblicare servirà `npm run release`.
+2. **JSON-LD pubblico**: aggiungere `Organization` / `SoftwareApplication` alla landing.
+3. **Ricerca globale e scorciatoie**: progettare `cmd+k` e scorciatoie per nuova pratica, cliente, fattura e ricerca.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.

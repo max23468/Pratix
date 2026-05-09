@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { TableEmptyState } from "@/components/table-empty-state";
 import {
   Select,
   SelectContent,
@@ -116,6 +117,9 @@ function InvoicesIndex() {
   const periodStart = routeSearch.from ?? "";
   const periodEnd = routeSearch.to ?? "";
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const hasInvoiceFilters = Boolean(
+    search.trim() || status !== "all" || year !== "all" || periodStart || periodEnd,
+  );
 
   const updateSearch = (next: InvoicesSearch) =>
     navigate({
@@ -460,8 +464,22 @@ function InvoicesIndex() {
                 )}
                 {!isLoading && filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
-                      Nessuna fattura trovata.
+                    <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                      <TableEmptyState
+                        title={hasInvoiceFilters ? "Nessuna fattura trovata" : "Nessuna fattura"}
+                        description={
+                          hasInvoiceFilters
+                            ? "Modifica ricerca, stato, anno o periodo per ampliare i risultati."
+                            : "Crea una fattura partendo dalle attività da fatturare."
+                        }
+                        action={
+                          !hasInvoiceFilters ? (
+                            <Button size="sm" asChild>
+                              <Link to="/fatture/nuova">Nuova fattura</Link>
+                            </Button>
+                          ) : undefined
+                        }
+                      />
                     </TableCell>
                   </TableRow>
                 )}

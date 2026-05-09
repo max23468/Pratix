@@ -6,6 +6,20 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.16.0] — 2026-05-09
+
+### Novità
+
+- **Landing pubblica**: aggiunte sezioni "Perché Pratix", mockup prodotto, pricing della fase iniziale e FAQ orientate al recupero crediti.
+
+### Correzioni
+
+- **Stati vuoti e microcopy**: uniformati Dashboard, Pratiche, Clienti, Fatture e Attività con messaggi e azioni contestuali coerenti con il glossario.
+
+### Sotto il cofano
+
+- **Audit dipendenze**: eseguito `npm audit --audit-level=moderate` senza vulnerabilità.
+
 ## [0.15.0] — 2026-05-09
 
 ### Novità
@@ -479,6 +493,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.16.0]: #0160--2026-05-09
 [0.15.0]: #0150--2026-05-09
 [0.14.0]: #0140--2026-05-09
 [0.13.3]: #0133--2026-05-09
