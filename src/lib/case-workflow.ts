@@ -163,21 +163,30 @@ function amountOf(invoice: CaseTimelineInvoice) {
 function isInvoiceOverdue(invoice: CaseTimelineInvoice) {
   if (invoice.status === "overdue") return true;
   if (invoice.status !== "issued" || !invoice.due_date) return false;
-  return startOfDateOnly(invoice.due_date).getTime() < startOfToday().getTime();
+  return dateOnlyKey(invoice.due_date) < todayDateKey();
 }
 
-function startOfToday() {
+function todayDateKey() {
   const now = new Date();
-  return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return toDateKey(now.getFullYear(), now.getMonth() + 1, now.getDate());
 }
 
-function startOfDateOnly(value: string) {
+function dateOnlyKey(value: string) {
+  const dateOnly = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (dateOnly) {
+    return `${dateOnly[1]}-${dateOnly[2]}-${dateOnly[3]}`;
+  }
+
   const [year, month, day] = value.split("-").map(Number);
 
   if (year && month && day) {
-    return new Date(year, month - 1, day);
+    return toDateKey(year, month, day);
   }
 
   const date = new Date(value);
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  return toDateKey(date.getFullYear(), date.getMonth() + 1, date.getDate());
+}
+
+function toDateKey(year: number, month: number, day: number) {
+  return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
