@@ -976,7 +976,9 @@ Stato di chiusura 2026-05-08:
 - audit visuale desktop/mobile e chiaro/scuro eseguito sulle superfici
   principali e sulle route autenticate con redirect;
 - test manuale di import con archivio reale o semi-reale escluso dalla chiusura
-  per scelta operativa e mantenuto come prossimo passo in roadmap;
+  per scelta operativa; un collaudo semi-reale successivo ha verificato staging,
+  conferma, pratica creata e attività importate, mentre allegati e fatturazione
+  successiva restano da completare in roadmap;
 - test automatici progressivi, audit accessibilità approfondito, esportazione
   massiva fatture e funzioni account/GDPR restano residui post-evoluzione
   tracciati in roadmap, non blocchi della prima evoluzione.
@@ -987,8 +989,8 @@ Questi elementi non impediscono di chiudere il piano recupero crediti, ma
 restano priorità successive perché aumentano affidabilità, collaudo e
 completezza operativa:
 
-1. Collaudare un import archivio reale o semi-reale, includendo staging,
-   conferma, allegati e fatturazione successiva.
+1. Completare il collaudo import semi-reale già avviato, includendo allegati e
+   fatturazione successiva dopo staging e conferma già verificati.
 2. Introdurre test automatici progressivi su generazione numero pratica,
    snapshot prezzi, attività rinviate, blocco attività fatturate, rendiconti
    Excel e RLS.
