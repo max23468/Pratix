@@ -1,12 +1,26 @@
+import { Link } from "@tanstack/react-router";
 import { useMemo, type ComponentType } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Download, FileSpreadsheet, ListChecks, Paperclip, Receipt } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Download,
+  FileText,
+  FileSpreadsheet,
+  ListChecks,
+  Paperclip,
+  Plus,
+  Receipt,
+  Upload,
+  WalletCards,
+} from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { CaseActivityDialog } from "@/components/case-activities";
 import { supabase } from "@/integrations/supabase/client";
-import { buildCaseDossierWorkbook } from "@/lib/case-dossier-xlsx";
+import { buildCaseDossierWorkbook, type CaseDossierInput } from "@/lib/case-dossier-xlsx";
 import {
   buildCaseTimelineItems,
   sortedHearings,
@@ -31,7 +45,11 @@ import {
 
 export type CaseOperationsCase = {
   id: string;
+  principal_id: string | null;
+  client_id: string | null;
+  counterparty_id: string | null;
   practice_number: number;
+  case_number?: string | null;
   title: string;
   status: string;
   opened_at: string;
@@ -40,7 +58,7 @@ export type CaseOperationsCase = {
   authority?: string | null;
   rg_number?: string | null;
   notes?: string | null;
-  principals?: { business_name?: string | null } | null;
+  principals?: { business_name: string | null } | null;
   clients?: CaseTimelineParty | null;
   counterparties?: CaseTimelineParty | null;
 };
@@ -63,6 +81,10 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
     () => summarizeCaseOperations(activities, invoices),
     [activities, invoices],
   );
+  const qualityChecks = useMemo(
+    () => buildQualityChecks({ caseRow, activities, invoices, totals }),
+    [activities, caseRow, invoices, totals],
+  );
   const timeline = useMemo(
     () => buildCaseTimelineItems({ caseRow, activities, invoices, history, transfers }),
     [activities, caseRow, history, invoices, transfers],
@@ -70,64 +92,52 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
   const isLoading = activitiesLoading || invoicesLoading || historyLoading || transfersLoading;
 
   const nextAction = getNextAction({ activities, invoices, attachmentCount: totals.attachments });
-
-  const downloadDossier = () => {
-    const workbook = buildCaseDossierWorkbook({
-      practiceNumber: caseRow.practice_number,
-      title: caseRow.title,
-      status: caseStatusLabels[caseRow.status] ?? caseRow.status,
-      openedAt: caseRow.opened_at,
-      closedAt: caseRow.closed_at,
-      principalName,
+  const dossierInput = useMemo<CaseDossierInput>(
+    () =>
+      buildDossierInput({
+        caseRow,
+        activities,
+        invoices,
+        history,
+        transfers,
+        principalName,
+        clientName,
+        counterpartyName,
+      }),
+    [
+      activities,
+      caseRow,
       clientName,
       counterpartyName,
-      authority: caseRow.authority,
-      rgNumber: caseRow.rg_number,
-      notes: caseRow.notes,
-      activities: activities.map((activity) => ({
-        activityDate: activity.activity_date,
-        kind: priceItemKindLabels[activity.kind] ?? activity.kind,
-        status: caseActivityStatusLabels[activity.status] ?? activity.status,
-        description: activity.description,
-        quantity: Number(activity.quantity) || 0,
-        unitPrice: Number(activity.unit_price) || 0,
-        amount: Number(activity.amount) || 0,
-        hearingDates: sortedHearings(activity).map((hearing) => hearing.hearing_date),
-        attachmentNames: (activity.activity_attachments ?? []).map(
-          (attachment) => attachment.display_name,
-        ),
-        notes: activity.notes,
-      })),
-      invoices: invoices.map((invoice) => ({
-        issueDate: invoice.issue_date,
-        dueDate: invoice.due_date,
-        paidAt: invoice.paid_at,
-        number: invoice.number,
-        year: invoice.year,
-        status: invoiceStatusLabels[invoice.status] ?? invoice.status,
-        totalAmount: Number(invoice.total_amount) || 0,
-        notes: invoice.notes,
-      })),
-      history: history.map((item) => ({
-        changedAt: item.changed_at,
-        previousStatus: item.previous_status
-          ? (caseStatusLabels[item.previous_status] ?? item.previous_status)
-          : null,
-        newStatus: caseStatusLabels[item.new_status] ?? item.new_status,
-        note: item.note,
-      })),
-      transfers: transfers.map((transfer) => ({
-        transferredAt: transfer.transferred_at,
-        previousClientName: transfer.previous_client
-          ? clientDisplayName(transfer.previous_client as ClientDisplayData)
-          : "—",
-        newClientName: transfer.new_client
-          ? clientDisplayName(transfer.new_client as ClientDisplayData)
-          : "—",
-      })),
-    });
+      history,
+      invoices,
+      principalName,
+      transfers,
+    ],
+  );
+  const caseActivityContext = useMemo(
+    () => ({
+      id: caseRow.id,
+      principal_id: caseRow.principal_id,
+      client_id: caseRow.client_id,
+      counterparty_id: caseRow.counterparty_id,
+      practice_number: caseRow.practice_number,
+      case_number: caseRow.case_number,
+      title: caseRow.title,
+      principals: caseRow.principals,
+      clients: caseRow.clients,
+      counterparties: caseRow.counterparties,
+    }),
+    [caseRow],
+  );
 
-    downloadFile(workbook);
+  const downloadDossier = () => {
+    downloadFile(buildCaseDossierWorkbook(dossierInput));
+  };
+
+  const downloadPdfDossier = async () => {
+    const { downloadCaseDossierPdf } = await import("@/lib/case-dossier-pdf");
+    downloadCaseDossierPdf(dossierInput);
   };
 
   return (
@@ -139,6 +149,51 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
         <OperationMetric label="Totale fatture" value={formatCurrency(totals.invoiceTotal)} />
       </div>
 
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Azioni rapide pratica</CardTitle>
+          <CardDescription>
+            Comandi operativi per continuare il lavoro sulla pratica.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="flex flex-wrap gap-2">
+          <CaseActivityDialog
+            caseRow={caseActivityContext}
+            trigger={
+              <Button size="sm">
+                <Plus className="mr-1 size-4" />
+                Nuova attività
+              </Button>
+            }
+          />
+          <Button asChild size="sm" variant="outline">
+            <Link to="/fatture/nuova">
+              <Receipt className="mr-1 size-4" />
+              Nuova fattura
+            </Link>
+          </Button>
+          <Button asChild size="sm" variant="outline">
+            <Link to="/import-archivio">
+              <Upload className="mr-1 size-4" />
+              Import archivio
+            </Link>
+          </Button>
+          <Button size="sm" variant="outline" onClick={downloadDossier} disabled={isLoading}>
+            <FileSpreadsheet className="mr-1 size-4" />
+            Excel
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => void downloadPdfDossier()}
+            disabled={isLoading}
+          >
+            <FileText className="mr-1 size-4" />
+            PDF
+          </Button>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
         <Card>
           <CardHeader>
@@ -149,7 +204,13 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
                   Stato operativo, soggetti e prossima azione consigliata.
                 </CardDescription>
               </div>
-              <Button type="button" variant="outline" size="sm" onClick={downloadDossier}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={downloadDossier}
+                disabled={isLoading}
+              >
                 <Download className="mr-1 size-4" />
                 Dossier Excel
               </Button>
@@ -178,17 +239,79 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
           <CardHeader>
             <CardTitle className="text-base">Dossier esportabile</CardTitle>
             <CardDescription>
-              Excel con soggetti, attività, fatture, allegati e storico della pratica.
+              Excel e PDF con soggetti, attività, fatture, allegati e storico della pratica.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm">
-            <DossierLine icon={FileSpreadsheet} label="Formato" value="Excel .xlsx" />
+            <DossierLine icon={FileSpreadsheet} label="Formato dati" value="Excel .xlsx" />
+            <DossierLine icon={FileText} label="Formato lettura" value="PDF" />
             <DossierLine icon={Receipt} label="Fatture" value={String(invoices.length)} />
             <DossierLine icon={Paperclip} label="Allegati" value={String(totals.attachments)} />
-            <Button type="button" className="w-full" onClick={downloadDossier} disabled={isLoading}>
-              <Download className="mr-1 size-4" />
-              Scarica dossier
-            </Button>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button type="button" onClick={downloadDossier} disabled={isLoading}>
+                <Download className="mr-1 size-4" />
+                Excel
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void downloadPdfDossier()}
+                disabled={isLoading}
+              >
+                <Download className="mr-1 size-4" />
+                PDF
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
+        <Card>
+          <CardHeader>
+            <div className="flex items-start gap-2">
+              <WalletCards className="mt-1 size-4 text-muted-foreground" />
+              <div>
+                <CardTitle className="text-base">Scheda economica</CardTitle>
+                <CardDescription>
+                  Compensi, rimborsi spese, fatturato, incassato e residuo operativo.
+                </CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <EconomicLine label="Compensi" value={formatCurrency(totals.fees)} />
+            <EconomicLine label="Rimborsi spese" value={formatCurrency(totals.reimbursements)} />
+            <EconomicLine label="Maturato" value={formatCurrency(totals.matured)} />
+            <EconomicLine label="Da fatturare" value={formatCurrency(totals.toInvoice)} />
+            <EconomicLine label="Fatturato" value={formatCurrency(totals.invoiceTotal)} />
+            <EconomicLine label="Incassato" value={formatCurrency(totals.paidTotal)} />
+            <EconomicLine label="Residuo" value={formatCurrency(totals.residual)} />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Controlli qualità dati</CardTitle>
+            <CardDescription>Avvisi sulle informazioni operative da completare.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {qualityChecks.map((check) => (
+              <div
+                key={check.id}
+                className="flex items-start gap-2 rounded-md border border-border p-3"
+              >
+                {check.severity === "ok" ? (
+                  <CheckCircle2 className="mt-0.5 size-4 text-muted-foreground" />
+                ) : (
+                  <AlertTriangle className="mt-0.5 size-4 text-muted-foreground" />
+                )}
+                <div>
+                  <p className="text-sm font-medium">{check.title}</p>
+                  <p className="text-sm text-muted-foreground">{check.description}</p>
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
@@ -309,18 +432,43 @@ function useCaseTransfers(caseId: string) {
 }
 
 function summarizeCaseOperations(activities: ActivityRow[], invoices: InvoiceRow[]) {
-  return activities.reduce(
+  const activityTotals = activities.reduce(
     (acc, activity) => {
+      const amount = Number(activity.amount) || 0;
       if (activity.status === "to_invoice") acc.toInvoice += Number(activity.amount) || 0;
+      if (activity.kind === "fee") acc.fees += amount;
+      else acc.reimbursements += amount;
       acc.attachments += activity.activity_attachments?.length ?? 0;
+      if ((activity.activity_attachments?.length ?? 0) === 0) acc.activitiesWithoutAttachments += 1;
       return acc;
     },
     {
       toInvoice: 0,
+      fees: 0,
+      reimbursements: 0,
       attachments: 0,
-      invoiceTotal: invoices.reduce((sum, invoice) => sum + (Number(invoice.total_amount) || 0), 0),
+      activitiesWithoutAttachments: 0,
     },
   );
+
+  const invoiceTotal = invoices.reduce(
+    (sum, invoice) => sum + (Number(invoice.total_amount) || 0),
+    0,
+  );
+  const paidTotal = invoices.reduce(
+    (sum, invoice) => sum + (invoice.status === "paid" ? Number(invoice.total_amount) || 0 : 0),
+    0,
+  );
+  const matured = activityTotals.fees + activityTotals.reimbursements;
+  const residual = Math.max(matured - paidTotal, 0);
+
+  return {
+    ...activityTotals,
+    matured,
+    invoiceTotal,
+    paidTotal,
+    residual,
+  };
 }
 
 function getNextAction({
@@ -342,6 +490,169 @@ function getNextAction({
   if (attachmentCount === 0)
     return "Aggiungi gli allegati essenziali alle Attività già registrate.";
   return "Scarica il dossier quando devi condividere o archiviare il riepilogo della pratica.";
+}
+
+function buildDossierInput({
+  caseRow,
+  activities,
+  invoices,
+  history,
+  transfers,
+  principalName,
+  clientName,
+  counterpartyName,
+}: {
+  caseRow: CaseOperationsCase;
+  activities: ActivityRow[];
+  invoices: InvoiceRow[];
+  history: HistoryRow[];
+  transfers: TransferRow[];
+  principalName: string;
+  clientName: string;
+  counterpartyName: string;
+}): CaseDossierInput {
+  return {
+    practiceNumber: caseRow.practice_number,
+    title: caseRow.title,
+    status: caseStatusLabels[caseRow.status] ?? caseRow.status,
+    openedAt: caseRow.opened_at,
+    closedAt: caseRow.closed_at,
+    principalName,
+    clientName,
+    counterpartyName,
+    authority: caseRow.authority,
+    rgNumber: caseRow.rg_number,
+    notes: caseRow.notes,
+    activities: activities.map((activity) => ({
+      activityDate: activity.activity_date,
+      kind: priceItemKindLabels[activity.kind] ?? activity.kind,
+      status: caseActivityStatusLabels[activity.status] ?? activity.status,
+      description: activity.description,
+      quantity: Number(activity.quantity) || 0,
+      unitPrice: Number(activity.unit_price) || 0,
+      amount: Number(activity.amount) || 0,
+      hearingDates: sortedHearings(activity).map((hearing) => hearing.hearing_date),
+      attachmentNames: (activity.activity_attachments ?? []).map(
+        (attachment) => attachment.display_name,
+      ),
+      notes: activity.notes,
+    })),
+    invoices: invoices.map((invoice) => ({
+      issueDate: invoice.issue_date,
+      dueDate: invoice.due_date,
+      paidAt: invoice.paid_at,
+      number: invoice.number,
+      year: invoice.year,
+      status: invoiceStatusLabels[invoice.status] ?? invoice.status,
+      totalAmount: Number(invoice.total_amount) || 0,
+      notes: invoice.notes,
+    })),
+    history: history.map((item) => ({
+      changedAt: item.changed_at,
+      previousStatus: item.previous_status
+        ? (caseStatusLabels[item.previous_status] ?? item.previous_status)
+        : null,
+      newStatus: caseStatusLabels[item.new_status] ?? item.new_status,
+      note: item.note,
+    })),
+    transfers: transfers.map((transfer) => ({
+      transferredAt: transfer.transferred_at,
+      previousClientName: transfer.previous_client
+        ? clientDisplayName(transfer.previous_client as ClientDisplayData)
+        : "-",
+      newClientName: transfer.new_client
+        ? clientDisplayName(transfer.new_client as ClientDisplayData)
+        : "-",
+    })),
+  };
+}
+
+function buildQualityChecks({
+  caseRow,
+  activities,
+  invoices,
+  totals,
+}: {
+  caseRow: CaseOperationsCase;
+  activities: ActivityRow[];
+  invoices: InvoiceRow[];
+  totals: ReturnType<typeof summarizeCaseOperations>;
+}) {
+  const checks: Array<{
+    id: string;
+    severity: "warning" | "ok";
+    title: string;
+    description: string;
+  }> = [];
+
+  if (!caseRow.principal_id) {
+    checks.push({
+      id: "missing-principal",
+      severity: "warning",
+      title: "Committente mancante",
+      description: "Completa il soggetto fatturato prima di preparare nuove Fatture.",
+    });
+  }
+  if (!caseRow.client_id) {
+    checks.push({
+      id: "missing-client",
+      severity: "warning",
+      title: "Cliente mancante",
+      description: "Completa il Cliente per mantenere coerente la pratica.",
+    });
+  }
+  if (!caseRow.counterparty_id) {
+    checks.push({
+      id: "missing-counterparty",
+      severity: "warning",
+      title: "Controparte mancante",
+      description: "Aggiungi la Controparte per rendere completo il dossier.",
+    });
+  }
+  if (activities.length === 0) {
+    checks.push({
+      id: "missing-activities",
+      severity: "warning",
+      title: "Nessuna Attività",
+      description: "Registra almeno un Compenso o Rimborso spese se la pratica ha lavoro storico.",
+    });
+  }
+  if (totals.toInvoice > 0) {
+    checks.push({
+      id: "to-invoice",
+      severity: "warning",
+      title: "Attività da fatturare",
+      description: `${formatCurrency(totals.toInvoice)} non ancora collegati a una Fattura.`,
+    });
+  }
+  if (totals.activitiesWithoutAttachments > 0) {
+    checks.push({
+      id: "missing-attachments",
+      severity: "warning",
+      title: "Attività senza allegati",
+      description: `${totals.activitiesWithoutAttachments} Attività non hanno allegati collegati.`,
+    });
+  }
+  const draftInvoices = invoices.filter((invoice) => invoice.status === "draft").length;
+  if (draftInvoices > 0) {
+    checks.push({
+      id: "draft-invoices",
+      severity: "warning",
+      title: "Fatture in bozza",
+      description: `${draftInvoices} Fatture sono ancora da completare o emettere.`,
+    });
+  }
+
+  if (checks.length === 0) {
+    checks.push({
+      id: "ok",
+      severity: "ok",
+      title: "Dati principali completi",
+      description: "La pratica non presenta avvisi operativi immediati.",
+    });
+  }
+
+  return checks;
 }
 
 function OperationMetric({ label, value }: { label: string; value: string }) {
@@ -378,6 +689,15 @@ function DossierLine({
         {label}
       </span>
       <span className="font-medium">{value}</span>
+    </div>
+  );
+}
+
+function EconomicLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-border p-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-1 text-base font-semibold">{value}</p>
     </div>
   );
 }
