@@ -6,6 +6,14 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.18.0] — 2026-05-09
+
+### Novità
+
+- **Cruscotto pratica**: il dettaglio Pratica ora mostra soggetti, importi da fatturare, fatture collegate, allegati e prossima azione consigliata.
+- **Timeline pratica**: aggiunta una vista cronologica con apertura pratica, Attività, allegati, Fatture, cessioni credito e cambi di stato.
+- **Dossier pratica**: aggiunto download Excel riepilogativo con soggetti, Attività, allegati, Fatture e storico operativo.
+
 ## [0.17.0] — 2026-05-09
 
 ### Novità
@@ -501,6 +509,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.18.0]: #0180--2026-05-09
 [0.17.0]: #0170--2026-05-09
 [0.16.0]: #0160--2026-05-09
 [0.15.0]: #0150--2026-05-09

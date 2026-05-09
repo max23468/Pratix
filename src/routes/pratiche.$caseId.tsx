@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { CaseForm } from "@/components/case-form";
 import { CaseActivitiesTab } from "@/components/case-activities";
+import { CaseOperationsPanel } from "@/components/case-operations-panel";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate } from "@/lib/format";
 import {
@@ -101,6 +102,8 @@ function CaseDetail() {
           </>
         }
       />
+
+      <CaseOperationsPanel caseRow={caseRow} />
 
       <Tabs defaultValue="info">
         <TabsList>
