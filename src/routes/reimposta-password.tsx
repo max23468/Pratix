@@ -1,12 +1,12 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { Logo } from "@/components/brand/logo";
-import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { getPasswordUpdateErrorMessage, resetPasswordSchema } from "@/lib/auth-schemas";
 
 export const Route = createFileRoute("/reimposta-password")({
   head: () => ({
@@ -26,30 +26,6 @@ export const Route = createFileRoute("/reimposta-password")({
   }),
   component: ResetPasswordPage,
 });
-
-const schema = z
-  .object({
-    password: z.string().min(8, "Almeno 8 caratteri").max(128),
-    confirm: z.string().min(8, "Almeno 8 caratteri").max(128),
-  })
-  .refine((d) => d.password === d.confirm, {
-    message: "Le password non coincidono",
-    path: ["confirm"],
-  });
-
-function getPasswordUpdateErrorMessage(message?: string) {
-  const normalized = message?.toLowerCase() ?? "";
-
-  if (
-    normalized.includes("different") ||
-    normalized.includes("same password") ||
-    normalized.includes("new password")
-  ) {
-    return "La nuova password deve essere diversa da quella attuale.";
-  }
-
-  return "Impossibile aggiornare la password. Richiedi un nuovo link di recupero.";
-}
 
 function ResetPasswordPage() {
   const navigate = useNavigate();
@@ -106,7 +82,7 @@ function ResetPasswordPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const parsed = schema.safeParse({ password, confirm });
+    const parsed = resetPasswordSchema.safeParse({ password, confirm });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Dati non validi");
       return;

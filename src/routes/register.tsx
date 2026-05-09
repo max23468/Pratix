@@ -1,13 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Logo } from "@/components/brand/logo";
-import { z } from "zod";
 import { toast } from "sonner";
 import { TurnstileChallenge } from "@/components/security/turnstile-challenge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { registerSchema } from "@/lib/auth-schemas";
 import { isTurnstileEnabled } from "@/lib/turnstile";
 
 export const Route = createFileRoute("/register")({
@@ -20,12 +20,6 @@ export const Route = createFileRoute("/register")({
     ],
   }),
   component: RegisterPage,
-});
-
-const schema = z.object({
-  fullName: z.string().trim().min(2, "Inserisci nome e cognome").max(120),
-  email: z.string().trim().email("Email non valida").max(255),
-  password: z.string().min(8, "Almeno 8 caratteri").max(128),
 });
 
 function RegisterPage() {
@@ -41,7 +35,7 @@ function RegisterPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const parsed = schema.safeParse({ fullName, email, password });
+    const parsed = registerSchema.safeParse({ fullName, email, password });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Dati non validi");
       return;

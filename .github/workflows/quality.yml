@@ -49,6 +49,9 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Test
+        run: npm test
+
       - name: Lint changed source files
         shell: bash
         run: |
@@ -56,7 +59,7 @@ jobs:
           git fetch origin "$base_ref" --depth=1
 
           changed_source_files="$(git diff --name-only --diff-filter=ACMR "origin/${base_ref}...HEAD" \
-            | grep -E '^((src|scripts|supabase)/.*\.(ts|tsx|js|jsx|mjs|cjs)|vite\.config\.ts|eslint\.config\.js)$' \
+            | grep -E '^((src|scripts|supabase)/.*\.(ts|tsx|js|jsx|mjs|cjs)|vite\.config\.ts|vitest\.config\.ts|vitest\.coverage-global\.config\.ts|eslint\.config\.js)$' \
             || true)"
 
           if [[ -z "$changed_source_files" ]]; then

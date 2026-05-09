@@ -1,13 +1,13 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Logo } from "@/components/brand/logo";
-import { z } from "zod";
 import { toast } from "sonner";
 import { TurnstileChallenge } from "@/components/security/turnstile-challenge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
+import { forgotPasswordSchema } from "@/lib/auth-schemas";
 import { isTurnstileEnabled } from "@/lib/turnstile";
 
 export const Route = createFileRoute("/recupera-password")({
@@ -30,10 +30,6 @@ export const Route = createFileRoute("/recupera-password")({
   component: ForgotPasswordPage,
 });
 
-const schema = z.object({
-  email: z.string().trim().email("Inserisci un'email valida").max(255),
-});
-
 function ForgotPasswordPage() {
   const captchaEnabled = isTurnstileEnabled();
   const [email, setEmail] = useState("");
@@ -44,7 +40,7 @@ function ForgotPasswordPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const parsed = schema.safeParse({ email });
+    const parsed = forgotPasswordSchema.safeParse({ email });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Email non valida");
       return;

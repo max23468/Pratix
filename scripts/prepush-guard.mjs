@@ -64,13 +64,30 @@ function buildPlan(files) {
         "package.json",
         "package-lock.json",
         "vite.config.ts",
+        "vitest.coverage-global.config.ts",
         "vercel.json",
       ].includes(file) || /^(src|supabase)\//.test(file),
+  );
+  const hasTestRelevantChanges = files.some(
+    (file) =>
+      [
+        "package.json",
+        "package-lock.json",
+        "vitest.config.ts",
+        "vitest.coverage-global.config.ts",
+      ].includes(file) ||
+      /^(src|tests)\//.test(file) ||
+      /\.(test|spec)\.(ts|tsx|js|jsx)$/.test(file),
   );
   const hasLintRelevantChanges = files.some(
     (file) =>
       /^(src|scripts|\.github\/scripts)\/.*\.(cjs|js|jsx|mjs|ts|tsx)$/.test(file) ||
-      ["eslint.config.js", "vite.config.ts"].includes(file),
+      [
+        "eslint.config.js",
+        "vite.config.ts",
+        "vitest.config.ts",
+        "vitest.coverage-global.config.ts",
+      ].includes(file),
   );
 
   if (hasFormatRelevantChanges) {
@@ -79,6 +96,10 @@ function buildPlan(files) {
 
   if (hasBuildRelevantChanges) {
     checks.push({ command: "npm", args: ["run", "build"] });
+  }
+
+  if (hasTestRelevantChanges) {
+    checks.push({ command: "npm", args: ["test"] });
   }
 
   if (hasLintRelevantChanges) {
