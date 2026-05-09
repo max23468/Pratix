@@ -1,6 +1,6 @@
 # Piano — Update latest dipendenze e toolchain
 
-- **Stato**: in pubblicazione; Fasi 0-7 completate localmente
+- **Stato**: chiuso e pubblicato; Fasi 0-7 completate, release pubblicate e produzione verificata
 - **Data**: 2026-05-08
 - **Ambito**: aggiornamento a latest assoluto di dipendenze npm, tooling locale, runtime Node, CLI operative e verifiche di deploy
 - **Tipo modifica attesa**: sotto il cofano, con probabile release PATCH se entra in runtime o build
@@ -534,6 +534,7 @@ restano attività tecniche bloccanti nel perimetro dell'update.
 
 ## Prossimo passo operativo
 
-Creare il branch `codex/update-latest-dipendenze` e partire dalla Fase 0. Se la
-baseline attuale è verde, procedere con Fase 1; se è rossa, isolare prima la
-regressione esistente per non attribuirla all'update.
+Nessuna attività tecnica bloccante resta nel perimetro dell'update latest.
+I prossimi passi sono solo manutentivi: monitorare Vercel dopo traffico reale,
+tenere gli update futuri su PR piccole e aprire un piano separato per la
+strategia test automatizzati progressiva già tracciata in roadmap.

@@ -6,6 +6,10 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Non versionato
+
+- **Piano update latest dipendenze**: allineati stato finale e prossimi passi del piano dopo la pubblicazione delle release e la verifica produzione.
+
 ## [0.12.7] — 2026-05-09
 
 ### Correzioni
