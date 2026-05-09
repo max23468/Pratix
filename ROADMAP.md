@@ -22,8 +22,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Logo unificato `<Logo>` + favicon SVG                     | Direzione default `px`, mai SVG inline                                                                                                                                         |
 | ✅    | Tono di voce "tu" professionale                           | No emoji UI, no esclamativi multipli                                                                                                                                           |
 | ✅    | Glossario freelance + recupero crediti                    | Committente/Cliente/Controparte/Pratica/Attività/Compenso-Onorario/Prezzi/Rimborso spese/Fattura/Rendiconto Excel; Attività è label ufficiale per le registrazioni fatturabili |
-| ⬜    | Pagina `/brand` o sezione interna riassuntiva             | Non urgente; per ora basta `BRAND.md`                                                                                                                                          |
-| 💤    | Loghi alternativi (orizzontale scuro su panna, monocromo) | Solo se serviranno per export/press                                                                                                                                            |
+| ✅    | Loghi alternativi (orizzontale scuro su panna, monocromo) | Asset SVG generati in `public/brand` per export/press; nella UI resta obbligatorio `<Logo />`                                                                                  |
 
 ## 1. Tema e accessibilità
 
@@ -131,7 +130,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Pubblicazione tramite Vercel                   | Produzione su `https://pratix.vercel.app`; dominio proprietario rimandato                                                                         |
 | ✅    | Migrazione backend fuori da Lovable Cloud      | Supabase di proprietà collegato, dati migrati, auth verificata                                                                                    |
 | ✅    | Bonifica riferimenti Lovable                   | Runtime, configurazione e docs operative pulite; restano solo riferimenti storici censiti in `docs/migration/lovable-reference-audit.md`          |
-| 💤    | Dismissione definitiva Lovable                 | Progetto Lovable lasciato inattivo per prudenza; in futuro verificare/rimuovere GitHub App Lovable e chiudere il progetto se non serve più        |
+| ✅    | Dismissione definitiva Lovable                 | Progetto Lovable chiuso dal proprietario; Pratix resta operativo su GitHub + Vercel + Supabase                                                    |
 | 💤    | Dominio proprietario futuro                    | Eventuale dominio tipo `pratix.it`                                                                                                                |
 
 ## 7. Qualità e processo

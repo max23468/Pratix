@@ -1474,7 +1474,11 @@ function ExcelImportPanel() {
     },
   });
 
-  const { data: existingPractices = [] } = useQuery({
+  const {
+    data: existingPractices = [],
+    isError: existingPracticesError,
+    isLoading: existingPracticesLoading,
+  } = useQuery({
     queryKey: ["cases", "import-archive", "excel-dedupe"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -1551,6 +1555,7 @@ function ExcelImportPanel() {
   ).length;
   const isPartialImportComplete =
     hasImportedStagedRows && hasFailedStagedRows && importableStagedRowsCount === 0;
+  const canBuildPreview = rows.length > 0 && !existingPracticesLoading && !existingPracticesError;
 
   const handleFile = async (file: File | null) => {
     if (!file) return;
@@ -1570,6 +1575,16 @@ function ExcelImportPanel() {
   };
 
   const buildPreview = () => {
+    if (existingPracticesLoading) {
+      toast.error("Attendi il caricamento delle pratiche esistenti prima di validare il file.");
+      return;
+    }
+
+    if (existingPracticesError) {
+      toast.error("Non riesco a leggere le pratiche esistenti. Riprova tra poco.");
+      return;
+    }
+
     const preview = applyImportPreviewPlan(
       rows.map((row, index) =>
         normalizeExcelRow(
@@ -1731,8 +1746,8 @@ function ExcelImportPanel() {
               onChange={(event) => void handleFile(event.target.files?.[0] ?? null)}
             />
           </div>
-          <Button type="button" disabled={rows.length === 0} onClick={buildPreview}>
-            Valida file
+          <Button type="button" disabled={!canBuildPreview} onClick={buildPreview}>
+            {existingPracticesLoading ? "Caricamento pratiche…" : "Valida file"}
           </Button>
         </div>
 

@@ -6,6 +6,24 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.20.1] — 2026-05-09
+
+### Correzioni
+
+- **Import Excel**: la validazione attende il caricamento delle pratiche esistenti prima di calcolare righe da creare o aggiornare.
+- **Dossier pratica**: i download Excel/PDF restano bloccati anche da handler mentre i dati del dossier sono in caricamento.
+- **Workflow recupero crediti**: le Fatture emesse diventano insolute solo dal giorno successivo alla scadenza.
+
+### Sotto il cofano
+
+- **Asset logo export/press**: aggiunti i loghi statici orizzontale scuro su panna e monocromatico, generabili con `npm run brand:assets`.
+
+## [Non versionato] — 2026-05-09
+
+### Non versionato
+
+- **Roadmap prodotto**: rimossa la pagina `/brand` dalle cose da fare e segnata come completata la dismissione definitiva di Lovable.
+
 ## [0.20.0] — 2026-05-09
 
 ### Novità
@@ -526,6 +544,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.20.1]: #0201--2026-05-09
 [0.20.0]: #0200--2026-05-09
 [0.19.0]: #0190--2026-05-09
 [0.18.0]: #0180--2026-05-09
