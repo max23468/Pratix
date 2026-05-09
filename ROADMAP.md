@@ -81,7 +81,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Attività fatturabili              | Sezione globale `/attivita` + tab pratica; voci da Prezzi, stato da fatturare/fatturata, quantità, udienze e allegati facoltativi                                    |
 | ✅    | Fatturazione committente/periodo  | Estrazione attività per committente/periodo, inclusione/rinvio/esclusione, spese generali opzionali, cassa forense su compensi + spese generali e rendiconti Excel   |
 | ✅    | Import archivio guidato           | Procedura manuale ed Excel strutturato dal menu Account con staging/anteprima, conferma transazionale e allegati sulle attività storiche                             |
-| ⬜    | Collaudo import reale/semi-reale  | Test manuale con dati anonimizzati o inventati ma aderenti all'archivio cartaceo: staging, conferma, allegati e fatturazione successiva                              |
+| 🟡    | Collaudo import reale/semi-reale  | Test semi-reale eseguito il 2026-05-09 su staging, conferma, pratica `159` e 2 attività importate; restano da verificare allegati e fatturazione successiva          |
 | 💤    | Time tracking per pratica         | Fuori dal perimetro recupero crediti attuale                                                                                                                         |
 | ✅    | Spese con allegati                | I rimborsi sono attività fatturabili Art. 15 con allegati; il flusso fatture usa `case_activities` e la tabella legacy `expenses` è in dismissione tramite migration |
 | ⬜    | Esportazione massiva fatture      | ZIP PDF + XML per periodo                                                                                                                                            |
@@ -168,7 +168,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 ## Prossime mosse suggerite (in ordine)
 
 1. **Strategia test automatizzati progressiva**: definire un set minimo di fixture anonime e smoke autenticati per coprire dashboard, pratiche, attività, fatture PDF/XML, import archivio e impostazioni account.
-2. **Provare un import archivio reale o semi-reale**: verificare staging, conferma, allegati e successiva fatturazione.
+2. **Completare collaudo import**: verificare allegati su attività importate e fatturazione successiva partendo dall'import semi-reale già confermato.
 3. **Esportazione massiva fatture**: ZIP PDF + XML per periodo.
 4. **Test recupero crediti**: partire da numero pratica, snapshot prezzi, rinvii, attività fatturate, rendiconti Excel e RLS.
 
