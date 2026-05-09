@@ -6,6 +6,20 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.14.0] — 2026-05-09
+
+### Novità
+
+- **Dashboard operativa**: aggiunta una sezione di azioni rapide per controllare attività da fatturare, preparare una fattura e importare nuove pratiche dall'archivio.
+
+### Correzioni
+
+- **Impostazioni**: associati esplicitamente i campi di anagrafica, fiscalità, pagamenti e fatturazione alle rispettive label, migliorando la navigazione assistiva.
+
+### Sotto il cofano
+
+- **Smoke accessibilità WebKit**: aggiunto `npm run smoke:a11y` con Playwright WebKit e `axe-core` per controllare route pubbliche e autenticate in chiaro/scuro su desktop, tablet e mobile.
+
 ## [0.13.3] — 2026-05-09
 
 ### Correzioni
@@ -459,6 +473,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.14.0]: #0140--2026-05-09
 [0.13.3]: #0133--2026-05-09
 [0.13.2]: #0132--2026-05-09
 [0.13.1]: #0131--2026-05-09
