@@ -53,6 +53,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ### Non versionato
 
+- **Smoke autenticato Pratix**: confermato l'account test Supabase riusabile e documentato il collaudo produzione con import, allegato attività, fattura successiva e rendiconti Excel su fixture anonime.
 - **Gate React Doctor major release**: aggiunto un controllo React Doctor offline e bloccante solo per diagnostiche `error` quando si prepara una release major.
 - **Strategia test automatizzati**: aggiunto Vitest, `npm test`, `npm run test:coverage`, `npm run test:coverage:global`, target coverage progressivi, piano operativo e prima copertura su calcoli fiscali, XML FatturaPA, path Storage, template Prezzi, rendiconti Excel, changelog, formattazione, label operative, schemi auth e helper server di fatturazione.
 - **Incremento coverage recupero crediti**: estesa la suite Vitest a PDF fatture, parser Excel, logica server di fatturazione, auth, onboarding, attività, form recupero crediti, smoke render dei componenti applicativi e route pubbliche, raggiungendo i target coverage definiti in roadmap.
