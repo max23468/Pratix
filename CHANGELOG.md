@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [Non versionato] — 2026-05-09
+
+### Non versionato
+
+- **Chiusura piano update latest dipendenze**: aggiornato il piano con PR mergeate, release `0.12.5`/`0.12.6`, produzione Vercel verificata e smoke autenticati Browser Use completati.
+
 ## [0.12.6] — 2026-05-09
 
 ### Correzioni

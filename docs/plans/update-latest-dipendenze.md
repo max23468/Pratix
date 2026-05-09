@@ -487,8 +487,30 @@ Esito Fase 7 locale (2026-05-09):
    - `npx --yes -p node@24 -p npm@11 npm run lint`;
    - `git diff --check`.
 
-La pubblicazione finale richiede PR, merge su `main`, verifica deployment
-production Vercel e smoke su `https://pratix.vercel.app`.
+Esito Fase 7 pubblicazione (2026-05-09):
+
+1. PR #48 `chore: release latest dependency update` mergeata su `main`;
+2. deployment production Vercel verificato `READY` su
+   `https://pratix.vercel.app`;
+3. smoke pubblico post-deploy completato sulle superfici pubbliche principali;
+4. Browser Use autenticato eseguito con fixture controllata su produzione dopo
+   la correzione successiva:
+   - apertura e navigazione delle route principali autenticate;
+   - `/fatture/nuova` senza errore React;
+   - generazione fattura da attività selezionate;
+   - dettaglio fattura con controlli PDF/XML e rendiconti Excel;
+   - verifica mobile sulle superfici operative principali;
+   - nessun errore console inatteso;
+5. PR #49 `fix: restore invoice server functions` mergeata su `main` per
+   correggere la regressione emersa durante lo smoke autenticato;
+6. release PATCH successiva `0.12.6` pubblicata con la correzione fatture;
+7. deployment production Vercel finale verificato `READY`, deployment
+   `dpl_Bb5mxP1ctFEeZN1a22Aj7a8fbUtr`;
+8. fixture Supabase temporanea rimossa dopo la verifica;
+9. branch locali dedicati assenti e riferimenti remoti stale potati.
+
+Stato finale: il piano update latest dipendenze e toolchain è chiuso. Non
+restano attività tecniche bloccanti nel perimetro dell'update.
 
 ## Rischi principali
 
