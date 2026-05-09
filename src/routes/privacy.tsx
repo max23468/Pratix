@@ -130,11 +130,11 @@ function PrivacyPage() {
         </article>
 
         <div className="mt-12 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-          <Link to="/termini" className="font-medium text-primary hover:underline">
+          <Link to="/termini" className="font-medium text-primary underline underline-offset-4">
             Leggi i Termini di servizio
           </Link>
           <span>·</span>
-          <Link to="/" className="font-medium text-primary hover:underline">
+          <Link to="/" className="font-medium text-primary underline underline-offset-4">
             Torna alla home
           </Link>
         </div>

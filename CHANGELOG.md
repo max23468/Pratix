@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.13.3] — 2026-05-09
+
+### Correzioni
+
+- **Accessibilità**: completato l'audit WCAG AA WebKit sui temi chiaro/scuro, correggendo contrasto della terracotta, link legali, filtri senza nome accessibile e label dei form account/impostazioni/fatture/import.
+
 ## [0.13.2] — 2026-05-09
 
 ### Correzioni
@@ -453,6 +459,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.13.3]: #0133--2026-05-09
 [0.13.2]: #0132--2026-05-09
 [0.13.1]: #0131--2026-05-09
 [0.13.0]: #0130--2026-05-09

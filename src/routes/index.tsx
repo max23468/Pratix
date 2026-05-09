@@ -171,7 +171,7 @@ function Landing() {
         <div className="mx-auto flex max-w-6xl flex-col gap-4 p-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <Logo form="wordmark" size={18} tone="navy" />
-            <span className="hidden text-muted-foreground/70 sm:inline">·</span>
+            <span className="hidden text-muted-foreground sm:inline">·</span>
             <span className="hidden italic sm:inline">Tutto torna.</span>
           </div>
           <nav aria-label="Documenti legali" className="flex flex-wrap items-center gap-4">
@@ -181,7 +181,7 @@ function Landing() {
             <Link to="/termini" className="hover:text-foreground hover:underline">
               Termini
             </Link>
-            <span className="text-muted-foreground/70">© 2026 Pratix · Pensato in Italia</span>
+            <span className="text-muted-foreground">© 2026 Pratix · Pensato in Italia</span>
           </nav>
         </div>
       </footer>

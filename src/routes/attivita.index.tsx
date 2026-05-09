@@ -136,7 +136,7 @@ function ActivitiesList() {
           />
         </div>
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="lg:w-44">
+          <SelectTrigger aria-label="Filtra attività per stato" className="lg:w-44">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -149,7 +149,7 @@ function ActivitiesList() {
           </SelectContent>
         </Select>
         <Select value={kind} onValueChange={setKind}>
-          <SelectTrigger className="lg:w-48">
+          <SelectTrigger aria-label="Filtra attività per tipo" className="lg:w-48">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

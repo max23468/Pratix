@@ -159,7 +159,7 @@ function PraticheList() {
           />
         </div>
         <Select value={view} onValueChange={setView}>
-          <SelectTrigger className="lg:w-52">
+          <SelectTrigger aria-label="Filtra pratiche per vista" className="lg:w-52">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -173,7 +173,7 @@ function PraticheList() {
           </SelectContent>
         </Select>
         <Select value={sort} onValueChange={setSort}>
-          <SelectTrigger className="lg:w-48">
+          <SelectTrigger aria-label="Ordina pratiche" className="lg:w-48">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -142,7 +142,7 @@ function ClientiList() {
           />
         </div>
         <Select value={kind} onValueChange={setKind}>
-          <SelectTrigger className="lg:w-44">
+          <SelectTrigger aria-label="Filtra clienti per tipo" className="lg:w-44">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -155,7 +155,7 @@ function ClientiList() {
           </SelectContent>
         </Select>
         <Select value={principalId} onValueChange={setPrincipalId}>
-          <SelectTrigger className="lg:w-56">
+          <SelectTrigger aria-label="Filtra clienti per committente" className="lg:w-56">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

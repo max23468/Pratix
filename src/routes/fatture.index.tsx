@@ -305,7 +305,7 @@ function InvoicesIndex() {
               />
             </div>
             <Select value={status} onValueChange={setStatus}>
-              <SelectTrigger className="sm:w-44">
+              <SelectTrigger aria-label="Filtra fatture per stato" className="sm:w-44">
                 <SelectValue placeholder="Stato" />
               </SelectTrigger>
               <SelectContent>
@@ -318,7 +318,7 @@ function InvoicesIndex() {
               </SelectContent>
             </Select>
             <Select value={year} onValueChange={setYear}>
-              <SelectTrigger className="sm:w-32">
+              <SelectTrigger aria-label="Filtra fatture per anno" className="sm:w-32">
                 <SelectValue placeholder="Anno" />
               </SelectTrigger>
               <SelectContent>
@@ -335,16 +335,28 @@ function InvoicesIndex() {
           <div className="flex flex-col gap-3 border-t pt-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">Da data fattura</label>
+                <label
+                  className="text-xs font-medium text-muted-foreground"
+                  htmlFor="invoice-period-start"
+                >
+                  Da data fattura
+                </label>
                 <Input
+                  id="invoice-period-start"
                   type="date"
                   value={periodStart}
                   onChange={(event) => setPeriodStart(event.target.value)}
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">A data fattura</label>
+                <label
+                  className="text-xs font-medium text-muted-foreground"
+                  htmlFor="invoice-period-end"
+                >
+                  A data fattura
+                </label>
                 <Input
+                  id="invoice-period-end"
                   type="date"
                   value={periodEnd}
                   onChange={(event) => setPeriodEnd(event.target.value)}
