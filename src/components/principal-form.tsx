@@ -359,9 +359,9 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
               disabled={archiveMutation.isPending}
             >
               {isArchived ? (
-                <ArchiveRestore className="mr-1 h-4 w-4" />
+                <ArchiveRestore className="mr-1 size-4" />
               ) : (
-                <Archive className="mr-1 h-4 w-4" />
+                <Archive className="mr-1 size-4" />
               )}
               {isArchived ? "Riattiva" : "Archivia"}
             </Button>

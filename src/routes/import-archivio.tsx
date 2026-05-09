@@ -333,7 +333,7 @@ function ImportArchive() {
         actions={
           <Link to="/pratiche">
             <Button size="sm" variant="outline">
-              <ArrowLeft className="mr-1 h-4 w-4" /> Pratiche
+              <ArrowLeft className="mr-1 size-4" /> Pratiche
             </Button>
           </Link>
         }
@@ -603,7 +603,7 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
             }`}
             onClick={() => setStep(index)}
           >
-            <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full border border-border text-xs">
+            <span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-border text-xs">
               {index + 1}
             </span>
             {label}
@@ -644,12 +644,12 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
           disabled={step === 0 || prepareMutation.isPending || confirmMutation.isPending}
           onClick={() => setStep((current) => Math.max(0, current - 1))}
         >
-          <ArrowLeft className="mr-1 h-4 w-4" /> Indietro
+          <ArrowLeft className="mr-1 size-4" /> Indietro
         </Button>
         <div className="flex gap-2">
           {step < 3 ? (
             <Button type="submit">
-              Avanti <ArrowRight className="ml-1 h-4 w-4" />
+              Avanti <ArrowRight className="ml-1 size-4" />
             </Button>
           ) : staged ? (
             <Button
@@ -660,7 +660,7 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
                 staged.status === "imported"
               }
             >
-              <CheckCircle2 className="mr-1 h-4 w-4" />
+              <CheckCircle2 className="mr-1 size-4" />
               {staged.status === "imported"
                 ? "Import completato"
                 : confirmMutation.isPending
@@ -672,7 +672,7 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
               type="submit"
               disabled={prepareMutation.isPending || prepared.errors.length > 0}
             >
-              <FileInput className="mr-1 h-4 w-4" />
+              <FileInput className="mr-1 size-4" />
               {prepareMutation.isPending ? "Preparazione…" : "Prepara anteprima"}
             </Button>
           )}
@@ -998,7 +998,7 @@ function ActivitiesStep({
             </CardDescription>
           </div>
           <Button type="button" size="sm" onClick={addActivity} disabled={!canAddActivities}>
-            <Plus className="mr-1 h-4 w-4" /> Aggiungi attività
+            <Plus className="mr-1 size-4" /> Aggiungi attività
           </Button>
         </div>
       </CardHeader>
@@ -1079,7 +1079,7 @@ function ActivityEditor({
           size="icon"
           onClick={() => removeActivity(activity.localId)}
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="size-4" />
         </Button>
       </div>
       <div className="grid gap-4 md:grid-cols-2">
@@ -1191,7 +1191,7 @@ function ActivityEditor({
         </div>
         <div className="space-y-4 rounded-md border border-border p-4 md:col-span-2">
           <div className="flex items-center gap-2">
-            <Paperclip className="h-4 w-4 text-muted-foreground" />
+            <Paperclip className="size-4 text-muted-foreground" />
             <Label htmlFor={`attachment_${activity.localId}`}>Allegato attività</Label>
           </div>
           <Input
@@ -1688,7 +1688,7 @@ function ExcelImportPanel() {
     <Card>
       <CardHeader>
         <div className="flex items-start gap-3">
-          <FileSpreadsheet className="mt-1 h-5 w-5 text-muted-foreground" />
+          <FileSpreadsheet className="mt-1 size-5 text-muted-foreground" />
           <div>
             <CardTitle className="text-base">Import Excel strutturato</CardTitle>
             <CardDescription>
@@ -1858,7 +1858,7 @@ function ExcelImportPanel() {
             disabled={confirmMutation.isPending || importableStagedRowsCount === 0}
             onClick={() => confirmMutation.mutate()}
           >
-            <CheckCircle2 className="mr-1 h-4 w-4" />
+            <CheckCircle2 className="mr-1 size-4" />
             {isPartialImportComplete
               ? "Import parziale"
               : hasImportedStagedRows && importableStagedRowsCount === 0

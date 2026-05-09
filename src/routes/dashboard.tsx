@@ -151,22 +151,22 @@ function DashboardContent() {
           <>
             <Link to="/prezzi">
               <Button size="sm" variant="outline">
-                <Tags className="mr-1 h-4 w-4" /> Prezzi
+                <Tags className="mr-1 size-4" /> Prezzi
               </Button>
             </Link>
             <Link to="/fatture/nuova">
               <Button size="sm" variant="outline">
-                <Receipt className="mr-1 h-4 w-4" /> Fattura
+                <Receipt className="mr-1 size-4" /> Fattura
               </Button>
             </Link>
             <Link to="/attivita">
               <Button size="sm" variant="outline">
-                <ListChecks className="mr-1 h-4 w-4" /> Attività
+                <ListChecks className="mr-1 size-4" /> Attività
               </Button>
             </Link>
             <Link to="/pratiche/nuova">
               <Button size="sm">
-                <Plus className="mr-1 h-4 w-4" /> Pratica
+                <Plus className="mr-1 size-4" /> Pratica
               </Button>
             </Link>
           </>
@@ -310,10 +310,8 @@ function StatCard({
   return (
     <Card className="border-border/70 shadow-soft">
       <CardContent className="flex items-center gap-3 p-4">
-        <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${iconCls}`}
-        >
-          <Icon className="h-5 w-5" strokeWidth={1.6} />
+        <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${iconCls}`}>
+          <Icon className="size-5" strokeWidth={1.6} />
         </div>
         <div className="min-w-0">
           <p className="truncate text-xs font-medium text-muted-foreground">{label}</p>

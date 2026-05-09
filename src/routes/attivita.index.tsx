@@ -112,7 +112,7 @@ function ActivitiesList() {
           <CaseActivityDialog
             trigger={
               <Button size="sm">
-                <Plus className="mr-1 h-4 w-4" /> Nuova attività
+                <Plus className="mr-1 size-4" /> Nuova attività
               </Button>
             }
           />
@@ -127,7 +127,7 @@ function ActivitiesList() {
 
       <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
         <div className="relative max-w-md flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Cerca per pratica, voce, committente, cliente…"
             value={q}
@@ -201,7 +201,7 @@ function ActivitiesList() {
                         <CaseActivityDialog
                           trigger={
                             <Button size="sm">
-                              <Plus className="mr-1 h-4 w-4" /> Nuova attività
+                              <Plus className="mr-1 size-4" /> Nuova attività
                             </Button>
                           }
                         />

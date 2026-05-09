@@ -7,10 +7,10 @@ export function DefaultErrorComponent({ error, reset }: { error: Error; reset: (
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
-        <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
-          <TriangleAlert className="h-8 w-8 text-destructive" aria-hidden="true" />
+        <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-destructive/10">
+          <TriangleAlert className="size-8 text-destructive" aria-hidden="true" />
         </div>
-        <h1 className="text-2xl font-bold tracking-tight text-foreground">
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
           Qualcosa è andato storto
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">

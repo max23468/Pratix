@@ -48,7 +48,7 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <Link to="/dashboard" className="flex items-center px-2 py-2">
+        <Link to="/dashboard" className="flex items-center p-2">
           <Logo form="lockup" size={28} className="group-data-[collapsible=icon]:hidden" />
           <Logo
             form="mark"
@@ -66,7 +66,7 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={isActive(item.url)} tooltip={item.title}>
                     <Link to={item.url}>
-                      <item.icon className="h-4 w-4" />
+                      <item.icon className="size-4" />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
@@ -87,7 +87,7 @@ export function AppSidebar() {
           </SidebarMenuItem>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={() => signOut()} tooltip="Esci">
-              <LogOut className="h-4 w-4" />
+              <LogOut className="size-4" />
               <span>Esci</span>
             </SidebarMenuButton>
           </SidebarMenuItem>

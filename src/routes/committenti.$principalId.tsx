@@ -50,7 +50,7 @@ function PrincipalDetail() {
         <PageHeader title="Committente non trovato" />
         <Link to="/committenti">
           <Button variant="outline" size="sm">
-            <ArrowLeft className="mr-1 h-4 w-4" /> Torna ai committenti
+            <ArrowLeft className="mr-1 size-4" /> Torna ai committenti
           </Button>
         </Link>
       </>
@@ -65,7 +65,7 @@ function PrincipalDetail() {
         actions={
           <Link to="/committenti">
             <Button variant="outline" size="sm">
-              <ArrowLeft className="mr-1 h-4 w-4" /> Indietro
+              <ArrowLeft className="mr-1 size-4" /> Indietro
             </Button>
           </Link>
         }

@@ -81,7 +81,7 @@ function Landing() {
               <Logo form="mark" size={88} />
             </Link>
             <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-soft">
-              <span className="h-1.5 w-1.5 rounded-full bg-brand-gold" />
+              <span className="size-1.5 rounded-full bg-brand-gold" />
               Per avvocati freelance
             </div>
             <h1 className="font-display mt-6 text-6xl font-semibold tracking-tight text-foreground sm:text-7xl lg:text-[88px] lg:leading-[0.98]">
@@ -135,8 +135,8 @@ function Landing() {
               },
             ].map((f) => (
               <div key={f.title} className="bg-card p-6">
-                <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary/5 text-primary">
-                  <f.icon className="h-4.5 w-4.5" strokeWidth={1.6} />
+                <div className="flex size-9 items-center justify-center rounded-md bg-primary/5 text-primary">
+                  <f.icon className="size-4.5" strokeWidth={1.6} />
                 </div>
                 <h3 className="font-display mt-5 text-base font-semibold text-foreground">
                   {f.title}
@@ -148,8 +148,8 @@ function Landing() {
 
           <div className="mt-20 flex flex-col items-center gap-3 rounded-2xl border border-border bg-card p-8 text-center shadow-soft sm:flex-row sm:justify-between sm:text-left">
             <div className="flex items-start gap-3">
-              <div className="mt-1 flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-brand-gold/10 text-brand-gold">
-                <ShieldCheck className="h-5 w-5" strokeWidth={1.6} />
+              <div className="mt-1 flex size-9 shrink-0 items-center justify-center rounded-md bg-brand-gold/10 text-brand-gold">
+                <ShieldCheck className="size-5" strokeWidth={1.6} />
               </div>
               <div>
                 <p className="font-display text-base font-semibold text-foreground">
@@ -168,7 +168,7 @@ function Landing() {
       </main>
 
       <footer className="border-t border-border/60">
-        <div className="mx-auto flex max-w-6xl flex-col gap-4 px-6 py-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto flex max-w-6xl flex-col gap-4 p-6 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
             <Logo form="wordmark" size={18} tone="navy" />
             <span className="hidden text-muted-foreground/70 sm:inline">·</span>
@@ -181,9 +181,7 @@ function Landing() {
             <Link to="/termini" className="hover:text-foreground hover:underline">
               Termini
             </Link>
-            <span className="text-muted-foreground/70">
-              © {new Date().getFullYear()} Pratix · Pensato in Italia
-            </span>
+            <span className="text-muted-foreground/70">© 2026 Pratix · Pensato in Italia</span>
           </nav>
         </div>
       </footer>

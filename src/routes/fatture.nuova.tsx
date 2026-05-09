@@ -29,7 +29,7 @@ function NewInvoicePage() {
         actions={
           <Button asChild variant="outline">
             <Link to="/fatture">
-              <ArrowLeft className="mr-2 h-4 w-4" /> Torna alle fatture
+              <ArrowLeft className="mr-2 size-4" /> Torna alle fatture
             </Link>
           </Button>
         }

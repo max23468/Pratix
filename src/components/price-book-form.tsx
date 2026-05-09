@@ -81,7 +81,9 @@ type Props = {
   onCancel: () => void;
 };
 
-export function PriceBookForm({ initial, initialItems = [], onSaved, onCancel }: Props) {
+const emptyItems: PriceItemDraft[] = [];
+
+export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onCancel }: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const isEdit = Boolean(initial?.id);
@@ -401,7 +403,7 @@ export function PriceBookForm({ initial, initialItems = [], onSaved, onCancel }:
           {!isEdit && (
             <div className="flex flex-wrap gap-2">
               <Button type="button" variant="outline" size="sm" onClick={resetTemplate}>
-                <RotateCcw className="mr-1 h-4 w-4" /> Template comune 2025/2026
+                <RotateCcw className="mr-1 size-4" /> Template comune 2025/2026
               </Button>
               <Button
                 type="button"
@@ -410,7 +412,7 @@ export function PriceBookForm({ initial, initialItems = [], onSaved, onCancel }:
                 onClick={copyPreviousYear}
                 disabled={!previousBook}
               >
-                <RotateCcw className="mr-1 h-4 w-4" /> Copia anno precedente
+                <RotateCcw className="mr-1 size-4" /> Copia anno precedente
               </Button>
             </div>
           )}
@@ -484,7 +486,7 @@ function PriceItemsEditor({
             <CardDescription>{description}</CardDescription>
           </div>
           <Button type="button" variant="outline" size="sm" onClick={() => onAdd(kind)}>
-            <Plus className="mr-1 h-4 w-4" /> Voce
+            <Plus className="mr-1 size-4" /> Voce
           </Button>
         </div>
       </CardHeader>
@@ -570,8 +572,12 @@ function PriceItemsEditor({
                           Usata {item.usedCount} volte
                         </span>
                       ) : null}
-                      <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                      <label
+                        htmlFor={`price-item-enabled-${item.id}`}
+                        className="flex items-center gap-2 text-xs text-muted-foreground"
+                      >
                         <Switch
+                          id={`price-item-enabled-${item.id}`}
                           checked={item.is_enabled}
                           onCheckedChange={(checked) => onUpdate(index, "is_enabled", checked)}
                         />
@@ -581,7 +587,7 @@ function PriceItemsEditor({
                   </TableCell>
                   <TableCell>
                     <Button type="button" variant="ghost" size="sm" onClick={() => onRemove(index)}>
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="size-4" />
                     </Button>
                   </TableCell>
                 </TableRow>

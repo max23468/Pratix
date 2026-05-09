@@ -124,7 +124,7 @@ function PraticheList() {
       );
     });
 
-    return [...result].sort((a, b) => {
+    return result.toSorted((a, b) => {
       const aSummary = activitySummaryByCase[a.id]?.toInvoiceAmount ?? 0;
       const bSummary = activitySummaryByCase[b.id]?.toInvoiceAmount ?? 0;
       if (sort === "practice_asc") return a.practice_number - b.practice_number;
@@ -142,7 +142,7 @@ function PraticheList() {
         actions={
           <Link to="/pratiche/nuova">
             <Button size="sm">
-              <Plus className="mr-1 h-4 w-4" /> Nuova pratica
+              <Plus className="mr-1 size-4" /> Nuova pratica
             </Button>
           </Link>
         }
@@ -150,7 +150,7 @@ function PraticheList() {
 
       <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
         <div className="relative max-w-sm flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Cerca per numero, committente, cliente, controparte…"
             value={q}

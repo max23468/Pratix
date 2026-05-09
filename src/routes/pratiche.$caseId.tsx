@@ -70,7 +70,7 @@ function CaseDetail() {
         <PageHeader title="Pratica non trovata" />
         <Link to="/pratiche">
           <Button size="sm" variant="outline">
-            <ArrowLeft className="mr-1 h-4 w-4" /> Torna alle pratiche
+            <ArrowLeft className="mr-1 size-4" /> Torna alle pratiche
           </Button>
         </Link>
       </>
@@ -95,7 +95,7 @@ function CaseDetail() {
             </Badge>
             <Link to="/pratiche">
               <Button size="sm" variant="outline">
-                <ArrowLeft className="mr-1 h-4 w-4" /> Indietro
+                <ArrowLeft className="mr-1 size-4" /> Indietro
               </Button>
             </Link>
           </>

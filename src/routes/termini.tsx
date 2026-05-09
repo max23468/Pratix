@@ -158,9 +158,9 @@ function TerminiPage() {
       </main>
 
       <footer className="border-t border-border/60">
-        <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-6 text-xs text-muted-foreground">
+        <div className="mx-auto flex max-w-3xl items-center justify-between p-6 text-xs text-muted-foreground">
           <Logo form="wordmark" size={16} tone="navy" />
-          <span>© {new Date().getFullYear()} Pratix</span>
+          <span>© 2026 Pratix</span>
         </div>
       </footer>
     </div>

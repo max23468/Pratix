@@ -26,9 +26,10 @@ export async function parseFirstXlsxSheet(file: File): Promise<XlsxSheet> {
 function findFirstSheetPath(archive: Record<string, Uint8Array>) {
   if (archive["xl/worksheets/sheet1.xml"]) return "xl/worksheets/sheet1.xml";
 
-  const firstSheet = Object.keys(archive)
-    .filter((path) => /^xl\/worksheets\/sheet\d+\.xml$/i.test(path))
-    .sort()[0];
+  const firstSheet = Object.keys(archive).reduce<string | null>((first, path) => {
+    if (!/^xl\/worksheets\/sheet\d+\.xml$/i.test(path)) return first;
+    return first === null || path < first ? path : first;
+  }, null);
 
   if (!firstSheet) throw new Error("Il file Excel non contiene fogli leggibili.");
   return firstSheet;

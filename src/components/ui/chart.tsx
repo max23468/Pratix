@@ -23,7 +23,7 @@ type ChartContextProps = {
 const ChartContext = React.createContext<ChartContextProps | null>(null);
 
 function useChart() {
-  const context = React.useContext(ChartContext);
+  const context = React.use(ChartContext);
 
   if (!context) {
     throw new Error("useChart must be used within a <ChartContainer />");
@@ -192,7 +192,7 @@ const ChartTooltipContent = React.forwardRef<
                             className={cn(
                               "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
                               {
-                                "h-2.5 w-2.5": indicator === "dot",
+                                "size-2.5": indicator === "dot",
                                 "w-1": indicator === "line",
                                 "w-0 border-[1.5px] border-dashed bg-transparent":
                                   indicator === "dashed",
@@ -280,7 +280,7 @@ const ChartLegendContent = React.forwardRef<
                 <itemConfig.icon />
               ) : (
                 <div
-                  className="h-2 w-2 shrink-0 rounded-[2px]"
+                  className="size-2 shrink-0 rounded-[2px]"
                   style={{
                     backgroundColor: item.color,
                   }}

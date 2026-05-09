@@ -6,12 +6,11 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
-### Non versionato
+## [0.12.8] — 2026-05-09
 
-- **Gate React Doctor major release**: aggiunto un controllo React Doctor offline e bloccante solo per diagnostiche `error` quando si prepara una release major.
-- **Strategia test automatizzati**: aggiunto Vitest, `npm test`, `npm run test:coverage`, `npm run test:coverage:global`, target coverage progressivi, piano operativo e prima copertura su calcoli fiscali, XML FatturaPA, path Storage, template Prezzi, rendiconti Excel, changelog, formattazione, label operative, schemi auth e helper server di fatturazione.
-- **Roadmap collaudo import**: segnato come parzialmente completato il test semi-reale del flusso import, mantenendo allegati e fatturazione successiva come residui espliciti.
-- **Piano update latest dipendenze**: allineati stato finale e prossimi passi del piano dopo la pubblicazione delle release e la verifica produzione.
+### Sotto il cofano
+
+- **React Doctor 100/100**: aggiunta la configurazione di baseline, documentata la soglia operativa e corretti warning sicuri su classi Tailwind, contesti React 19, accessibilità e micro-performance.
 
 ## [0.12.7] — 2026-05-09
 
@@ -23,6 +22,10 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ### Non versionato
 
+- **Gate React Doctor major release**: aggiunto un controllo React Doctor offline e bloccante solo per diagnostiche `error` quando si prepara una release major.
+- **Strategia test automatizzati**: aggiunto Vitest, `npm test`, `npm run test:coverage`, `npm run test:coverage:global`, target coverage progressivi, piano operativo e prima copertura su calcoli fiscali, XML FatturaPA, path Storage, template Prezzi, rendiconti Excel, changelog, formattazione, label operative, schemi auth e helper server di fatturazione.
+- **Roadmap collaudo import**: segnato come parzialmente completato il test semi-reale del flusso import, mantenendo allegati e fatturazione successiva come residui espliciti.
+- **Piano update latest dipendenze**: allineati stato finale e prossimi passi del piano dopo la pubblicazione delle release e la verifica produzione.
 - **Chiusura piano update latest dipendenze**: aggiornato il piano con PR mergeate, release `0.12.5`/`0.12.6`, produzione Vercel verificata e smoke autenticati Browser Use completati.
 
 ## [0.12.6] — 2026-05-09
@@ -417,6 +420,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.12.8]: #0128--2026-05-09
 [0.12.7]: #0127--2026-05-09
 [0.12.6]: #0126--2026-05-09
 [0.12.5]: #0125--2026-05-09
