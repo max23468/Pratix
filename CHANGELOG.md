@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.12.7] — 2026-05-09
+
+### Correzioni
+
+- **Accesso**: pulita automaticamente la sessione locale quando Supabase trova un refresh token non più valido, evitando errori console dopo la rimozione di un utente test o sessioni scadute.
+
 ## [Non versionato] — 2026-05-09
 
 ### Non versionato
@@ -404,6 +410,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.12.7]: #0127--2026-05-09
 [0.12.6]: #0126--2026-05-09
 [0.12.5]: #0125--2026-05-09
 [0.12.4]: #0124--2026-05-08
