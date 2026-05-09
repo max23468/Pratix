@@ -63,6 +63,7 @@ function InvoicesIndex() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
   const [year, setYear] = useState<string>("all");
+  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   const { data, isLoading } = useQuery({
     queryKey: ["invoices", user?.id],
@@ -118,7 +119,7 @@ function InvoicesIndex() {
         actions={
           <Button asChild>
             <Link to="/fatture/nuova">
-              <Plus className="mr-2 h-4 w-4" /> Nuova fattura
+              <Plus className="mr-2 size-4" /> Nuova fattura
             </Link>
           </Button>
         }
@@ -149,7 +150,7 @@ function InvoicesIndex() {
         <CardContent className="space-y-4 pt-6">
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 placeholder="Cerca per numero o committente"
                 value={search}
@@ -214,7 +215,6 @@ function InvoicesIndex() {
                   </TableRow>
                 )}
                 {filtered.map((i) => {
-                  const today = new Date().toISOString().slice(0, 10);
                   const isOverdue = i.status === "issued" && i.due_date && i.due_date < today;
                   return (
                     <TableRow key={i.id} className="cursor-pointer">

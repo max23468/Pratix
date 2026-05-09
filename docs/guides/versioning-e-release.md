@@ -83,7 +83,8 @@ npm run quality:react-doctor
 
 Il gate è pensato come controllo speciale da major release, non come check
 periodico o pre-push ordinario. Al momento blocca solo diagnostiche di livello
-`error`; i warning restano materiale di bonifica pianificata.
+`error`; la soglia di punteggio e la baseline delle regole ignorate sono
+descritte nella guida [React Doctor](./react-doctor.md).
 
 - Rimosso un campo dalla fattura (anche solo dal layout PDF).
 - Cambiata una formula di calcolo (es. cassa, ritenuta).

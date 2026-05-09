@@ -27,9 +27,9 @@ export function UserMenu() {
           variant="ghost"
           size="icon"
           aria-label="Apri menu account"
-          className="relative h-8 w-8 rounded-full"
+          className="relative size-8 rounded-full"
         >
-          <span className="flex h-7 w-7 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+          <span className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
             {initial}
           </span>
         </Button>
@@ -42,25 +42,25 @@ export function UserMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link to="/account">
-            <UserCircle className="mr-2 h-4 w-4" />
+            <UserCircle className="mr-2 size-4" />
             Account
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/account">
-            <KeyRound className="mr-2 h-4 w-4" />
+            <KeyRound className="mr-2 size-4" />
             Cambia password
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/impostazioni">
-            <Settings className="mr-2 h-4 w-4" />
+            <Settings className="mr-2 size-4" />
             Impostazioni professione
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/import-archivio">
-            <FileInput className="mr-2 h-4 w-4" />
+            <FileInput className="mr-2 size-4" />
             Import archivio
           </Link>
         </DropdownMenuItem>
@@ -69,7 +69,7 @@ export function UserMenu() {
           onClick={() => signOut()}
           className="text-destructive focus:text-destructive"
         >
-          <LogOut className="mr-2 h-4 w-4" />
+          <LogOut className="mr-2 size-4" />
           Esci
         </DropdownMenuItem>
       </DropdownMenuContent>

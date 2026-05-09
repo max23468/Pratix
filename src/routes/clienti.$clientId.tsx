@@ -50,7 +50,7 @@ function ClientDetail() {
         <PageHeader title="Cliente non trovato" />
         <Link to="/clienti">
           <Button variant="outline" size="sm">
-            <ArrowLeft className="mr-1 h-4 w-4" /> Torna ai clienti
+            <ArrowLeft className="mr-1 size-4" /> Torna ai clienti
           </Button>
         </Link>
       </>
@@ -65,7 +65,7 @@ function ClientDetail() {
         actions={
           <Link to="/clienti">
             <Button variant="outline" size="sm">
-              <ArrowLeft className="mr-1 h-4 w-4" /> Indietro
+              <ArrowLeft className="mr-1 size-4" /> Indietro
             </Button>
           </Link>
         }

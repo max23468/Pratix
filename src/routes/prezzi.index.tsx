@@ -122,7 +122,7 @@ function PrezziList() {
         actions={
           <Link to="/prezzi/nuovo">
             <Button size="sm">
-              <Plus className="mr-1 h-4 w-4" /> Nuovi prezzi
+              <Plus className="mr-1 size-4" /> Nuovi prezzi
             </Button>
           </Link>
         }
@@ -130,7 +130,7 @@ function PrezziList() {
 
       <div className="mb-4 flex items-center gap-2">
         <div className="relative max-w-sm flex-1">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Cerca per committente, anno o stato…"
             value={q}

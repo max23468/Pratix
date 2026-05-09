@@ -179,7 +179,7 @@ function SettingsPage() {
             onClick={() => saveMutation.mutate()}
             disabled={saveMutation.isPending || isLoading}
           >
-            <Save className="mr-2 h-4 w-4" />
+            <Save className="mr-2 size-4" />
             {saveMutation.isPending ? "Salvataggio…" : "Salva modifiche"}
           </Button>
         }
@@ -389,13 +389,13 @@ function SettingsPage() {
             <CardContent className="grid gap-3 sm:grid-cols-2">
               <Button variant="outline" asChild className="justify-start">
                 <Link to="/committenti">
-                  <Building2 className="mr-2 h-4 w-4" />
+                  <Building2 className="mr-2 size-4" />
                   Committenti
                 </Link>
               </Button>
               <Button variant="outline" asChild className="justify-start">
                 <Link to="/prezzi">
-                  <Tags className="mr-2 h-4 w-4" />
+                  <Tags className="mr-2 size-4" />
                   Prezzi
                 </Link>
               </Button>

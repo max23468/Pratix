@@ -73,7 +73,7 @@ function PriceBookDetail() {
         <PageHeader title="Prezzi non trovati" />
         <Link to="/prezzi">
           <Button variant="outline" size="sm">
-            <ArrowLeft className="mr-1 h-4 w-4" /> Torna ai prezzi
+            <ArrowLeft className="mr-1 size-4" /> Torna ai prezzi
           </Button>
         </Link>
       </>
@@ -88,7 +88,7 @@ function PriceBookDetail() {
         actions={
           <Link to="/prezzi">
             <Button variant="outline" size="sm">
-              <ArrowLeft className="mr-1 h-4 w-4" /> Indietro
+              <ArrowLeft className="mr-1 size-4" /> Indietro
             </Button>
           </Link>
         }

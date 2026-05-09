@@ -239,7 +239,7 @@ export function CaseActivitiesTab({ caseRow }: { caseRow: CaseActivityContext })
                       disabled={Boolean(activity.invoice_id) || remove.isPending}
                       onClick={() => remove.mutate(activity)}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="size-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -263,32 +263,32 @@ function SummaryTile({ label, value }: { label: string; value: number }) {
 
 function AttachmentList({ attachments }: { attachments: ActivityAttachment[] }) {
   if (attachments.length === 0) {
-    return <span className="text-sm text-muted-foreground">—</span>;
+    return <span className="text-sm text-muted-foreground">Nessun allegato</span>;
   }
 
   return (
     <div className="flex flex-col gap-1">
       {attachments.map((attachment) => (
         <div key={attachment.id} className="flex items-center gap-1">
-          <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
+          <Paperclip className="size-3.5 text-muted-foreground" />
           <span className="max-w-36 truncate text-xs">{attachment.display_name}</span>
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="size-7"
             onClick={() => openAttachment(attachment, "preview")}
           >
-            <Eye className="h-3.5 w-3.5" />
+            <Eye className="size-3.5" />
           </Button>
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="h-7 w-7"
+            className="size-7"
             onClick={() => openAttachment(attachment, "download")}
           >
-            <Download className="h-3.5 w-3.5" />
+            <Download className="size-3.5" />
           </Button>
         </div>
       ))}
@@ -325,7 +325,7 @@ export function CaseActivityDialog({
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState(caseRow?.id ?? "");
-  const [activityDate, setActivityDate] = useState(today());
+  const [activityDate, setActivityDate] = useState(() => today());
   const [priceItemId, setPriceItemId] = useState("");
   const [description, setDescription] = useState("");
   const [quantity, setQuantity] = useState(1);
@@ -553,7 +553,7 @@ export function CaseActivityDialog({
       <DialogTrigger asChild>
         {trigger ?? (
           <Button size="sm">
-            <Plus className="mr-1 h-4 w-4" /> Attività
+            <Plus className="mr-1 size-4" /> Attività
           </Button>
         )}
       </DialogTrigger>

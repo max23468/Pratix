@@ -144,7 +144,7 @@ function AccountPage() {
               onClick={() => saveMutation.mutate()}
               disabled={saveMutation.isPending || isLoading}
             >
-              <Save className="mr-2 h-4 w-4" />
+              <Save className="mr-2 size-4" />
               {saveMutation.isPending ? "Salvataggio…" : "Salva profilo"}
             </Button>
           </div>
@@ -165,7 +165,7 @@ function AccountPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                <ShieldCheck className="size-4 text-muted-foreground" />
                 Email di accesso
               </CardTitle>
               <CardDescription>È l'indirizzo che usi per entrare in Pratix.</CardDescription>
@@ -211,7 +211,7 @@ function AccountPage() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <FileUp className="h-4 w-4 text-muted-foreground" />
+                <FileUp className="size-4 text-muted-foreground" />
                 Import archivio
               </CardTitle>
               <CardDescription>
@@ -282,7 +282,7 @@ function DataExportCard() {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Download className="h-4 w-4 text-muted-foreground" />
+          <Download className="size-4 text-muted-foreground" />
           Export dati
         </CardTitle>
         <CardDescription>
@@ -336,7 +336,7 @@ function ChangePasswordCard({ email }: { email: string }) {
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <KeyRound className="h-4 w-4 text-muted-foreground" />
+          <KeyRound className="size-4 text-muted-foreground" />
           Cambia password
         </CardTitle>
         <CardDescription>

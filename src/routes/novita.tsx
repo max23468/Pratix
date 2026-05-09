@@ -237,7 +237,7 @@ function ReleaseBlock({
       {groups.internal.length > 0 && (
         <details className="group">
           <summary className="flex cursor-pointer list-none items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground">
-            <Settings2 className="h-3.5 w-3.5" strokeWidth={1.6} />
+            <Settings2 className="size-3.5" strokeWidth={1.6} />
             Sotto il cofano · {internalCount} {internalCount === 1 ? "voce" : "voci"}
             <span className="ml-1 text-muted-foreground/70 group-open:hidden">mostra</span>
             <span className="ml-1 hidden text-muted-foreground/70 group-open:inline">nascondi</span>
@@ -271,7 +271,7 @@ function CategoryBlock({
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <Icon className={`h-4 w-4 ${meta.tone}`} strokeWidth={1.8} />
+        <Icon className={`size-4 ${meta.tone}`} strokeWidth={1.8} />
         <h3 className="text-sm font-semibold text-foreground">{meta.label}</h3>
       </div>
       <div className={isHighlight ? "space-y-2" : "space-y-1.5"}>

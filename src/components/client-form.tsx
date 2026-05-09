@@ -401,7 +401,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button type="button" variant="outline" size="sm">
-                  <Trash2 className="mr-1 h-4 w-4" /> Elimina
+                  <Trash2 className="mr-1 size-4" /> Elimina
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>

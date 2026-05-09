@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
@@ -13,17 +13,12 @@ import { UserMenu } from "@/components/user-menu";
 export function AppLayout({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
   const navigate = useNavigate();
-  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setHydrated(true);
-  }, []);
-
-  useEffect(() => {
-    if (!loading && hydrated && !session) {
+    if (!loading && !session) {
       navigate({ to: "/login" });
     }
-  }, [loading, hydrated, session, navigate]);
+  }, [loading, session, navigate]);
 
   const { data: profile } = useQuery({
     enabled: !!session,
@@ -39,7 +34,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
     },
   });
 
-  if (loading || !hydrated || !session) {
+  if (loading || !session) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-sm text-muted-foreground">Caricamento…</div>

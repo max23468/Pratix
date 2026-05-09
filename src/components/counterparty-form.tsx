@@ -75,7 +75,14 @@ type Props = {
   onCancel: () => void;
 };
 
-export function CounterpartyForm({ initial, initialSubjects = [], onSaved, onCancel }: Props) {
+const emptySubjects: SubjectRow[] = [];
+
+export function CounterpartyForm({
+  initial,
+  initialSubjects = emptySubjects,
+  onSaved,
+  onCancel,
+}: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [form, setForm] = useState<CounterpartyRow>({
@@ -254,7 +261,7 @@ export function CounterpartyForm({ initial, initialSubjects = [], onSaved, onCan
                 size="sm"
                 onClick={() => setSubjects((current) => [...current, emptySubject(current.length)])}
               >
-                <Plus className="mr-1 h-4 w-4" /> Soggetto
+                <Plus className="mr-1 size-4" /> Soggetto
               </Button>
             </div>
           </CardHeader>
@@ -275,7 +282,7 @@ export function CounterpartyForm({ initial, initialSubjects = [], onSaved, onCan
                       )
                     }
                   >
-                    <Trash2 className="mr-1 h-4 w-4" /> Rimuovi
+                    <Trash2 className="mr-1 size-4" /> Rimuovi
                   </Button>
                 </div>
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -354,7 +361,7 @@ export function CounterpartyForm({ initial, initialSubjects = [], onSaved, onCan
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button type="button" variant="outline" size="sm">
-                  <Trash2 className="mr-1 h-4 w-4" /> Elimina
+                  <Trash2 className="mr-1 size-4" /> Elimina
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>

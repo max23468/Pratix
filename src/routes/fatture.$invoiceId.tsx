@@ -296,7 +296,7 @@ function InvoiceDetailPage() {
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline">
               <Link to="/fatture">
-                <ArrowLeft className="mr-2 h-4 w-4" /> Indietro
+                <ArrowLeft className="mr-2 size-4" /> Indietro
               </Link>
             </Button>
             {data.invoice.status !== "paid" && (
@@ -305,23 +305,23 @@ function InvoiceDetailPage() {
                 onClick={() => markPaidMutation.mutate()}
                 disabled={markPaidMutation.isPending}
               >
-                <CheckCircle2 className="mr-2 h-4 w-4" /> Segna pagata
+                <CheckCircle2 className="mr-2 size-4" /> Segna pagata
               </Button>
             )}
             <Button variant="outline" onClick={handleDownloadPdf}>
-              <FileText className="mr-2 h-4 w-4" /> PDF
+              <FileText className="mr-2 size-4" /> PDF
             </Button>
             <Button
               onClick={() => downloadXmlMutation.mutate()}
               disabled={downloadXmlMutation.isPending}
             >
-              <FileDown className="mr-2 h-4 w-4" />
+              <FileDown className="mr-2 size-4" />
               {downloadXmlMutation.isPending ? "Generazione…" : "XML SdI"}
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive" size="icon" aria-label="Elimina fattura">
-                  <Trash2 className="h-4 w-4" />
+                  <Trash2 className="size-4" />
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -452,7 +452,7 @@ function InvoiceDetailPage() {
                   className="w-full justify-start"
                   onClick={() => downloadExport(item.storage_path, item.file_name)}
                 >
-                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  <FileSpreadsheet className="mr-2 size-4" />
                   {item.file_name}
                 </Button>
               ))}

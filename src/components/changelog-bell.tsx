@@ -16,14 +16,14 @@ export function ChangelogBell() {
       variant="ghost"
       size="icon"
       aria-label={hasUnread ? "Novità disponibili" : "Novità"}
-      className="relative h-8 w-8"
+      className="relative size-8"
     >
       <Link to="/novita">
-        <Bell className="h-4 w-4" />
+        <Bell className="size-4" />
         {hasUnread && (
           <span
             aria-hidden="true"
-            className="absolute right-1.5 top-1.5 inline-flex h-2 w-2 rounded-full bg-[var(--brand-gold)] ring-2 ring-background"
+            className="absolute right-1.5 top-1.5 inline-flex size-2 rounded-full bg-[var(--brand-gold)] ring-2 ring-background"
           />
         )}
       </Link>

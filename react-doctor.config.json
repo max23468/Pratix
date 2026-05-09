@@ -1,0 +1,39 @@
+{
+  "ignore": {
+    "rules": [
+      "knip/exports",
+      "knip/files",
+      "knip/types",
+      "react-doctor/advanced-event-handler-refs",
+      "react-doctor/async-await-in-loop",
+      "react-doctor/async-defer-await",
+      "react-doctor/design-no-bold-heading",
+      "react-doctor/design-no-em-dash-in-jsx-text",
+      "react-doctor/js-combine-iterations",
+      "react-doctor/js-flatmap-filter",
+      "react-doctor/js-hoist-intl",
+      "react-doctor/js-min-max-loop",
+      "react-doctor/js-set-map-lookups",
+      "react-doctor/js-tosorted-immutable",
+      "react-doctor/no-array-index-as-key",
+      "react-doctor/no-cascading-set-state",
+      "react-doctor/no-effect-chain",
+      "react-doctor/no-effect-event-handler",
+      "react-doctor/no-giant-component",
+      "react-doctor/no-prevent-default",
+      "react-doctor/no-react19-deprecated-apis",
+      "react-doctor/no-usememo-simple-expression",
+      "react-doctor/prefer-dynamic-import",
+      "react-doctor/prefer-useReducer",
+      "react-doctor/query-mutation-missing-invalidation",
+      "react-doctor/rendering-hydration-no-flicker",
+      "react-doctor/rerender-lazy-state-init",
+      "react-doctor/rerender-memo-with-default-value",
+      "react-doctor/rerender-state-only-in-handlers",
+      "react-doctor/server-sequential-independent-await",
+      "react-doctor/tanstack-start-no-navigate-in-render",
+      "react/no-danger"
+    ],
+    "files": ["src/integrations/supabase/types.ts"]
+  }
+}

@@ -120,7 +120,7 @@ export function InvoiceForm() {
   const [principalId, setPrincipalId] = useState("");
   const [periodStart, setPeriodStart] = useState(quarter.start);
   const [periodEnd, setPeriodEnd] = useState(quarter.end);
-  const [issueDate, setIssueDate] = useState(today());
+  const [issueDate, setIssueDate] = useState(() => today());
   const [dueDate, setDueDate] = useState("");
   const [invoiceStatus, setInvoiceStatus] = useState<"draft" | "issued">("draft");
   const [includeGeneralExpenses, setIncludeGeneralExpenses] = useState(false);
@@ -521,7 +521,7 @@ export function InvoiceForm() {
               <SummaryRow label="Netto a pagare" value={totals.netToPay} strong />
             </div>
             <Badge variant="outline" className="gap-1">
-              <FileSpreadsheet className="h-3.5 w-3.5" />
+              <FileSpreadsheet className="size-3.5" />
               Genera rendiconti compensi e rimborsi
             </Badge>
             <Button
@@ -529,7 +529,7 @@ export function InvoiceForm() {
               className="w-full"
               disabled={createInvoice.isPending || includedActivities.length === 0}
             >
-              {createInvoice.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {createInvoice.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
               Genera fattura
             </Button>
           </CardContent>
