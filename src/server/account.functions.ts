@@ -2,6 +2,8 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
+  ACCOUNT_DATA_DELETE_TABLE_ORDER,
+  type AccountDataDeleteTable,
   accountStoragePrefix,
   mergeStoragePaths,
   PRATIX_DOCUMENTS_BUCKET,
@@ -44,17 +46,33 @@ async function removeStoragePaths(paths: string[]) {
 }
 
 async function knownStoragePaths(userId: string) {
-  const [{ data: attachments }, { data: exports }, { data: imports }] = await Promise.all([
+  const [attachmentsResult, exportsResult, importsResult] = await Promise.all([
     supabaseAdmin.from("activity_attachments").select("storage_path").eq("user_id", userId),
     supabaseAdmin.from("billing_exports").select("storage_path").eq("user_id", userId),
     supabaseAdmin.from("imports").select("source_storage_path").eq("user_id", userId),
   ]);
 
+  for (const result of [attachmentsResult, exportsResult, importsResult]) {
+    if (result.error) throw result.error;
+  }
+
   return mergeStoragePaths(
-    (attachments ?? []).map((row) => row.storage_path),
-    (exports ?? []).map((row) => row.storage_path),
-    (imports ?? []).map((row) => row.source_storage_path),
+    (attachmentsResult.data ?? []).map((row) => row.storage_path),
+    (exportsResult.data ?? []).map((row) => row.storage_path),
+    (importsResult.data ?? []).map((row) => row.source_storage_path),
   );
+}
+
+async function deleteAccountData(userId: string) {
+  for (const table of ACCOUNT_DATA_DELETE_TABLE_ORDER) {
+    const ownerColumn = ownerColumnFor(table);
+    const { error } = await supabaseAdmin.from(table).delete().eq(ownerColumn, userId);
+    if (error) throw error;
+  }
+}
+
+function ownerColumnFor(table: AccountDataDeleteTable) {
+  return table === "profiles" ? "id" : "user_id";
 }
 
 export const deleteAccountFn = createServerFn({ method: "POST" })
@@ -67,6 +85,8 @@ export const deleteAccountFn = createServerFn({ method: "POST" })
       await knownStoragePaths(userId),
       await listStoragePaths(prefix),
     );
+
+    await deleteAccountData(userId);
 
     if (paths.length > 0) {
       await removeStoragePaths(paths);
