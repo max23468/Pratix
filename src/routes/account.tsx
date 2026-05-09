@@ -38,6 +38,7 @@ import {
   buildPersonalDataCsvArchive,
   buildPersonalDataJson,
   PERSONAL_DATA_TABLES,
+  type PersonalDataTable,
   type PersonalDataPayload,
 } from "@/lib/personal-data-export";
 import { APP_VERSION, BUILD_DATE } from "@/lib/version";
@@ -273,12 +274,27 @@ function AccountPage() {
 }
 
 function DataExportCard() {
+  const fetchTableRows = async (table: PersonalDataTable) => {
+    const pageSize = 1000;
+    const rows: unknown[] = [];
+
+    for (let from = 0; ; from += pageSize) {
+      const { data, error } = await supabase
+        .from(table)
+        .select("*")
+        .range(from, from + pageSize - 1);
+      if (error) throw error;
+
+      const page = (data ?? []) as unknown[];
+      rows.push(...page);
+      if (page.length < pageSize) return rows;
+    }
+  };
+
   const buildPayload = async (): Promise<PersonalDataPayload> => {
     const entries = await Promise.all(
       PERSONAL_DATA_TABLES.map(async (table) => {
-        const { data, error } = await supabase.from(table).select("*");
-        if (error) throw error;
-        return [table, (data ?? []) as unknown[]] as const;
+        return [table, await fetchTableRows(table)] as const;
       }),
     );
 

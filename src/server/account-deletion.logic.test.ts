@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   ACCOUNT_DELETE_CONFIRMATION,
+  ACCOUNT_DATA_DELETE_TABLE_ORDER,
   accountStoragePrefix,
   mergeStoragePaths,
   validateDeleteAccountInput,
@@ -23,5 +24,25 @@ describe("account deletion logic", () => {
         ["", "user-1/activities/b.pdf"],
       ),
     ).toEqual(["user-1/activities/b.pdf", "user-1/invoices/a.pdf"]);
+  });
+
+  it("cancella le righe applicative prima dei parent con FK restrittive", () => {
+    const order = ACCOUNT_DATA_DELETE_TABLE_ORDER;
+    const before = (
+      child: (typeof ACCOUNT_DATA_DELETE_TABLE_ORDER)[number],
+      parent: (typeof ACCOUNT_DATA_DELETE_TABLE_ORDER)[number],
+    ) => {
+      expect(order.indexOf(child)).toBeLessThan(order.indexOf(parent));
+    };
+
+    before("billing_run_items", "case_activities");
+    before("activity_attachments", "case_activities");
+    before("invoice_lines", "invoices");
+    before("case_activities", "price_items");
+    before("case_activities", "clients");
+    before("case_activities", "principals");
+    before("case_credit_transfers", "clients");
+    before("cases", "counterparties");
+    before("price_books", "principals");
   });
 });

@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.13.1] — 2026-05-09
+
+### Correzioni
+
+- **Account**: resa più sicura la cancellazione account eliminando prima le righe applicative in ordine coerente con le FK e poi gli oggetti Storage; l'export dati personali ora pagina le tabelle Supabase per non omettere righe oltre il limite di risposta.
+
 ## [0.13.0] — 2026-05-09
 
 ### Novità
@@ -440,6 +446,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.13.1]: #0131--2026-05-09
 [0.13.0]: #0130--2026-05-09
 [0.12.9]: #0129--2026-05-09
 [0.12.8]: #0128--2026-05-09
