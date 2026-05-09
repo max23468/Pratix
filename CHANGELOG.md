@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.13.2] — 2026-05-09
+
+### Correzioni
+
+- **Account**: la cancellazione account completa la rimozione Auth anche se la pulizia Storage incontra un errore transitorio, evitando account attivi senza dati applicativi; l'export dati personali pagina con ordinamento deterministico per `id`.
+
 ## [0.13.1] — 2026-05-09
 
 ### Correzioni
@@ -446,6 +452,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.13.2]: #0132--2026-05-09
 [0.13.1]: #0131--2026-05-09
 [0.13.0]: #0130--2026-05-09
 [0.12.9]: #0129--2026-05-09
