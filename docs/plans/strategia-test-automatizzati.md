@@ -1,6 +1,6 @@
 # Piano — Strategia test automatizzati progressiva
 
-- **Stato**: target ideale operativo raggiunto
+- **Stato**: target ideale operativo raggiunto; smoke autenticato completato
 - **Data**: 2026-05-09
 - **Ambito**: introdurre test automatici proporzionati ai rischi reali di Pratix
 - **Tipo modifica attesa**: non versionato finché aggiunge solo copertura e processo
@@ -64,7 +64,7 @@ dedicati e skip esplicito quando l'ambiente non è disponibile.
 
 ### Livello 3 — Smoke autenticati
 
-Stato: manuale/assistito per ora.
+Stato: manuale/assistito per ora, con account test Supabase confermato.
 
 Copre i flussi che il professionista usa davvero:
 
@@ -76,6 +76,21 @@ Copre i flussi che il professionista usa davvero:
 - import archivio con allegati e fatturazione successiva.
 
 Si eseguono con account/fixture di test riconoscibili e dati anonimi.
+
+Smoke completato il 2026-05-09:
+
+- account test riusabile: `codex.pratix.test.20260509@gmail.com`;
+- UID Supabase: `4bd1afb3-fbd8-46d5-84cb-ebd177c76817`;
+- conferma email verificata in Supabase Auth alle 18:13 Europe/Rome;
+- login produzione su `https://pratix.vercel.app` completato con profilo
+  anonimo `Avv. Codex Test Pratix`;
+- fixture anonima recupero crediti creata con committente, cliente,
+  controparte, prezzi 2026, pratica `5093212`, compenso, rimborso spese e
+  allegato attività;
+- import applicato via RPC `apply_import_row` con sessione autenticata e RLS
+  dell'utente test;
+- fatturazione successiva verificata generando fattura `TST1/2026`, due righe
+  fattura, rendiconto compensi e rendiconto rimborsi spese.
 
 ## Baseline 2026-05-09
 
@@ -226,16 +241,17 @@ Questo incremento porta la suite a 117 test distribuiti su 41 file, aggiungendo:
 - test sulla conferma di eliminazione account e deduplica dei path Storage;
 - test di contratto su RLS owner-scoped, RPC `apply_import_row` e policy Storage.
 
-Lo smoke autenticato con account test non è stato completato perché la signup
-pubblica Supabase richiede conferma email (`email_not_confirmed`). L'account
-test è stato creato e salvato nel Portachiavi locale come
-`pratix-codex-test-account`; va confermato via email prima di usarlo come
-fixture riusabile.
+Lo smoke autenticato è stato completato dopo conferma manuale dell'account
+test Supabase. L'account resta salvato nel Portachiavi locale come
+`pratix-codex-test-account` e va riusato solo con dati anonimi riconoscibili.
 
 ## Prossimi incrementi
 
-1. Confermare l'account test Supabase e usarlo per smoke autenticati.
-2. Coprire il flusso import end-to-end con allegati e fatturazione successiva.
-3. Aggiungere fixture anonime più ampie per flussi recupero crediti.
-4. Valutare Playwright solo quando i flussi UI diventano abbastanza stabili da
-   giustificare manutenzione e tempi di CI.
+1. ✅ Confermare l'account test Supabase e usarlo per smoke autenticati.
+2. ✅ Coprire il flusso import con allegati e fatturazione successiva.
+3. ✅ Aggiungere una fixture anonima più ampia per i flussi recupero crediti:
+   committente, prezzi, cliente, controparte, pratica, attività, allegato,
+   fattura e rendiconti Excel.
+4. ✅ Valutare Playwright: rimandato. Per ora il costo di manutenzione non è
+   giustificato rispetto a Vitest, contratti Supabase e smoke manuali assistiti
+   con Safari/Computer Use.
