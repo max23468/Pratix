@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.15.0] — 2026-05-09
+
+### Novità
+
+- **Filtri persistenti**: le viste Attività e Fatture mantengono ricerca, stato, tipo, anno e periodo nell'URL, così si possono ricaricare, ritrovare tornando alla pagina o condividere.
+
 ## [0.14.0] — 2026-05-09
 
 ### Novità
@@ -473,6 +479,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.15.0]: #0150--2026-05-09
 [0.14.0]: #0140--2026-05-09
 [0.13.3]: #0133--2026-05-09
 [0.13.2]: #0132--2026-05-09

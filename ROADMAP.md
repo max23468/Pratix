@@ -63,7 +63,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ⬜    | Microcopy review pagina per pagina | Coerenza tono, glossario, "tu"                                                                                                                                           |
 | ⬜    | Scorciatoie tastiera               | Almeno: nuova pratica, nuovo cliente, nuova fattura, ricerca globale                                                                                                     |
 | ⬜    | Ricerca globale (cmd+k)            | Pratiche, clienti, fatture                                                                                                                                               |
-| ⬜    | Filtri persistenti per pagina      | Salvare in URL/query                                                                                                                                                     |
+| ✅    | Filtri persistenti per pagina      | `/attivita` e `/fatture` salvano ricerca e filtri in URL/query per riprendere il lavoro operativo                                                                        |
 | ⬜    | Dati di esempio opzionali          | Per esplorare l'app a freddo                                                                                                                                             |
 
 ## 4. Funzionalità di prodotto
@@ -170,7 +170,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 ## Prossime mosse suggerite (in ordine)
 
 1. **Monitorare smoke WebKit**: usare `npm run smoke:a11y` sulle modifiche UI sostanziali e aggiornare la lista route solo quando cresce il rischio.
-2. **Fixture anonime aggiuntive solo se servono**: l'account smoke copre già committente, cliente, controparte, pratica, attività, allegato, fattura e rendiconti; aggiungere altri scenari solo quando una nuova modifica li richiede.
-3. **Filtri persistenti**: valutare persistenza in URL/query per `/attivita` e `/fatture`, così il lavoro operativo resta riprendibile.
+2. **Empty states uniformi**: allineare Dashboard, Pratiche, Clienti, Fatture e Attività con azioni contestuali coerenti.
+3. **Microcopy review pagina per pagina**: rifinire tono, glossario e messaggi vuoti senza aprire nuovi domini di prodotto.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.

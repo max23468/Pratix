@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
@@ -35,6 +35,11 @@ import {
 } from "@/lib/labels";
 
 export const Route = createFileRoute("/attivita/")({
+  validateSearch: (search: Record<string, unknown>): ActivitiesSearch => ({
+    q: parseTextSearch(search.q),
+    status: parseFilterValue(search.status, caseActivityStatusLabels),
+    kind: parseFilterValue(search.kind, priceItemKindLabels),
+  }),
   head: () => ({
     meta: [
       { title: "Attività · Pratix" },
@@ -56,10 +61,28 @@ export const Route = createFileRoute("/attivita/")({
   ),
 });
 
+type ActivitiesSearch = {
+  q?: string;
+  status?: string;
+  kind?: string;
+};
+
 function ActivitiesList() {
-  const [q, setQ] = useState("");
-  const [status, setStatus] = useState("all");
-  const [kind, setKind] = useState("all");
+  const navigate = Route.useNavigate();
+  const search = Route.useSearch();
+  const q = search.q ?? "";
+  const status = search.status ?? "all";
+  const kind = search.kind ?? "all";
+
+  const updateSearch = (next: ActivitiesSearch) =>
+    navigate({
+      search: {
+        q: next.q?.trim() ? next.q : undefined,
+        status: next.status && next.status !== "all" ? next.status : undefined,
+        kind: next.kind && next.kind !== "all" ? next.kind : undefined,
+      },
+      replace: true,
+    });
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["activities"],
@@ -131,11 +154,11 @@ function ActivitiesList() {
           <Input
             placeholder="Cerca per pratica, voce, committente, cliente…"
             value={q}
-            onChange={(event) => setQ(event.target.value)}
+            onChange={(event) => updateSearch({ q: event.target.value, status, kind })}
             className="pl-9"
           />
         </div>
-        <Select value={status} onValueChange={setStatus}>
+        <Select value={status} onValueChange={(value) => updateSearch({ q, status: value, kind })}>
           <SelectTrigger aria-label="Filtra attività per stato" className="lg:w-44">
             <SelectValue />
           </SelectTrigger>
@@ -148,7 +171,7 @@ function ActivitiesList() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={kind} onValueChange={setKind}>
+        <Select value={kind} onValueChange={(value) => updateSearch({ q, status, kind: value })}>
           <SelectTrigger aria-label="Filtra attività per tipo" className="lg:w-48">
             <SelectValue />
           </SelectTrigger>
@@ -262,4 +285,15 @@ function SummaryTile({ label, value }: { label: string; value: number }) {
       <p className="text-lg font-semibold">{formatCurrency(value)}</p>
     </div>
   );
+}
+
+function parseTextSearch(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim().slice(0, 120);
+  return normalized || undefined;
+}
+
+function parseFilterValue(value: unknown, labels: Record<string, string>) {
+  if (typeof value !== "string") return undefined;
+  return value in labels ? value : undefined;
 }

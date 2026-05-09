@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Archive, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -79,6 +79,13 @@ const readServerResult = async <T,>(result: T | { data: T } | Response) => {
 };
 
 export const Route = createFileRoute("/fatture/")({
+  validateSearch: (search: Record<string, unknown>): InvoicesSearch => ({
+    q: parseTextSearch(search.q),
+    status: parseFilterValue(search.status, invoiceStatusLabels),
+    year: parseYearSearch(search.year),
+    from: parseDateSearch(search.from),
+    to: parseDateSearch(search.to),
+  }),
   head: () => ({
     meta: [
       { title: "Fatture · Pratix" },
@@ -90,15 +97,37 @@ export const Route = createFileRoute("/fatture/")({
   component: InvoicesIndex,
 });
 
+type InvoicesSearch = {
+  q?: string;
+  status?: string;
+  year?: string;
+  from?: string;
+  to?: string;
+};
+
 function InvoicesIndex() {
   const { user } = useAuth();
   const generateInvoiceXml = useServerFn(generateInvoiceXmlFn);
-  const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<string>("all");
-  const [year, setYear] = useState<string>("all");
-  const [periodStart, setPeriodStart] = useState("");
-  const [periodEnd, setPeriodEnd] = useState("");
+  const navigate = Route.useNavigate();
+  const routeSearch = Route.useSearch();
+  const search = routeSearch.q ?? "";
+  const status = routeSearch.status ?? "all";
+  const year = routeSearch.year ?? "all";
+  const periodStart = routeSearch.from ?? "";
+  const periodEnd = routeSearch.to ?? "";
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+
+  const updateSearch = (next: InvoicesSearch) =>
+    navigate({
+      search: {
+        q: next.q?.trim() ? next.q : undefined,
+        status: next.status && next.status !== "all" ? next.status : undefined,
+        year: next.year && next.year !== "all" ? next.year : undefined,
+        from: next.from || undefined,
+        to: next.to || undefined,
+      },
+      replace: true,
+    });
 
   const { data, isLoading } = useQuery({
     queryKey: ["invoices", user?.id],
@@ -300,11 +329,24 @@ function InvoicesIndex() {
               <Input
                 placeholder="Cerca per numero o committente"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(event) =>
+                  updateSearch({
+                    q: event.target.value,
+                    status,
+                    year,
+                    from: periodStart,
+                    to: periodEnd,
+                  })
+                }
                 className="pl-9"
               />
             </div>
-            <Select value={status} onValueChange={setStatus}>
+            <Select
+              value={status}
+              onValueChange={(value) =>
+                updateSearch({ q: search, status: value, year, from: periodStart, to: periodEnd })
+              }
+            >
               <SelectTrigger aria-label="Filtra fatture per stato" className="sm:w-44">
                 <SelectValue placeholder="Stato" />
               </SelectTrigger>
@@ -317,7 +359,12 @@ function InvoicesIndex() {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={year} onValueChange={setYear}>
+            <Select
+              value={year}
+              onValueChange={(value) =>
+                updateSearch({ q: search, status, year: value, from: periodStart, to: periodEnd })
+              }
+            >
               <SelectTrigger aria-label="Filtra fatture per anno" className="sm:w-32">
                 <SelectValue placeholder="Anno" />
               </SelectTrigger>
@@ -345,7 +392,15 @@ function InvoicesIndex() {
                   id="invoice-period-start"
                   type="date"
                   value={periodStart}
-                  onChange={(event) => setPeriodStart(event.target.value)}
+                  onChange={(event) =>
+                    updateSearch({
+                      q: search,
+                      status,
+                      year,
+                      from: event.target.value,
+                      to: periodEnd,
+                    })
+                  }
                 />
               </div>
               <div className="space-y-2">
@@ -359,7 +414,15 @@ function InvoicesIndex() {
                   id="invoice-period-end"
                   type="date"
                   value={periodEnd}
-                  onChange={(event) => setPeriodEnd(event.target.value)}
+                  onChange={(event) =>
+                    updateSearch({
+                      q: search,
+                      status,
+                      year,
+                      from: periodStart,
+                      to: event.target.value,
+                    })
+                  }
                 />
               </div>
             </div>
@@ -448,4 +511,25 @@ function InvoicesIndex() {
       </Card>
     </AppLayout>
   );
+}
+
+function parseTextSearch(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  const normalized = value.trim().slice(0, 120);
+  return normalized || undefined;
+}
+
+function parseFilterValue(value: unknown, labels: Record<string, string>) {
+  if (typeof value !== "string") return undefined;
+  return value in labels ? value : undefined;
+}
+
+function parseYearSearch(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  return /^\d{4}$/.test(value) ? value : undefined;
+}
+
+function parseDateSearch(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : undefined;
 }
