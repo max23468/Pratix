@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { OnboardingDialog } from "@/components/onboarding-dialog";
 import { ChangelogBell } from "@/components/changelog-bell";
 import { UserMenu } from "@/components/user-menu";
+import { GlobalSearch } from "@/components/global-search";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const { session, loading } = useAuth();
@@ -58,6 +59,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
               {profile?.business_name || profile?.full_name || "La mia professione"}
             </Link>
             <div className="ml-auto flex items-center gap-1">
+              <GlobalSearch />
               <ChangelogBell />
               <UserMenu />
             </div>

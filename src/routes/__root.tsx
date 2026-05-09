@@ -7,11 +7,47 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/lib/auth-context";
 import { queryClient } from "@/lib/query-client";
 import { ThemeProvider, NO_FLASH_SCRIPT } from "@/lib/theme-context";
+import { APP_VERSION } from "@/lib/version";
 
 import appCss from "../styles.css?url";
 
 const DEFAULT_DESCRIPTION =
   "Pratix è il gestionale per avvocati freelance che seguono pratiche di recupero crediti: committenti, clienti, controparti, attività e fatturazione.";
+const SITE_URL = "https://pratix.vercel.app";
+const OG_IMAGE_URL = `${SITE_URL}/og-image.jpg`;
+const STRUCTURED_DATA = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "@id": `${SITE_URL}/#organization`,
+      name: "Pratix",
+      url: SITE_URL,
+      logo: `${SITE_URL}/app-icon-512.png`,
+      sameAs: [],
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": `${SITE_URL}/#software`,
+      name: "Pratix",
+      url: SITE_URL,
+      description: DEFAULT_DESCRIPTION,
+      applicationCategory: "BusinessApplication",
+      operatingSystem: "Web",
+      inLanguage: "it-IT",
+      softwareVersion: APP_VERSION,
+      publisher: {
+        "@id": `${SITE_URL}/#organization`,
+      },
+      offers: {
+        "@type": "Offer",
+        price: "0",
+        priceCurrency: "EUR",
+        category: "Fase iniziale gratuita",
+      },
+    },
+  ],
+};
 
 function NotFoundComponent() {
   return (
@@ -60,8 +96,7 @@ export const Route = createRootRoute({
       { property: "og:site_name", content: "Pratix" },
       {
         property: "og:image",
-        content:
-          "https://storage.googleapis.com/gpt-engineer-file-uploads/gLsIYnhnwdgvDO7hJ37c2yvGWXu2/social-images/social-1777502938853-og-image.webp",
+        content: OG_IMAGE_URL,
       },
       { property: "og:image:width", content: "1216" },
       { property: "og:image:height", content: "640" },
@@ -74,8 +109,7 @@ export const Route = createRootRoute({
       },
       {
         name: "twitter:image",
-        content:
-          "https://storage.googleapis.com/gpt-engineer-file-uploads/gLsIYnhnwdgvDO7hJ37c2yvGWXu2/social-images/social-1777502938853-og-image.webp",
+        content: OG_IMAGE_URL,
       },
       {
         name: "description",
@@ -112,6 +146,10 @@ function RootShell({ children }: { children: React.ReactNode }) {
     <html lang="it" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
+        />
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
       </head>
       <body>
