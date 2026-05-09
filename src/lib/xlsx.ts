@@ -64,7 +64,7 @@ function parseSheetRows(xml: string, sharedStrings: string[]) {
       if (index < 0) return;
       values[index] = readCellValue(cellNode, sharedStrings);
     });
-    return values.map((value) => value ?? "");
+    return Array.from({ length: values.length }, (_, index) => values[index] ?? "");
   });
 }
 

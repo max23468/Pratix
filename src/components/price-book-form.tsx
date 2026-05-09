@@ -510,88 +510,97 @@ function PriceItemsEditor({
                 </TableCell>
               </TableRow>
             ) : (
-              sectionItems.map(({ item, index }) => (
-                <TableRow key={item.id ?? `${item.kind}-${index}`}>
-                  <TableCell>
-                    <Input
-                      value={item.code}
-                      onChange={(event) =>
-                        onUpdate(index, "code", event.target.value.toUpperCase())
-                      }
-                      className="min-w-40"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex min-w-72 flex-col gap-2">
+              sectionItems.map(({ item, index }) => {
+                const enabledSwitchId = `price-item-${item.id ?? `${item.kind}-${index}`}-enabled`;
+
+                return (
+                  <TableRow key={item.id ?? `${item.kind}-${index}`}>
+                    <TableCell>
                       <Input
-                        value={item.name}
-                        onChange={(event) => onUpdate(index, "name", event.target.value)}
-                        placeholder={priceItemKindLabels[item.kind]}
-                      />
-                      <Input
-                        value={item.invoice_description ?? ""}
+                        value={item.code}
                         onChange={(event) =>
-                          onUpdate(index, "invoice_description", event.target.value)
+                          onUpdate(index, "code", event.target.value.toUpperCase())
                         }
-                        placeholder="Descrizione in fattura"
+                        className="min-w-40"
                       />
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    {item.kind === "fee" ? (
-                      <Input
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={item.unit_price ?? 0}
-                        onChange={(event) =>
-                          onUpdate(index, "unit_price", Number(event.target.value))
-                        }
-                        className="min-w-28"
-                      />
-                    ) : (
-                      <span className="text-sm text-muted-foreground">Libero</span>
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Checkbox
-                      checked={item.requires_hearing_dates}
-                      onCheckedChange={(checked) =>
-                        onUpdate(index, "requires_hearing_dates", checked === true)
-                      }
-                      disabled={item.kind !== "fee"}
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-2">
-                      <Badge variant={item.is_enabled ? "outline" : "secondary"}>
-                        {item.is_enabled ? "Abilitata" : "Disabilitata"}
-                      </Badge>
-                      {item.usedCount ? (
-                        <span className="text-xs text-muted-foreground">
-                          Usata {item.usedCount} volte
-                        </span>
-                      ) : null}
-                      <label
-                        htmlFor={`price-item-enabled-${item.id}`}
-                        className="flex items-center gap-2 text-xs text-muted-foreground"
-                      >
-                        <Switch
-                          id={`price-item-enabled-${item.id}`}
-                          checked={item.is_enabled}
-                          onCheckedChange={(checked) => onUpdate(index, "is_enabled", checked)}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex min-w-72 flex-col gap-2">
+                        <Input
+                          value={item.name}
+                          onChange={(event) => onUpdate(index, "name", event.target.value)}
+                          placeholder={priceItemKindLabels[item.kind]}
                         />
-                        Visibile
-                      </label>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Button type="button" variant="ghost" size="sm" onClick={() => onRemove(index)}>
-                      <Trash2 className="size-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
+                        <Input
+                          value={item.invoice_description ?? ""}
+                          onChange={(event) =>
+                            onUpdate(index, "invoice_description", event.target.value)
+                          }
+                          placeholder="Descrizione in fattura"
+                        />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {item.kind === "fee" ? (
+                        <Input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={item.unit_price ?? 0}
+                          onChange={(event) =>
+                            onUpdate(index, "unit_price", Number(event.target.value))
+                          }
+                          className="min-w-28"
+                        />
+                      ) : (
+                        <span className="text-sm text-muted-foreground">Libero</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Checkbox
+                        checked={item.requires_hearing_dates}
+                        onCheckedChange={(checked) =>
+                          onUpdate(index, "requires_hearing_dates", checked === true)
+                        }
+                        disabled={item.kind !== "fee"}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-2">
+                        <Badge variant={item.is_enabled ? "outline" : "secondary"}>
+                          {item.is_enabled ? "Abilitata" : "Disabilitata"}
+                        </Badge>
+                        {item.usedCount ? (
+                          <span className="text-xs text-muted-foreground">
+                            Usata {item.usedCount} volte
+                          </span>
+                        ) : null}
+                        <label
+                          htmlFor={enabledSwitchId}
+                          className="flex items-center gap-2 text-xs text-muted-foreground"
+                        >
+                          <Switch
+                            id={enabledSwitchId}
+                            checked={item.is_enabled}
+                            onCheckedChange={(checked) => onUpdate(index, "is_enabled", checked)}
+                          />
+                          Visibile
+                        </label>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => onRemove(index)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

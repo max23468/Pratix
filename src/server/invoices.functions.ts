@@ -3,41 +3,29 @@ import { createServerFn } from "@tanstack/react-start";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
-import { buildBillingWorkbook, type BillingExportRow } from "@/lib/billing-xlsx";
-import { computeInvoice, type InvoiceLineInput } from "@/lib/invoice-calc";
+import { buildBillingWorkbook } from "@/lib/billing-xlsx";
+import { computeInvoice } from "@/lib/invoice-calc";
 import { buildInvoiceXml } from "@/lib/invoice-xml";
 import { buildBillingExportStoragePath, PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
 import {
-  billingDatePattern,
-  billingPartyName,
-  nextBillingPeriodStart,
-} from "@/server/invoice-billing.helpers";
-
-type BillingItemStatus = "included" | "postponed" | "excluded";
-
-type BillingSelectionInput = {
-  activityId: string;
-  status: BillingItemStatus;
-  notes?: string | null;
-};
-
-type CreateBillingInvoiceInput = {
-  principalId: string;
-  periodStart: string;
-  periodEnd: string;
-  issueDate: string;
-  dueDate?: string | null;
-  status: "draft" | "issued";
-  includeGeneralExpenses: boolean;
-  generalExpensesRate: number;
-  cassaRate: number;
-  vatRate: number;
-  withholdingRate: number;
-  applyWithholding: boolean;
-  paymentMethod?: string | null;
-  notes?: string | null;
-  selections: BillingSelectionInput[];
-};
+  assertIncludedActivitiesBillable,
+  billedPartyForInvoiceXml,
+  buildBillingExportRows,
+  buildBillingRunItemRows,
+  buildBillingRunRow,
+  buildInvoiceLineRows,
+  buildInvoiceRow,
+  firstIncludedClientId,
+  invoiceLinesForTotals,
+  partitionBillingActivities,
+  postponedActivityUpdate,
+  selectedActivityIds,
+  selectionMap,
+  validateCreateBillingInvoiceInput,
+  type BillingActivity,
+  type CreateBillingInvoiceInput,
+  type InvoiceXmlPrincipal,
+} from "@/server/invoice-billing.logic";
 
 async function reserveNextInvoiceNumber(supabase: SupabaseClient<Database>, userId: string) {
   const currentYear = new Date().getFullYear();
@@ -76,32 +64,11 @@ export const reserveInvoiceNumber = createServerFn({ method: "POST" })
 
 export const createBillingInvoiceFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: CreateBillingInvoiceInput) => {
-    if (!input?.principalId) throw new Error("Seleziona un committente");
-    if (!billingDatePattern.test(input.periodStart) || !billingDatePattern.test(input.periodEnd)) {
-      throw new Error("Periodo di fatturazione non valido");
-    }
-    if (input.periodEnd < input.periodStart) {
-      throw new Error("La data fine periodo deve essere successiva alla data inizio");
-    }
-    if (!billingDatePattern.test(input.issueDate)) throw new Error("Data fattura non valida");
-    if (input.dueDate && !billingDatePattern.test(input.dueDate)) {
-      throw new Error("Scadenza non valida");
-    }
-    if (!Array.isArray(input.selections) || input.selections.length === 0) {
-      throw new Error("Seleziona almeno un'attività");
-    }
-    if (!input.selections.some((selection) => selection.status === "included")) {
-      throw new Error("Includi almeno un'attività in fattura");
-    }
-    return input;
-  })
+  .inputValidator(validateCreateBillingInvoiceInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
-    const selectedIds = data.selections.map((selection) => selection.activityId);
-    const selectionById = new Map(
-      data.selections.map((selection) => [selection.activityId, selection]),
-    );
+    const selectedIds = selectedActivityIds(data.selections);
+    const selectionById = selectionMap(data.selections);
 
     const [{ data: principal, error: principalError }, { data: profile, error: profileError }] =
       await Promise.all([
@@ -130,30 +97,15 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
       throw new Error("Una o più attività non sono disponibili");
     }
 
-    const included = activities.filter(
-      (activity) => selectionById.get(activity.id)?.status === "included",
-    );
-    const postponed = activities.filter(
-      (activity) => selectionById.get(activity.id)?.status === "postponed",
+    const { included, postponed } = partitionBillingActivities(
+      activities as BillingActivity[],
+      selectionById,
     );
     const firstIncluded = included[0];
-    if (!firstIncluded?.client_id) {
-      throw new Error("Le attività incluse devono avere un cliente collegato");
-    }
+    firstIncludedClientId(included);
+    assertIncludedActivitiesBillable(included);
 
-    for (const activity of included) {
-      if (activity.status !== "to_invoice" || activity.invoice_id) {
-        throw new Error("Una o più attività incluse risultano già fatturate");
-      }
-    }
-
-    const invoiceLinesForTotals: InvoiceLineInput[] = included.map((activity) => ({
-      kind: activity.kind === "fee" ? "fee" : "expense_art15",
-      quantity: Number(activity.quantity),
-      unit_price: Number(activity.unit_price),
-    }));
-
-    const totals = computeInvoice(invoiceLinesForTotals, {
+    const totals = computeInvoice(invoiceLinesForTotals(included), {
       cassaRate: Number(data.cassaRate),
       vatRate: Number(data.vatRate),
       withholdingRate: Number(data.withholdingRate),
@@ -167,110 +119,45 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
 
     const { data: billingRun, error: billingRunError } = await supabase
       .from("billing_runs")
-      .insert({
-        user_id: userId,
-        principal_id: data.principalId,
-        period_start: data.periodStart,
-        period_end: data.periodEnd,
-        status: "finalized",
-        include_general_expenses: data.includeGeneralExpenses,
-        general_expenses_rate: data.generalExpensesRate,
-        compensation_total: totals.taxableFees,
-        general_expenses_amount: totals.generalExpensesAmount,
-        cassa_rate: data.cassaRate,
-        cassa_base_amount: totals.cassaBaseAmount,
-        cassa_amount: totals.cassaAmount,
-        reimbursements_total: totals.art15Expenses,
-        notes: data.notes?.trim() || null,
-      })
+      .insert(buildBillingRunRow({ input: data, userId, totals }))
       .select("id")
       .single();
     if (billingRunError) throw billingRunError;
 
     const { data: invoice, error: invoiceError } = await supabase
       .from("invoices")
-      .insert({
-        user_id: userId,
-        client_id: firstIncluded.client_id,
-        case_id: firstIncluded.case_id,
-        principal_id: data.principalId,
-        billing_run_id: billingRun.id,
-        number,
-        year,
-        issue_date: data.issueDate,
-        due_date: data.dueDate || null,
-        status: data.status,
-        cassa_rate: data.cassaRate,
-        vat_rate: data.vatRate,
-        withholding_rate: data.withholdingRate,
-        apply_withholding: data.applyWithholding,
-        taxable_fees: totals.taxableFees,
-        taxable_expenses: totals.taxableExpenses,
-        art15_expenses: totals.art15Expenses,
-        general_expenses_amount: totals.generalExpensesAmount,
-        general_expenses_rate: data.generalExpensesRate,
-        include_general_expenses: data.includeGeneralExpenses,
-        cassa_base_amount: totals.cassaBaseAmount,
-        cassa_amount: totals.cassaAmount,
-        vat_amount: totals.vatAmount,
-        withholding_amount: totals.withholdingAmount,
-        stamp_amount: totals.stampAmount,
-        total_amount: totals.totalAmount,
-        net_to_pay: totals.netToPay,
-        payment_method: data.paymentMethod?.trim() || null,
-        notes: data.notes?.trim() || null,
-      })
+      .insert(
+        buildInvoiceRow({
+          input: data,
+          userId,
+          billingRunId: billingRun.id,
+          firstIncluded,
+          number,
+          year,
+          totals,
+        }),
+      )
       .select("id")
       .single();
     if (invoiceError) throw invoiceError;
 
-    const invoiceLineRows = included.map((activity, index) => ({
-      user_id: userId,
-      invoice_id: invoice.id,
-      position: index + 1,
-      case_activity_id: activity.id,
-      practice_number: activity.cases?.practice_number ?? null,
-      client_name: billingPartyName(activity.clients),
-      counterparty_name: billingPartyName(activity.counterparties),
-      activity_date: activity.activity_date,
-      kind: activity.kind === "fee" ? "fee" : "expense_art15",
-      description: activity.description,
-      quantity: Number(activity.quantity),
-      unit_price: Number(activity.unit_price),
-      amount: Number(activity.amount),
-    }));
-
-    if (totals.generalExpensesAmount > 0) {
-      invoiceLineRows.push({
-        user_id: userId,
-        invoice_id: invoice.id,
-        position: invoiceLineRows.length + 1,
-        case_activity_id: null,
-        practice_number: null,
-        client_name: null,
-        counterparty_name: null,
-        activity_date: data.issueDate,
-        kind: "fee",
-        description: `Spese generali ${data.generalExpensesRate}%`,
-        quantity: 1,
-        unit_price: totals.generalExpensesAmount,
-        amount: totals.generalExpensesAmount,
-      });
-    }
+    const invoiceLineRows = buildInvoiceLineRows({
+      input: data,
+      userId,
+      invoiceId: invoice.id,
+      included,
+      totals,
+    });
 
     const { error: linesError } = await supabase.from("invoice_lines").insert(invoiceLineRows);
     if (linesError) throw linesError;
 
     const { error: itemsError } = await supabase.from("billing_run_items").insert(
-      activities.map((activity) => {
-        const selection = selectionById.get(activity.id);
-        return {
-          user_id: userId,
-          billing_run_id: billingRun.id,
-          activity_id: activity.id,
-          status: selection?.status ?? "excluded",
-          notes: selection?.notes?.trim() || null,
-        };
+      buildBillingRunItemRows({
+        activities: activities as BillingActivity[],
+        billingRunId: billingRun.id,
+        selections: selectionById,
+        userId,
       }),
     );
     if (itemsError) throw itemsError;
@@ -286,34 +173,17 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
       if (includedError) throw includedError;
     }
 
-    const postponedUntil = nextBillingPeriodStart(data.periodEnd);
     for (const activity of postponed) {
+      const update = postponedActivityUpdate(activity, data.periodEnd);
       const { error: postponedError } = await supabase
         .from("case_activities")
         .update({
-          postponed_until: postponedUntil,
-          postponed_count: Number(activity.postponed_count ?? 0) + 1,
+          postponed_until: update.postponed_until,
+          postponed_count: update.postponed_count,
         })
-        .eq("id", activity.id);
+        .eq("id", update.id);
       if (postponedError) throw postponedError;
     }
-
-    const exportRows = (kind: "fee" | "expense_reimbursement"): BillingExportRow[] =>
-      included
-        .filter((activity) => activity.kind === kind)
-        .map((activity) => ({
-          practiceNumber: activity.cases?.practice_number ?? null,
-          clientName: billingPartyName(activity.clients),
-          counterpartyName: billingPartyName(activity.counterparties),
-          activityDate: activity.activity_date,
-          description: activity.description,
-          quantity: Number(activity.quantity),
-          unitPrice: Number(activity.unit_price),
-          amount: Number(activity.amount),
-          hearingDates: (activity.case_activity_hearings ?? [])
-            .sort((a, b) => Number(a.position) - Number(b.position))
-            .map((hearing) => hearing.hearing_date),
-        }));
 
     const exportsToSave = [
       buildBillingWorkbook({
@@ -321,14 +191,14 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
         principalName: principal.business_name,
         periodStart: data.periodStart,
         periodEnd: data.periodEnd,
-        rows: exportRows("fee"),
+        rows: buildBillingExportRows(included, "fee"),
       }),
       buildBillingWorkbook({
         kind: "expenses",
         principalName: principal.business_name,
         periodStart: data.periodStart,
         periodEnd: data.periodEnd,
-        rows: exportRows("expense_reimbursement"),
+        rows: buildBillingExportRows(included, "expense_reimbursement"),
       }),
     ];
 
@@ -414,24 +284,7 @@ export const generateInvoiceXmlFn = createServerFn({ method: "POST" })
     if (lErr) throw lErr;
     if (principalErr) throw principalErr;
     if (cErr && !principal) throw cErr;
-    const billedParty = principal
-      ? {
-          kind: "company",
-          first_name: null,
-          last_name: null,
-          business_name: principal.business_name,
-          tax_code: principal.tax_code,
-          vat_number: principal.vat_number,
-          sdi_code: principal.sdi_code,
-          pec: principal.pec,
-          address_street: principal.address_street,
-          address_zip: principal.address_zip,
-          address_city: principal.address_city,
-          address_province: principal.address_province,
-          address_country: principal.address_country,
-        }
-      : client;
-    if (!billedParty) throw new Error("Committente della fattura non trovato");
+    const billedParty = billedPartyForInvoiceXml(principal as InvoiceXmlPrincipal | null, client);
 
     const result = buildInvoiceXml({
       invoice: {

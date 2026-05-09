@@ -15,6 +15,7 @@ export default defineConfig({
       ],
       exclude: [
         "src/**/*.test.ts",
+        "src/**/*.test.tsx",
         "src/lib/version.ts",
         "src/components/ui/**",
         "src/components/brand/**",
@@ -30,6 +31,6 @@ export default defineConfig({
       reportsDirectory: "coverage/operational",
     },
     environment: "node",
-    include: ["src/**/*.test.ts"],
+    include: ["src/**/*.test.ts", "src/**/*.test.tsx"],
   },
 });
