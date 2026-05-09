@@ -15,6 +15,7 @@ import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { TableEmptyState } from "@/components/table-empty-state";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { formatCurrency } from "@/lib/format";
@@ -269,13 +270,16 @@ function DashboardContent() {
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                Nessuna pratica ancora.{" "}
-                <Link to="/pratiche/nuova" className="text-primary hover:underline">
-                  Crea la prima
-                </Link>
-                .
-              </p>
+              <TableEmptyState
+                icon={<Briefcase className="size-5" strokeWidth={1.6} />}
+                title="Nessuna pratica recente"
+                description="Crea la prima pratica per vedere qui le attività più recenti."
+                action={
+                  <Button size="sm" asChild>
+                    <Link to="/pratiche/nuova">Nuova pratica</Link>
+                  </Button>
+                }
+              />
             )}
           </CardContent>
         </Card>
@@ -305,9 +309,16 @@ function DashboardContent() {
                 ))}
               </ul>
             ) : (
-              <p className="text-sm text-muted-foreground">
-                Nessuna attività da fatturare. Quando registri compensi o rimborsi, li vedrai qui.
-              </p>
+              <TableEmptyState
+                icon={<Receipt className="size-5" strokeWidth={1.6} />}
+                title="Nessuna attività da fatturare"
+                description="Registra compensi o rimborsi spese per prepararli alla fattura."
+                action={
+                  <Button size="sm" variant="outline" asChild>
+                    <Link to="/attivita">Vai ad Attività</Link>
+                  </Button>
+                }
+              />
             )}
           </CardContent>
         </Card>

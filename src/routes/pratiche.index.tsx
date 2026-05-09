@@ -138,7 +138,7 @@ function PraticheList() {
     <>
       <PageHeader
         title="Pratiche"
-        description="Tutte le tue pratiche in un unico posto."
+        description="Controlla pratiche, soggetti collegati e attività da fatturare."
         actions={
           <Link to="/pratiche/nuova">
             <Button size="sm">
@@ -216,7 +216,7 @@ function PraticheList() {
                     description={
                       q || view !== "open"
                         ? "Modifica ricerca, vista o ordinamento per ampliare i risultati."
-                        : "Crea la prima pratica collegando committente, cliente e controparte."
+                        : "Crea la prima pratica e collega committente, cliente e controparte."
                     }
                     action={
                       !q && view === "open" ? (

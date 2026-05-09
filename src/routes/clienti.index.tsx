@@ -121,7 +121,7 @@ function ClientiList() {
     <>
       <PageHeader
         title="Clienti"
-        description="Anagrafica dei tuoi clienti."
+        description="Gestisci l'anagrafica dei clienti collegati ai committenti."
         actions={
           <Link to="/clienti/nuovo">
             <Button size="sm">
@@ -201,7 +201,7 @@ function ClientiList() {
                     description={
                       q || kind !== "all" || principalId !== "all"
                         ? "Modifica ricerca o filtri per ampliare i risultati."
-                        : "Aggiungi il primo cliente e collegalo a uno o più committenti."
+                        : "Aggiungi il primo cliente e collegalo ai committenti interessati."
                     }
                     action={
                       !q && kind === "all" && principalId === "all" ? (
