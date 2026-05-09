@@ -6,6 +6,10 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Non versionato
+
+- **Chiusura operativa readiness 1.0**: aggiornato lo stato finale post-merge con release `1.0.0` pubblicata, deployment production verificato, dry-run Supabase finale e smoke autenticato mirato completati.
+
 ## [1.0.0] — 2026-05-09
 
 ### Novità

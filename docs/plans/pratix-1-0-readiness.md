@@ -1,6 +1,6 @@
 # Piano — Pratix 1.0 readiness
 
-- **Stato**: release `1.0.0` preparata; inbox Codex verificata e correzioni P2 assorbite, pronta per gate finale commit/PR
+- **Stato**: completato; release `1.0.0` pubblicata su `main` e verificata in produzione
 - **Data**: 2026-05-09
 - **Ambito**: stabilizzazione, verifica produzione e decisione di apertura controllata verso Pratix 1.0
 - **Tipo modifica attesa**: non versionato finché resta piano/checklist; release MAJOR solo quando viene promosso `1.0.0`
@@ -304,10 +304,31 @@ Esito 2026-05-09, pre-push: release `1.0.0` preparata.
     lint e audit moderato completati senza errori.
 14. Dopo le correzioni P2, `npm run smoke:a11y`: ok; 36 combinazioni auditate
     su desktop, tablet, mobile, tema chiaro e tema scuro, con `issueCount: 0`.
-15. Retry post-correzioni di `npm run db:push:dry-run`: non completato perché
-    gli appunti non contenevano più la password DB corretta. Il dry-run
-    Supabase della fase era già verde e il diff finale non modifica schema,
-    migrations o tipi Supabase.
+15. Retry post-correzioni di `npm run db:push:dry-run`: primo tentativo non
+    completato perché gli appunti non contenevano più la password DB corretta.
+    Retry successivo con password ripulita da newline/carriage return:
+    completato, esito `Remote database is up to date`.
+
+Esito 2026-05-09, post-merge: release `1.0.0` pubblicata e verificata.
+
+1. PR #71 mergeata su `main` con merge commit
+   `a5691e626a689de5e4f248ce63f227b9c56e6c97`.
+2. Branch remoto `codex/pratix-1-0` eliminato da GitHub e branch locale
+   eliminato dopo verifica di assorbimento.
+3. Checkout locale allineato su `main` a `origin/main`.
+4. Deployment production Vercel
+   `https://pratix-751fctnay-matteos-projects-9226d217.vercel.app` verificato
+   `READY`.
+5. Route pubbliche su `https://pratix.vercel.app`: `/`, `/login`,
+   `/register`, `/recupera-password`, `/privacy` e `/termini` hanno risposto
+   `200`.
+6. Runtime log Vercel production controllati per errori e status `500`: nessun
+   log trovato.
+7. Smoke Playwright a11y production completo non conclusivo perché WebKit è
+   rimasto appeso; i processi `smoke-a11y`/Playwright/WebKit sono stati
+   terminati e verificati assenti.
+8. Smoke autenticato mirato post-merge completato con account test: login,
+   arrivo su `/dashboard` e accesso a `/pratiche`.
 
 ## Via libera / stop
 
@@ -356,4 +377,4 @@ Alla fine della fase Pratix deve avere:
 4. changelog pronto;
 5. release `1.0.0` pubblicata su `main`;
 6. deployment production Vercel verificato;
-7. branch dedicato chiuso o motivo esplicito per tenerlo aperto.
+7. branch dedicato chiuso.
