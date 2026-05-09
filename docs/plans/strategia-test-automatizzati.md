@@ -1,6 +1,6 @@
 # Piano — Strategia test automatizzati progressiva
 
-- **Stato**: target ideale operativo raggiunto; smoke autenticato completato
+- **Stato**: target ideale operativo raggiunto; smoke autenticato e smoke WebKit ripetibile completati
 - **Data**: 2026-05-09
 - **Ambito**: introdurre test automatici proporzionati ai rischi reali di Pratix
 - **Tipo modifica attesa**: non versionato finché aggiunge solo copertura e processo
@@ -23,8 +23,10 @@ quando servono davvero.
 4. **`npm run test:coverage:global`** come indicatore secondario su tutto `src`
    utile a capire il debito complessivo, non come gate principale.
 5. **Quality GitHub** e **pre-push guard** come punti di ingresso graduali.
-6. Browser Use o Safari/Computer Use solo per smoke autenticati e collaudi UI,
-   non per test unitari.
+6. **WebKit + axe-core** per smoke accessibilità/responsive ripetibili sulle
+   route principali.
+7. Browser Use o Safari/Computer Use per smoke autenticati guidati e collaudi
+   UI quando serve verificare interazioni o browser reale, non per test unitari.
 
 ## Livelli di copertura
 
@@ -62,9 +64,10 @@ Questi test non devono usare dati reali e non devono richiedere segreti
 committati. Se richiedono Supabase remoto o locale, vanno documentati con env
 dedicati e skip esplicito quando l'ambiente non è disponibile.
 
-### Livello 3 — Smoke autenticati
+### Livello 3 — Smoke autenticati e accessibilità WebKit
 
-Stato: manuale/assistito per ora, con account test Supabase confermato.
+Stato: manuale/assistito per i flussi completi, automatizzato per lo smoke
+accessibilità/responsive con `npm run smoke:a11y`.
 
 Copre i flussi che il professionista usa davvero:
 
@@ -76,6 +79,12 @@ Copre i flussi che il professionista usa davvero:
 - import archivio con allegati e fatturazione successiva.
 
 Si eseguono con account/fixture di test riconoscibili e dati anonimi.
+
+Lo smoke ripetibile WebKit copre route pubbliche e, quando sono presenti
+`PRATIX_SMOKE_EMAIL` e `PRATIX_SMOKE_PASSWORD`, le route autenticate principali.
+Per ogni route controlla tema chiaro/scuro, desktop/tablet/mobile, violazioni
+WCAG A/AA, overflow orizzontale e controlli interattivi con testo tagliato. Le
+istruzioni operative sono in `docs/guides/smoke-a11y.md`.
 
 Smoke completato il 2026-05-09:
 
@@ -245,6 +254,20 @@ Lo smoke autenticato è stato completato dopo conferma manuale dell'account
 test Supabase. L'account resta salvato nel Portachiavi locale come
 `pratix-codex-test-account` e va riusato solo con dati anonimi riconoscibili.
 
+## Incremento 2026-05-09 — smoke WebKit accessibilità/responsive
+
+Questo incremento introduce `npm run smoke:a11y`, basato su Playwright WebKit e
+`axe-core`, per rendere ripetibili gli audit su:
+
+- route pubbliche e autenticate principali;
+- temi chiaro e scuro;
+- viewport desktop, tablet e mobile;
+- violazioni WCAG A/AA, overflow orizzontale e controlli interattivi con testo
+  tagliato.
+
+Il comando usa l'account test Supabase solo se le credenziali vengono fornite
+tramite variabili d'ambiente locali. Le credenziali restano fuori dal repo.
+
 ## Prossimi incrementi
 
 1. ✅ Confermare l'account test Supabase e usarlo per smoke autenticati.
@@ -252,6 +275,5 @@ test Supabase. L'account resta salvato nel Portachiavi locale come
 3. ✅ Aggiungere una fixture anonima più ampia per i flussi recupero crediti:
    committente, prezzi, cliente, controparte, pratica, attività, allegato,
    fattura e rendiconti Excel.
-4. ✅ Valutare Playwright: rimandato. Per ora il costo di manutenzione non è
-   giustificato rispetto a Vitest, contratti Supabase e smoke manuali assistiti
-   con Safari/Computer Use.
+4. ✅ Introdurre uno smoke WebKit mirato e leggero per accessibilità/responsive,
+   senza trasformarlo in una suite e2e fragile.

@@ -4,6 +4,7 @@ import {
   AlertTriangle,
   Briefcase,
   FileWarning,
+  FileUp,
   ListChecks,
   Plus,
   Receipt,
@@ -209,6 +210,32 @@ function DashboardContent() {
         />
       </div>
 
+      <Card className="mt-4 border-border/70 shadow-soft">
+        <CardHeader>
+          <CardTitle className="text-base">Prossime azioni operative</CardTitle>
+        </CardHeader>
+        <CardContent className="grid gap-3 md:grid-cols-3">
+          <ActionLink
+            to="/attivita"
+            icon={ListChecks}
+            title="Controlla attività"
+            description={`${data?.toInvoiceCount ?? 0} ${data?.toInvoiceCount === 1 ? "attività" : "attività"} da fatturare`}
+          />
+          <ActionLink
+            to="/fatture/nuova"
+            icon={Receipt}
+            title="Prepara fattura"
+            description={`${formatCurrency(data?.toInvoiceAmount ?? 0)} maturati`}
+          />
+          <ActionLink
+            to="/import-archivio"
+            icon={FileUp}
+            title="Importa archivio"
+            description="Trascrivi o importa nuove pratiche"
+          />
+        </CardContent>
+      </Card>
+
       <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
         <Card>
           <CardHeader>
@@ -286,6 +313,34 @@ function DashboardContent() {
         </Card>
       </div>
     </>
+  );
+}
+
+function ActionLink({
+  to,
+  icon: Icon,
+  title,
+  description,
+}: {
+  to: "/attivita" | "/fatture/nuova" | "/import-archivio";
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  title: string;
+  description: string;
+}) {
+  return (
+    <Button variant="outline" asChild className="h-auto justify-start p-3 text-left">
+      <Link to={to} className="flex items-start gap-3">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/5 text-primary">
+          <Icon className="size-4" strokeWidth={1.7} />
+        </span>
+        <span className="min-w-0">
+          <span className="block text-sm font-medium text-foreground">{title}</span>
+          <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
+            {description}
+          </span>
+        </span>
+      </Link>
+    </Button>
   );
 }
 

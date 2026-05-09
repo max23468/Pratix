@@ -92,10 +92,12 @@ Per varianti custom usare `cva` (class-variance-authority) — vedi i pattern gi
 
 ## Accessibilità
 
-- Tutti i contrasti devono passare WCAG AA in entrambi i temi (audit ⬜ in roadmap).
+- Tutti i contrasti devono passare WCAG AA in entrambi i temi.
 - Focus visibile su ogni elemento interattivo.
-- Rispetto di `prefers-reduced-motion` (audit ⬜ in roadmap).
+- Rispetto di `prefers-reduced-motion`.
 - `lang="it"` sul root.
+- Per smoke ripetibili su WebKit, tema chiaro/scuro e viewport
+  desktop/tablet/mobile usa [`smoke-a11y.md`](./smoke-a11y.md).
 
 ## Cosa NON fare
 
