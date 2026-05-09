@@ -366,6 +366,9 @@ trigger.
 - **Niente tabella `documents` generica**: lo Storage privato è predisposto e
   gli allegati economici hanno `activity_attachments`, ma non c'è ancora un
   catalogo unico documentale per tutte le pratiche.
+- **Niente tabella dedicata per export massivi**: lo ZIP PDF/XML delle fatture
+  viene generato al download dai dati gia presenti in `invoices`,
+  `invoice_lines` e dagli XML costruiti server-side.
 - **Niente UI nuovo schema in Fase 2**: questa fase crea la base dati. Le
   schermate committenti, controparti, prezzi, attività, fatturazione e import
   arrivano nelle fasi successive.
