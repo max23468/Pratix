@@ -3,6 +3,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { spawnSync } from "node:child_process";
 
 const root = process.cwd();
 const changelogPath = path.join(root, "CHANGELOG.md");
@@ -158,6 +159,33 @@ function bumpVersion(currentVersion, bump) {
   if (bump === "none") return currentVersion;
 
   fail(`Bump non valido: ${bump}`);
+}
+
+function isMajorRelease(currentVersion, nextVersion, bump) {
+  if (bump === "major") return true;
+
+  const [currentMajor] = parseVersion(currentVersion);
+  const [nextMajor, nextMinor, nextPatch] = parseVersion(nextVersion);
+
+  return nextMajor > currentMajor && nextMinor === 0 && nextPatch === 0;
+}
+
+function runReactDoctorForMajorRelease() {
+  console.log("Release major rilevata: eseguo React Doctor prima di aggiornare i file.");
+
+  const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
+  const result = spawnSync(npmCommand, ["run", "quality:react-doctor"], {
+    cwd: root,
+    stdio: "inherit",
+  });
+
+  if (result.error) {
+    fail(`React Doctor non eseguibile: ${result.error.message}`);
+  }
+
+  if (result.status !== 0) {
+    fail("React Doctor ha rilevato problemi bloccanti per una release major.");
+  }
 }
 
 function extractUnreleased(changelog) {
@@ -434,10 +462,17 @@ if (options.dryRun) {
   console.log(`Versione corrente: ${current.version} (${current.buildDate})`);
   console.log(`Strategia: ${strategy}`);
   console.log(`Analisi blocco [Non rilasciato]: ${analyzeUnreleased(unreleased.body)}`);
+  if (isMajorRelease(current.version, nextVersion, bump)) {
+    console.log("Gate major: React Doctor verrebbe eseguito prima di aggiornare i file.");
+  }
   console.log("File che verrebbero aggiornati:");
   console.log("- CHANGELOG.md");
   console.log("- src/lib/version.ts");
   process.exit(0);
+}
+
+if (isMajorRelease(current.version, nextVersion, bump)) {
+  runReactDoctorForMajorRelease();
 }
 
 writeFileSync(changelogPath, nextChangelog);

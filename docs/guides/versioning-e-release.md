@@ -74,6 +74,17 @@ l'utente vede, produce o si aspetta dai propri dati. Domanda guida: "dopo il
 deploy, un utente potrebbe ottenere un risultato diverso o dover cambiare il
 proprio modo di lavorare?"
 
+Ogni release major esegue anche il gate React Doctor prima di aggiornare
+`CHANGELOG.md` e `src/lib/version.ts`. Il controllo usa:
+
+```sh
+npm run quality:react-doctor
+```
+
+Il gate è pensato come controllo speciale da major release, non come check
+periodico o pre-push ordinario. Al momento blocca solo diagnostiche di livello
+`error`; i warning restano materiale di bonifica pianificata.
+
 - Rimosso un campo dalla fattura (anche solo dal layout PDF).
 - Cambiata una formula di calcolo (es. cassa, ritenuta).
 - Cambiata una struttura dati che obbliga l'utente a ricompilare qualcosa.
