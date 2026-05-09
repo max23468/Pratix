@@ -163,15 +163,17 @@ function AccountPage() {
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label>Nome e cognome</Label>
+                <Label htmlFor="profile-full-name">Nome e cognome</Label>
                 <Input
+                  id="profile-full-name"
                   value={form.full_name}
                   onChange={(e) => setForm((s) => ({ ...s, full_name: e.target.value }))}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Email di contatto</Label>
+                <Label htmlFor="profile-contact-email">Email di contatto</Label>
                 <Input
+                  id="profile-contact-email"
                   type="email"
                   value={form.email}
                   onChange={(e) => setForm((s) => ({ ...s, email: e.target.value }))}
@@ -181,8 +183,9 @@ function AccountPage() {
                 </p>
               </div>
               <div className="space-y-2">
-                <Label>Telefono</Label>
+                <Label htmlFor="profile-phone">Telefono</Label>
                 <Input
+                  id="profile-phone"
                   value={form.phone}
                   onChange={(e) => setForm((s) => ({ ...s, phone: e.target.value }))}
                 />
@@ -413,8 +416,9 @@ function EmailAccessCard({ email }: { email: string }) {
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label>Nuova email</Label>
+          <Label htmlFor="account-next-email">Nuova email</Label>
           <Input
+            id="account-next-email"
             type="email"
             value={nextEmail}
             onChange={(event) => setNextEmail(event.target.value)}
@@ -422,8 +426,9 @@ function EmailAccessCard({ email }: { email: string }) {
           />
         </div>
         <div className="space-y-2">
-          <Label>Password attuale</Label>
+          <Label htmlFor="account-email-current-password">Password attuale</Label>
           <Input
+            id="account-email-current-password"
             type="password"
             value={currentPassword}
             onChange={(event) => setCurrentPassword(event.target.value)}
@@ -490,8 +495,9 @@ function ChangePasswordCard({ email }: { email: string }) {
       <CardContent className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2 sm:col-span-2">
-            <Label>Password attuale</Label>
+            <Label htmlFor="account-password-current">Password attuale</Label>
             <Input
+              id="account-password-current"
               type="password"
               autoComplete="current-password"
               value={current}
@@ -499,8 +505,9 @@ function ChangePasswordCard({ email }: { email: string }) {
             />
           </div>
           <div className="space-y-2">
-            <Label>Nuova password</Label>
+            <Label htmlFor="account-password-next">Nuova password</Label>
             <Input
+              id="account-password-next"
               type="password"
               autoComplete="new-password"
               value={next}
@@ -509,8 +516,9 @@ function ChangePasswordCard({ email }: { email: string }) {
             <p className="text-xs text-muted-foreground">Almeno 8 caratteri.</p>
           </div>
           <div className="space-y-2">
-            <Label>Conferma nuova password</Label>
+            <Label htmlFor="account-password-confirm">Conferma nuova password</Label>
             <Input
+              id="account-password-confirm"
               type="password"
               autoComplete="new-password"
               value={confirm}
@@ -584,8 +592,9 @@ function DeleteAccountCard({
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label>Password attuale</Label>
+          <Label htmlFor="delete-account-current-password">Password attuale</Label>
           <Input
+            id="delete-account-current-password"
             type="password"
             value={currentPassword}
             onChange={(event) => setCurrentPassword(event.target.value)}
@@ -593,8 +602,9 @@ function DeleteAccountCard({
           />
         </div>
         <div className="space-y-2">
-          <Label>Conferma scrivendo ELIMINA</Label>
+          <Label htmlFor="delete-account-confirmation">Conferma scrivendo ELIMINA</Label>
           <Input
+            id="delete-account-confirmation"
             value={confirmation}
             onChange={(event) => setConfirmation(event.target.value)}
             autoComplete="off"

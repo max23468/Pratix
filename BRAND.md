@@ -45,7 +45,7 @@ Tutti i token vivono in `src/styles.css` come variabili CSS in `oklch`, con vari
 | Ruolo                                 | Token           | Light                         | Dark                                     |
 | ------------------------------------- | --------------- | ----------------------------- | ---------------------------------------- |
 | Primario (Inchiostro)                 | `--primary`     | `oklch(0.22 0.04 260)`        | `oklch(0.94 0.006 80)` (chiaro su scuro) |
-| Brand gold = **Terracotta** (accento) | `--brand-gold`  | `oklch(0.62 0.15 35)`         | `oklch(0.70 0.15 38)`                    |
+| Brand gold = **Terracotta** (accento) | `--brand-gold`  | `oklch(0.55 0.15 35)`         | `oklch(0.70 0.15 38)`                    |
 | Sfondo                                | `--background`  | panna `oklch(0.985 0.004 80)` | grigio caldo `oklch(0.18 0.010 60)`      |
 | Card                                  | `--card`        | bianco caldo                  | grigio caldo medio                       |
 | Border                                | `--border`      | `oklch(0.91 0.008 60)`        | bianco 10%                               |

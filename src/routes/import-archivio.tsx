@@ -720,7 +720,7 @@ function SubjectsStep({
               value={draft.principalId}
               onValueChange={(value) => updateDraft("principalId", value)}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-label="Seleziona committente esistente">
                 <SelectValue placeholder="Seleziona committente" />
               </SelectTrigger>
               <SelectContent>
@@ -766,7 +766,7 @@ function SubjectsStep({
               value={draft.clientId}
               onValueChange={(value) => updateDraft("clientId", value)}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-label="Seleziona cliente esistente">
                 <SelectValue placeholder="Seleziona cliente" />
               </SelectTrigger>
               <SelectContent>
@@ -816,7 +816,7 @@ function SubjectsStep({
               value={draft.counterpartyId}
               onValueChange={(value) => updateDraft("counterpartyId", value)}
             >
-              <SelectTrigger>
+              <SelectTrigger aria-label="Seleziona controparte esistente">
                 <SelectValue placeholder="Seleziona controparte" />
               </SelectTrigger>
               <SelectContent>
@@ -904,7 +904,7 @@ function PracticeStep({
               value={draft.status}
               onValueChange={(value) => updateDraft("status", value as CaseStatus)}
             >
-              <SelectTrigger id="practice_status">
+              <SelectTrigger id="practice_status" aria-label="Stato pratica">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -1101,7 +1101,7 @@ function ActivityEditor({
               updateActivity(activity.localId, "status", value as ActivityStatus)
             }
           >
-            <SelectTrigger>
+            <SelectTrigger aria-label={`Stato attività ${activity.localId}`}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -1129,7 +1129,7 @@ function ActivityEditor({
               updateActivity(activity.localId, "hearingDates", []);
             }}
           >
-            <SelectTrigger>
+            <SelectTrigger aria-label={`Prezzo attività ${activity.localId}`}>
               <SelectValue placeholder="Seleziona voce prezzo" />
             </SelectTrigger>
             <SelectContent>
@@ -1762,7 +1762,9 @@ function ExcelImportPanel() {
                             setStagedRows([]);
                           }}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger
+                            aria-label={`Mappa colonna Excel ${header || `Colonna ${index + 1}`}`}
+                          >
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -2064,7 +2066,10 @@ function ModeSelect({
 }) {
   return (
     <Select value={value} onValueChange={(next) => onValueChange(next as ExistingMode)}>
-      <SelectTrigger id={id}>
+      <SelectTrigger
+        id={id}
+        aria-label={`Scegli tra ${existingLabel.toLowerCase()} e ${newLabel.toLowerCase()}`}
+      >
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
@@ -2103,7 +2108,7 @@ function PersonOrCompanyFields({
       <div className="space-y-2">
         <Label>{kindLabel}</Label>
         <Select value={kind} onValueChange={onKindChange}>
-          <SelectTrigger>
+          <SelectTrigger aria-label={kindLabel}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

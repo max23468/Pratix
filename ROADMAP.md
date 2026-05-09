@@ -27,15 +27,15 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## 1. Tema e accessibilità
 
-| Stato | Voce                                                | Note                                                            |
-| ----- | --------------------------------------------------- | --------------------------------------------------------------- |
-| ✅    | Tema auto (sistema) + override manuale chiaro/scuro | Provider `src/lib/theme-context.tsx`                            |
-| ✅    | Toggle in sidebar, landing, impostazioni            | `<ThemeToggle>`                                                 |
-| ✅    | No-flash script in `__root.tsx`                     | Evita FOUC al caricamento                                       |
-| ✅    | Dark mode "rilassante"                              | Grigio caldo neutro, croma bassa                                |
-| ⬜    | Audit contrasto WCAG AA su entrambi i temi          | Specie su muted, gold su panna, success/warning                 |
-| ⬜    | Focus visibili e navigazione tastiera               | Verifica su tutte le route                                      |
-| ✅    | Riduci-movimento (`prefers-reduced-motion`)         | Animazioni e transizioni non essenziali ridotte via CSS globale |
+| Stato | Voce                                                | Note                                                                                  |
+| ----- | --------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| ✅    | Tema auto (sistema) + override manuale chiaro/scuro | Provider `src/lib/theme-context.tsx`                                                  |
+| ✅    | Toggle in sidebar, landing, impostazioni            | `<ThemeToggle>`                                                                       |
+| ✅    | No-flash script in `__root.tsx`                     | Evita FOUC al caricamento                                                             |
+| ✅    | Dark mode "rilassante"                              | Grigio caldo neutro, croma bassa                                                      |
+| ✅    | Audit contrasto WCAG AA su entrambi i temi          | Axe/WebKit su route pubbliche e autenticate; corretti muted, terracotta e link legali |
+| ✅    | Focus visibili e navigazione tastiera               | Probe WebKit sui controlli interattivi; nomi accessibili aggiunti a filtri e form     |
+| ✅    | Riduci-movimento (`prefers-reduced-motion`)         | Animazioni e transizioni non essenziali ridotte via CSS globale                       |
 
 ## 2. Landing pubblica
 

@@ -27,26 +27,29 @@ I componenti usano classi semantiche (`bg-background`, `text-foreground`, `borde
 --sidebar*, --chart-*
 ```
 
-### Token brand FISSI (uguali in light e dark)
+### Token brand semantici
 
 ```
 --color-brand-navy   = oklch(0.30 0.07 255)
 --color-brand-cream  = oklch(0.985 0.004 80)
---color-brand-gold   = oklch(0.68 0.11 75)
+--color-brand-gold   = oklch(0.55 0.15 35)
 ```
 
-Da usare **solo** per logo e asset di marca che non devono invertirsi col tema.
+Da usare tramite classi Tailwind (`text-brand-gold`, `bg-brand-gold`) e non come
+valori hardcoded nei componenti.
 
 ## Palette (sorgente di verità)
 
-| Ruolo          | Light                         | Dark                                 |
-| -------------- | ----------------------------- | ------------------------------------ |
-| Sfondo         | panna `oklch(0.985 0.004 80)` | grigio caldo `oklch(0.18 0.012 250)` |
-| Testo          | navy carbone                  | panna                                |
-| Primario brand | navy `oklch(0.30 0.07 255)`   | invariato                            |
-| Accento        | oro `oklch(0.68 0.11 75)`     | invariato                            |
+| Ruolo          | Light                             | Dark                                    |
+| -------------- | --------------------------------- | --------------------------------------- |
+| Sfondo         | panna `oklch(0.985 0.004 80)`     | grigio caldo `oklch(0.18 0.010 60)`     |
+| Testo          | inchiostro                        | panna                                   |
+| Primario brand | inchiostro `oklch(0.22 0.04 260)` | panna `oklch(0.94 0.006 80)`            |
+| Accento        | terracotta `oklch(0.55 0.15 35)`  | terracotta chiara `oklch(0.70 0.15 38)` |
 
-La **dark mode è ammorbidita** (croma 0.012, hue 250): scelta esplicita per ridurre l'affaticamento visivo. Vedi [ADR 0006](../decisions/0006-tema-auto-piu-override.md).
+La **dark mode è ammorbidita** (grigio caldo, croma bassa): scelta esplicita per
+ridurre l'affaticamento visivo. Vedi [ADR 0006](../decisions/0006-tema-auto-piu-override.md)
+e [ADR 0007](../decisions/0007-palette-inchiostro-terracotta.md).
 
 ## Tipografia
 

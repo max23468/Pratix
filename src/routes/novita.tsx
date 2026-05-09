@@ -157,13 +157,13 @@ function NovitaPage() {
                       <span className="font-display">
                         Versioni precedenti della serie {s.label}
                       </span>
-                      <span className="text-muted-foreground/70">
+                      <span className="text-muted-foreground">
                         ({older.map((e) => e.version).join(" · ")})
                       </span>
-                      <span className="ml-auto text-muted-foreground/70 group-open:hidden">
+                      <span className="ml-auto text-muted-foreground group-open:hidden">
                         mostra
                       </span>
-                      <span className="ml-auto hidden text-muted-foreground/70 group-open:inline">
+                      <span className="ml-auto hidden text-muted-foreground group-open:inline">
                         nascondi
                       </span>
                     </summary>
@@ -239,8 +239,8 @@ function ReleaseBlock({
           <summary className="flex cursor-pointer list-none items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground">
             <Settings2 className="size-3.5" strokeWidth={1.6} />
             Sotto il cofano · {internalCount} {internalCount === 1 ? "voce" : "voci"}
-            <span className="ml-1 text-muted-foreground/70 group-open:hidden">mostra</span>
-            <span className="ml-1 hidden text-muted-foreground/70 group-open:inline">nascondi</span>
+            <span className="ml-1 text-muted-foreground group-open:hidden">mostra</span>
+            <span className="ml-1 hidden text-muted-foreground group-open:inline">nascondi</span>
           </summary>
           <div className="mt-3 space-y-3 border-l-2 border-border/60 pl-4">
             {groups.internal.map((section) => (

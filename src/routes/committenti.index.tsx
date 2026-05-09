@@ -125,7 +125,7 @@ function CommittentiList() {
           />
         </div>
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="lg:w-44">
+          <SelectTrigger aria-label="Filtra committenti per stato" className="lg:w-44">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -135,7 +135,7 @@ function CommittentiList() {
           </SelectContent>
         </Select>
         <Select value={economics} onValueChange={setEconomics}>
-          <SelectTrigger className="lg:w-56">
+          <SelectTrigger aria-label="Filtra committenti per regole economiche" className="lg:w-56">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

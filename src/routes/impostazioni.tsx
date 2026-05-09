@@ -285,7 +285,7 @@ function SettingsPage() {
                   value={form.tax_regime}
                   onValueChange={(v) => set("tax_regime", v as "ordinario" | "forfettario")}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger aria-label="Regime fiscale">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -424,6 +424,7 @@ function Field({
     <div className="space-y-2">
       <Label>{label}</Label>
       <Input
+        aria-label={label}
         type={type}
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -448,6 +449,7 @@ function NumField({
     <div className="space-y-2">
       <Label>{label}</Label>
       <Input
+        aria-label={label}
         type="number"
         step={step}
         value={value}

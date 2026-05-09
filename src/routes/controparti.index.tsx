@@ -119,7 +119,7 @@ function ContropartiList() {
           />
         </div>
         <Select value={kind} onValueChange={setKind}>
-          <SelectTrigger className="sm:w-52">
+          <SelectTrigger aria-label="Filtra controparti per tipo" className="sm:w-52">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -88,7 +88,7 @@ function TerminiPage() {
               I dati e i contenuti inseriti dall'utente (committenti, clienti, controparti,
               pratiche, attività, fatture, allegati) restano di proprietà dell'utente. Pratix li
               tratta nei limiti necessari all'erogazione del servizio, come descritto nell'
-              <Link to="/privacy" className="text-primary hover:underline">
+              <Link to="/privacy" className="font-medium text-primary underline underline-offset-4">
                 Informativa sulla privacy
               </Link>
               .
@@ -120,7 +120,7 @@ function TerminiPage() {
             <p className="mt-2 text-muted-foreground">
               L'utente può recedere in qualsiasi momento richiedendo la cancellazione del proprio
               account. I dati saranno cancellati nei termini previsti dall'
-              <Link to="/privacy" className="text-primary hover:underline">
+              <Link to="/privacy" className="font-medium text-primary underline underline-offset-4">
                 Informativa sulla privacy
               </Link>
               , fatti salvi gli obblighi di conservazione di legge.
@@ -147,11 +147,11 @@ function TerminiPage() {
         </article>
 
         <div className="mt-12 flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-          <Link to="/privacy" className="font-medium text-primary hover:underline">
+          <Link to="/privacy" className="font-medium text-primary underline underline-offset-4">
             Leggi l'Informativa sulla privacy
           </Link>
           <span>·</span>
-          <Link to="/" className="font-medium text-primary hover:underline">
+          <Link to="/" className="font-medium text-primary underline underline-offset-4">
             Torna alla home
           </Link>
         </div>
