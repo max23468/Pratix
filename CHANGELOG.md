@@ -6,6 +6,16 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.19.0] — 2026-05-09
+
+### Novità
+
+- **Azioni rapide Pratica**: aggiunti comandi diretti per registrare Attività, creare Fatture, aprire l'import archivio ed esportare dossier dal dettaglio Pratica.
+- **Scheda economica Pratica**: il dettaglio Pratica ora mostra compensi, rimborsi spese, maturato, fatturato, incassato e residuo operativo.
+- **Dossier PDF**: aggiunto un export PDF leggibile del dossier pratica accanto all'Excel.
+- **Import incrementale**: l'anteprima Excel distingue righe da creare, pratiche già presenti da aggiornare manualmente e righe duplicate da ignorare prima dello staging.
+- **Controlli qualità dati**: il dettaglio Pratica segnala soggetti mancanti, Attività senza allegati, importi da fatturare e Fatture in bozza.
+
 ## [0.18.0] — 2026-05-09
 
 ### Novità
@@ -509,6 +519,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.19.0]: #0190--2026-05-09
 [0.18.0]: #0180--2026-05-09
 [0.17.0]: #0170--2026-05-09
 [0.16.0]: #0160--2026-05-09

@@ -42,6 +42,12 @@ import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/lib/auth-context";
 import { formatCurrency, formatDate } from "@/lib/format";
 import {
+  applyImportPreviewPlan,
+  summarizeImportPreviewPlan,
+  type ExistingImportPractice,
+  type ImportPreviewPlan,
+} from "@/lib/import-preview-plan";
+import {
   caseActivityStatusLabels,
   caseStatusLabels,
   clientDisplayName,
@@ -212,6 +218,7 @@ type ExcelPreviewRow = {
   normalized: NormalizedImport | null;
   errors: string[];
   warnings: string[];
+  importPlan: ImportPreviewPlan;
 };
 
 type ExcelStagedRow = {
@@ -1466,6 +1473,18 @@ function ExcelImportPanel() {
     },
   });
 
+  const { data: existingPractices = [] } = useQuery({
+    queryKey: ["cases", "import-archive", "excel-dedupe"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("cases")
+        .select("id, practice_number, title")
+        .order("practice_number", { ascending: true });
+      if (error) throw error;
+      return (data ?? []) as ExistingImportPractice[];
+    },
+  });
+
   const { data: priceBooks = [] } = useQuery({
     queryKey: ["price-books", "import-archive", "excel"],
     queryFn: async () => {
@@ -1522,7 +1541,7 @@ function ExcelImportPanel() {
   const stats = useMemo(() => {
     const valid = previewRows.filter((row) => row.errors.length === 0).length;
     const errors = previewRows.length - valid;
-    return { valid, errors };
+    return { valid, errors, plan: summarizeImportPreviewPlan(previewRows) };
   }, [previewRows]);
   const hasImportedStagedRows = stagedRows.some((row) => row.status === "imported");
   const hasFailedStagedRows = stagedRows.some((row) => row.status === "error");
@@ -1550,17 +1569,20 @@ function ExcelImportPanel() {
   };
 
   const buildPreview = () => {
-    const preview = rows.map((row, index) =>
-      normalizeExcelRow(
-        index + 2,
-        row,
-        headers,
-        columnMap,
-        principals,
-        clients,
-        counterparties,
-        priceOptions,
+    const preview = applyImportPreviewPlan(
+      rows.map((row, index) =>
+        normalizeExcelRow(
+          index + 2,
+          row,
+          headers,
+          columnMap,
+          principals,
+          clients,
+          counterparties,
+          priceOptions,
+        ),
       ),
+      existingPractices,
     );
     setPreviewRows(preview);
     setStagedRows([]);
@@ -1727,6 +1749,10 @@ function ExcelImportPanel() {
                 {previewRows.length > 0 ? (
                   <>
                     <Badge variant="outline">{stats.valid} valide</Badge>
+                    <Badge variant="outline">{stats.plan.create} da creare</Badge>
+                    <Badge variant={stats.plan.update > 0 ? "destructive" : "outline"}>
+                      {stats.plan.update} da aggiornare
+                    </Badge>
                     <Badge variant={stats.errors > 0 ? "destructive" : "outline"}>
                       {stats.errors} errori
                     </Badge>
@@ -1798,6 +1824,7 @@ function ExcelImportPanel() {
                     <TableHead>Committente</TableHead>
                     <TableHead>Cliente</TableHead>
                     <TableHead>Controparte</TableHead>
+                    <TableHead>Piano import</TableHead>
                     <TableHead>Esito</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -1814,6 +1841,16 @@ function ExcelImportPanel() {
                         {row.normalized
                           ? displayNormalizedCounterparty(row.normalized.counterparty)
                           : "—"}
+                      </TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          <Badge
+                            variant={row.importPlan.action === "create" ? "outline" : "destructive"}
+                          >
+                            {row.importPlan.label}
+                          </Badge>
+                          <p className="text-xs text-muted-foreground">{row.importPlan.detail}</p>
+                        </div>
                       </TableCell>
                       <TableCell>
                         {row.errors.length > 0 ? (
@@ -1853,7 +1890,7 @@ function ExcelImportPanel() {
               ? "Staging importato"
               : stageMutation.isPending
                 ? "Preparazione…"
-                : "Prepara staging"}
+                : `Prepara ${stats.plan.create} nuove righe`}
           </Button>
           <Button
             type="button"
@@ -2048,6 +2085,11 @@ function normalizeExcelRow(
     normalized: prepared.errors.length > 0 ? null : prepared.normalized,
     errors: prepared.errors,
     warnings: prepared.warnings,
+    importPlan: {
+      action: "ignore",
+      label: "Da valutare",
+      detail: "Valida la riga per calcolare il piano import.",
+    },
   };
 }
 

@@ -65,6 +65,9 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Filtri persistenti per pagina      | `/attivita` e `/fatture` salvano ricerca e filtri in URL/query per riprendere il lavoro operativo                                                                        |
 | ✅    | Cruscotto operativo della pratica  | Nel dettaglio Pratica mostra soggetti, importi da fatturare, fatture collegate, allegati e prossima azione consigliata                                                   |
 | ✅    | Timeline della pratica             | Vista cronologica con apertura pratica, Attività, allegati, Fatture, cessioni credito e cambi di stato                                                                   |
+| ✅    | Azioni rapide dentro la Pratica    | Dal cruscotto: nuova Attività, nuova Fattura, Import archivio, dossier Excel e dossier PDF                                                                               |
+| ✅    | Scheda economica della Pratica     | Compensi, rimborsi spese, maturato, da fatturare, fatturato, incassato e residuo operativo                                                                               |
+| ✅    | Controlli qualità dati             | Avvisi su soggetti mancanti, Attività senza allegati, importi da fatturare e Fatture in bozza                                                                            |
 
 ## 4. Funzionalità di prodotto
 
@@ -88,6 +91,8 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Spese con allegati                | I rimborsi sono attività fatturabili Art. 15 con allegati; il flusso fatture usa `case_activities` e la tabella legacy `expenses` è in dismissione tramite migration    |
 | ✅    | Esportazione massiva fatture      | ZIP PDF + XML dalla lista fatture, rispettando ricerca, stato, anno e periodo filtrati                                                                                  |
 | ✅    | Dossier pratica esportabile       | Excel riepilogativo per Pratica con soggetti, Attività, allegati, Fatture, storico stati e cessioni credito                                                             |
+| ✅    | Dossier pratica in PDF            | Export PDF leggibile/stampabile con soggetti, riepilogo economico, Attività, Fatture e storico operativo                                                                |
+| ✅    | Import incrementale più smart     | Anteprima Excel con piano righe da creare, pratiche già presenti da aggiornare manualmente e duplicati da ignorare prima dello staging                                  |
 | ✅    | Numerazione automatica            | Numero pratica numerico suggerito dal database e modificabile manualmente                                                                                               |
 | 💤    | Area cliente esterna              | Login dedicato per visione fatture e documenti                                                                                                                          |
 | 💤    | Integrazione invio SDI            | Oggi solo generazione XML; invio futuro                                                                                                                                 |
