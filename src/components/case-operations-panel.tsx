@@ -92,6 +92,7 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
     [activities, caseRow, history, invoices, transfers],
   );
   const isLoading = activitiesLoading || invoicesLoading || historyLoading || transfersLoading;
+  const dossierDownloadsDisabled = isLoading;
 
   const nextAction = getNextAction({ activities, invoices, attachmentCount: totals.attachments });
   const workflow = useMemo(
@@ -145,10 +146,12 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
   );
 
   const downloadDossier = () => {
+    if (dossierDownloadsDisabled) return;
     downloadFile(buildCaseDossierWorkbook(dossierInput));
   };
 
   const downloadPdfDossier = async () => {
+    if (dossierDownloadsDisabled) return;
     const { downloadCaseDossierPdf } = await import("@/lib/case-dossier-pdf");
     downloadCaseDossierPdf(dossierInput);
   };
@@ -191,7 +194,12 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
               Import archivio
             </Link>
           </Button>
-          <Button size="sm" variant="outline" onClick={downloadDossier} disabled={isLoading}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={downloadDossier}
+            disabled={dossierDownloadsDisabled}
+          >
             <FileSpreadsheet className="mr-1 size-4" />
             Excel
           </Button>
@@ -199,7 +207,7 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
             size="sm"
             variant="outline"
             onClick={() => void downloadPdfDossier()}
-            disabled={isLoading}
+            disabled={dossierDownloadsDisabled}
           >
             <FileText className="mr-1 size-4" />
             PDF
@@ -222,7 +230,7 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
                 variant="outline"
                 size="sm"
                 onClick={downloadDossier}
-                disabled={isLoading}
+                disabled={dossierDownloadsDisabled}
               >
                 <Download className="mr-1 size-4" />
                 Dossier Excel
@@ -269,7 +277,7 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
             <DossierLine icon={Receipt} label="Fatture" value={String(invoices.length)} />
             <DossierLine icon={Paperclip} label="Allegati" value={String(totals.attachments)} />
             <div className="grid gap-2 sm:grid-cols-2">
-              <Button type="button" onClick={downloadDossier} disabled={isLoading}>
+              <Button type="button" onClick={downloadDossier} disabled={dossierDownloadsDisabled}>
                 <Download className="mr-1 size-4" />
                 Excel
               </Button>
@@ -277,7 +285,7 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
                 type="button"
                 variant="outline"
                 onClick={() => void downloadPdfDossier()}
-                disabled={isLoading}
+                disabled={dossierDownloadsDisabled}
               >
                 <Download className="mr-1 size-4" />
                 PDF

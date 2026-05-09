@@ -1,10 +1,14 @@
 import { renderToString } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { buildCaseTimelineItems } from "@/lib/case-timeline";
 import { buildDebtCollectionWorkflow, summarizeCaseOperations } from "@/lib/case-workflow";
 import { CaseTimeline } from "./case-operations-panel";
 
 describe("case operations timeline", () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   it("ordina eventi pratica, attività, allegati, fatture e storico", () => {
     const timeline = buildCaseTimelineItems({
       caseRow: {
@@ -103,6 +107,40 @@ describe("case operations timeline", () => {
       stage: "Preparazione Fattura",
       priority: "Alta",
       action: "Prepara la Fattura per le Attività maturate.",
+    });
+  });
+
+  it("non anticipa lo stato insoluto nel giorno di scadenza della Fattura", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 4, 9, 12));
+
+    const activities = [] as never;
+    const invoices = [
+      {
+        id: "invoice-1",
+        number: "TST1",
+        year: 2026,
+        issue_date: "2026-05-01",
+        due_date: "2026-05-09",
+        paid_at: null,
+        status: "issued",
+        total_amount: 150,
+        notes: null,
+      },
+    ] as never;
+    const workflow = buildDebtCollectionWorkflow({
+      caseRow: {
+        status: "in_progress",
+      },
+      activities,
+      invoices,
+      totals: summarizeCaseOperations(activities, invoices),
+      qualityChecks: [{ severity: "ok" }],
+    });
+
+    expect(workflow).toMatchObject({
+      stage: "Monitoraggio incasso",
+      priority: "Media",
     });
   });
 });

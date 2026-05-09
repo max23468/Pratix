@@ -163,10 +163,21 @@ function amountOf(invoice: CaseTimelineInvoice) {
 function isInvoiceOverdue(invoice: CaseTimelineInvoice) {
   if (invoice.status === "overdue") return true;
   if (invoice.status !== "issued" || !invoice.due_date) return false;
-  return new Date(invoice.due_date).getTime() < startOfToday().getTime();
+  return startOfDateOnly(invoice.due_date).getTime() < startOfToday().getTime();
 }
 
 function startOfToday() {
   const now = new Date();
   return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+}
+
+function startOfDateOnly(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+
+  if (year && month && day) {
+    return new Date(year, month - 1, day);
+  }
+
+  const date = new Date(value);
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
 }

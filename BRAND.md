@@ -126,6 +126,13 @@ Componente: `src/components/brand/logo.tsx` → `<Logo />`.
 <Logo direction="seal" form="lockup" /> // per intestazione fattura PDF
 ```
 
+**Asset statici per export/press**:
+
+- `/brand/pratix-logo-horizontal-dark-on-cream.svg`: lockup orizzontale scuro su fondo panna.
+- `/brand/pratix-logo-monochrome.svg`: lockup monocromatico trasparente, adatto a stampa, watermark e materiali esterni.
+
+Gli asset statici sono generati con `npm run brand:assets`. Nella UI React resta obbligatorio usare `<Logo />`, non `<img>`.
+
 **Per cambiare la direzione di brand a livello globale**: modifica `BRAND_DIRECTION` in `src/components/brand/logo.tsx`.
 
 **Spazio di rispetto**: gestito dal componente (gap proporzionale alla size). Non incollare il logo a bordi o testo.
