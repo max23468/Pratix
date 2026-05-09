@@ -61,8 +61,8 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Revisione superfici trasversali    | Dashboard, filtri/empty state, viste pratiche, Impostazioni, Account, Novità, onboarding, landing, privacy/termini e audit visuale allineati al dominio recupero crediti |
 | ✅    | Azioni operative in dashboard      | Collegamenti rapidi verso Attività, nuova Fattura e Import archivio con dati già maturati                                                                                |
 | ✅    | Microcopy review pagina per pagina | Passata sulle superfici principali e sulla landing; testi allineati a tono, glossario e "tu" professionale                                                               |
-| ⬜    | Scorciatoie tastiera               | Almeno: nuova pratica, nuovo cliente, nuova fattura, ricerca globale                                                                                                     |
-| ⬜    | Ricerca globale (cmd+k)            | Pratiche, clienti, fatture                                                                                                                                               |
+| ✅    | Scorciatoie tastiera               | `Cmd/Ctrl+K` apre la ricerca globale; `Cmd/Ctrl+Shift+P/C/F` aprono nuova pratica, nuovo cliente e nuova fattura                                                         |
+| ✅    | Ricerca globale (cmd+k)            | Command palette in topbar per azioni rapide e ricerca su Pratiche, Clienti e Fatture                                                                                     |
 | ✅    | Filtri persistenti per pagina      | `/attivita` e `/fatture` salvano ricerca e filtri in URL/query per riprendere il lavoro operativo                                                                        |
 | ⬜    | Dati di esempio opzionali          | Per esplorare l'app a freddo                                                                                                                                             |
 
@@ -119,7 +119,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Meta unici per route pubbliche                 | Landing, login, registrazione, recupero, privacy, termini                                                                                         |
 | ✅    | og:image globale + Twitter card                | `/og-image.jpg`                                                                                                                                   |
 | ✅    | `sitemap.xml` + `robots.txt`                   | Sitemap pubblica per home, novità, privacy e termini; robots con esclusione di aree riservate e pagine operative di accesso                       |
-| ⬜    | JSON-LD `Organization` / `SoftwareApplication` |                                                                                                                                                   |
+| ✅    | JSON-LD `Organization` / `SoftwareApplication` | Structured data pubblico nel root HTML con versione app e immagine locale `/og-image.jpg`                                                         |
 | ✅    | Uscita tecnica da Lovable                      | GitHub + Vercel + Supabase attivi; produzione verificata su `https://pratix.vercel.app`; Lovable resta solo parcheggiato come archivio temporaneo |
 | ✅    | Pubblicazione tramite Vercel                   | Produzione su `https://pratix.vercel.app`; dominio proprietario rimandato                                                                         |
 | ✅    | Migrazione backend fuori da Lovable Cloud      | Supabase di proprietà collegato, dati migrati, auth verificata                                                                                    |
@@ -169,8 +169,8 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## Prossime mosse suggerite (in ordine)
 
-1. **Rilasciare la fase quando pronta per produzione**: il blocco `[Non rilasciato]` contiene modifiche utente-visibili, quindi prima di pubblicare servirà `npm run release`.
-2. **JSON-LD pubblico**: aggiungere `Organization` / `SoftwareApplication` alla landing.
-3. **Ricerca globale e scorciatoie**: progettare `cmd+k` e scorciatoie per nuova pratica, cliente, fattura e ricerca.
+1. **Dati di esempio opzionali**: permettere di esplorare l'app a freddo senza inserire subito dati reali.
+2. **JSON-LD avanzato**: valutare `FAQPage` sulla landing se il contenuto FAQ resta stabile.
+3. **Auth Google opzionale**: decidere se serve al target freelance prima di configurare OAuth.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.

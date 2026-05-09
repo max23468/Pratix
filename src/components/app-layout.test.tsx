@@ -61,6 +61,10 @@ vi.mock("@/components/user-menu", () => ({
   UserMenu: () => <button type="button">utente</button>,
 }));
 
+vi.mock("@/components/global-search", () => ({
+  GlobalSearch: () => <button type="button">ricerca</button>,
+}));
+
 vi.mock("@/components/onboarding-dialog", () => ({
   OnboardingDialog: () => <div>onboarding</div>,
 }));

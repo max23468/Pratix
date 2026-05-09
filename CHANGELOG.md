@@ -6,6 +6,14 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.17.0] — 2026-05-09
+
+### Novità
+
+- **Ricerca globale**: aggiunta una command palette nella topbar per cercare Pratiche, Clienti e Fatture, con azioni rapide per nuova pratica, nuovo cliente, nuova fattura e Attività.
+- **Scorciatoie tastiera**: aggiunti `Cmd/Ctrl+K` per la ricerca globale e scorciatoie dirette per nuova pratica, nuovo cliente e nuova fattura.
+- **JSON-LD pubblico**: aggiunti structured data `Organization` e `SoftwareApplication` con logo, versione e offerta iniziale gratuita.
+
 ## [0.16.0] — 2026-05-09
 
 ### Novità
@@ -493,6 +501,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.17.0]: #0170--2026-05-09
 [0.16.0]: #0160--2026-05-09
 [0.15.0]: #0150--2026-05-09
 [0.14.0]: #0140--2026-05-09
