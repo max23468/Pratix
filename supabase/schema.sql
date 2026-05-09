@@ -210,6 +210,7 @@ DECLARE
   v_client_id uuid;
   v_counterparty_id uuid;
   v_case_id uuid;
+  v_existing_case_id uuid;
   v_activity_id uuid;
   v_activity jsonb;
   v_hearing_date text;
@@ -335,26 +336,56 @@ BEGIN
     active_from = coalesce(public.principal_clients.active_from, excluded.active_from),
     updated_at = now();
 
-  INSERT INTO public.cases (
-    user_id, principal_id, client_id, counterparty_id, practice_number, case_number,
-    title, matter, status, fee_type, agreed_fee, hourly_rate, retainer, counterparty,
-    authority, rg_number, opened_at, closed_at, notes
-  )
-  VALUES (
-    v_user_id, v_principal_id, v_client_id, v_counterparty_id,
-    (v_normalized #>> '{practice,practiceNumber}')::integer,
-    v_normalized #>> '{practice,practiceNumber}',
-    v_normalized #>> '{practice,title}',
-    'civile',
-    (v_normalized #>> '{practice,status}')::public.case_status,
-    'flat', 0, NULL, 0, NULL,
-    nullif(v_normalized #>> '{practice,authority}', ''),
-    nullif(v_normalized #>> '{practice,rgNumber}', ''),
-    (v_normalized #>> '{practice,openedAt}')::date,
-    nullif(v_normalized #>> '{practice,closedAt}', '')::date,
-    nullif(v_normalized #>> '{practice,notes}', '')
-  )
-  RETURNING id INTO v_case_id;
+  v_existing_case_id := nullif(v_normalized #>> '{practice,existingCaseId}', '')::uuid;
+
+  IF v_existing_case_id IS NOT NULL THEN
+    SELECT id INTO v_case_id
+    FROM public.cases
+    WHERE id = v_existing_case_id
+      AND user_id = v_user_id
+      AND practice_number = (v_normalized #>> '{practice,practiceNumber}')::integer;
+
+    IF v_case_id IS NULL THEN
+      RAISE EXCEPTION 'Pratica esistente non trovata per aggiornamento.';
+    END IF;
+
+    UPDATE public.cases
+    SET principal_id = v_principal_id,
+        client_id = v_client_id,
+        counterparty_id = v_counterparty_id,
+        case_number = v_normalized #>> '{practice,practiceNumber}',
+        title = v_normalized #>> '{practice,title}',
+        status = (v_normalized #>> '{practice,status}')::public.case_status,
+        authority = nullif(v_normalized #>> '{practice,authority}', ''),
+        rg_number = nullif(v_normalized #>> '{practice,rgNumber}', ''),
+        opened_at = (v_normalized #>> '{practice,openedAt}')::date,
+        closed_at = nullif(v_normalized #>> '{practice,closedAt}', '')::date,
+        notes = nullif(v_normalized #>> '{practice,notes}', '')
+    WHERE id = v_case_id
+      AND user_id = v_user_id
+    RETURNING id INTO v_case_id;
+  ELSE
+    INSERT INTO public.cases (
+      user_id, principal_id, client_id, counterparty_id, practice_number, case_number,
+      title, matter, status, fee_type, agreed_fee, hourly_rate, retainer, counterparty,
+      authority, rg_number, opened_at, closed_at, notes
+    )
+    VALUES (
+      v_user_id, v_principal_id, v_client_id, v_counterparty_id,
+      (v_normalized #>> '{practice,practiceNumber}')::integer,
+      v_normalized #>> '{practice,practiceNumber}',
+      v_normalized #>> '{practice,title}',
+      'civile',
+      (v_normalized #>> '{practice,status}')::public.case_status,
+      'flat', 0, NULL, 0, NULL,
+      nullif(v_normalized #>> '{practice,authority}', ''),
+      nullif(v_normalized #>> '{practice,rgNumber}', ''),
+      (v_normalized #>> '{practice,openedAt}')::date,
+      nullif(v_normalized #>> '{practice,closedAt}', '')::date,
+      nullif(v_normalized #>> '{practice,notes}', '')
+    )
+    RETURNING id INTO v_case_id;
+  END IF;
 
   FOR v_activity IN
     SELECT value FROM jsonb_array_elements(coalesce(v_normalized -> 'activities', '[]'::jsonb))
@@ -373,12 +404,14 @@ BEGIN
       RAISE EXCEPTION 'Voce prezzo non valida per la riga di import.';
     END IF;
 
+    v_activity_id := NULL;
+
     INSERT INTO public.case_activities (
       id, user_id, case_id, principal_id, client_id, counterparty_id, price_book_id,
       price_item_id, activity_date, kind, status, snapshot_price_year, snapshot_price_code,
       snapshot_price_name, description, quantity, unit_price, notes
     )
-    VALUES (
+    SELECT
       coalesce((v_activity ->> 'id')::uuid, gen_random_uuid()),
       v_user_id, v_case_id, v_principal_id, v_client_id, v_counterparty_id,
       (v_activity ->> 'priceBookId')::uuid,
@@ -393,26 +426,37 @@ BEGIN
       (v_activity ->> 'quantity')::numeric,
       (v_activity ->> 'unitPrice')::numeric,
       nullif(v_activity ->> 'notes', '')
+    WHERE NOT EXISTS (
+      SELECT 1
+      FROM public.case_activities ca
+      WHERE ca.user_id = v_user_id
+        AND ca.case_id = v_case_id
+        AND ca.price_item_id = (v_activity ->> 'priceItemId')::uuid
+        AND ca.activity_date = (v_activity ->> 'activityDate')::date
+        AND ca.description = v_activity ->> 'description'
+        AND ca.amount = round((v_activity ->> 'quantity')::numeric * (v_activity ->> 'unitPrice')::numeric, 2)
     )
     RETURNING id INTO v_activity_id;
 
-    FOR v_hearing_date IN
-      SELECT value #>> '{}'
-      FROM jsonb_array_elements(coalesce(v_activity -> 'hearingDates', '[]'::jsonb))
-    LOOP
-      INSERT INTO public.case_activity_hearings (user_id, activity_id, hearing_date, position)
-      VALUES (
-        v_user_id,
-        v_activity_id,
-        v_hearing_date::date,
-        (
-          SELECT count(*) + 1
-          FROM public.case_activity_hearings
-          WHERE activity_id = v_activity_id
-            AND user_id = v_user_id
-        )
-      );
-    END LOOP;
+    IF v_activity_id IS NOT NULL THEN
+      FOR v_hearing_date IN
+        SELECT value #>> '{}'
+        FROM jsonb_array_elements(coalesce(v_activity -> 'hearingDates', '[]'::jsonb))
+      LOOP
+        INSERT INTO public.case_activity_hearings (user_id, activity_id, hearing_date, position)
+        VALUES (
+          v_user_id,
+          v_activity_id,
+          v_hearing_date::date,
+          (
+            SELECT count(*) + 1
+            FROM public.case_activity_hearings
+            WHERE activity_id = v_activity_id
+              AND user_id = v_user_id
+          )
+        );
+      END LOOP;
+    END IF;
   END LOOP;
 
   UPDATE public.import_rows

@@ -255,6 +255,7 @@ type NormalizedImport = {
   };
   practice: {
     practiceNumber: number;
+    existingCaseId?: string | null;
     title: string;
     status: CaseStatus;
     openedAt: string;
@@ -1750,7 +1751,7 @@ function ExcelImportPanel() {
                   <>
                     <Badge variant="outline">{stats.valid} valide</Badge>
                     <Badge variant="outline">{stats.plan.create} da creare</Badge>
-                    <Badge variant={stats.plan.update > 0 ? "destructive" : "outline"}>
+                    <Badge variant={stats.plan.update > 0 ? "outline" : "outline"}>
                       {stats.plan.update} da aggiornare
                     </Badge>
                     <Badge variant={stats.errors > 0 ? "destructive" : "outline"}>
@@ -1845,7 +1846,7 @@ function ExcelImportPanel() {
                       <TableCell>
                         <div className="space-y-1">
                           <Badge
-                            variant={row.importPlan.action === "create" ? "outline" : "destructive"}
+                            variant={row.importPlan.action === "ignore" ? "destructive" : "outline"}
                           >
                             {row.importPlan.label}
                           </Badge>
@@ -1890,7 +1891,7 @@ function ExcelImportPanel() {
               ? "Staging importato"
               : stageMutation.isPending
                 ? "Preparazione…"
-                : `Prepara ${stats.plan.create} nuove righe`}
+                : `Prepara ${stats.valid} righe`}
           </Button>
           <Button
             type="button"
@@ -2326,6 +2327,7 @@ function buildNormalizedImport(
     },
     practice: {
       practiceNumber: Number.isFinite(practiceNumber) ? practiceNumber : 0,
+      existingCaseId: null,
       title: draft.title.trim() || `Pratica ${draft.practiceNumber || "—"}`,
       status: draft.status,
       openedAt: draft.openedAt || today(),

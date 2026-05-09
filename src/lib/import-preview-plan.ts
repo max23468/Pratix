@@ -15,6 +15,7 @@ export type ImportPlanCandidate = {
   normalized: {
     practice: {
       practiceNumber: number;
+      existingCaseId?: string | null;
     };
   } | null;
   errors: string[];
@@ -43,26 +44,7 @@ export function applyImportPreviewPlan<T extends ImportPlanCandidate>(
     }
 
     const practiceNumber = row.normalized.practice.practiceNumber;
-    const existingPractice = existingByPracticeNumber.get(practiceNumber);
     const previousRow = firstRowByPracticeNumber.get(practiceNumber);
-
-    if (existingPractice) {
-      return {
-        ...row,
-        normalized: null,
-        errors: [
-          ...row.errors,
-          `Pratica ${practiceNumber} già presente: aggiorna la pratica esistente o cambia numero prima di importare.`,
-        ],
-        importPlan: {
-          action: "update",
-          label: "Da aggiornare",
-          detail: existingPractice.title
-            ? `Già presente: ${existingPractice.title}`
-            : "Pratica già presente in archivio.",
-        } satisfies ImportPreviewPlan,
-      };
-    }
 
     if (previousRow) {
       return {
@@ -81,6 +63,32 @@ export function applyImportPreviewPlan<T extends ImportPlanCandidate>(
     }
 
     firstRowByPracticeNumber.set(practiceNumber, row.rowNumber);
+
+    const existingPractice = existingByPracticeNumber.get(practiceNumber);
+    if (existingPractice) {
+      return {
+        ...row,
+        normalized: {
+          ...row.normalized,
+          practice: {
+            ...row.normalized.practice,
+            existingCaseId: existingPractice.id,
+          },
+        },
+        warnings: [
+          ...row.warnings,
+          `Pratica ${practiceNumber} già presente: verrà aggiornata senza duplicare le Attività già registrate.`,
+        ],
+        importPlan: {
+          action: "update",
+          label: "Da aggiornare",
+          detail: existingPractice.title
+            ? `Aggiorna: ${existingPractice.title}`
+            : "Aggiorna la pratica già presente in archivio.",
+        } satisfies ImportPreviewPlan,
+      };
+    }
+
     return {
       ...row,
       importPlan: {

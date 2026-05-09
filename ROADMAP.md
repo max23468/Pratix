@@ -68,6 +68,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Azioni rapide dentro la Pratica    | Dal cruscotto: nuova Attività, nuova Fattura, Import archivio, dossier Excel e dossier PDF                                                                               |
 | ✅    | Scheda economica della Pratica     | Compensi, rimborsi spese, maturato, da fatturare, fatturato, incassato e residuo operativo                                                                               |
 | ✅    | Controlli qualità dati             | Avvisi su soggetti mancanti, Attività senza allegati, importi da fatturare e Fatture in bozza                                                                            |
+| ✅    | Workflow recupero crediti          | Il cruscotto Pratica mostra stato operativo, priorità, prossima azione e motivo calcolati da Attività, Fatture, stato e qualità dati                                     |
 
 ## 4. Funzionalità di prodotto
 
@@ -93,6 +94,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Dossier pratica esportabile       | Excel riepilogativo per Pratica con soggetti, Attività, allegati, Fatture, storico stati e cessioni credito                                                             |
 | ✅    | Dossier pratica in PDF            | Export PDF leggibile/stampabile con soggetti, riepilogo economico, Attività, Fatture e storico operativo                                                                |
 | ✅    | Import incrementale più smart     | Anteprima Excel con piano righe da creare, pratiche già presenti da aggiornare manualmente e duplicati da ignorare prima dello staging                                  |
+| ✅    | Aggiornamento reale da import     | Le righe Excel su pratiche già presenti aggiornano la Pratica esistente e aggiungono solo Attività non già registrate                                                   |
 | ✅    | Numerazione automatica            | Numero pratica numerico suggerito dal database e modificabile manualmente                                                                                               |
 | 💤    | Area cliente esterna              | Login dedicato per visione fatture e documenti                                                                                                                          |
 | 💤    | Integrazione invio SDI            | Oggi solo generazione XML; invio futuro                                                                                                                                 |
@@ -174,6 +176,6 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## Prossime mosse suggerite (in ordine)
 
-1. **Rivalutare le voci parcheggiate solo su bisogno reale**: time tracking, area cliente esterna, invio SDI, dominio proprietario e dismissione Lovable restano fuori dallo sviluppo immediato.
+1. **Rivalutare la roadmap solo su bisogno reale**: i due blocchi attivi sono completati; le voci parcheggiate restano fuori dallo sviluppo immediato.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.

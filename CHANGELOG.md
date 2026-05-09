@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.20.0] — 2026-05-09
+
+### Novità
+
+- **Workflow recupero crediti**: il cruscotto Pratica ora mostra stato operativo, priorità, prossima azione e motivo calcolati da Attività, Fatture e qualità dati.
+- **Aggiornamento reale da import**: le righe Excel su pratiche già presenti aggiornano la Pratica esistente e aggiungono solo Attività non già registrate.
+
 ## [0.19.0] — 2026-05-09
 
 ### Novità
@@ -519,6 +526,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.20.0]: #0200--2026-05-09
 [0.19.0]: #0190--2026-05-09
 [0.18.0]: #0180--2026-05-09
 [0.17.0]: #0170--2026-05-09

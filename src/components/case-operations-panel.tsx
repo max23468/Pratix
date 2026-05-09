@@ -5,6 +5,7 @@ import {
   AlertTriangle,
   CheckCircle2,
   Download,
+  Flag,
   FileText,
   FileSpreadsheet,
   ListChecks,
@@ -31,6 +32,7 @@ import {
   type CaseTimelineParty,
   type CaseTimelineTransfer as TransferRow,
 } from "@/lib/case-timeline";
+import { buildDebtCollectionWorkflow, summarizeCaseOperations } from "@/lib/case-workflow";
 import { formatCurrency, formatDate } from "@/lib/format";
 import {
   caseActivityStatusLabels,
@@ -92,6 +94,17 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
   const isLoading = activitiesLoading || invoicesLoading || historyLoading || transfersLoading;
 
   const nextAction = getNextAction({ activities, invoices, attachmentCount: totals.attachments });
+  const workflow = useMemo(
+    () =>
+      buildDebtCollectionWorkflow({
+        caseRow,
+        activities,
+        invoices,
+        totals,
+        qualityChecks,
+      }),
+    [activities, caseRow, invoices, qualityChecks, totals],
+  );
   const dossierInput = useMemo<CaseDossierInput>(
     () =>
       buildDossierInput({
@@ -225,10 +238,18 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
 
             <Separator />
 
-            <div className="flex flex-col gap-2 rounded-md border border-border p-3">
-              <div className="flex items-center gap-2">
-                <ListChecks className="size-4 text-muted-foreground" />
-                <p className="text-sm font-medium">Prossima azione</p>
+            <div className="space-y-3 rounded-md border border-border p-3">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <ListChecks className="size-4 text-muted-foreground" />
+                  <p className="text-sm font-medium">Workflow recupero crediti</p>
+                </div>
+                <Badge variant={workflow.priorityVariant}>{workflow.priority}</Badge>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-3">
+                <WorkflowField label="Stato operativo" value={workflow.stage} />
+                <WorkflowField label="Prossima azione" value={workflow.action} />
+                <WorkflowField label="Motivo" value={workflow.reason} />
               </div>
               <p className="text-sm text-muted-foreground">{nextAction}</p>
             </div>
@@ -429,46 +450,6 @@ function useCaseTransfers(caseId: string) {
       return (data ?? []) as TransferRow[];
     },
   });
-}
-
-function summarizeCaseOperations(activities: ActivityRow[], invoices: InvoiceRow[]) {
-  const activityTotals = activities.reduce(
-    (acc, activity) => {
-      const amount = Number(activity.amount) || 0;
-      if (activity.status === "to_invoice") acc.toInvoice += Number(activity.amount) || 0;
-      if (activity.kind === "fee") acc.fees += amount;
-      else acc.reimbursements += amount;
-      acc.attachments += activity.activity_attachments?.length ?? 0;
-      if ((activity.activity_attachments?.length ?? 0) === 0) acc.activitiesWithoutAttachments += 1;
-      return acc;
-    },
-    {
-      toInvoice: 0,
-      fees: 0,
-      reimbursements: 0,
-      attachments: 0,
-      activitiesWithoutAttachments: 0,
-    },
-  );
-
-  const invoiceTotal = invoices.reduce(
-    (sum, invoice) => sum + (Number(invoice.total_amount) || 0),
-    0,
-  );
-  const paidTotal = invoices.reduce(
-    (sum, invoice) => sum + (invoice.status === "paid" ? Number(invoice.total_amount) || 0 : 0),
-    0,
-  );
-  const matured = activityTotals.fees + activityTotals.reimbursements;
-  const residual = Math.max(matured - paidTotal, 0);
-
-  return {
-    ...activityTotals,
-    matured,
-    invoiceTotal,
-    paidTotal,
-    residual,
-  };
 }
 
 function getNextAction({
@@ -698,6 +679,18 @@ function EconomicLine({ label, value }: { label: string; value: string }) {
     <div className="rounded-md border border-border p-3">
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="mt-1 text-base font-semibold">{value}</p>
+    </div>
+  );
+}
+
+function WorkflowField({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="flex items-center gap-1 text-xs text-muted-foreground">
+        <Flag className="size-3" />
+        {label}
+      </p>
+      <p className="mt-1 text-sm font-medium">{value}</p>
     </div>
   );
 }
