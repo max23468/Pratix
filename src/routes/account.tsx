@@ -1,8 +1,18 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Download, FileUp, KeyRound, Save, ShieldCheck } from "lucide-react";
+import {
+  Download,
+  FileArchive,
+  FileUp,
+  KeyRound,
+  MailCheck,
+  Save,
+  ShieldCheck,
+  Trash2,
+} from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -10,10 +20,29 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { AppearanceCard } from "@/components/appearance-card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import {
+  buildPersonalDataCsvArchive,
+  buildPersonalDataJson,
+  PERSONAL_DATA_TABLES,
+  type PersonalDataPayload,
+} from "@/lib/personal-data-export";
 import { APP_VERSION, BUILD_DATE } from "@/lib/version";
+import { downloadBytes } from "@/lib/invoice-file-exports";
+import { deleteAccountFn } from "@/server/account.functions";
 
 export const Route = createFileRoute("/account")({
   head: () => ({
@@ -39,9 +68,30 @@ type ProfileForm = {
   phone: string;
 };
 
+type DeleteAccountResult = {
+  deleted: boolean;
+  removedStorageObjects: number;
+};
+
+const unwrapServerResult = <T,>(result: T | { data: T }) =>
+  "data" in Object(result) ? (result as { data: T }).data : (result as T);
+
+const readServerResult = async <T,>(result: T | { data: T } | Response) => {
+  if (result instanceof Response) {
+    if (!result.ok) throw new Error(await result.text());
+    const contentType = result.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      return unwrapServerResult<T>(await result.json());
+    }
+    throw new Error("Risposta server non valida");
+  }
+  return unwrapServerResult<T>(result);
+};
+
 function AccountPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const navigate = useNavigate();
   const [form, setForm] = useState<ProfileForm>({ full_name: "", email: "", phone: "" });
 
   const { data, isLoading } = useQuery({
@@ -162,26 +212,7 @@ function AccountPage() {
         </TabsContent>
 
         <TabsContent value="sicurezza" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShieldCheck className="size-4 text-muted-foreground" />
-                Email di accesso
-              </CardTitle>
-              <CardDescription>È l'indirizzo che usi per entrare in Pratix.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input value={user?.email ?? ""} readOnly disabled />
-                <p className="text-xs text-muted-foreground">
-                  Per cambiare l'email di accesso scrivi al supporto. Stiamo lavorando alla modifica
-                  autonoma.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
+          <EmailAccessCard email={user?.email ?? ""} />
           <ChangePasswordCard email={user?.email ?? ""} />
         </TabsContent>
 
@@ -226,6 +257,15 @@ function AccountPage() {
           </Card>
 
           <DataExportCard />
+
+          <DeleteAccountCard
+            email={user?.email ?? ""}
+            onDeleted={async () => {
+              qc.clear();
+              await supabase.auth.signOut().catch(() => undefined);
+              navigate({ to: "/" });
+            }}
+          />
         </TabsContent>
       </Tabs>
     </AppLayout>
@@ -233,48 +273,47 @@ function AccountPage() {
 }
 
 function DataExportCard() {
+  const buildPayload = async (): Promise<PersonalDataPayload> => {
+    const entries = await Promise.all(
+      PERSONAL_DATA_TABLES.map(async (table) => {
+        const { data, error } = await supabase.from(table).select("*");
+        if (error) throw error;
+        return [table, (data ?? []) as unknown[]] as const;
+      }),
+    );
+
+    return {
+      exportedAt: new Date().toISOString(),
+      product: "Pratix",
+      tables: Object.fromEntries(entries),
+    };
+  };
+
   const exportMutation = useMutation({
-    mutationFn: async () => {
-      const tables = [
-        "principals",
-        "principal_clients",
-        "clients",
-        "counterparties",
-        "counterparty_subjects",
-        "cases",
-        "case_activities",
-        "case_activity_hearings",
-        "activity_attachments",
-        "price_books",
-        "price_items",
-        "invoices",
-        "invoice_lines",
-      ] as const;
+    mutationFn: async (format: "json" | "csv") => {
+      const payload = await buildPayload();
+      const date = new Date().toISOString().slice(0, 10);
 
-      const entries = await Promise.all(
-        tables.map(async (table) => {
-          const { data, error } = await supabase.from(table).select("*");
-          if (error) throw error;
-          return [table, data ?? []] as const;
-        }),
-      );
+      if (format === "json") {
+        const file = buildPersonalDataJson(payload);
+        downloadBytes({
+          bytes: file.bytes,
+          fileName: `pratix-export-dati-${date}.json`,
+          mimeType: file.mimeType,
+        });
+        return "json";
+      }
 
-      const payload = {
-        exportedAt: new Date().toISOString(),
-        product: "Pratix",
-        data: Object.fromEntries(entries),
-      };
-      const blob = new Blob([JSON.stringify(payload, null, 2)], {
-        type: "application/json;charset=utf-8",
+      const archive = buildPersonalDataCsvArchive(payload);
+      downloadBytes({
+        bytes: archive.bytes,
+        fileName: `pratix-export-dati-${date}.zip`,
+        mimeType: archive.mimeType,
       });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `pratix-export-${new Date().toISOString().slice(0, 10)}.json`;
-      link.click();
-      URL.revokeObjectURL(url);
+      return "csv";
     },
-    onSuccess: () => toast.success("Export dati generato"),
+    onSuccess: (format) =>
+      toast.success(format === "json" ? "Export JSON generato" : "Archivio CSV generato"),
     onError: (err: Error) => toast.error(err.message),
   });
 
@@ -286,17 +325,105 @@ function DataExportCard() {
           Export dati
         </CardTitle>
         <CardDescription>
-          Scarica un archivio JSON con anagrafiche, pratiche, attività, prezzi e fatture.
+          Scarica una copia dei dati personali e operativi in formato JSON o CSV.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-col gap-2 sm:flex-row">
         <Button
           variant="outline"
-          onClick={() => exportMutation.mutate()}
+          onClick={() => exportMutation.mutate("json")}
           disabled={exportMutation.isPending}
         >
-          {exportMutation.isPending ? "Preparazione…" : "Scarica export JSON"}
+          <Download className="mr-2 size-4" />
+          {exportMutation.isPending ? "Preparazione…" : "Scarica JSON"}
         </Button>
+        <Button
+          variant="outline"
+          onClick={() => exportMutation.mutate("csv")}
+          disabled={exportMutation.isPending}
+        >
+          <FileArchive className="mr-2 size-4" />
+          {exportMutation.isPending ? "Preparazione…" : "Scarica CSV"}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function EmailAccessCard({ email }: { email: string }) {
+  const [nextEmail, setNextEmail] = useState(email);
+  const [currentPassword, setCurrentPassword] = useState("");
+
+  useEffect(() => setNextEmail(email), [email]);
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      const cleanedEmail = nextEmail.trim().toLowerCase();
+      if (!email) throw new Error("Email attuale mancante");
+      if (!cleanedEmail || !cleanedEmail.includes("@"))
+        throw new Error("Inserisci una email valida");
+      if (cleanedEmail === email.toLowerCase())
+        throw new Error("La nuova email coincide con quella attuale");
+      if (!currentPassword) throw new Error("Inserisci la password attuale");
+
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: currentPassword,
+      });
+      if (signInError) throw new Error("Password attuale non corretta");
+
+      const { error } = await supabase.auth.updateUser({ email: cleanedEmail });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Controlla la nuova email per confermare la modifica");
+      setCurrentPassword("");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <ShieldCheck className="size-4 text-muted-foreground" />
+          Email di accesso
+        </CardTitle>
+        <CardDescription>
+          Cambia l'indirizzo usato per entrare in Pratix. Supabase invia una conferma alla nuova
+          email.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label>Nuova email</Label>
+          <Input
+            type="email"
+            value={nextEmail}
+            onChange={(event) => setNextEmail(event.target.value)}
+            autoComplete="email"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Password attuale</Label>
+          <Input
+            type="password"
+            value={currentPassword}
+            onChange={(event) => setCurrentPassword(event.target.value)}
+            autoComplete="current-password"
+          />
+        </div>
+        <div className="flex justify-end sm:col-span-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => mutation.mutate()}
+            disabled={mutation.isPending || !nextEmail || !currentPassword}
+          >
+            <MailCheck className="mr-2 size-4" />
+            {mutation.isPending ? "Invio conferma…" : "Cambia email"}
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
@@ -381,6 +508,112 @@ function ChangePasswordCard({ email }: { email: string }) {
           >
             {mutation.isPending ? "Aggiornamento…" : "Aggiorna password"}
           </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DeleteAccountCard({
+  email,
+  onDeleted,
+}: {
+  email: string;
+  onDeleted: () => Promise<void>;
+}) {
+  const deleteAccount = useServerFn(deleteAccountFn);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [confirmation, setConfirmation] = useState("");
+
+  const mutation = useMutation({
+    mutationFn: async () => {
+      if (!email) throw new Error("Email mancante");
+      if (!currentPassword) throw new Error("Inserisci la password attuale");
+
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password: currentPassword,
+      });
+      if (signInError) throw new Error("Password attuale non corretta");
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error("Sessione non valida. Accedi di nuovo.");
+
+      const result = await deleteAccount({
+        data: { confirmation },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return readServerResult<DeleteAccountResult>(result);
+    },
+    onSuccess: async () => {
+      toast.success("Account eliminato");
+      await onDeleted();
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  return (
+    <Card className="border-destructive/40">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Trash2 className="size-4 text-destructive" />
+          Eliminazione account
+        </CardTitle>
+        <CardDescription>
+          Elimina account, dati applicativi e oggetti Storage collegati. L'operazione non è
+          reversibile.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label>Password attuale</Label>
+          <Input
+            type="password"
+            value={currentPassword}
+            onChange={(event) => setCurrentPassword(event.target.value)}
+            autoComplete="current-password"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Conferma scrivendo ELIMINA</Label>
+          <Input
+            value={confirmation}
+            onChange={(event) => setConfirmation(event.target.value)}
+            autoComplete="off"
+          />
+        </div>
+        <div className="flex justify-end sm:col-span-2">
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button
+                type="button"
+                variant="destructive"
+                disabled={mutation.isPending || !currentPassword || confirmation !== "ELIMINA"}
+              >
+                <Trash2 className="mr-2 size-4" />
+                {mutation.isPending ? "Eliminazione…" : "Elimina account"}
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Eliminare definitivamente l'account?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Verranno rimossi l'utente Supabase, i dati di Pratix e gli allegati nel bucket
+                  privato. Prima di procedere scarica un export dati se ti serve una copia.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Annulla</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => mutation.mutate()}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Elimina definitivamente
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       </CardContent>
     </Card>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useId, useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -472,6 +472,7 @@ function PriceItemsEditor({
     value: PriceItemDraft[K],
   ) => void;
 }) {
+  const editorId = useId();
   const sectionItems = items
     .map((item, index) => ({ item, index }))
     .filter(({ item }) => item.kind === kind)
@@ -511,7 +512,7 @@ function PriceItemsEditor({
               </TableRow>
             ) : (
               sectionItems.map(({ item, index }) => {
-                const enabledSwitchId = `price-item-${item.id ?? `${item.kind}-${index}`}-enabled`;
+                const enabledSwitchId = `${editorId}-price-item-${item.id ?? `${item.kind}-${index}`}-enabled`;
 
                 return (
                   <TableRow key={item.id ?? `${item.kind}-${index}`}>

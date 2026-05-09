@@ -6,6 +6,18 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [0.13.0] — 2026-05-09
+
+### Novità
+
+- **Export massivo fatture**: dalla lista fatture si può scaricare uno ZIP con PDF di cortesia e XML SdI delle fatture filtrate per stato, anno, ricerca e periodo.
+- **Account e dati personali**: aggiunti cambio email con conferma Supabase, export dati JSON/CSV e cancellazione account con rimozione degli oggetti Storage collegati.
+
+### Sotto il cofano
+
+- **Contratti Supabase/RLS**: aggiunti test su RPC import, policy owner-scoped, Storage privato e helper di export con fixture anonime.
+- **Accessibilità**: rispettato `prefers-reduced-motion` per ridurre animazioni e transizioni non essenziali.
+
 ## [0.12.9] — 2026-05-09
 
 ### Correzioni
@@ -428,6 +440,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[0.13.0]: #0130--2026-05-09
 [0.12.9]: #0129--2026-05-09
 [0.12.8]: #0128--2026-05-09
 [0.12.7]: #0127--2026-05-09

@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Plus, Search } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Archive, Plus, Search } from "lucide-react";
+import { toast } from "sonner";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -26,12 +28,22 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import {
+  buildInvoiceArchive,
+  buildInvoiceArchiveFileName,
+  buildSingleInvoiceFiles,
+  downloadBytes,
+  type InvoiceXmlFile,
+} from "@/lib/invoice-file-exports";
+import type { InvoiceLineKind } from "@/lib/invoice-calc";
+import type { InvoicePdfData } from "@/lib/invoice-pdf";
+import {
   clientDisplayName,
   invoiceStatusLabels,
   invoiceStatusVariant,
   type ClientDisplayData,
 } from "@/lib/labels";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { generateInvoiceXmlFn } from "@/server/invoices.functions";
 
 type InvoiceListRow = {
   id: string;
@@ -44,6 +56,26 @@ type InvoiceListRow = {
   net_to_pay: number;
   client: ClientDisplayData | null;
   principal: { id: string; business_name: string } | null;
+};
+
+type GenerateInvoiceXmlResult = {
+  xml: string;
+  filename: string;
+};
+
+const unwrapServerResult = <T,>(result: T | { data: T }) =>
+  "data" in Object(result) ? (result as { data: T }).data : (result as T);
+
+const readServerResult = async <T,>(result: T | { data: T } | Response) => {
+  if (result instanceof Response) {
+    if (!result.ok) throw new Error(await result.text());
+    const contentType = result.headers.get("content-type") ?? "";
+    if (contentType.includes("application/json")) {
+      return unwrapServerResult<T>(await result.json());
+    }
+    throw new Error("Risposta server non valida");
+  }
+  return unwrapServerResult<T>(result);
 };
 
 export const Route = createFileRoute("/fatture/")({
@@ -60,9 +92,12 @@ export const Route = createFileRoute("/fatture/")({
 
 function InvoicesIndex() {
   const { user } = useAuth();
+  const generateInvoiceXml = useServerFn(generateInvoiceXmlFn);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>("all");
   const [year, setYear] = useState<string>("all");
+  const [periodStart, setPeriodStart] = useState("");
+  const [periodEnd, setPeriodEnd] = useState("");
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   const { data, isLoading } = useQuery({
@@ -91,13 +126,15 @@ function InvoicesIndex() {
     return (data || []).filter((i) => {
       if (status !== "all" && i.status !== status) return false;
       if (year !== "all" && String(i.year) !== year) return false;
+      if (periodStart && i.issue_date < periodStart) return false;
+      if (periodEnd && i.issue_date > periodEnd) return false;
       if (!q) return true;
       const name = (
         i.principal?.business_name || clientDisplayName(i.client as ClientDisplayData)
       ).toLowerCase();
       return i.number.toLowerCase().includes(q) || name.includes(q);
     });
-  }, [data, search, status, year]);
+  }, [data, periodEnd, periodStart, search, status, year]);
 
   const totals = useMemo(() => {
     return filtered.reduce(
@@ -110,6 +147,115 @@ function InvoicesIndex() {
       { total: 0, net: 0, paid: 0 },
     );
   }, [filtered]);
+
+  const loadInvoicePdfData = async (invoiceId: string): Promise<InvoicePdfData> => {
+    const { data: invoice, error } = await supabase
+      .from("invoices")
+      .select("*")
+      .eq("id", invoiceId)
+      .single();
+    if (error) throw error;
+
+    const [{ data: lines }, { data: principal }, { data: client }, { data: profile }] =
+      await Promise.all([
+        supabase
+          .from("invoice_lines")
+          .select("*")
+          .eq("invoice_id", invoiceId)
+          .order("position", { ascending: true }),
+        invoice.principal_id
+          ? supabase.from("principals").select("*").eq("id", invoice.principal_id).single()
+          : Promise.resolve({ data: null }),
+        supabase.from("clients").select("*").eq("id", invoice.client_id).maybeSingle(),
+        supabase.from("profiles").select("*").eq("id", user!.id).single(),
+      ]);
+
+    const billedParty = principal
+      ? {
+          kind: "company",
+          business_name: principal.business_name,
+          first_name: null,
+          last_name: null,
+          tax_code: principal.tax_code,
+          vat_number: principal.vat_number,
+          address_street: principal.address_street,
+          address_zip: principal.address_zip,
+          address_city: principal.address_city,
+          address_province: principal.address_province,
+        }
+      : client;
+
+    return {
+      invoice: {
+        number: invoice.number,
+        year: invoice.year,
+        issue_date: invoice.issue_date,
+        due_date: invoice.due_date,
+        notes: invoice.notes,
+        taxable_fees: Number(invoice.taxable_fees),
+        taxable_expenses: Number(invoice.taxable_expenses),
+        art15_expenses: Number(invoice.art15_expenses),
+        general_expenses_amount: Number(invoice.general_expenses_amount),
+        cassa_amount: Number(invoice.cassa_amount),
+        vat_amount: Number(invoice.vat_amount),
+        withholding_amount: Number(invoice.withholding_amount),
+        stamp_amount: Number(invoice.stamp_amount),
+        total_amount: Number(invoice.total_amount),
+        net_to_pay: Number(invoice.net_to_pay),
+        cassa_rate: Number(invoice.cassa_rate),
+        vat_rate: Number(invoice.vat_rate),
+        withholding_rate: Number(invoice.withholding_rate),
+        apply_withholding: invoice.apply_withholding,
+      },
+      lines: (lines ?? []).map((line) => ({
+        kind: line.kind as InvoiceLineKind,
+        description: line.description,
+        quantity: Number(line.quantity),
+        unit_price: Number(line.unit_price),
+        amount: Number(line.amount),
+      })),
+      client: billedParty as InvoicePdfData["client"],
+      profile: profile as InvoicePdfData["profile"],
+    };
+  };
+
+  const exportZipMutation = useMutation({
+    mutationFn: async () => {
+      if (filtered.length === 0) throw new Error("Nessuna fattura da esportare");
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error("Sessione non valida. Accedi di nuovo.");
+
+      const files = [];
+      for (const invoice of filtered) {
+        const [pdfData, xmlPayload] = await Promise.all([
+          loadInvoicePdfData(invoice.id),
+          generateInvoiceXml({
+            data: { invoiceId: invoice.id },
+            headers: { Authorization: `Bearer ${token}` },
+          }).then((result) => readServerResult<GenerateInvoiceXmlResult>(result)),
+        ]);
+
+        files.push(
+          ...buildSingleInvoiceFiles({
+            invoice: pdfData,
+            xml: xmlPayload satisfies InvoiceXmlFile,
+          }),
+        );
+      }
+
+      const archive = buildInvoiceArchive(files);
+      downloadBytes({
+        bytes: archive.bytes,
+        fileName: buildInvoiceArchiveFileName({ periodStart, periodEnd }),
+        mimeType: archive.mimeType,
+      });
+      return filtered.length;
+    },
+    onSuccess: (count) => toast.success(`${count} fatture esportate`),
+    onError: (err: Error) => toast.error(err.message),
+  });
 
   return (
     <AppLayout>
@@ -184,6 +330,36 @@ function InvoicesIndex() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="flex flex-col gap-3 border-t pt-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">Da data fattura</label>
+                <Input
+                  type="date"
+                  value={periodStart}
+                  onChange={(event) => setPeriodStart(event.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-xs font-medium text-muted-foreground">A data fattura</label>
+                <Input
+                  type="date"
+                  value={periodEnd}
+                  onChange={(event) => setPeriodEnd(event.target.value)}
+                />
+              </div>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => exportZipMutation.mutate()}
+              disabled={exportZipMutation.isPending || filtered.length === 0}
+            >
+              <Archive className="mr-2 size-4" />
+              {exportZipMutation.isPending ? "Preparazione ZIP…" : "Esporta ZIP PDF + XML"}
+            </Button>
           </div>
 
           <div className="overflow-x-auto">

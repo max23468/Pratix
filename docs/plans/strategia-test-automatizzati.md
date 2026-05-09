@@ -217,14 +217,25 @@ Restano fuori dal perimetro di questa tranche i test end-to-end su import con
 allegati, fatturazione successiva e integrazione Supabase/RLS: vanno trattati
 come prossimi incrementi con fixture anonime e ambiente dedicato.
 
+## Incremento 2026-05-09 — contratti export, account e Supabase
+
+Questo incremento porta la suite a 117 test distribuiti su 41 file, aggiungendo:
+
+- test sugli helper ZIP per export massivo fatture PDF/XML;
+- test su export dati personali JSON e CSV;
+- test sulla conferma di eliminazione account e deduplica dei path Storage;
+- test di contratto su RLS owner-scoped, RPC `apply_import_row` e policy Storage.
+
+Lo smoke autenticato con account test non è stato completato perché la signup
+pubblica Supabase richiede conferma email (`email_not_confirmed`). L'account
+test è stato creato e salvato nel Portachiavi locale come
+`pratix-codex-test-account`; va confermato via email prima di usarlo come
+fixture riusabile.
+
 ## Prossimi incrementi
 
-1. Estrarre helper import testabili da `src/routes/import-archivio.tsx`, se
-   serve coprire parsing e validazioni senza browser.
-2. Coprire numero pratica, snapshot prezzi e conferma import con fixture
-   anonime.
-3. Aggiungere fixture anonime per flussi recupero crediti.
-4. Definire il perimetro integration Supabase, distinguendo test locali,
-   remoto controllato e smoke production.
-5. Valutare Playwright solo quando i flussi UI diventano abbastanza stabili da
+1. Confermare l'account test Supabase e usarlo per smoke autenticati.
+2. Coprire il flusso import end-to-end con allegati e fatturazione successiva.
+3. Aggiungere fixture anonime più ampie per flussi recupero crediti.
+4. Valutare Playwright solo quando i flussi UI diventano abbastanza stabili da
    giustificare manutenzione e tempi di CI.

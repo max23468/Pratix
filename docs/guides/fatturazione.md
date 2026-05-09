@@ -93,13 +93,14 @@ netto_a_pagare     = totale_documento
 | Numerazione progressiva          | ✅              |
 | Fatturazione committente/periodo | ✅              |
 | Rendiconti Excel compensi/spese  | ✅              |
-| Esportazione massiva ZIP         | ⬜              |
+| Esportazione massiva ZIP         | ✅              |
 | Invio diretto SDI                | ⬜ (ADR aperto) |
 
 ## File rilevanti
 
 - `src/lib/invoice-xml.ts` — costruzione XML
 - `src/lib/invoice-pdf.ts` — generazione PDF (jsPDF)
+- `src/lib/invoice-file-exports.ts` — ZIP PDF + XML per export massivo
 - `src/components/invoice-form.tsx` — generazione fattura da attività
 - `src/routes/fatture.*.tsx` — UI lista e dettaglio
 
