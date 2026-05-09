@@ -143,4 +143,38 @@ describe("case operations timeline", () => {
       priority: "Media",
     });
   });
+
+  it("valuta la scadenza Fattura come data locale anche con timestamp ISO", () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date(2026, 4, 9, 23, 30));
+
+    const activities = [] as never;
+    const invoices = [
+      {
+        id: "invoice-1",
+        number: "TST1",
+        year: 2026,
+        issue_date: "2026-05-01",
+        due_date: "2026-05-09T00:00:00.000Z",
+        paid_at: null,
+        status: "issued",
+        total_amount: 150,
+        notes: null,
+      },
+    ] as never;
+    const workflow = buildDebtCollectionWorkflow({
+      caseRow: {
+        status: "in_progress",
+      },
+      activities,
+      invoices,
+      totals: summarizeCaseOperations(activities, invoices),
+      qualityChecks: [{ severity: "ok" }],
+    });
+
+    expect(workflow).toMatchObject({
+      stage: "Monitoraggio incasso",
+      priority: "Media",
+    });
+  });
 });

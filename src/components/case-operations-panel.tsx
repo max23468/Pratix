@@ -66,10 +66,26 @@ export type CaseOperationsCase = {
 };
 
 export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }) {
-  const { data: activities = [], isLoading: activitiesLoading } = useCaseActivities(caseRow.id);
-  const { data: invoices = [], isLoading: invoicesLoading } = useCaseInvoices(caseRow.id);
-  const { data: history = [], isLoading: historyLoading } = useCaseHistory(caseRow.id);
-  const { data: transfers = [], isLoading: transfersLoading } = useCaseTransfers(caseRow.id);
+  const {
+    data: activities = [],
+    isFetching: activitiesFetching,
+    isLoading: activitiesLoading,
+  } = useCaseActivities(caseRow.id);
+  const {
+    data: invoices = [],
+    isFetching: invoicesFetching,
+    isLoading: invoicesLoading,
+  } = useCaseInvoices(caseRow.id);
+  const {
+    data: history = [],
+    isFetching: historyFetching,
+    isLoading: historyLoading,
+  } = useCaseHistory(caseRow.id);
+  const {
+    data: transfers = [],
+    isFetching: transfersFetching,
+    isLoading: transfersLoading,
+  } = useCaseTransfers(caseRow.id);
 
   const principalName = caseRow.principals?.business_name ?? "—";
   const clientName = caseRow.clients
@@ -91,7 +107,15 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
     () => buildCaseTimelineItems({ caseRow, activities, invoices, history, transfers }),
     [activities, caseRow, history, invoices, transfers],
   );
-  const isLoading = activitiesLoading || invoicesLoading || historyLoading || transfersLoading;
+  const isLoading =
+    activitiesLoading ||
+    invoicesLoading ||
+    historyLoading ||
+    transfersLoading ||
+    activitiesFetching ||
+    invoicesFetching ||
+    historyFetching ||
+    transfersFetching;
   const dossierDownloadsDisabled = isLoading;
 
   const nextAction = getNextAction({ activities, invoices, attachmentCount: totals.attachments });

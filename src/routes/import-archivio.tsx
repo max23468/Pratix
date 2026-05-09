@@ -1477,7 +1477,9 @@ function ExcelImportPanel() {
   const {
     data: existingPractices = [],
     isError: existingPracticesError,
+    isFetching: existingPracticesFetching,
     isLoading: existingPracticesLoading,
+    refetch: refetchExistingPractices,
   } = useQuery({
     queryKey: ["cases", "import-archive", "excel-dedupe"],
     queryFn: async () => {
@@ -1555,7 +1557,8 @@ function ExcelImportPanel() {
   ).length;
   const isPartialImportComplete =
     hasImportedStagedRows && hasFailedStagedRows && importableStagedRowsCount === 0;
-  const canBuildPreview = rows.length > 0 && !existingPracticesLoading && !existingPracticesError;
+  const existingPracticesPending = existingPracticesLoading || existingPracticesFetching;
+  const canBuildPreview = rows.length > 0 && (!existingPracticesPending || existingPracticesError);
 
   const handleFile = async (file: File | null) => {
     if (!file) return;
@@ -1574,15 +1577,21 @@ function ExcelImportPanel() {
     }
   };
 
-  const buildPreview = () => {
-    if (existingPracticesLoading) {
+  const buildPreview = async () => {
+    if (existingPracticesPending && !existingPracticesError) {
       toast.error("Attendi il caricamento delle pratiche esistenti prima di validare il file.");
       return;
     }
 
+    let practicesForPlan = existingPractices;
+
     if (existingPracticesError) {
-      toast.error("Non riesco a leggere le pratiche esistenti. Riprova tra poco.");
-      return;
+      const result = await refetchExistingPractices();
+      if (result.isError) {
+        toast.error("Non riesco a leggere le pratiche esistenti. Riprova tra poco.");
+        return;
+      }
+      practicesForPlan = result.data ?? [];
     }
 
     const preview = applyImportPreviewPlan(
@@ -1598,7 +1607,7 @@ function ExcelImportPanel() {
           priceOptions,
         ),
       ),
-      existingPractices,
+      practicesForPlan,
     );
     setPreviewRows(preview);
     setStagedRows([]);
@@ -1746,8 +1755,12 @@ function ExcelImportPanel() {
               onChange={(event) => void handleFile(event.target.files?.[0] ?? null)}
             />
           </div>
-          <Button type="button" disabled={!canBuildPreview} onClick={buildPreview}>
-            {existingPracticesLoading ? "Caricamento pratiche…" : "Valida file"}
+          <Button type="button" disabled={!canBuildPreview} onClick={() => void buildPreview()}>
+            {existingPracticesPending && !existingPracticesError
+              ? "Caricamento pratiche…"
+              : existingPracticesError
+                ? "Riprova validazione"
+                : "Valida file"}
           </Button>
         </div>
 

@@ -6,6 +6,28 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.0.0] — 2026-05-09
+
+### Novità
+
+- **Pratix 1.0**: promosso il perimetro stabile del gestionale per avvocati freelance centrato su recupero crediti, con Pratiche, Committenti, Clienti, Controparti, Attività, Prezzi, Fatture, import, export, dossier e verifiche produzione completate.
+
+### Correzioni
+
+- **Import Excel**: la validazione aspetta sempre il lookup delle Pratiche esistenti e consente di ritentare se il caricamento iniziale fallisce.
+- **Dossier Pratica**: i download dal cruscotto restano disabilitati anche durante il refresh dei dati di Attività, Fatture, storico e cessioni.
+- **Workflow recupero crediti**: il calcolo delle Fatture insolute confronta solo la data di calendario, evitando anticipi legati a timestamp o fusi orari.
+
+## [Non versionato] — 2026-05-09
+
+### Non versionato
+
+- **Piano Pratix 1.0 readiness**: definita la checklist operativa per congelare il perimetro, verificare produzione e promuovere la release `1.0.0` senza aprire nuove macro-feature.
+- **Fase 0 readiness 1.0**: confermato che le voci parcheggiate restano post-1.0 e che il blocco `[Non rilasciato]` non richiede una release intermedia.
+- **Fase 1 readiness 1.0**: registrati i gate locali verdi e il dry-run Supabase completato con database remoto allineato.
+- **Fase 2 readiness 1.0**: completato lo smoke produzione pubblico e autenticato, con fixture recupero crediti, download, export dati e Vercel verificati senza bug bloccanti.
+- **Fase 4 readiness 1.0**: preparata la release `1.0.0` con React Doctor major, gate locali, smoke a11y, dry-run Supabase e verifica `Codex feedback inbox`.
+
 ## [0.20.1] — 2026-05-09
 
 ### Correzioni
@@ -544,6 +566,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.0.0]: #100--2026-05-09
 [0.20.1]: #0201--2026-05-09
 [0.20.0]: #0200--2026-05-09
 [0.19.0]: #0190--2026-05-09
