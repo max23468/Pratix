@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.0.2] — 2026-05-15
+
+### Correzioni
+
+- **Controparti**: le persone fisiche mostrano e ordinano il nome come cognome seguito dal nome.
+
 ## [1.0.1] — 2026-05-15
 
 ### Correzioni
@@ -573,6 +579,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.0.2]: #102--2026-05-15
 [1.0.1]: #101--2026-05-15
 [1.0.0]: #100--2026-05-09
 [0.20.1]: #0201--2026-05-09

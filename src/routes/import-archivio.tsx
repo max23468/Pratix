@@ -51,6 +51,7 @@ import {
   caseActivityStatusLabels,
   caseStatusLabels,
   clientDisplayName,
+  compareCounterparties,
   counterpartyDisplayName,
   counterpartyKindLabels,
   priceItemKindLabels,
@@ -404,10 +405,9 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
     queryFn: async () => {
       const { data, error } = await supabase
         .from("counterparties")
-        .select("id, kind, first_name, last_name, business_name")
-        .order("updated_at", { ascending: false });
+        .select("id, kind, first_name, last_name, business_name");
       if (error) throw error;
-      return (data ?? []) as CounterpartyRow[];
+      return ((data ?? []) as CounterpartyRow[]).slice().sort(compareCounterparties);
     },
   });
 
@@ -1467,10 +1467,9 @@ function ExcelImportPanel() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("counterparties")
-        .select("id, kind, first_name, last_name, business_name")
-        .order("updated_at", { ascending: false });
+        .select("id, kind, first_name, last_name, business_name");
       if (error) throw error;
-      return (data ?? []) as CounterpartyRow[];
+      return ((data ?? []) as CounterpartyRow[]).slice().sort(compareCounterparties);
     },
   });
 
@@ -2529,7 +2528,7 @@ function displayDraftClient(draft: ImportDraft) {
 
 function displayDraftCounterparty(draft: ImportDraft) {
   if (draft.counterpartyKind === "individual") {
-    return [draft.counterpartyFirstName, draft.counterpartyLastName]
+    return [draft.counterpartyLastName, draft.counterpartyFirstName]
       .filter(Boolean)
       .join(" ")
       .trim();
@@ -2544,7 +2543,7 @@ function displayNormalizedClient(client: NormalizedImport["client"]) {
 
 function displayNormalizedCounterparty(counterparty: NormalizedImport["counterparty"]) {
   if (counterparty.kind === "individual") {
-    return [counterparty.firstName, counterparty.lastName].filter(Boolean).join(" ") || "—";
+    return [counterparty.lastName, counterparty.firstName].filter(Boolean).join(" ") || "—";
   }
   return counterparty.businessName || counterpartyKindLabels[counterparty.kind] || "—";
 }

@@ -7,7 +7,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { clientDisplayName, counterpartyDisplayName } from "@/lib/labels";
+import { clientDisplayName, compareCounterparties, counterpartyDisplayName } from "@/lib/labels";
 
 type CommonSelectProps = {
   id?: string;
@@ -100,10 +100,9 @@ export function CounterpartySelect({
     queryFn: async () => {
       const { data, error } = await supabase
         .from("counterparties")
-        .select("id, kind, first_name, last_name, business_name")
-        .order("updated_at", { ascending: false });
+        .select("id, kind, first_name, last_name, business_name");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []).slice().sort(compareCounterparties);
     },
   });
 

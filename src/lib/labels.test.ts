@@ -4,6 +4,7 @@ import { activityCaseLabel } from "./case-activities";
 import {
   caseActivityStatusLabels,
   clientDisplayName,
+  compareCounterparties,
   counterpartyDisplayName,
   priceItemKindLabels,
 } from "./labels";
@@ -23,6 +24,28 @@ describe("clientDisplayName", () => {
     expect(counterpartyDisplayName({ kind: "individual", first_name: null, last_name: null })).toBe(
       "—",
     );
+  });
+});
+
+describe("counterpartyDisplayName", () => {
+  it("mostra le persone fisiche con cognome prima del nome", () => {
+    expect(
+      counterpartyDisplayName({ kind: "individual", first_name: "Luca", last_name: "Bianchi" }),
+    ).toBe("Bianchi Luca");
+  });
+
+  it("ordina le controparti per il nome mostrato", () => {
+    const sorted = [
+      { id: "3", kind: "company", business_name: "Zeta S.r.l." },
+      { id: "2", kind: "individual", first_name: "Anna", last_name: "Rossi" },
+      { id: "1", kind: "individual", first_name: "Luca", last_name: "Bianchi" },
+    ].sort(compareCounterparties);
+
+    expect(sorted.map(counterpartyDisplayName)).toEqual([
+      "Bianchi Luca",
+      "Rossi Anna",
+      "Zeta S.r.l.",
+    ]);
   });
 });
 

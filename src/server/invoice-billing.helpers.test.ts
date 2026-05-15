@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  billingCounterpartyName,
   billingDatePattern,
   billingPartyName,
   nextBillingPeriodStart,
@@ -15,6 +16,17 @@ describe("billingPartyName", () => {
     expect(billingPartyName(null)).toBe("—");
     expect(billingPartyName({ kind: "individual", first_name: null, last_name: null })).toBe("—");
     expect(billingPartyName({ kind: "company", business_name: null })).toBe("—");
+  });
+});
+
+describe("billingCounterpartyName", () => {
+  it("formatta le controparti persona fisica con cognome prima del nome", () => {
+    expect(
+      billingCounterpartyName({ kind: "individual", first_name: "Luca", last_name: "Bianchi" }),
+    ).toBe("Bianchi Luca");
+    expect(billingCounterpartyName({ kind: "company", business_name: "Alfa S.r.l." })).toBe(
+      "Alfa S.r.l.",
+    );
   });
 });
 
