@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { PriceBookForm } from "@/components/price-book-form";
@@ -86,11 +86,18 @@ function PriceBookDetail() {
         title={`Prezzi ${data.priceBook.year}`}
         description="Modifica voci, abilitazioni e stato annuale."
         actions={
-          <Link to="/prezzi">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="mr-1 size-4" /> Indietro
-            </Button>
-          </Link>
+          <>
+            <Link to="/prezzi/nuovo">
+              <Button size="sm">
+                <Plus className="mr-1 size-4" /> Nuovi prezzi
+              </Button>
+            </Link>
+            <Link to="/prezzi">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="mr-1 size-4" /> Indietro
+              </Button>
+            </Link>
+          </>
         }
       />
       <PriceBookForm

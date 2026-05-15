@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { CounterpartyForm } from "@/components/counterparty-form";
 import { PageHeader } from "@/components/page-header";
@@ -73,11 +73,18 @@ function CounterpartyDetail() {
         title={counterpartyDisplayName(data.counterparty)}
         description="Modifica anagrafica e soggetti collegati."
         actions={
-          <Link to="/controparti">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="mr-1 size-4" /> Indietro
-            </Button>
-          </Link>
+          <>
+            <Link to="/controparti/nuova">
+              <Button size="sm">
+                <Plus className="mr-1 size-4" /> Nuova controparte
+              </Button>
+            </Link>
+            <Link to="/controparti">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="mr-1 size-4" /> Indietro
+              </Button>
+            </Link>
+          </>
         }
       />
       <CounterpartyForm

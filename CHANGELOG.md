@@ -6,9 +6,11 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
-### Non versionato
+## [1.0.1] — 2026-05-15
 
-- **Chiusura operativa readiness 1.0**: aggiornato lo stato finale post-merge con release `1.0.0` pubblicata, deployment production verificato, dry-run Supabase finale e smoke autenticato mirato completati.
+### Correzioni
+
+- **Creazione rapida continuativa**: dopo aver creato Committenti, Clienti, Controparti, Pratiche, Prezzi o Fatture, il dettaglio mostra subito l'azione per inserirne un altro senza tornare all'elenco.
 
 ## [1.0.0] — 2026-05-09
 
@@ -31,6 +33,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 - **Fase 1 readiness 1.0**: registrati i gate locali verdi e il dry-run Supabase completato con database remoto allineato.
 - **Fase 2 readiness 1.0**: completato lo smoke produzione pubblico e autenticato, con fixture recupero crediti, download, export dati e Vercel verificati senza bug bloccanti.
 - **Fase 4 readiness 1.0**: preparata la release `1.0.0` con React Doctor major, gate locali, smoke a11y, dry-run Supabase e verifica `Codex feedback inbox`.
+- **Chiusura operativa readiness 1.0**: aggiornato lo stato finale post-merge con release `1.0.0` pubblicata, deployment production verificato, dry-run Supabase finale e smoke autenticato mirato completati.
 
 ## [0.20.1] — 2026-05-09
 
@@ -570,6 +573,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.0.1]: #101--2026-05-15
 [1.0.0]: #100--2026-05-09
 [0.20.1]: #0201--2026-05-09
 [0.20.0]: #0200--2026-05-09
