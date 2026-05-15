@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.1.1] — 2026-05-16
+
+### Correzioni
+
+- **Attività**: le voci non collegate a una Fattura si possono modificare dal dettaglio Pratica.
+
 ## [1.1.0] — 2026-05-16
 
 ### Novità
@@ -592,6 +598,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.1.1]: #111--2026-05-16
 [1.1.0]: #110--2026-05-16
 [1.0.2]: #102--2026-05-15
 [1.0.1]: #101--2026-05-15

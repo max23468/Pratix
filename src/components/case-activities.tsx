@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Eye, Paperclip, Plus, Trash2 } from "lucide-react";
+import { Download, Eye, Paperclip, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -85,9 +85,13 @@ type ActivityHearing = {
 
 type ActivityRow = {
   id: string;
+  case_id: string;
+  price_book_id: string;
+  price_item_id: string;
   activity_date: string;
   kind: "fee" | "expense_reimbursement";
   status: "to_invoice" | "invoiced";
+  snapshot_price_year: number;
   snapshot_price_code: string;
   snapshot_price_name: string;
   description: string;
@@ -99,6 +103,8 @@ type ActivityRow = {
   case_activity_hearings?: ActivityHearing[];
   activity_attachments?: ActivityAttachment[];
 };
+
+export type CaseActivityDialogActivity = ActivityRow;
 
 type CaseOption = CaseActivityContext & {
   practice_number: number;
@@ -145,6 +151,7 @@ export function CaseActivitiesTab({ caseRow }: { caseRow: CaseActivityContext })
     onSuccess: () => {
       toast.success("Voce eliminata");
       qc.invalidateQueries({ queryKey: ["case-activities", caseRow.id] });
+      qc.invalidateQueries({ queryKey: ["activities"] });
     },
     onError: (error: Error) => toast.error(error.message),
   });
@@ -232,15 +239,43 @@ export function CaseActivitiesTab({ caseRow }: { caseRow: CaseActivityContext })
                     <AttachmentList attachments={activity.activity_attachments ?? []} />
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      disabled={Boolean(activity.invoice_id) || remove.isPending}
-                      onClick={() => remove.mutate(activity)}
-                    >
-                      <Trash2 className="size-4" />
-                    </Button>
+                    <div className="flex justify-end gap-1">
+                      <CaseActivityDialog
+                        caseRow={caseRow}
+                        activity={activity}
+                        trigger={
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            disabled={Boolean(activity.invoice_id)}
+                            aria-label={`Modifica ${activity.description}`}
+                            title={
+                              activity.invoice_id
+                                ? "Le voci collegate a una Fattura non si modificano"
+                                : "Modifica voce"
+                            }
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        disabled={Boolean(activity.invoice_id) || remove.isPending}
+                        onClick={() => remove.mutate(activity)}
+                        aria-label={`Elimina ${activity.description}`}
+                        title={
+                          activity.invoice_id
+                            ? "Le voci collegate a una Fattura non si eliminano"
+                            : "Elimina voce"
+                        }
+                      >
+                        <Trash2 className="size-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -315,15 +350,21 @@ async function openAttachment(attachment: ActivityAttachment, mode: "preview" | 
 export function CaseActivityDialog({
   caseRow,
   trigger,
+  activity,
+  open: controlledOpen,
+  onOpenChange,
   onSaved,
 }: {
   caseRow?: CaseActivityContext;
-  trigger?: ReactNode;
+  trigger?: ReactNode | null;
+  activity?: CaseActivityDialogActivity;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   onSaved?: () => void;
 }) {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
   const [selectedCaseId, setSelectedCaseId] = useState(caseRow?.id ?? "");
   const [activityDate, setActivityDate] = useState(() => today());
   const [priceItemId, setPriceItemId] = useState("");
@@ -337,6 +378,8 @@ export function CaseActivityDialog({
   const [attachmentName, setAttachmentName] = useState("");
   const [attachmentType, setAttachmentType] = useState("");
   const [attachmentNotes, setAttachmentNotes] = useState("");
+  const isEditing = Boolean(activity);
+  const open = controlledOpen ?? internalOpen;
 
   const activityYear = currentYearFromDate(activityDate);
 
@@ -362,20 +405,24 @@ export function CaseActivityDialog({
     queryKey: ["price-books", "activity", selectedCase?.principal_id, activityYear],
     enabled: open && Boolean(selectedCase?.principal_id),
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("price_books")
         .select("id, principal_id, year, status, fees_enabled, expense_reimbursements_enabled")
         .eq("principal_id", selectedCase?.principal_id ?? "")
-        .eq("year", activityYear)
-        .in("status", ["active", "draft"]);
+        .eq("year", activityYear);
+      if (!isEditing) query = query.in("status", ["active", "draft"]);
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []) as PriceBookRow[];
     },
   });
 
   const priceBook = useMemo(() => {
+    if (activity) {
+      return priceBooks.find((book) => book.id === activity.price_book_id) ?? priceBooks[0] ?? null;
+    }
     return priceBooks.find((book) => book.status === "active") ?? priceBooks[0] ?? null;
-  }, [priceBooks]);
+  }, [activity, priceBooks]);
 
   const { data: priceItems = [] } = useQuery({
     queryKey: ["price-items", "activity", priceBook?.id],
@@ -385,7 +432,6 @@ export function CaseActivityDialog({
         .from("price_items")
         .select("*")
         .eq("price_book_id", priceBook?.id ?? "")
-        .eq("is_enabled", true)
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return (data ?? []) as PriceItemRow[];
@@ -395,48 +441,144 @@ export function CaseActivityDialog({
   const availablePriceItems = useMemo(() => {
     if (!priceBook) return [];
     return priceItems.filter((item) => {
+      if (activity && item.id === activity.price_item_id) return true;
+      if (!item.is_enabled) return false;
       if (item.kind === "fee") return priceBook.fees_enabled;
       return priceBook.expense_reimbursements_enabled;
     });
-  }, [priceBook, priceItems]);
+  }, [activity, priceBook, priceItems]);
 
   const selectedItem = availablePriceItems.find((item) => item.id === priceItemId) ?? null;
+  const effectiveKind = selectedItem?.kind ?? activity?.kind;
+  const requiresHearingDates =
+    selectedItem?.requires_hearing_dates ?? Boolean(activity?.case_activity_hearings?.length);
 
   useEffect(() => {
-    if (!selectedItem) return;
+    if (!selectedItem || isEditing) return;
     setDescription(selectedItem.invoice_description || selectedItem.name);
     if (selectedItem.kind === "fee") setQuantity(selectedItem.requires_hearing_dates ? 0 : 1);
     if (selectedItem.kind === "expense_reimbursement") setQuantity(1);
-  }, [selectedItem]);
+  }, [isEditing, selectedItem]);
 
-  const calculatedQuantity = selectedItem?.requires_hearing_dates ? hearingDates.length : quantity;
+  useEffect(() => {
+    if (!open) return;
+    if (!activity) {
+      if (caseRow) setSelectedCaseId(caseRow.id);
+      return;
+    }
+    setSelectedCaseId(activity.case_id);
+    setActivityDate(activity.activity_date);
+    setPriceItemId(activity.price_item_id);
+    setDescription(activity.description);
+    setQuantity(Number(activity.quantity) || 1);
+    setFreeAmount(Number(activity.unit_price) || 0);
+    setStatus(activity.status);
+    setNotes(activity.notes ?? "");
+    setHearingDates(
+      [...(activity.case_activity_hearings ?? [])]
+        .sort((a, b) => a.position - b.position)
+        .map((hearing) => hearing.hearing_date),
+    );
+    setFile(null);
+    setAttachmentName("");
+    setAttachmentType("");
+    setAttachmentNotes("");
+  }, [activity, caseRow, open]);
+
+  const calculatedQuantity = requiresHearingDates ? hearingDates.length : quantity;
   const unitPrice =
-    selectedItem?.kind === "fee" ? Number(selectedItem.unit_price ?? 0) : freeAmount;
+    !isEditing && selectedItem?.kind === "fee" ? Number(selectedItem.unit_price ?? 0) : freeAmount;
   const total = calculatedQuantity * unitPrice;
 
   const save = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Sessione non valida");
+      if (activity?.invoice_id) throw new Error("La voce è collegata a una fattura");
       if (!selectedCase) throw new Error("Seleziona una pratica");
       if (!selectedCase.principal_id || !selectedCase.client_id) {
         throw new Error("Completa committente e cliente della pratica");
       }
-      if (!priceBook) throw new Error(`Nessun prezzo configurato per il ${activityYear}`);
-      if (!selectedItem) throw new Error("Seleziona una voce prezzo");
+      if (!isEditing && !priceBook) {
+        throw new Error(`Nessun prezzo configurato per il ${activityYear}`);
+      }
+      if (!isEditing && !selectedItem) throw new Error("Seleziona una voce prezzo");
       if (!description.trim()) throw new Error("Inserisci una descrizione");
       if (calculatedQuantity <= 0) throw new Error("Inserisci una quantità positiva");
       if (unitPrice < 0) throw new Error("Inserisci un importo valido");
-      if (selectedItem.requires_hearing_dates && hearingDates.some((date) => !date)) {
+      if (requiresHearingDates && hearingDates.some((date) => !date)) {
         throw new Error("Completa tutte le date udienza");
       }
-      if (
-        selectedItem.requires_hearing_dates &&
-        new Set(hearingDates).size !== hearingDates.length
-      ) {
+      if (requiresHearingDates && new Set(hearingDates).size !== hearingDates.length) {
         throw new Error("Rimuovi le date udienza duplicate");
       }
 
-      const { data: activity, error } = await supabase
+      if (isEditing) {
+        if (!activity) throw new Error("Attività non disponibile");
+        const { error } = await supabase
+          .from("case_activities")
+          .update({
+            activity_date: activityDate,
+            status,
+            description: description.trim(),
+            quantity: calculatedQuantity,
+            unit_price: unitPrice,
+            notes: notes.trim() || null,
+          })
+          .eq("id", activity.id)
+          .is("invoice_id", null);
+        if (error) throw error;
+
+        const { error: deleteHearingsError } = await supabase
+          .from("case_activity_hearings")
+          .delete()
+          .eq("activity_id", activity.id);
+        if (deleteHearingsError) throw deleteHearingsError;
+
+        if (requiresHearingDates && hearingDates.length > 0) {
+          const { error: hearingsError } = await supabase.from("case_activity_hearings").insert(
+            hearingDates.map((hearingDate, index) => ({
+              user_id: user.id,
+              activity_id: activity.id,
+              hearing_date: hearingDate,
+              position: index + 1,
+            })),
+          );
+          if (hearingsError) throw hearingsError;
+        }
+
+        if (file) {
+          const storagePath = buildActivityAttachmentStoragePath(
+            user.id,
+            activity.id,
+            `${Date.now()}-${file.name}`,
+          );
+          const { error: uploadError } = await supabase.storage
+            .from(PRATIX_DOCUMENTS_BUCKET)
+            .upload(storagePath, file, { contentType: file.type || undefined, upsert: false });
+          if (uploadError) throw uploadError;
+
+          const { error: attachmentError } = await supabase.from("activity_attachments").insert({
+            user_id: user.id,
+            activity_id: activity.id,
+            storage_path: storagePath,
+            original_file_name: file.name,
+            display_name: attachmentName.trim() || file.name,
+            document_type: attachmentType.trim() || null,
+            mime_type: file.type || null,
+            size_bytes: file.size,
+            preview_available: file.type.startsWith("image/") || file.type === "application/pdf",
+            notes: attachmentNotes.trim() || null,
+          });
+          if (attachmentError) throw attachmentError;
+        }
+        return;
+      }
+
+      const currentPriceBook = priceBook;
+      const currentItem = selectedItem;
+      if (!currentPriceBook || !currentItem) throw new Error("Seleziona una voce prezzo");
+
+      const { data: createdActivity, error } = await supabase
         .from("case_activities")
         .insert({
           user_id: user.id,
@@ -444,14 +586,14 @@ export function CaseActivityDialog({
           principal_id: selectedCase.principal_id,
           client_id: selectedCase.client_id,
           counterparty_id: selectedCase.counterparty_id,
-          price_book_id: priceBook.id,
-          price_item_id: selectedItem.id,
+          price_book_id: currentPriceBook.id,
+          price_item_id: currentItem.id,
           activity_date: activityDate,
-          kind: selectedItem.kind,
+          kind: currentItem.kind,
           status,
-          snapshot_price_year: priceBook.year,
-          snapshot_price_code: selectedItem.code,
-          snapshot_price_name: selectedItem.name,
+          snapshot_price_year: currentPriceBook.year,
+          snapshot_price_code: currentItem.code,
+          snapshot_price_name: currentItem.name,
           description: description.trim(),
           quantity: calculatedQuantity,
           unit_price: unitPrice,
@@ -461,11 +603,11 @@ export function CaseActivityDialog({
         .single();
       if (error) throw error;
 
-      if (selectedItem.requires_hearing_dates) {
+      if (currentItem.requires_hearing_dates) {
         const { error: hearingsError } = await supabase.from("case_activity_hearings").insert(
           hearingDates.map((hearingDate, index) => ({
             user_id: user.id,
-            activity_id: activity.id,
+            activity_id: createdActivity.id,
             hearing_date: hearingDate,
             position: index + 1,
           })),
@@ -476,7 +618,7 @@ export function CaseActivityDialog({
       if (file) {
         const storagePath = buildActivityAttachmentStoragePath(
           user.id,
-          activity.id,
+          createdActivity.id,
           `${Date.now()}-${file.name}`,
         );
         const { error: uploadError } = await supabase.storage
@@ -486,7 +628,7 @@ export function CaseActivityDialog({
 
         const { error: attachmentError } = await supabase.from("activity_attachments").insert({
           user_id: user.id,
-          activity_id: activity.id,
+          activity_id: createdActivity.id,
           storage_path: storagePath,
           original_file_name: file.name,
           display_name: attachmentName.trim() || file.name,
@@ -500,14 +642,13 @@ export function CaseActivityDialog({
       }
     },
     onSuccess: () => {
-      toast.success("Voce fatturabile registrata");
+      toast.success(isEditing ? "Voce fatturabile aggiornata" : "Voce fatturabile registrata");
       if (selectedCase) {
         qc.invalidateQueries({ queryKey: ["case-activities", selectedCase.id] });
       }
       qc.invalidateQueries({ queryKey: ["activities"] });
       qc.invalidateQueries({ queryKey: ["cases"] });
-      resetForm();
-      setOpen(false);
+      setDialogOpen(false);
       onSaved?.();
     },
     onError: (error: Error) => toast.error(error.message),
@@ -529,6 +670,12 @@ export function CaseActivityDialog({
     if (!caseRow) setSelectedCaseId("");
   };
 
+  const setDialogOpen = (nextOpen: boolean) => {
+    if (!nextOpen) resetForm();
+    if (controlledOpen === undefined) setInternalOpen(nextOpen);
+    onOpenChange?.(nextOpen);
+  };
+
   const setHearingCount = (count: number) => {
     const normalized = Math.max(0, count);
     setHearingDates((current) => {
@@ -543,23 +690,21 @@ export function CaseActivityDialog({
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(nextOpen) => {
-        setOpen(nextOpen);
-        if (!nextOpen) resetForm();
-      }}
-    >
-      <DialogTrigger asChild>
-        {trigger ?? (
-          <Button size="sm">
-            <Plus className="mr-1 size-4" /> Attività
-          </Button>
-        )}
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={setDialogOpen}>
+      {trigger !== null ? (
+        <DialogTrigger asChild>
+          {trigger ?? (
+            <Button size="sm">
+              <Plus className="mr-1 size-4" /> Attività
+            </Button>
+          )}
+        </DialogTrigger>
+      ) : null}
       <DialogContent className="max-h-[90vh] max-w-3xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nuova voce fatturabile</DialogTitle>
+          <DialogTitle>
+            {isEditing ? "Modifica voce fatturabile" : "Nuova voce fatturabile"}
+          </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -616,7 +761,11 @@ export function CaseActivityDialog({
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="price_item_id">Prezzo</Label>
-            <Select value={priceItemId} onValueChange={setPriceItemId} disabled={!priceBook}>
+            <Select
+              value={priceItemId}
+              onValueChange={setPriceItemId}
+              disabled={isEditing || !priceBook}
+            >
               <SelectTrigger id="price_item_id">
                 <SelectValue
                   placeholder={
@@ -644,7 +793,7 @@ export function CaseActivityDialog({
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
-            {selectedItem?.requires_hearing_dates ? (
+            {requiresHearingDates ? (
               <div className="flex flex-col gap-2">
                 <Label htmlFor="hearing_count">Numero udienze</Label>
                 <Input
@@ -666,13 +815,13 @@ export function CaseActivityDialog({
                   step="1"
                   value={quantity}
                   onChange={(event) => setQuantity(Number(event.target.value))}
-                  disabled={!selectedItem}
+                  disabled={!isEditing && !selectedItem}
                 />
               </div>
             )}
             <div className="flex flex-col gap-2">
               <Label htmlFor="unit_price">
-                {selectedItem?.kind === "expense_reimbursement" ? "Importo" : "Prezzo unitario"}
+                {effectiveKind === "expense_reimbursement" ? "Importo" : "Prezzo unitario"}
               </Label>
               <Input
                 id="unit_price"
@@ -680,7 +829,7 @@ export function CaseActivityDialog({
                 min="0"
                 step="0.01"
                 value={unitPrice}
-                disabled={selectedItem?.kind === "fee"}
+                disabled={!isEditing && selectedItem?.kind === "fee"}
                 onChange={(event) => setFreeAmount(Number(event.target.value))}
               />
             </div>
@@ -692,7 +841,7 @@ export function CaseActivityDialog({
             </div>
           </div>
 
-          {selectedItem?.requires_hearing_dates ? (
+          {requiresHearingDates ? (
             <div className="grid gap-3 sm:grid-cols-2">
               {hearingDates.map((date, index) => (
                 <div key={index} className="flex flex-col gap-2">
@@ -771,11 +920,11 @@ export function CaseActivityDialog({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+            <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
               Annulla
             </Button>
             <Button type="submit" disabled={save.isPending}>
-              {save.isPending ? "Salvataggio…" : "Salva"}
+              {save.isPending ? "Salvataggio…" : isEditing ? "Salva modifiche" : "Salva"}
             </Button>
           </DialogFooter>
         </form>
