@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -63,11 +63,18 @@ function ClientDetail() {
         title={clientDisplayName(data)}
         description="Modifica i dati del cliente."
         actions={
-          <Link to="/clienti">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="mr-1 size-4" /> Indietro
-            </Button>
-          </Link>
+          <>
+            <Link to="/clienti/nuovo">
+              <Button size="sm">
+                <Plus className="mr-1 size-4" /> Nuovo cliente
+              </Button>
+            </Link>
+            <Link to="/clienti">
+              <Button variant="outline" size="sm">
+                <ArrowLeft className="mr-1 size-4" /> Indietro
+              </Button>
+            </Link>
+          </>
         }
       />
       <ClientForm

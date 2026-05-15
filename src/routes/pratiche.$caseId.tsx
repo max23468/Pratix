@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -94,6 +94,11 @@ function CaseDetail() {
             <Badge variant={caseStatusVariant[caseRow.status] ?? "outline"}>
               {caseStatusLabels[caseRow.status] ?? caseRow.status}
             </Badge>
+            <Link to="/pratiche/nuova">
+              <Button size="sm">
+                <Plus className="mr-1 size-4" /> Nuova pratica
+              </Button>
+            </Link>
             <Link to="/pratiche">
               <Button size="sm" variant="outline">
                 <ArrowLeft className="mr-1 size-4" /> Indietro

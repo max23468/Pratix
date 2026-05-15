@@ -2,7 +2,15 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { ArrowLeft, CheckCircle2, FileDown, FileSpreadsheet, FileText, Trash2 } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  FileDown,
+  FileSpreadsheet,
+  FileText,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
@@ -297,6 +305,11 @@ function InvoiceDetailPage() {
             <Button asChild variant="outline">
               <Link to="/fatture">
                 <ArrowLeft className="mr-2 size-4" /> Indietro
+              </Link>
+            </Button>
+            <Button asChild>
+              <Link to="/fatture/nuova">
+                <Plus className="mr-2 size-4" /> Nuova fattura
               </Link>
             </Button>
             {data.invoice.status !== "paid" && (
