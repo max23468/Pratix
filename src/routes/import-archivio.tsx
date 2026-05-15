@@ -2024,11 +2024,7 @@ function normalizeExcelRow(
     (principal) => principal.business_name,
   );
   const selectedClient = findByName(clients, clientName, clientDisplayName);
-  const selectedCounterparty = findByName(
-    counterparties,
-    counterpartyName,
-    counterpartyDisplayName,
-  );
+  const selectedCounterparty = findCounterpartyByName(counterparties, counterpartyName);
   const openedAt = parseExcelDate(value("openedAt")) || today();
   const activityDate = parseExcelDate(value("activityDate"));
   const practiceStatus = parseCaseStatus(value("status"));
@@ -2451,6 +2447,27 @@ function findByName<T>(items: T[], name: string, display: (item: T) => string) {
   const normalizedName = normalizeText(name);
   if (!normalizedName) return null;
   return items.find((item) => normalizeText(display(item)) === normalizedName) ?? null;
+}
+
+function findCounterpartyByName(counterparties: CounterpartyRow[], name: string) {
+  const normalizedName = normalizeText(name);
+  if (!normalizedName) return null;
+
+  return (
+    counterparties.find((counterparty) =>
+      counterpartyImportNames(counterparty).some(
+        (counterpartyName) => normalizeText(counterpartyName) === normalizedName,
+      ),
+    ) ?? null
+  );
+}
+
+function counterpartyImportNames(counterparty: CounterpartyRow) {
+  if (counterparty.kind !== "individual") return [counterpartyDisplayName(counterparty)];
+  return [
+    counterpartyDisplayName(counterparty),
+    [counterparty.first_name, counterparty.last_name].filter(Boolean).join(" "),
+  ];
 }
 
 function parseExcelDate(value: string) {

@@ -7,6 +7,25 @@ export type CaseWorkflowCase = {
 
 export type CaseWorkflowQualityCheck = {
   severity: "warning" | "ok";
+  id?: string;
+  title?: string;
+  description?: string;
+};
+
+export type CaseWorkflowPriorityInsight = {
+  title: string;
+  description: string;
+  items: string[];
+  nextStep: string;
+};
+
+export type CaseDebtCollectionWorkflow = {
+  stage: string;
+  priority: "Alta" | "Media" | "Ordinaria";
+  priorityVariant: "destructive" | "outline" | "secondary";
+  action: string;
+  reason: string;
+  priorityInsight?: CaseWorkflowPriorityInsight;
 };
 
 export function summarizeCaseOperations(
@@ -71,11 +90,12 @@ export function buildDebtCollectionWorkflow({
   invoices: CaseTimelineInvoice[];
   totals: ReturnType<typeof summarizeCaseOperations>;
   qualityChecks: CaseWorkflowQualityCheck[];
-}) {
+}): CaseDebtCollectionWorkflow {
   const hasBlockingQualityChecks = qualityChecks.some((check) => check.severity === "warning");
   const hasDraftInvoices = invoices.some((invoice) => invoice.status === "draft");
   const hasIssuedInvoices = invoices.some((invoice) => invoice.status === "issued");
-  const hasOverdueInvoices = totals.overdueInvoiceTotal > 0 || invoices.some(isInvoiceOverdue);
+  const overdueInvoices = invoices.filter(isInvoiceOverdue);
+  const hasOverdueInvoices = totals.overdueInvoiceTotal > 0 || overdueInvoices.length > 0;
 
   if (caseRow.status === "closed" || caseRow.status === "archived") {
     return {
@@ -88,22 +108,48 @@ export function buildDebtCollectionWorkflow({
   }
 
   if (hasBlockingQualityChecks && activities.length === 0) {
+    const setupItems = qualityChecks
+      .filter((check) => check.severity === "warning")
+      .map((check) => check.title)
+      .filter((title): title is string => Boolean(title));
+
     return {
       stage: "Impostazione pratica",
       priority: "Alta",
       priorityVariant: "destructive" as const,
       action: "Completa soggetti e prima Attività.",
       reason: "Mancano dati essenziali per procedere.",
+      priorityInsight: {
+        title: "Perché è priorità alta",
+        description:
+          "Pratix la considera priorità alta perché la pratica è ancora in impostazione e non ha una base operativa completa.",
+        items: setupItems.length > 0 ? setupItems : ["Dati essenziali incompleti"],
+        nextStep: "Completa soggetti e prima Attività.",
+      } satisfies CaseWorkflowPriorityInsight,
     };
   }
 
   if (hasOverdueInvoices) {
+    const overdueAmount = totals.overdueInvoiceTotal || totals.openInvoiceTotal;
+
     return {
       stage: "Recupero incasso",
       priority: "Alta",
       priorityVariant: "destructive" as const,
       action: "Sollecita il pagamento delle Fatture insolute.",
-      reason: `${formatCurrency(totals.overdueInvoiceTotal || totals.openInvoiceTotal)} risultano ancora aperti.`,
+      reason: `${formatCurrency(overdueAmount)} risultano ancora aperti.`,
+      priorityInsight: {
+        title: "Perché è priorità alta",
+        description:
+          "Pratix la considera priorità alta perché ci sono Fatture scadute o già segnate come insolute.",
+        items: [
+          `${formatCurrency(overdueAmount)} ancora aperti`,
+          overdueInvoices.length > 0
+            ? formatCount(overdueInvoices.length, "Fattura insoluta", "Fatture insolute")
+            : "Fatture aperte oltre la scadenza",
+        ],
+        nextStep: "Sollecita il pagamento delle Fatture insolute.",
+      } satisfies CaseWorkflowPriorityInsight,
     };
   }
 
@@ -128,12 +174,28 @@ export function buildDebtCollectionWorkflow({
   }
 
   if (totals.toInvoice > 0) {
+    const toInvoiceActivities = activities.filter((activity) => activity.status === "to_invoice");
+
     return {
       stage: "Preparazione Fattura",
       priority: "Alta",
       priorityVariant: "destructive" as const,
       action: "Prepara la Fattura per le Attività maturate.",
       reason: `${formatCurrency(totals.toInvoice)} sono da fatturare.`,
+      priorityInsight: {
+        title: "Perché è priorità alta",
+        description:
+          "Pratix la considera priorità alta perché ci sono Attività maturate non ancora collegate a una Fattura.",
+        items: [
+          `${formatCurrency(totals.toInvoice)} da fatturare`,
+          formatCount(
+            toInvoiceActivities.length,
+            "Attività maturata non fatturata",
+            "Attività maturate non fatturate",
+          ),
+        ],
+        nextStep: "Prepara la Fattura per le Attività maturate.",
+      } satisfies CaseWorkflowPriorityInsight,
     };
   }
 
@@ -189,4 +251,8 @@ function dateOnlyKey(value: string) {
 
 function toDateKey(year: number, month: number, day: number) {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+}
+
+function formatCount(count: number, singular: string, plural: string) {
+  return `${count} ${count === 1 ? singular : plural}`;
 }

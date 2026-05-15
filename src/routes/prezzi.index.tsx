@@ -169,12 +169,12 @@ function PrezziList() {
               filtered.map((book) => {
                 const counts = countsByBook[book.id] ?? { fees: 0, expenses: 0, enabled: 0 };
                 return (
-                  <TableRow key={book.id} className="cursor-pointer">
+                  <TableRow key={book.id} className="relative cursor-pointer">
                     <TableCell>
                       <Link
                         to="/prezzi/$priceBookId"
                         params={{ priceBookId: book.id }}
-                        className="font-medium hover:underline"
+                        className="font-medium after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
                       >
                         {principalNameById.get(book.principal_id) ?? "—"}
                       </Link>

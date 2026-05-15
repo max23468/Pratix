@@ -85,16 +85,17 @@ describe("buildInvoiceXml", () => {
     expect(xml).toContain("<ImportoPagamento>1257.68</ImportoPagamento>");
   });
 
-  it("genera regime forfettario senza IVA, cassa e ritenuta e con Natura N2.2", () => {
+  it("genera regime forfettario con cassa, senza IVA e ritenuta e con Natura N2.2", () => {
     const { xml } = buildInvoiceXml({
       ...baseInvoice,
       invoice: {
         ...baseInvoice.invoice,
-        cassa_amount: 0,
+        cassa_base_amount: 100,
+        cassa_amount: 4,
         vat_amount: 0,
         withholding_amount: 0,
         stamp_amount: 2,
-        total_amount: 102,
+        total_amount: 106,
       },
       lines: [
         {
@@ -114,9 +115,10 @@ describe("buildInvoiceXml", () => {
     expect(xml).toContain("<RegimeFiscale>RF19</RegimeFiscale>");
     expect(xml).toContain("<AliquotaIVA>0.00</AliquotaIVA>");
     expect(xml).toContain("<Natura>N2.2</Natura>");
-    expect(xml).not.toContain("<DatiCassaPrevidenziale>");
+    expect(xml).toContain("<DatiCassaPrevidenziale>");
+    expect(xml).toContain("<ImportoContributoCassa>4.00</ImportoContributoCassa>");
     expect(xml).not.toContain("<DatiRitenuta>");
-    expect(xml).toContain("<ImportoPagamento>102.00</ImportoPagamento>");
+    expect(xml).toContain("<ImportoPagamento>106.00</ImportoPagamento>");
   });
 
   it("blocca XML senza Partita IVA del professionista", () => {

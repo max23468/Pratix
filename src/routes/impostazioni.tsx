@@ -297,7 +297,8 @@ function SettingsPage() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  In regime forfettario IVA, cassa addebitata e ritenuta non vengono applicate.
+                  In regime forfettario IVA e ritenuta non vengono applicate; la Cassa Forense resta
+                  calcolata sui compensi.
                 </p>
               </div>
             </CardContent>

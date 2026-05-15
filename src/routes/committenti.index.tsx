@@ -193,12 +193,12 @@ function CommittentiList() {
               </TableRow>
             ) : (
               filtered.map((principal) => (
-                <TableRow key={principal.id} className="cursor-pointer">
+                <TableRow key={principal.id} className="relative cursor-pointer">
                   <TableCell>
                     <Link
                       to="/committenti/$principalId"
                       params={{ principalId: principal.id }}
-                      className="font-medium hover:underline"
+                      className="font-medium after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
                     >
                       {principal.business_name}
                     </Link>

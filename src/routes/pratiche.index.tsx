@@ -236,13 +236,13 @@ function PraticheList() {
                   toInvoiceAmount: 0,
                 };
                 return (
-                  <TableRow key={c.id}>
+                  <TableRow key={c.id} className="relative cursor-pointer">
                     <TableCell className="font-mono text-sm">{c.practice_number}</TableCell>
                     <TableCell>
                       <Link
                         to="/pratiche/$caseId"
                         params={{ caseId: c.id }}
-                        className="font-medium hover:underline"
+                        className="font-medium after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
                       >
                         {c.title}
                       </Link>

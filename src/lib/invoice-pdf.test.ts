@@ -97,13 +97,16 @@ describe("generateInvoicePdf", () => {
         invoice: {
           ...baseInvoicePdfData().invoice,
           due_date: null,
+          taxable_fees: 100,
           taxable_expenses: 0,
           art15_expenses: 0,
           general_expenses_amount: 0,
-          cassa_amount: 0,
+          cassa_amount: 4,
           vat_amount: 0,
           withholding_amount: 0,
           stamp_amount: 0,
+          total_amount: 104,
+          net_to_pay: 104,
           notes: null,
         },
         client: {
@@ -121,6 +124,7 @@ describe("generateInvoicePdf", () => {
     expect(pdf).toContain("Avvocato");
     expect(pdf).toContain("Luca Bianchi");
     expect(pdf).toContain("regime forfettario");
+    expect(pdf).toContain("Cassa Forense");
     expect(pdf).not.toContain("Scadenza:");
     expect(pdf).not.toContain("Ritenuta d");
   });

@@ -215,12 +215,12 @@ function ClientiList() {
               </TableRow>
             ) : (
               filtered.map((c) => (
-                <TableRow key={c.id} className="cursor-pointer">
+                <TableRow key={c.id} className="relative cursor-pointer">
                   <TableCell>
                     <Link
                       to="/clienti/$clientId"
                       params={{ clientId: c.id }}
-                      className="font-medium hover:underline"
+                      className="font-medium after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
                     >
                       {clientDisplayName(c)}
                     </Link>

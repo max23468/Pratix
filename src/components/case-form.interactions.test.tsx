@@ -169,6 +169,7 @@ function Wrapper({ children }: { children: ReactNode }) {
 describe("CaseForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    single.mockReset();
     single.mockResolvedValue({ data: { id: "case-1" }, error: null });
   });
 
@@ -209,6 +210,82 @@ describe("CaseForm", () => {
       }),
     );
     expect(onSaved).toHaveBeenCalledWith("case-1");
+  });
+
+  it("crea anagrafiche minime rapide e le collega alla nuova pratica", async () => {
+    single
+      .mockResolvedValueOnce({ data: { id: "principal-new" }, error: null })
+      .mockResolvedValueOnce({ data: { id: "client-new" }, error: null })
+      .mockResolvedValueOnce({ data: { id: "counterparty-new" }, error: null })
+      .mockResolvedValueOnce({ data: { id: "case-quick" }, error: null });
+
+    const onSaved = vi.fn();
+    render(<CaseForm onSaved={onSaved} onCancel={vi.fn()} />, { wrapper: Wrapper });
+
+    await screen.findByText("Banca Test");
+
+    await userEvent.click(screen.getAllByRole("button", { name: /Nuovo/ })[0]);
+    await userEvent.type(screen.getByLabelText("Nome committente"), " Nuovo Mandante ");
+    await userEvent.click(screen.getByRole("button", { name: "Crea" }));
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Committente creato"));
+
+    await userEvent.click(screen.getAllByRole("button", { name: /Nuovo/ })[1]);
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[2], "individual");
+    await userEvent.type(screen.getByLabelText("Nome"), " Ada ");
+    await userEvent.type(screen.getByLabelText("Cognome"), " Verdi ");
+    await userEvent.click(screen.getByRole("button", { name: "Crea" }));
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Cliente creato"));
+
+    await userEvent.click(screen.getByRole("button", { name: /Nuova/ }));
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[3], "company");
+    await userEvent.type(screen.getByLabelText("Ragione sociale"), " Beta Debitrice ");
+    await userEvent.click(screen.getByRole("button", { name: "Crea" }));
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Controparte creata"));
+
+    await userEvent.click(screen.getByRole("button", { name: "Salva" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Pratica creata"));
+    expect(query.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user_id: "user-test",
+        business_name: "Nuovo Mandante",
+      }),
+    );
+    expect(query.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user_id: "user-test",
+        kind: "individual",
+        first_name: "Ada",
+        last_name: "Verdi",
+        business_name: null,
+      }),
+    );
+    expect(query.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user_id: "user-test",
+        principal_id: "principal-new",
+        client_id: "client-new",
+      }),
+    );
+    expect(query.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user_id: "user-test",
+        kind: "company",
+        first_name: null,
+        last_name: null,
+        business_name: "Beta Debitrice",
+      }),
+    );
+    expect(query.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user_id: "user-test",
+        principal_id: "principal-new",
+        client_id: "client-new",
+        counterparty_id: "counterparty-new",
+        practice_number: 157,
+      }),
+    );
+    expect(onSaved).toHaveBeenCalledWith("case-quick");
   });
 
   it("aggiorna una pratica e registra il trasferimento quando cambia cliente", async () => {

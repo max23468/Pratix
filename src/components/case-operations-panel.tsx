@@ -15,9 +15,10 @@ import {
   Upload,
   WalletCards,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge, badgeVariants } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { CaseActivityDialog } from "@/components/case-activities";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,6 +45,7 @@ import {
   type ClientDisplayData,
   type CounterpartyDisplayData,
 } from "@/lib/labels";
+import { cn } from "@/lib/utils";
 
 export type CaseOperationsCase = {
   id: string;
@@ -276,7 +278,7 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
                   <ListChecks className="size-4 text-muted-foreground" />
                   <p className="text-sm font-medium">Workflow recupero crediti</p>
                 </div>
-                <Badge variant={workflow.priorityVariant}>{workflow.priority}</Badge>
+                <WorkflowPriorityBadge workflow={workflow} />
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
                 <WorkflowField label="Stato operativo" value={workflow.stage} />
@@ -666,6 +668,54 @@ function buildQualityChecks({
   }
 
   return checks;
+}
+
+export function WorkflowPriorityBadge({
+  workflow,
+}: {
+  workflow: ReturnType<typeof buildDebtCollectionWorkflow>;
+}) {
+  const priorityLabel = formatPriorityLabel(workflow.priority);
+
+  if (!workflow.priorityInsight) {
+    return <Badge variant={workflow.priorityVariant}>{priorityLabel}</Badge>;
+  }
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          type="button"
+          className={cn(badgeVariants({ variant: workflow.priorityVariant }), "cursor-help")}
+          aria-label={`Mostra perché questa pratica è ${priorityLabel.toLowerCase()}`}
+        >
+          {priorityLabel}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent align="end" className="flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-3">
+        <div className="flex flex-col gap-1">
+          <p className="text-sm font-medium">{workflow.priorityInsight.title}</p>
+          <p className="text-sm text-muted-foreground">{workflow.priorityInsight.description}</p>
+        </div>
+        <ul className="flex flex-col gap-2 text-sm">
+          {workflow.priorityInsight.items.map((item) => (
+            <li key={item} className="flex gap-2">
+              <Flag className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="rounded-md border border-border bg-muted/40 p-3 text-sm">
+          <p className="font-medium">Azione consigliata</p>
+          <p className="mt-1 text-muted-foreground">{workflow.priorityInsight.nextStep}</p>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function formatPriorityLabel(priority: string) {
+  return `Priorità ${priority.toLocaleLowerCase("it-IT")}`;
 }
 
 function OperationMetric({ label, value }: { label: string; value: string }) {

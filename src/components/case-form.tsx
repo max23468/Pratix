@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { RefreshCcw, Trash2 } from "lucide-react";
+import { Plus, RefreshCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -28,7 +28,12 @@ import {
 import { CounterpartySelect, PrincipalSelect } from "@/components/debt-collection-selects";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { caseStatusLabels, clientDisplayName } from "@/lib/labels";
+import {
+  caseStatusLabels,
+  clientDisplayName,
+  clientKindLabels,
+  counterpartyKindLabels,
+} from "@/lib/labels";
 
 type CaseRow = {
   id?: string;
@@ -45,6 +50,49 @@ type CaseRow = {
   opened_at: string;
   closed_at: string | null;
   notes: string | null;
+};
+
+type ClientKind = "individual" | "company";
+type CounterpartyKind = "individual" | "company" | "group";
+
+type ClientOption = {
+  id: string;
+  kind: ClientKind;
+  first_name: string | null;
+  last_name: string | null;
+  business_name: string | null;
+};
+
+type PrincipalOption = {
+  id: string;
+  business_name: string;
+  archived_at: string | null;
+};
+
+type CounterpartyOption = {
+  id: string;
+  kind: CounterpartyKind;
+  first_name: string | null;
+  last_name: string | null;
+  business_name: string | null;
+};
+
+type QuickPrincipalDraft = {
+  business_name: string;
+};
+
+type QuickClientDraft = {
+  kind: ClientKind | "";
+  first_name: string;
+  last_name: string;
+  business_name: string;
+};
+
+type QuickCounterpartyDraft = {
+  kind: CounterpartyKind | "";
+  first_name: string;
+  last_name: string;
+  business_name: string;
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -65,6 +113,24 @@ const empty: CaseRow = {
   notes: "",
 };
 
+const emptyQuickPrincipal: QuickPrincipalDraft = {
+  business_name: "",
+};
+
+const emptyQuickClient: QuickClientDraft = {
+  kind: "",
+  first_name: "",
+  last_name: "",
+  business_name: "",
+};
+
+const emptyQuickCounterparty: QuickCounterpartyDraft = {
+  kind: "",
+  first_name: "",
+  last_name: "",
+  business_name: "",
+};
+
 type Props = {
   initial?: Partial<CaseRow> & { id?: string };
   defaultClientId?: string;
@@ -81,9 +147,29 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
     ...(defaultClientId ? { client_id: defaultClientId } : {}),
     ...(initial ?? {}),
   });
+  const [quickPrincipalOpen, setQuickPrincipalOpen] = useState(false);
+  const [quickClientOpen, setQuickClientOpen] = useState(false);
+  const [quickCounterpartyOpen, setQuickCounterpartyOpen] = useState(false);
+  const [quickPrincipal, setQuickPrincipal] = useState<QuickPrincipalDraft>(emptyQuickPrincipal);
+  const [quickClient, setQuickClient] = useState<QuickClientDraft>(emptyQuickClient);
+  const [quickCounterparty, setQuickCounterparty] =
+    useState<QuickCounterpartyDraft>(emptyQuickCounterparty);
+  const [quickCreatedClients, setQuickCreatedClients] = useState<ClientOption[]>([]);
 
   const upd = <K extends keyof CaseRow>(key: K, value: CaseRow[K]) =>
     setForm((current) => ({ ...current, [key]: value }));
+  const updateQuickPrincipal = <K extends keyof QuickPrincipalDraft>(
+    key: K,
+    value: QuickPrincipalDraft[K],
+  ) => setQuickPrincipal((current) => ({ ...current, [key]: value }));
+  const updateQuickClient = <K extends keyof QuickClientDraft>(
+    key: K,
+    value: QuickClientDraft[K],
+  ) => setQuickClient((current) => ({ ...current, [key]: value }));
+  const updateQuickCounterparty = <K extends keyof QuickCounterpartyDraft>(
+    key: K,
+    value: QuickCounterpartyDraft[K],
+  ) => setQuickCounterparty((current) => ({ ...current, [key]: value }));
 
   const { data: nextPracticeNumber, refetch: refetchNextPracticeNumber } = useQuery({
     queryKey: ["cases", "next-practice-number"],
@@ -129,17 +215,184 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
     },
   });
 
+  const allClients = useMemo(() => {
+    const byId = new Map<string, ClientOption>();
+    [...quickCreatedClients, ...clients].forEach((client) => byId.set(client.id, client));
+    return Array.from(byId.values());
+  }, [clients, quickCreatedClients]);
+
   const availableClients = useMemo(() => {
-    if (!form.principal_id) return clients;
+    if (!form.principal_id) return allClients;
     const allowed = new Set(principalClientIds);
-    return clients.filter((client) => allowed.has(client.id) || client.id === form.client_id);
-  }, [clients, form.client_id, form.principal_id, principalClientIds]);
+    return allClients.filter((client) => allowed.has(client.id) || client.id === form.client_id);
+  }, [allClients, form.client_id, form.principal_id, principalClientIds]);
 
   useEffect(() => {
     if (!form.principal_id || !form.client_id) return;
     if (availableClients.some((client) => client.id === form.client_id)) return;
     upd("client_id", null);
   }, [availableClients, form.client_id, form.principal_id]);
+
+  const createQuickPrincipalMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Sessione non valida");
+      const businessName = quickPrincipal.business_name.trim();
+      if (!businessName) throw new Error("Inserisci il nome del committente");
+
+      const payload = {
+        user_id: user.id,
+        business_name: businessName,
+        fees_enabled: true,
+        expense_reimbursements_enabled: true,
+        default_general_expenses_rate: 10,
+        default_cassa_rate: 4,
+        address_country: "IT",
+      };
+
+      const { data, error } = await supabase
+        .from("principals")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (error) throw error;
+
+      return {
+        id: data.id,
+        business_name: businessName,
+        archived_at: null,
+      } satisfies PrincipalOption;
+    },
+    onSuccess: (principal) => {
+      qc.setQueryData<PrincipalOption[]>(["principals", "selector"], (current = []) => [
+        ...current,
+        principal,
+      ]);
+      qc.invalidateQueries({ queryKey: ["principals"] });
+      upd("principal_id", principal.id);
+      upd("client_id", null);
+      setQuickPrincipal(emptyQuickPrincipal);
+      setQuickPrincipalOpen(false);
+      toast.success("Committente creato");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const createQuickClientMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Sessione non valida");
+      if (!form.principal_id) throw new Error("Seleziona prima un committente");
+      if (!quickClient.kind) throw new Error("Seleziona il tipo cliente");
+
+      const isIndividual = quickClient.kind === "individual";
+      const firstName = quickClient.first_name.trim();
+      const lastName = quickClient.last_name.trim();
+      const businessName = quickClient.business_name.trim();
+
+      if (isIndividual && !firstName && !lastName) throw new Error("Inserisci nome e cognome");
+      if (!isIndividual && !businessName) throw new Error("Inserisci la ragione sociale");
+
+      const payload = {
+        user_id: user.id,
+        kind: quickClient.kind,
+        first_name: isIndividual ? firstName || null : null,
+        last_name: isIndividual ? lastName || null : null,
+        business_name: isIndividual ? null : businessName,
+        address_country: "IT",
+      };
+
+      const { data, error } = await supabase.from("clients").insert(payload).select("id").single();
+      if (error) throw error;
+
+      const { error: linkError } = await supabase.from("principal_clients").insert({
+        user_id: user.id,
+        principal_id: form.principal_id,
+        client_id: data.id,
+        active_from: form.opened_at || today(),
+      });
+      if (linkError) throw linkError;
+
+      return {
+        id: data.id,
+        kind: quickClient.kind,
+        first_name: payload.first_name,
+        last_name: payload.last_name,
+        business_name: payload.business_name,
+      } satisfies ClientOption;
+    },
+    onSuccess: (client) => {
+      setQuickCreatedClients((current) => [
+        client,
+        ...current.filter((item) => item.id !== client.id),
+      ]);
+      qc.setQueryData<ClientOption[]>(["clients", "case-form"], (current = []) => [
+        client,
+        ...current,
+      ]);
+      qc.setQueryData<string[]>(
+        ["principal-clients", "case-form", form.principal_id],
+        (current = []) => Array.from(new Set([...current, client.id])),
+      );
+      qc.invalidateQueries({ queryKey: ["clients"] });
+      qc.invalidateQueries({ queryKey: ["principal-clients"] });
+      upd("client_id", client.id);
+      setQuickClient(emptyQuickClient);
+      setQuickClientOpen(false);
+      toast.success("Cliente creato");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
+
+  const createQuickCounterpartyMutation = useMutation({
+    mutationFn: async () => {
+      if (!user) throw new Error("Sessione non valida");
+      if (!quickCounterparty.kind) throw new Error("Seleziona il tipo controparte");
+
+      const isIndividual = quickCounterparty.kind === "individual";
+      const firstName = quickCounterparty.first_name.trim();
+      const lastName = quickCounterparty.last_name.trim();
+      const businessName = quickCounterparty.business_name.trim();
+
+      if (isIndividual && !firstName && !lastName) throw new Error("Inserisci nome e cognome");
+      if (!isIndividual && !businessName) {
+        throw new Error("Inserisci la ragione sociale o il nome del gruppo");
+      }
+
+      const payload = {
+        user_id: user.id,
+        kind: quickCounterparty.kind,
+        first_name: isIndividual ? firstName || null : null,
+        last_name: isIndividual ? lastName || null : null,
+        business_name: isIndividual ? null : businessName,
+      };
+
+      const { data, error } = await supabase
+        .from("counterparties")
+        .insert(payload)
+        .select("id")
+        .single();
+      if (error) throw error;
+
+      return {
+        id: data.id,
+        kind: quickCounterparty.kind,
+        first_name: payload.first_name,
+        last_name: payload.last_name,
+        business_name: payload.business_name,
+      } satisfies CounterpartyOption;
+    },
+    onSuccess: (counterparty) => {
+      qc.setQueryData<CounterpartyOption[]>(["counterparties", "selector"], (current = []) => [
+        counterparty,
+        ...current,
+      ]);
+      qc.invalidateQueries({ queryKey: ["counterparties"] });
+      upd("counterparty_id", counterparty.id);
+      setQuickCounterparty(emptyQuickCounterparty);
+      setQuickCounterpartyOpen(false);
+      toast.success("Controparte creata");
+    },
+    onError: (error: Error) => toast.error(error.message),
+  });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -256,50 +509,271 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
           <div className="grid gap-4 lg:grid-cols-3">
             <div className="flex flex-col gap-2">
               <Label htmlFor="principal_id">Committente</Label>
-              <PrincipalSelect
-                id="principal_id"
-                value={form.principal_id}
-                onValueChange={(value) => {
-                  upd("principal_id", value);
-                  upd("client_id", null);
-                }}
-              />
+              <div className="flex gap-2">
+                <div className="min-w-0 flex-1">
+                  <PrincipalSelect
+                    id="principal_id"
+                    value={form.principal_id}
+                    onValueChange={(value) => {
+                      upd("principal_id", value);
+                      upd("client_id", null);
+                    }}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setQuickPrincipalOpen((open) => !open)}
+                >
+                  <Plus className="mr-1 size-4" /> Nuovo
+                </Button>
+              </div>
+              {quickPrincipalOpen ? (
+                <div className="flex flex-col gap-3 rounded-md border border-border p-3">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="quick_principal_name">Nome committente</Label>
+                    <Input
+                      id="quick_principal_name"
+                      value={quickPrincipal.business_name}
+                      onChange={(event) =>
+                        updateQuickPrincipal("business_name", event.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setQuickPrincipal(emptyQuickPrincipal);
+                        setQuickPrincipalOpen(false);
+                      }}
+                    >
+                      Annulla
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => createQuickPrincipalMutation.mutate()}
+                      disabled={createQuickPrincipalMutation.isPending}
+                    >
+                      {createQuickPrincipalMutation.isPending ? "Creazione…" : "Crea"}
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="client_id">Cliente</Label>
-              <Select
-                value={form.client_id ?? ""}
-                onValueChange={(value) => upd("client_id", value)}
-                disabled={!form.principal_id}
-              >
-                <SelectTrigger id="client_id">
-                  <SelectValue
-                    placeholder={
-                      form.principal_id ? "Seleziona cliente" : "Prima scegli il committente"
-                    }
-                  />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableClients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {clientDisplayName(client)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex gap-2">
+                <div className="min-w-0 flex-1">
+                  <Select
+                    value={form.client_id ?? ""}
+                    onValueChange={(value) => upd("client_id", value)}
+                    disabled={!form.principal_id}
+                  >
+                    <SelectTrigger id="client_id">
+                      <SelectValue
+                        placeholder={
+                          form.principal_id ? "Seleziona cliente" : "Prima scegli il committente"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {availableClients.map((client) => (
+                        <SelectItem key={client.id} value={client.id}>
+                          {clientDisplayName(client)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setQuickClientOpen((open) => !open)}
+                  disabled={!form.principal_id}
+                >
+                  <Plus className="mr-1 size-4" /> Nuovo
+                </Button>
+              </div>
               {form.principal_id && availableClients.length === 0 ? (
                 <p className="text-xs text-muted-foreground">
                   Nessun cliente collegato a questo committente.
                 </p>
               ) : null}
+              {quickClientOpen ? (
+                <div className="flex flex-col gap-3 rounded-md border border-border p-3">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="quick_client_kind">Tipo cliente</Label>
+                    <Select
+                      value={quickClient.kind}
+                      onValueChange={(value) => updateQuickClient("kind", value as ClientKind)}
+                    >
+                      <SelectTrigger id="quick_client_kind">
+                        <SelectValue placeholder="Seleziona tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(clientKindLabels).map(([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {quickClient.kind === "individual" ? (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="quick_client_first_name">Nome</Label>
+                        <Input
+                          id="quick_client_first_name"
+                          value={quickClient.first_name}
+                          onChange={(event) => updateQuickClient("first_name", event.target.value)}
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="quick_client_last_name">Cognome</Label>
+                        <Input
+                          id="quick_client_last_name"
+                          value={quickClient.last_name}
+                          onChange={(event) => updateQuickClient("last_name", event.target.value)}
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+                  {quickClient.kind === "company" ? (
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="quick_client_business_name">Ragione sociale</Label>
+                      <Input
+                        id="quick_client_business_name"
+                        value={quickClient.business_name}
+                        onChange={(event) => updateQuickClient("business_name", event.target.value)}
+                      />
+                    </div>
+                  ) : null}
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setQuickClient(emptyQuickClient);
+                        setQuickClientOpen(false);
+                      }}
+                    >
+                      Annulla
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => createQuickClientMutation.mutate()}
+                      disabled={createQuickClientMutation.isPending}
+                    >
+                      {createQuickClientMutation.isPending ? "Creazione…" : "Crea"}
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="counterparty_id">Controparte</Label>
-              <CounterpartySelect
-                id="counterparty_id"
-                value={form.counterparty_id}
-                onValueChange={(value) => upd("counterparty_id", value)}
-              />
+              <div className="flex gap-2">
+                <div className="min-w-0 flex-1">
+                  <CounterpartySelect
+                    id="counterparty_id"
+                    value={form.counterparty_id}
+                    onValueChange={(value) => upd("counterparty_id", value)}
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setQuickCounterpartyOpen((open) => !open)}
+                >
+                  <Plus className="mr-1 size-4" /> Nuova
+                </Button>
+              </div>
+              {quickCounterpartyOpen ? (
+                <div className="flex flex-col gap-3 rounded-md border border-border p-3">
+                  <div className="flex flex-col gap-2">
+                    <Label htmlFor="quick_counterparty_kind">Tipo controparte</Label>
+                    <Select
+                      value={quickCounterparty.kind}
+                      onValueChange={(value) =>
+                        updateQuickCounterparty("kind", value as CounterpartyKind)
+                      }
+                    >
+                      <SelectTrigger id="quick_counterparty_kind">
+                        <SelectValue placeholder="Seleziona tipo" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(counterpartyKindLabels).map(([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {quickCounterparty.kind === "individual" ? (
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="quick_counterparty_first_name">Nome</Label>
+                        <Input
+                          id="quick_counterparty_first_name"
+                          value={quickCounterparty.first_name}
+                          onChange={(event) =>
+                            updateQuickCounterparty("first_name", event.target.value)
+                          }
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="quick_counterparty_last_name">Cognome</Label>
+                        <Input
+                          id="quick_counterparty_last_name"
+                          value={quickCounterparty.last_name}
+                          onChange={(event) =>
+                            updateQuickCounterparty("last_name", event.target.value)
+                          }
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+                  {quickCounterparty.kind && quickCounterparty.kind !== "individual" ? (
+                    <div className="flex flex-col gap-2">
+                      <Label htmlFor="quick_counterparty_business_name">
+                        {quickCounterparty.kind === "group"
+                          ? "Nome controparte composta"
+                          : "Ragione sociale"}
+                      </Label>
+                      <Input
+                        id="quick_counterparty_business_name"
+                        value={quickCounterparty.business_name}
+                        onChange={(event) =>
+                          updateQuickCounterparty("business_name", event.target.value)
+                        }
+                      />
+                    </div>
+                  ) : null}
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setQuickCounterparty(emptyQuickCounterparty);
+                        setQuickCounterpartyOpen(false);
+                      }}
+                    >
+                      Annulla
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => createQuickCounterpartyMutation.mutate()}
+                      disabled={createQuickCounterpartyMutation.isPending}
+                    >
+                      {createQuickCounterpartyMutation.isPending ? "Creazione…" : "Crea"}
+                    </Button>
+                  </div>
+                </div>
+              ) : null}
             </div>
           </div>
 
