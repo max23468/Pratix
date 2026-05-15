@@ -44,6 +44,10 @@ import {
   type ClientDisplayData,
 } from "@/lib/labels";
 import { formatCurrency, formatDate } from "@/lib/format";
+import {
+  handleClickableTableRowClick,
+  handleClickableTableRowKeyDown,
+} from "@/lib/table-row-navigation";
 import { generateInvoiceXmlFn } from "@/server/invoices.functions";
 
 type InvoiceListRow = {
@@ -132,6 +136,9 @@ function InvoicesIndex() {
       },
       replace: true,
     });
+
+  const openInvoice = (invoiceId: string) =>
+    navigate({ to: "/fatture/$invoiceId", params: { invoiceId } });
 
   const { data, isLoading } = useQuery({
     queryKey: ["invoices", user?.id],
@@ -486,12 +493,24 @@ function InvoicesIndex() {
                 {filtered.map((i) => {
                   const isOverdue = i.status === "issued" && i.due_date && i.due_date < today;
                   return (
-                    <TableRow key={i.id} className="relative cursor-pointer">
+                    <TableRow
+                      key={i.id}
+                      className="cursor-pointer"
+                      role="link"
+                      tabIndex={0}
+                      aria-label={`Apri fattura ${i.number}/${i.year}`}
+                      onClick={(event) =>
+                        handleClickableTableRowClick(event, () => openInvoice(i.id))
+                      }
+                      onKeyDown={(event) =>
+                        handleClickableTableRowKeyDown(event, () => openInvoice(i.id))
+                      }
+                    >
                       <TableCell>
                         <Link
                           to="/fatture/$invoiceId"
                           params={{ invoiceId: i.id }}
-                          className="font-medium after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
+                          className="font-medium hover:underline"
                         >
                           {i.number}/{i.year}
                         </Link>

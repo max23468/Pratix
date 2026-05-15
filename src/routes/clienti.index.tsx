@@ -26,6 +26,10 @@ import {
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { clientDisplayName, clientKindLabels } from "@/lib/labels";
+import {
+  handleClickableTableRowClick,
+  handleClickableTableRowKeyDown,
+} from "@/lib/table-row-navigation";
 
 export const Route = createFileRoute("/clienti/")({
   head: () => ({
@@ -44,6 +48,7 @@ export const Route = createFileRoute("/clienti/")({
 });
 
 function ClientiList() {
+  const navigate = Route.useNavigate();
   const [q, setQ] = useState("");
   const [kind, setKind] = useState("all");
   const [principalId, setPrincipalId] = useState("all");
@@ -116,6 +121,9 @@ function ClientiList() {
       );
     });
   }, [data, kind, principalId, principalLinks, principalNamesByClient, q]);
+
+  const openClient = (clientId: string) =>
+    navigate({ to: "/clienti/$clientId", params: { clientId } });
 
   return (
     <>
@@ -214,32 +222,47 @@ function ClientiList() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((c) => (
-                <TableRow key={c.id} className="relative cursor-pointer">
-                  <TableCell>
-                    <Link
-                      to="/clienti/$clientId"
-                      params={{ clientId: c.id }}
-                      className="font-medium after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
-                    >
-                      {clientDisplayName(c)}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{clientKindLabels[c.kind] ?? c.kind}</Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {principalNamesByClient[c.id]?.join(", ") || "—"}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {c.vat_number || c.tax_code || "—"}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">{c.email ?? "—"}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {c.address_city ?? "—"}
-                  </TableCell>
-                </TableRow>
-              ))
+              filtered.map((c) => {
+                const displayName = clientDisplayName(c);
+                return (
+                  <TableRow
+                    key={c.id}
+                    className="cursor-pointer"
+                    role="link"
+                    tabIndex={0}
+                    aria-label={`Apri cliente ${displayName}`}
+                    onClick={(event) => handleClickableTableRowClick(event, () => openClient(c.id))}
+                    onKeyDown={(event) =>
+                      handleClickableTableRowKeyDown(event, () => openClient(c.id))
+                    }
+                  >
+                    <TableCell>
+                      <Link
+                        to="/clienti/$clientId"
+                        params={{ clientId: c.id }}
+                        className="font-medium hover:underline"
+                      >
+                        {displayName}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{clientKindLabels[c.kind] ?? c.kind}</Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {principalNamesByClient[c.id]?.join(", ") || "—"}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {c.vat_number || c.tax_code || "—"}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {c.email ?? "—"}
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {c.address_city ?? "—"}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

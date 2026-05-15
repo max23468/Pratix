@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.1.3] — 2026-05-16
+
+### Correzioni
+
+- **Liste**: corretto il click sulla riga intera, evitando che la selezione apra sempre l'ultimo elemento della tabella.
+
 ## [1.1.2] — 2026-05-16
 
 ### Correzioni
@@ -612,6 +618,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.1.3]: #113--2026-05-16
 [1.1.2]: #112--2026-05-16
 [1.1.1]: #111--2026-05-16
 [1.1.0]: #110--2026-05-16
