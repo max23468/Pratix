@@ -3,6 +3,7 @@ import type { InvoiceLineInput } from "@/lib/invoice-calc";
 import type { InvoiceLineKind } from "@/lib/invoice-calc";
 import {
   billingDatePattern,
+  billingCounterpartyName,
   billingPartyName,
   nextBillingPeriodStart,
   type BillingPartyDisplay,
@@ -240,7 +241,7 @@ export function buildInvoiceLineRows({
     case_activity_id: activity.id,
     practice_number: activity.cases?.practice_number ?? null,
     client_name: billingPartyName(activity.clients),
-    counterparty_name: billingPartyName(activity.counterparties),
+    counterparty_name: billingCounterpartyName(activity.counterparties),
     activity_date: activity.activity_date,
     kind: (activity.kind === "fee" ? "fee" : "expense_art15") as InvoiceLineKind,
     description: activity.description,
@@ -310,7 +311,7 @@ export function buildBillingExportRows(
     .map((activity) => ({
       practiceNumber: activity.cases?.practice_number ?? null,
       clientName: billingPartyName(activity.clients),
-      counterpartyName: billingPartyName(activity.counterparties),
+      counterpartyName: billingCounterpartyName(activity.counterparties),
       activityDate: activity.activity_date,
       description: activity.description,
       quantity: Number(activity.quantity),

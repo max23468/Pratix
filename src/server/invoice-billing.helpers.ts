@@ -15,6 +15,14 @@ export const billingPartyName = (party?: BillingPartyDisplay | null) => {
   return party.business_name || "—";
 };
 
+export const billingCounterpartyName = (party?: BillingPartyDisplay | null) => {
+  if (!party) return "—";
+  if (party.kind === "individual") {
+    return [party.last_name, party.first_name].filter(Boolean).join(" ") || "—";
+  }
+  return party.business_name || "—";
+};
+
 export const nextBillingPeriodStart = (periodEnd: string) => {
   const date = new Date(`${periodEnd}T00:00:00.000Z`);
   date.setUTCDate(date.getUTCDate() + 1);

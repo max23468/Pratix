@@ -25,7 +25,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { counterpartyDisplayName, counterpartyKindLabels } from "@/lib/labels";
+import {
+  compareCounterparties,
+  counterpartyDisplayName,
+  counterpartyKindLabels,
+} from "@/lib/labels";
 
 export const Route = createFileRoute("/controparti/")({
   head: () => ({
@@ -58,10 +62,9 @@ function ContropartiList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("counterparties")
-        .select("id, kind, first_name, last_name, business_name, notes, updated_at")
-        .order("updated_at", { ascending: false });
+        .select("id, kind, first_name, last_name, business_name, notes, updated_at");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []).slice().sort(compareCounterparties);
     },
   });
 

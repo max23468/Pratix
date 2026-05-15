@@ -111,16 +111,35 @@ export const clientDisplayName = (c: ClientDisplayData): string => {
 };
 
 export type CounterpartyDisplayData = {
+  id?: string | null;
   kind: string;
   first_name?: string | null;
   last_name?: string | null;
   business_name?: string | null;
 };
 
+const counterpartyNameCollator = new Intl.Collator("it", {
+  sensitivity: "base",
+  numeric: true,
+});
+
 export const counterpartyDisplayName = (c: CounterpartyDisplayData): string => {
   if (c.kind === "individual") {
-    return [c.first_name, c.last_name].filter(Boolean).join(" ") || "—";
+    return [c.last_name, c.first_name].filter(Boolean).join(" ") || "—";
   }
 
   return c.business_name || "—";
+};
+
+export const compareCounterparties = <T extends CounterpartyDisplayData>(a: T, b: T): number => {
+  const byName = counterpartyNameCollator.compare(
+    counterpartyDisplayName(a),
+    counterpartyDisplayName(b),
+  );
+  if (byName !== 0) return byName;
+
+  const byKind = counterpartyNameCollator.compare(a.kind, b.kind);
+  if (byKind !== 0) return byKind;
+
+  return counterpartyNameCollator.compare(a.id ?? "", b.id ?? "");
 };
