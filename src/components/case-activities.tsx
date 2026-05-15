@@ -514,19 +514,27 @@ export function CaseActivityDialog({
 
       if (isEditing) {
         if (!activity) throw new Error("Attività non disponibile");
-        const { error } = await supabase
+        const { error, count } = await supabase
           .from("case_activities")
-          .update({
-            activity_date: activityDate,
-            status,
-            description: description.trim(),
-            quantity: calculatedQuantity,
-            unit_price: unitPrice,
-            notes: notes.trim() || null,
-          })
+          .update(
+            {
+              activity_date: activityDate,
+              status,
+              description: description.trim(),
+              quantity: calculatedQuantity,
+              unit_price: unitPrice,
+              notes: notes.trim() || null,
+            },
+            { count: "exact" },
+          )
           .eq("id", activity.id)
           .is("invoice_id", null);
         if (error) throw error;
+        if (count !== 1) {
+          throw new Error(
+            "La voce è stata collegata a una Fattura e non può più essere modificata",
+          );
+        }
 
         const { error: deleteHearingsError } = await supabase
           .from("case_activity_hearings")
