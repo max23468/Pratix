@@ -25,6 +25,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  handleClickableTableRowClick,
+  handleClickableTableRowKeyDown,
+} from "@/lib/table-row-navigation";
 
 export const Route = createFileRoute("/committenti/")({
   head: () => ({
@@ -49,6 +53,7 @@ export const Route = createFileRoute("/committenti/")({
 });
 
 function CommittentiList() {
+  const navigate = Route.useNavigate();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("active");
   const [economics, setEconomics] = useState("all");
@@ -99,6 +104,9 @@ function CommittentiList() {
         .some((value) => value?.toLowerCase().includes(term));
     });
   }, [data, economics, q, status]);
+
+  const openPrincipal = (principalId: string) =>
+    navigate({ to: "/committenti/$principalId", params: { principalId } });
 
   return (
     <>
@@ -193,12 +201,24 @@ function CommittentiList() {
               </TableRow>
             ) : (
               filtered.map((principal) => (
-                <TableRow key={principal.id} className="relative cursor-pointer">
+                <TableRow
+                  key={principal.id}
+                  className="cursor-pointer"
+                  role="link"
+                  tabIndex={0}
+                  aria-label={`Apri committente ${principal.business_name}`}
+                  onClick={(event) =>
+                    handleClickableTableRowClick(event, () => openPrincipal(principal.id))
+                  }
+                  onKeyDown={(event) =>
+                    handleClickableTableRowKeyDown(event, () => openPrincipal(principal.id))
+                  }
+                >
                   <TableCell>
                     <Link
                       to="/committenti/$principalId"
                       params={{ principalId: principal.id }}
-                      className="font-medium after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
+                      className="font-medium hover:underline"
                     >
                       {principal.business_name}
                     </Link>

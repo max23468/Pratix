@@ -33,6 +33,10 @@ import {
   caseActivityStatusVariant,
   priceItemKindLabels,
 } from "@/lib/labels";
+import {
+  handleClickableTableRowClick,
+  handleClickableTableRowKeyDown,
+} from "@/lib/table-row-navigation";
 
 export const Route = createFileRoute("/attivita/")({
   validateSearch: (search: Record<string, unknown>): ActivitiesSearch => ({
@@ -83,6 +87,8 @@ function ActivitiesList() {
       },
       replace: true,
     });
+
+  const openCase = (caseId: string) => navigate({ to: "/pratiche/$caseId", params: { caseId } });
 
   const { data = [], isLoading } = useQuery({
     queryKey: ["activities"],
@@ -233,45 +239,67 @@ function ActivitiesList() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((activity) => (
-                <TableRow
-                  key={activity.id}
-                  className={activity.cases ? "relative cursor-pointer" : undefined}
-                >
-                  <TableCell className="text-sm">{formatDate(activity.activity_date)}</TableCell>
-                  <TableCell className="text-sm">
-                    {activity.cases ? (
-                      <Link
-                        to="/pratiche/$caseId"
-                        params={{ caseId: activity.cases.id }}
-                        className="after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
-                      >
-                        <div className="font-medium">Pratica {activity.cases.practice_number}</div>
-                        <div className="text-xs text-muted-foreground">{activity.cases.title}</div>
-                      </Link>
-                    ) : (
-                      "—"
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <span className="font-medium">{activity.description}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {priceItemKindLabels[activity.kind]} · {activity.snapshot_price_name}
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={caseActivityStatusVariant[activity.status] ?? "outline"}>
-                      {caseActivityStatusLabels[activity.status] ?? activity.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right text-sm">{activity.quantity}</TableCell>
-                  <TableCell className="text-right text-sm font-medium">
-                    {formatCurrency(Number(activity.amount))}
-                  </TableCell>
-                </TableRow>
-              ))
+              filtered.map((activity) => {
+                const caseId = activity.cases?.id;
+                return (
+                  <TableRow
+                    key={activity.id}
+                    className={caseId ? "cursor-pointer" : undefined}
+                    role={caseId ? "link" : undefined}
+                    tabIndex={caseId ? 0 : undefined}
+                    aria-label={
+                      caseId ? `Apri pratica ${activity.cases?.practice_number}` : undefined
+                    }
+                    onClick={
+                      caseId
+                        ? (event) => handleClickableTableRowClick(event, () => openCase(caseId))
+                        : undefined
+                    }
+                    onKeyDown={
+                      caseId
+                        ? (event) => handleClickableTableRowKeyDown(event, () => openCase(caseId))
+                        : undefined
+                    }
+                  >
+                    <TableCell className="text-sm">{formatDate(activity.activity_date)}</TableCell>
+                    <TableCell className="text-sm">
+                      {activity.cases ? (
+                        <Link
+                          to="/pratiche/$caseId"
+                          params={{ caseId: activity.cases.id }}
+                          className="hover:underline"
+                        >
+                          <div className="font-medium">
+                            Pratica {activity.cases.practice_number}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            {activity.cases.title}
+                          </div>
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium">{activity.description}</span>
+                        <span className="text-xs text-muted-foreground">
+                          {priceItemKindLabels[activity.kind]} · {activity.snapshot_price_name}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={caseActivityStatusVariant[activity.status] ?? "outline"}>
+                        {caseActivityStatusLabels[activity.status] ?? activity.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right text-sm">{activity.quantity}</TableCell>
+                    <TableCell className="text-right text-sm font-medium">
+                      {formatCurrency(Number(activity.amount))}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

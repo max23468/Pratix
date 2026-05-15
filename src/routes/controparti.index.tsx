@@ -30,6 +30,10 @@ import {
   counterpartyDisplayName,
   counterpartyKindLabels,
 } from "@/lib/labels";
+import {
+  handleClickableTableRowClick,
+  handleClickableTableRowKeyDown,
+} from "@/lib/table-row-navigation";
 
 export const Route = createFileRoute("/controparti/")({
   head: () => ({
@@ -54,6 +58,7 @@ export const Route = createFileRoute("/controparti/")({
 });
 
 function ContropartiList() {
+  const navigate = Route.useNavigate();
   const [q, setQ] = useState("");
   const [kind, setKind] = useState("all");
 
@@ -96,6 +101,9 @@ function ContropartiList() {
       return name.includes(term) || (counterparty.notes ?? "").toLowerCase().includes(term);
     });
   }, [counterparties, kind, q]);
+
+  const openCounterparty = (counterpartyId: string) =>
+    navigate({ to: "/controparti/$counterpartyId", params: { counterpartyId } });
 
   return (
     <>
@@ -176,30 +184,45 @@ function ContropartiList() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((counterparty) => (
-                <TableRow key={counterparty.id} className="relative cursor-pointer">
-                  <TableCell>
-                    <Link
-                      to="/controparti/$counterpartyId"
-                      params={{ counterpartyId: counterparty.id }}
-                      className="font-medium after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
-                    >
-                      {counterpartyDisplayName(counterparty)}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {counterpartyKindLabels[counterparty.kind] ?? counterparty.kind}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {counterparty.kind === "group" ? (subjectCounts[counterparty.id] ?? 0) : "—"}
-                  </TableCell>
-                  <TableCell className="max-w-sm truncate text-sm text-muted-foreground">
-                    {counterparty.notes ?? "—"}
-                  </TableCell>
-                </TableRow>
-              ))
+              filtered.map((counterparty) => {
+                const displayName = counterpartyDisplayName(counterparty);
+                return (
+                  <TableRow
+                    key={counterparty.id}
+                    className="cursor-pointer"
+                    role="link"
+                    tabIndex={0}
+                    aria-label={`Apri controparte ${displayName}`}
+                    onClick={(event) =>
+                      handleClickableTableRowClick(event, () => openCounterparty(counterparty.id))
+                    }
+                    onKeyDown={(event) =>
+                      handleClickableTableRowKeyDown(event, () => openCounterparty(counterparty.id))
+                    }
+                  >
+                    <TableCell>
+                      <Link
+                        to="/controparti/$counterpartyId"
+                        params={{ counterpartyId: counterparty.id }}
+                        className="font-medium hover:underline"
+                      >
+                        {displayName}
+                      </Link>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {counterpartyKindLabels[counterparty.kind] ?? counterparty.kind}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground">
+                      {counterparty.kind === "group" ? (subjectCounts[counterparty.id] ?? 0) : "—"}
+                    </TableCell>
+                    <TableCell className="max-w-sm truncate text-sm text-muted-foreground">
+                      {counterparty.notes ?? "—"}
+                    </TableCell>
+                  </TableRow>
+                );
+              })
             )}
           </TableBody>
         </Table>

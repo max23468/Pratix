@@ -32,6 +32,10 @@ import {
   counterpartyDisplayName,
 } from "@/lib/labels";
 import { formatDate } from "@/lib/format";
+import {
+  handleClickableTableRowClick,
+  handleClickableTableRowKeyDown,
+} from "@/lib/table-row-navigation";
 
 export const Route = createFileRoute("/pratiche/")({
   head: () => ({
@@ -50,6 +54,7 @@ export const Route = createFileRoute("/pratiche/")({
 });
 
 function PraticheList() {
+  const navigate = Route.useNavigate();
   const [q, setQ] = useState("");
   const [view, setView] = useState<string>("open");
   const [sort, setSort] = useState<string>("updated_desc");
@@ -133,6 +138,8 @@ function PraticheList() {
       return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
     });
   }, [activitySummaryByCase, data, q, sort, view]);
+
+  const openCase = (caseId: string) => navigate({ to: "/pratiche/$caseId", params: { caseId } });
 
   return (
     <>
@@ -236,13 +243,23 @@ function PraticheList() {
                   toInvoiceAmount: 0,
                 };
                 return (
-                  <TableRow key={c.id} className="relative cursor-pointer">
+                  <TableRow
+                    key={c.id}
+                    className="cursor-pointer"
+                    role="link"
+                    tabIndex={0}
+                    aria-label={`Apri pratica ${c.practice_number}`}
+                    onClick={(event) => handleClickableTableRowClick(event, () => openCase(c.id))}
+                    onKeyDown={(event) =>
+                      handleClickableTableRowKeyDown(event, () => openCase(c.id))
+                    }
+                  >
                     <TableCell className="font-mono text-sm">{c.practice_number}</TableCell>
                     <TableCell>
                       <Link
                         to="/pratiche/$caseId"
                         params={{ caseId: c.id }}
-                        className="font-medium after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
+                        className="font-medium hover:underline"
                       >
                         {c.title}
                       </Link>

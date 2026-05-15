@@ -18,6 +18,10 @@ import {
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { priceBookStatusLabels, priceBookStatusVariant } from "@/lib/labels";
+import {
+  handleClickableTableRowClick,
+  handleClickableTableRowKeyDown,
+} from "@/lib/table-row-navigation";
 
 export const Route = createFileRoute("/prezzi/")({
   head: () => ({
@@ -42,6 +46,7 @@ export const Route = createFileRoute("/prezzi/")({
 });
 
 function PrezziList() {
+  const navigate = Route.useNavigate();
   const [q, setQ] = useState("");
 
   const { data: priceBooks = [], isLoading } = useQuery({
@@ -114,6 +119,9 @@ function PrezziList() {
     });
   }, [priceBooks, principalNameById, q]);
 
+  const openPriceBook = (priceBookId: string) =>
+    navigate({ to: "/prezzi/$priceBookId", params: { priceBookId } });
+
   return (
     <>
       <PageHeader
@@ -168,15 +176,28 @@ function PrezziList() {
             ) : (
               filtered.map((book) => {
                 const counts = countsByBook[book.id] ?? { fees: 0, expenses: 0, enabled: 0 };
+                const principalName = principalNameById.get(book.principal_id) ?? "—";
                 return (
-                  <TableRow key={book.id} className="relative cursor-pointer">
+                  <TableRow
+                    key={book.id}
+                    className="cursor-pointer"
+                    role="link"
+                    tabIndex={0}
+                    aria-label={`Apri prezzi ${principalName} ${book.year}`}
+                    onClick={(event) =>
+                      handleClickableTableRowClick(event, () => openPriceBook(book.id))
+                    }
+                    onKeyDown={(event) =>
+                      handleClickableTableRowKeyDown(event, () => openPriceBook(book.id))
+                    }
+                  >
                     <TableCell>
                       <Link
                         to="/prezzi/$priceBookId"
                         params={{ priceBookId: book.id }}
-                        className="font-medium after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
+                        className="font-medium hover:underline"
                       >
-                        {principalNameById.get(book.principal_id) ?? "—"}
+                        {principalName}
                       </Link>
                     </TableCell>
                     <TableCell>{book.year}</TableCell>
