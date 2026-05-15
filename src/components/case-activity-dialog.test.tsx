@@ -10,7 +10,11 @@ const { toast, supabase, query, single, storage } = vi.hoisted(() => {
   const single = vi.fn();
   const query = {
     insert: vi.fn(() => query),
+    update: vi.fn(() => query),
+    delete: vi.fn(() => query),
     select: vi.fn(() => query),
+    eq: vi.fn(() => query),
+    is: vi.fn(() => Promise.resolve({ error: null })),
     single,
   };
   const storage = {
@@ -89,7 +93,7 @@ vi.mock("@/components/ui/select", () => ({
   ),
 }));
 
-import { CaseActivityDialog } from "./case-activities";
+import { CaseActivityDialog, type CaseActivityDialogActivity } from "./case-activities";
 
 const caseRow = {
   id: "case-1",
@@ -106,11 +110,11 @@ const caseRow = {
   },
 };
 
-const renderDialog = () => {
+const renderDialog = (activity?: CaseActivityDialogActivity) => {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity }, mutations: { retry: false } },
   });
-  const year = new Date().getFullYear();
+  const year = activity ? Number(activity.activity_date.slice(0, 4)) : new Date().getFullYear();
   client.setQueryData(
     ["price-books", "activity", "principal-1", year],
     [
@@ -153,9 +157,36 @@ const renderDialog = () => {
   );
   return render(
     <QueryClientProvider client={client}>
-      <CaseActivityDialog caseRow={caseRow} onSaved={vi.fn()} />
+      <CaseActivityDialog
+        caseRow={caseRow}
+        activity={activity}
+        trigger={activity ? null : undefined}
+        open={activity ? true : undefined}
+        onSaved={vi.fn()}
+      />
     </QueryClientProvider>,
   );
+};
+
+const editableActivity: CaseActivityDialogActivity = {
+  id: "activity-edit",
+  case_id: "case-1",
+  price_book_id: "book-1",
+  price_item_id: "item-1",
+  activity_date: `${new Date().getFullYear()}-05-10`,
+  kind: "fee",
+  status: "to_invoice",
+  snapshot_price_year: new Date().getFullYear(),
+  snapshot_price_code: "DIFF",
+  snapshot_price_name: "Diffida",
+  description: "Redazione diffida",
+  quantity: 1,
+  unit_price: 120,
+  amount: 120,
+  invoice_id: null,
+  notes: "Nota iniziale",
+  case_activity_hearings: [],
+  activity_attachments: [],
 };
 
 describe("CaseActivityDialog", () => {
@@ -241,5 +272,30 @@ describe("CaseActivityDialog", () => {
         notes: "Documento test",
       }),
     );
+  });
+
+  it("modifica una voce fatturabile non collegata a fattura", async () => {
+    renderDialog(editableActivity);
+
+    await screen.findByRole("heading", { name: "Modifica voce fatturabile" });
+    await userEvent.clear(screen.getByLabelText("Descrizione"));
+    await userEvent.type(screen.getByLabelText("Descrizione"), "Diffida aggiornata");
+    await userEvent.clear(screen.getByLabelText("Quantità"));
+    await userEvent.type(screen.getByLabelText("Quantità"), "2");
+    await userEvent.click(screen.getByRole("button", { name: "Salva modifiche" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Voce fatturabile aggiornata"));
+    expect(query.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        activity_date: editableActivity.activity_date,
+        status: "to_invoice",
+        description: "Diffida aggiornata",
+        quantity: 2,
+        unit_price: 120,
+        notes: "Nota iniziale",
+      }),
+    );
+    expect(query.eq).toHaveBeenCalledWith("id", "activity-edit");
+    expect(query.is).toHaveBeenCalledWith("invoice_id", null);
   });
 });
