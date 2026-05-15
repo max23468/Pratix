@@ -18,7 +18,7 @@ export type InvoiceCalcOptions = {
   withholdingRate: number;
   /** Applicare la ritenuta d'acconto. Tipicamente false in regime forfettario. */
   applyWithholding: boolean;
-  /** Regime fiscale del cedente. In forfettario non si applicano IVA né cassa addebitata. */
+  /** Regime fiscale del cedente. In forfettario non si applicano IVA né ritenuta. */
   taxRegime?: "ordinario" | "forfettario";
   /** Applica le spese generali ai compensi imponibili. */
   includeGeneralExpenses?: boolean;
@@ -54,7 +54,7 @@ const lineAmount = (l: InvoiceLineInput): number =>
  * Schema:
  *  - Compensi = somma righe `fee`
  *  - Spese generali = compensi × generalExpensesRate% quando abilitate
- *  - Cassa = (compensi + spese generali) × cassaRate%   (solo regime ordinario)
+ *  - Cassa = (compensi + spese generali + eventuali spese imponibili legacy) × cassaRate%
  *  - IVA = (compensi + spese generali + eventuali spese imponibili legacy + cassa) × vatRate%
  *  - Ritenuta = (compensi + spese generali + eventuali spese imponibili legacy) × withholdingRate%
  *  - Spese Art. 15 = anticipazioni in nome e per conto (escluse IVA, escluse ritenuta)
@@ -87,10 +87,10 @@ export function computeInvoice(
     options.includeGeneralExpenses && taxableFees > 0
       ? round2(taxableFees * ((options.generalExpensesRate ?? 10) / 100))
       : 0;
-  const cassaBaseAmount = round2(taxableFees + generalExpensesAmount);
-  const taxableTotal = round2(cassaBaseAmount + taxableExpenses);
+  const cassaBaseAmount = round2(taxableFees + generalExpensesAmount + taxableExpenses);
+  const taxableTotal = cassaBaseAmount;
 
-  const cassaAmount = isForfettario ? 0 : round2(cassaBaseAmount * (options.cassaRate / 100));
+  const cassaAmount = round2(cassaBaseAmount * (options.cassaRate / 100));
 
   const vatBase = round2(taxableTotal + cassaAmount);
   const vatAmount = isForfettario ? 0 : round2(vatBase * (options.vatRate / 100));

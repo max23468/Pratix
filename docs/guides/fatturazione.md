@@ -26,6 +26,7 @@ Pratix oggi **genera** il file XML; **non** lo invia ancora a SDI (vedi roadmap)
 - Imponibile uguale al totale della prestazione
 - **Niente IVA** (operazione fuori campo IVA, art. 1 c. 54-89 L. 190/2014)
 - **Niente ritenuta d'acconto** in fattura
+- **Cassa Forense 4%** esposta in fattura sui compensi, senza IVA
 - Imposta sostitutiva versata dal professionista, non in fattura
 - Soglia ricavi attuale: 85.000 € (verificare normativa vigente)
 
@@ -38,7 +39,8 @@ Pratix oggi **genera** il file XML; **non** lo invia ancora a SDI (vedi roadmap)
 ## Cassa Forense
 
 - **Contributo integrativo (CPA) 4%** in fattura, applicato a compensi +
-  spese generali quando abilitate, addebitato al committente.
+  spese generali quando abilitate + eventuali spese imponibili legacy,
+  addebitato al committente.
 - Concorre alla base imponibile IVA nel regime ordinario; nel forfettario non c'è IVA.
 - I rimborsi spese del flusso recupero crediti sono sempre anticipazioni
   Art. 15 e non entrano nella base cassa.
@@ -49,7 +51,7 @@ Pratix oggi **genera** il file XML; **non** lo invia ancora a SDI (vedi roadmap)
 ```
 compensi           = somma attività di tipo compenso
 spese_generali     = compensi * 0.10           (solo se flag attivo)
-base_cassa         = compensi + spese_generali
+base_cassa         = compensi + spese_generali + spese_imponibili_legacy
 contributo_cpa     = base_cassa * 0.04
 base_iva           = base_cassa + contributo_cpa
 iva                = base_iva * 0.22
@@ -64,9 +66,10 @@ netto_a_pagare     = totale_documento - ritenuta_acconto
 ```
 compensi           = somma attività di tipo compenso
 spese_generali     = compensi * 0.10           (solo se flag attivo)
-contributo_cpa     = 0                         (non addebitato nel calcolo Pratix)
+base_cassa         = compensi + spese_generali + spese_imponibili_legacy
+contributo_cpa     = base_cassa * 0.04
 rimborsi_art15     = somma rimborsi spese
-totale_documento   = compensi + spese_generali + rimborsi_art15
+totale_documento   = base_cassa + contributo_cpa + rimborsi_art15
 netto_a_pagare     = totale_documento
 ```
 

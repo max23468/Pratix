@@ -205,7 +205,8 @@ sessione `billing_runs`: il soggetto fatturato è il committente
 compatibile con lo schema storico. I campi `include_general_expenses`,
 `general_expenses_rate`, `general_expenses_amount`, `cassa_base_amount`
 congelano le spese generali opzionali. La cassa forense si calcola solo su
-compensi + spese generali, non sui rimborsi Art. 15.
+compensi + spese generali + eventuali spese imponibili legacy, non sui rimborsi
+Art. 15.
 
 ### `billing_runs`
 

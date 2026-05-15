@@ -6,6 +6,19 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.1.0] — 2026-05-16
+
+### Novità
+
+- **Pratiche**: dalla creazione di una Pratica si possono creare al volo anagrafiche minime di Committente, Cliente e Controparte, poi salvarle già collegate.
+
+### Correzioni
+
+- **Cruscotto pratica**: il badge mostra "Priorità alta" e apre una spiegazione contestuale con il motivo specifico della priorità.
+- **Fatture**: la Cassa Forense viene calcolata anche in regime forfettario sui compensi; le spese imponibili legacy entrano nella base cassa e i rimborsi Art. 15 restano esclusi.
+- **Import archivio**: il riconoscimento delle Controparti persona fisica resta compatibile con i file che usano l'ordine nome-cognome.
+- **Liste**: le righe di Clienti, Committenti, Controparti, Pratiche, Prezzi e Fatture sono selezionabili su tutta la larghezza.
+
 ## [1.0.2] — 2026-05-15
 
 ### Correzioni
@@ -579,6 +592,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.1.0]: #110--2026-05-16
 [1.0.2]: #102--2026-05-15
 [1.0.1]: #101--2026-05-15
 [1.0.0]: #100--2026-05-09

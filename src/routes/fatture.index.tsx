@@ -486,12 +486,12 @@ function InvoicesIndex() {
                 {filtered.map((i) => {
                   const isOverdue = i.status === "issued" && i.due_date && i.due_date < today;
                   return (
-                    <TableRow key={i.id} className="cursor-pointer">
+                    <TableRow key={i.id} className="relative cursor-pointer">
                       <TableCell>
                         <Link
                           to="/fatture/$invoiceId"
                           params={{ invoiceId: i.id }}
-                          className="font-medium hover:underline"
+                          className="font-medium after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
                         >
                           {i.number}/{i.year}
                         </Link>

@@ -95,6 +95,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Import incrementale più smart     | Anteprima Excel con piano righe da creare, pratiche già presenti da aggiornare manualmente e duplicati da ignorare prima dello staging                                  |
 | ✅    | Aggiornamento reale da import     | Le righe Excel su pratiche già presenti aggiornano la Pratica esistente e aggiungono solo Attività non già registrate                                                   |
 | ✅    | Numerazione automatica            | Numero pratica numerico suggerito dal database e modificabile manualmente                                                                                               |
+| ✅    | Anagrafiche rapide da Pratica     | In creazione Pratica si possono creare Committente, Cliente e Controparte minimi, salvando subito i collegamenti operativi                                              |
 | 💤    | Area cliente esterna              | Login dedicato per visione fatture e documenti                                                                                                                          |
 | 💤    | Integrazione invio SDI            | Oggi solo generazione XML; invio futuro                                                                                                                                 |
 
