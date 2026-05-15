@@ -1,10 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search } from "lucide-react";
+import { Pencil, Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
-import { CaseActivityDialog } from "@/components/case-activities";
+import { CaseActivityDialog, type CaseActivityDialogActivity } from "@/components/case-activities";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -26,7 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { activityCaseLabel } from "@/lib/case-activities";
+import { activityCaseLabel, type CaseActivityContext } from "@/lib/case-activities";
 import { formatCurrency, formatDate } from "@/lib/format";
 import {
   caseActivityStatusLabels,
@@ -71,6 +71,10 @@ type ActivitiesSearch = {
   kind?: string;
 };
 
+type GlobalActivityRow = CaseActivityDialogActivity & {
+  cases: (CaseActivityContext & { practice_number: number; title: string }) | null;
+};
+
 function ActivitiesList() {
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
@@ -96,11 +100,11 @@ function ActivitiesList() {
       const { data, error } = await supabase
         .from("case_activities")
         .select(
-          "id, activity_date, kind, status, snapshot_price_code, snapshot_price_name, description, quantity, unit_price, amount, case_id, cases(id, practice_number, case_number, title, principal_id, client_id, counterparty_id, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name))",
+          "id, case_id, price_book_id, price_item_id, activity_date, kind, status, snapshot_price_year, snapshot_price_code, snapshot_price_name, description, quantity, unit_price, amount, invoice_id, notes, case_activity_hearings(*), activity_attachments(*), cases(id, practice_number, case_number, title, principal_id, client_id, counterparty_id, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name))",
         )
         .order("activity_date", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as GlobalActivityRow[];
     },
   });
 
@@ -201,18 +205,19 @@ function ActivitiesList() {
               <TableHead>Stato</TableHead>
               <TableHead className="text-right">Quantità</TableHead>
               <TableHead className="text-right">Totale</TableHead>
+              <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
                   Caricamento…
                 </TableCell>
               </TableRow>
             ) : filtered.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
                   <TableEmptyState
                     title={
                       q || status !== "all" || kind !== "all"
@@ -241,6 +246,9 @@ function ActivitiesList() {
             ) : (
               filtered.map((activity) => {
                 const caseId = activity.cases?.id;
+                const editTitle = activity.invoice_id
+                  ? "Le voci collegate a una Fattura non si modificano"
+                  : "Modifica voce";
                 return (
                   <TableRow
                     key={activity.id}
@@ -281,12 +289,28 @@ function ActivitiesList() {
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <span className="font-medium">{activity.description}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {priceItemKindLabels[activity.kind]} · {activity.snapshot_price_name}
-                        </span>
-                      </div>
+                      <CaseActivityDialog
+                        caseRow={activity.cases ?? undefined}
+                        activity={activity}
+                        trigger={
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            className="h-auto max-w-full justify-start px-0 py-0 text-left hover:bg-transparent"
+                            disabled={Boolean(activity.invoice_id)}
+                            aria-label={`Modifica ${activity.description}`}
+                            title={editTitle}
+                          >
+                            <span className="flex min-w-0 flex-col gap-1">
+                              <span className="truncate font-medium">{activity.description}</span>
+                              <span className="truncate text-xs text-muted-foreground">
+                                {priceItemKindLabels[activity.kind]} ·{" "}
+                                {activity.snapshot_price_name}
+                              </span>
+                            </span>
+                          </Button>
+                        }
+                      />
                     </TableCell>
                     <TableCell>
                       <Badge variant={caseActivityStatusVariant[activity.status] ?? "outline"}>
@@ -296,6 +320,24 @@ function ActivitiesList() {
                     <TableCell className="text-right text-sm">{activity.quantity}</TableCell>
                     <TableCell className="text-right text-sm font-medium">
                       {formatCurrency(Number(activity.amount))}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <CaseActivityDialog
+                        caseRow={activity.cases ?? undefined}
+                        activity={activity}
+                        trigger={
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            disabled={Boolean(activity.invoice_id)}
+                            aria-label={`Modifica ${activity.description}`}
+                            title={editTitle}
+                          >
+                            <Pencil className="size-4" />
+                          </Button>
+                        }
+                      />
                     </TableCell>
                   </TableRow>
                 );

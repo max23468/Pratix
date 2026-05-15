@@ -193,6 +193,7 @@ describe("CaseActivityDialog", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     single.mockResolvedValue({ data: { id: "activity-1" }, error: null });
+    query.is.mockResolvedValue({ error: null, count: 1 });
     globalThis.ResizeObserver = class {
       observe() {}
       unobserve() {}
@@ -294,8 +295,27 @@ describe("CaseActivityDialog", () => {
         unit_price: 120,
         notes: "Nota iniziale",
       }),
+      { count: "exact" },
     );
     expect(query.eq).toHaveBeenCalledWith("id", "activity-edit");
     expect(query.is).toHaveBeenCalledWith("invoice_id", null);
+  });
+
+  it("non modifica udienze e allegati se la voce viene fatturata durante il salvataggio", async () => {
+    query.is.mockResolvedValueOnce({ error: null, count: 0 });
+    renderDialog(editableActivity);
+
+    await screen.findByRole("heading", { name: "Modifica voce fatturabile" });
+    await userEvent.clear(screen.getByLabelText("Descrizione"));
+    await userEvent.type(screen.getByLabelText("Descrizione"), "Diffida aggiornata");
+    await userEvent.click(screen.getByRole("button", { name: "Salva modifiche" }));
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "La voce è stata collegata a una Fattura e non può più essere modificata",
+      ),
+    );
+    expect(query.delete).not.toHaveBeenCalled();
+    expect(storage.upload).not.toHaveBeenCalled();
   });
 });
