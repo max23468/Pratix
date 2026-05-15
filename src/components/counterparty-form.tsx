@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { clientKindLabels, counterpartyKindLabels } from "@/lib/labels";
@@ -93,15 +94,19 @@ export function CounterpartyForm({
     initialSubjects.length > 0 ? initialSubjects : [emptySubject(0)],
   );
   const isEdit = Boolean(initial?.id);
+  const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
 
-  const upd = <K extends keyof CounterpartyRow>(key: K, value: CounterpartyRow[K]) =>
+  const upd = <K extends keyof CounterpartyRow>(key: K, value: CounterpartyRow[K]) => {
+    markDirty();
     setForm((current) => ({ ...current, [key]: value }));
+  };
 
   const updateSubject = <K extends keyof SubjectRow>(
     index: number,
     key: K,
     value: SubjectRow[K],
   ) => {
+    markDirty();
     setSubjects((current) =>
       current.map((subject, currentIndex) =>
         currentIndex === index ? { ...subject, [key]: value } : subject,
@@ -154,6 +159,7 @@ export function CounterpartyForm({
       toast.success(isEdit ? "Controparte aggiornata" : "Controparte creata");
       qc.invalidateQueries({ queryKey: ["counterparties"] });
       qc.invalidateQueries({ queryKey: ["counterparty", id] });
+      if (finishSave()) return;
       onSaved(id);
     },
     onError: (error: Error) => toast.error(error.message),
@@ -179,7 +185,7 @@ export function CounterpartyForm({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+    <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Anagrafica</CardTitle>
@@ -259,7 +265,10 @@ export function CounterpartyForm({
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setSubjects((current) => [...current, emptySubject(current.length)])}
+                onClick={() => {
+                  markDirty();
+                  setSubjects((current) => [...current, emptySubject(current.length)]);
+                }}
               >
                 <Plus className="mr-1 size-4" /> Soggetto
               </Button>
@@ -274,13 +283,14 @@ export function CounterpartyForm({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    onClick={() =>
+                    onClick={() => {
+                      markDirty();
                       setSubjects((current) =>
                         current.length === 1
                           ? [emptySubject(0)]
                           : current.filter((_, currentIndex) => currentIndex !== index),
-                      )
-                    }
+                      );
+                    }}
                   >
                     <Trash2 className="mr-1 size-4" /> Rimuovi
                   </Button>
@@ -391,6 +401,7 @@ export function CounterpartyForm({
           </Button>
         </div>
       </div>
+      {guardDialog}
     </form>
   );
 }

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Plus, RefreshCcw, Trash2 } from "lucide-react";
@@ -34,6 +34,7 @@ import {
   clientKindLabels,
   counterpartyKindLabels,
 } from "@/lib/labels";
+import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 
 type CaseRow = {
   id?: string;
@@ -155,21 +156,36 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
   const [quickCounterparty, setQuickCounterparty] =
     useState<QuickCounterpartyDraft>(emptyQuickCounterparty);
   const [quickCreatedClients, setQuickCreatedClients] = useState<ClientOption[]>([]);
+  const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
 
-  const upd = <K extends keyof CaseRow>(key: K, value: CaseRow[K]) =>
-    setForm((current) => ({ ...current, [key]: value }));
+  const upd = useCallback(
+    <K extends keyof CaseRow>(key: K, value: CaseRow[K]) => {
+      markDirty();
+      setForm((current) => ({ ...current, [key]: value }));
+    },
+    [markDirty],
+  );
   const updateQuickPrincipal = <K extends keyof QuickPrincipalDraft>(
     key: K,
     value: QuickPrincipalDraft[K],
-  ) => setQuickPrincipal((current) => ({ ...current, [key]: value }));
+  ) => {
+    markDirty();
+    setQuickPrincipal((current) => ({ ...current, [key]: value }));
+  };
   const updateQuickClient = <K extends keyof QuickClientDraft>(
     key: K,
     value: QuickClientDraft[K],
-  ) => setQuickClient((current) => ({ ...current, [key]: value }));
+  ) => {
+    markDirty();
+    setQuickClient((current) => ({ ...current, [key]: value }));
+  };
   const updateQuickCounterparty = <K extends keyof QuickCounterpartyDraft>(
     key: K,
     value: QuickCounterpartyDraft[K],
-  ) => setQuickCounterparty((current) => ({ ...current, [key]: value }));
+  ) => {
+    markDirty();
+    setQuickCounterparty((current) => ({ ...current, [key]: value }));
+  };
 
   const { data: nextPracticeNumber, refetch: refetchNextPracticeNumber } = useQuery({
     queryKey: ["cases", "next-practice-number"],
@@ -231,7 +247,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
     if (!form.principal_id || !form.client_id) return;
     if (availableClients.some((client) => client.id === form.client_id)) return;
     upd("client_id", null);
-  }, [availableClients, form.client_id, form.principal_id]);
+  }, [availableClients, form.client_id, form.principal_id, upd]);
 
   const createQuickPrincipalMutation = useMutation({
     mutationFn: async () => {
@@ -464,6 +480,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       qc.invalidateQueries({ queryKey: ["case", id] });
       qc.invalidateQueries({ queryKey: ["case-credit-transfers", id] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      if (finishSave()) return;
       onSaved(id);
     },
     onError: (error: Error) => toast.error(error.message),
@@ -497,7 +514,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+    <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Dati pratica</CardTitle>
@@ -923,6 +940,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
           </Button>
         </div>
       </div>
+      {guardDialog}
     </form>
   );
 }

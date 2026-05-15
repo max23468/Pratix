@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { priceBookStatusLabels, priceItemKindLabels } from "@/lib/labels";
@@ -94,6 +95,7 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
   const [items, setItems] = useState<PriceItemDraft[]>(
     initialItems.length > 0 ? initialItems : createTemplateItems(),
   );
+  const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
 
   const { data: principals = [] } = useQuery({
     queryKey: ["principals", "price-book-form"],
@@ -150,6 +152,7 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
   }, [items]);
 
   const setField = <K extends keyof PriceBookRow>(key: K, value: PriceBookRow[K]) => {
+    markDirty();
     setForm((current) => {
       const next = { ...current, [key]: value };
       if (key === "year") {
@@ -166,6 +169,7 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
     key: K,
     value: PriceItemDraft[K],
   ) => {
+    markDirty();
     setItems((current) =>
       current.map((item, currentIndex) => {
         if (currentIndex !== index) return item;
@@ -178,6 +182,7 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
   };
 
   const addItem = (kind: PriceItemKind) => {
+    markDirty();
     setItems((current) => [
       ...current,
       {
@@ -199,10 +204,12 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
       toast.error("La voce è già usata in una pratica e non può essere eliminata");
       return;
     }
+    markDirty();
     setItems((current) => current.filter((_, currentIndex) => currentIndex !== index));
   };
 
   const resetTemplate = () => {
+    markDirty();
     setItems(createTemplateItems());
     toast.success("Template comune 2025/2026 caricato");
   };
@@ -213,6 +220,7 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
       return;
     }
 
+    markDirty();
     setForm((current) => ({
       ...current,
       fees_enabled: previousBook.book.fees_enabled,
@@ -270,6 +278,7 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
       toast.success(isEdit ? "Prezzi aggiornati" : "Prezzi creati");
       qc.invalidateQueries({ queryKey: ["price-books"] });
       qc.invalidateQueries({ queryKey: ["price-book", id] });
+      if (finishSave()) return;
       onSaved(id);
     },
     onError: (error: Error) => toast.error(error.message),
@@ -281,7 +290,7 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+    <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Configurazione</CardTitle>
@@ -447,6 +456,7 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
           {saveMutation.isPending ? "Salvataggio…" : "Salva"}
         </Button>
       </div>
+      {guardDialog}
     </form>
   );
 }

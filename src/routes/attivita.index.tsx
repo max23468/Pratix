@@ -109,7 +109,6 @@ function ActivitiesList() {
       return (
         activity.description.toLowerCase().includes(term) ||
         activity.snapshot_price_name.toLowerCase().includes(term) ||
-        activity.snapshot_price_code.toLowerCase().includes(term) ||
         caseLabel.includes(term)
       );
     });
@@ -235,14 +234,17 @@ function ActivitiesList() {
               </TableRow>
             ) : (
               filtered.map((activity) => (
-                <TableRow key={activity.id}>
+                <TableRow
+                  key={activity.id}
+                  className={activity.cases ? "relative cursor-pointer" : undefined}
+                >
                   <TableCell className="text-sm">{formatDate(activity.activity_date)}</TableCell>
                   <TableCell className="text-sm">
                     {activity.cases ? (
                       <Link
                         to="/pratiche/$caseId"
                         params={{ caseId: activity.cases.id }}
-                        className="hover:underline"
+                        className="after:absolute after:inset-0 after:content-[''] hover:underline focus-visible:outline-none focus-visible:after:ring-2 focus-visible:after:ring-ring"
                       >
                         <div className="font-medium">Pratica {activity.cases.practice_number}</div>
                         <div className="text-xs text-muted-foreground">{activity.cases.title}</div>
@@ -255,7 +257,7 @@ function ActivitiesList() {
                     <div className="flex flex-col gap-1">
                       <span className="font-medium">{activity.description}</span>
                       <span className="text-xs text-muted-foreground">
-                        {priceItemKindLabels[activity.kind]} · {activity.snapshot_price_code}
+                        {priceItemKindLabels[activity.kind]} · {activity.snapshot_price_name}
                       </span>
                     </div>
                   </TableCell>

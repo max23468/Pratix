@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 
@@ -66,9 +67,12 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
   const [form, setForm] = useState<PrincipalRow>({ ...empty, ...(initial ?? {}) });
   const isEdit = Boolean(initial?.id);
   const isArchived = Boolean(form.archived_at);
+  const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
 
-  const upd = <K extends keyof PrincipalRow>(k: K, v: PrincipalRow[K]) =>
+  const upd = <K extends keyof PrincipalRow>(k: K, v: PrincipalRow[K]) => {
+    markDirty();
     setForm((current) => ({ ...current, [k]: v }));
+  };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -123,6 +127,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
       toast.success(isEdit ? "Committente aggiornato" : "Committente creato");
       qc.invalidateQueries({ queryKey: ["principals"] });
       qc.invalidateQueries({ queryKey: ["principal", id] });
+      if (finishSave()) return;
       onSaved(id);
     },
     onError: (error: Error) => toast.error(error.message),
@@ -142,7 +147,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
       return data;
     },
     onSuccess: (data) => {
-      upd("archived_at", data.archived_at);
+      setForm((current) => ({ ...current, archived_at: data.archived_at }));
       toast.success(data.archived_at ? "Committente archiviato" : "Committente riattivato");
       qc.invalidateQueries({ queryKey: ["principals"] });
       qc.invalidateQueries({ queryKey: ["principal", data.id] });
@@ -156,7 +161,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+    <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Anagrafica</CardTitle>
@@ -376,6 +381,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
           </Button>
         </div>
       </div>
+      {guardDialog}
     </form>
   );
 }

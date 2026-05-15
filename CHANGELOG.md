@@ -6,6 +6,20 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.1.2] — 2026-05-16
+
+### Correzioni
+
+- **Dettaglio Pratica**: riordinati i box principali con azioni rapide, cruscotto, dati, riferimenti, timeline, scheda economica e controlli qualità; rimossa la sezione separata "Dossier esportabile".
+- **Timeline pratica**: le Attività incluse nella timeline aprono la modifica della voce fatturabile al click.
+- **Attività**: le righe collegate a una Pratica sono selezionabili su tutta la larghezza.
+- **Form**: i form principali avvisano quando si prova a tornare indietro con modifiche non salvate e offrono di salvare prima di lasciare la pagina.
+- **Attività**: i codici interni dei prezzi restano visibili solo nella sezione Prezzi e nelle altre viste vengono sostituiti dal nome della voce.
+- **Impostazioni**: la tab fiscale usa il titolo "Fiscalità".
+- **Impostazioni**: rimossa la sezione "Recupero crediti" dalla tab Fatturazione.
+- **Impostazioni**: la tab Professione ora usa il titolo più esplicito "Dati professionali".
+- **Menu utente**: la scorciatoia alle impostazioni usa il titolo "Impostazioni".
+
 ## [1.1.1] — 2026-05-16
 
 ### Correzioni
@@ -598,6 +612,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.1.2]: #112--2026-05-16
 [1.1.1]: #111--2026-05-16
 [1.1.0]: #110--2026-05-16
 [1.0.2]: #102--2026-05-15

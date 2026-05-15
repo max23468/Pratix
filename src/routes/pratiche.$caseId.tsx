@@ -108,23 +108,23 @@ function CaseDetail() {
         }
       />
 
-      <CaseOperationsPanel caseRow={caseRow} />
-
-      <Tabs defaultValue="info">
-        <TabsList>
-          <TabsTrigger value="info">Dati</TabsTrigger>
-          <TabsTrigger value="activities">Voci fatturabili</TabsTrigger>
-          <TabsTrigger value="transfers">Cessioni credito</TabsTrigger>
-          <TabsTrigger value="history">Storico stati</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="info" className="mt-4">
+      <CaseOperationsPanel
+        caseRow={caseRow}
+        detailsSlot={
           <CaseForm
             initial={caseRow}
             onSaved={() => navigate({ to: "/pratiche" })}
             onCancel={() => navigate({ to: "/pratiche" })}
           />
-        </TabsContent>
+        }
+      />
+
+      <Tabs defaultValue="activities" className="mt-6">
+        <TabsList>
+          <TabsTrigger value="activities">Voci fatturabili</TabsTrigger>
+          <TabsTrigger value="transfers">Cessioni credito</TabsTrigger>
+          <TabsTrigger value="history">Storico stati</TabsTrigger>
+        </TabsList>
 
         <TabsContent value="activities" className="mt-4">
           <CaseActivitiesTab caseRow={caseRow} />

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useMemo, type ComponentType } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -9,7 +9,6 @@ import {
   FileText,
   FileSpreadsheet,
   ListChecks,
-  Paperclip,
   Plus,
   Receipt,
   Upload,
@@ -20,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
-import { CaseActivityDialog } from "@/components/case-activities";
+import { CaseActivityDialog, type CaseActivityDialogActivity } from "@/components/case-activities";
 import { supabase } from "@/integrations/supabase/client";
 import { buildCaseDossierWorkbook, type CaseDossierInput } from "@/lib/case-dossier-xlsx";
 import {
@@ -47,6 +46,8 @@ import {
 } from "@/lib/labels";
 import { cn } from "@/lib/utils";
 
+type OperationsActivityRow = ActivityRow & CaseActivityDialogActivity;
+
 export type CaseOperationsCase = {
   id: string;
   principal_id: string | null;
@@ -67,7 +68,14 @@ export type CaseOperationsCase = {
   counterparties?: CaseTimelineParty | null;
 };
 
-export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }) {
+export function CaseOperationsPanel({
+  caseRow,
+  detailsSlot,
+}: {
+  caseRow: CaseOperationsCase;
+  detailsSlot?: ReactNode;
+}) {
+  const [editingActivity, setEditingActivity] = useState<OperationsActivityRow | null>(null);
   const {
     data: activities = [],
     isFetching: activitiesFetching,
@@ -184,13 +192,6 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
 
   return (
     <div className="mt-4 space-y-4">
-      <div className="grid gap-3 md:grid-cols-4">
-        <OperationMetric label="Da fatturare" value={formatCurrency(totals.toInvoice)} />
-        <OperationMetric label="Fatture collegate" value={String(invoices.length)} />
-        <OperationMetric label="Allegati attività" value={String(totals.attachments)} />
-        <OperationMetric label="Totale fatture" value={formatCurrency(totals.invoiceTotal)} />
-      </div>
-
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Azioni rapide pratica</CardTitle>
@@ -241,85 +242,84 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
         </CardContent>
       </Card>
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
-        <Card>
-          <CardHeader>
+      <Card>
+        <CardHeader>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <CardTitle className="text-base">Cruscotto pratica</CardTitle>
+              <CardDescription>
+                Stato operativo, soggetti e prossima azione consigliata.
+              </CardDescription>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={downloadDossier}
+              disabled={dossierDownloadsDisabled}
+            >
+              <Download className="mr-1 size-4" />
+              Dossier Excel
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-4">
+            <OperationMetric label="Da fatturare" value={formatCurrency(totals.toInvoice)} />
+            <OperationMetric label="Fatture collegate" value={String(invoices.length)} />
+            <OperationMetric label="Allegati attività" value={String(totals.attachments)} />
+            <OperationMetric label="Totale fatture" value={formatCurrency(totals.invoiceTotal)} />
+          </div>
+
+          <Separator />
+
+          <div className="grid gap-3 md:grid-cols-3">
+            <SubjectTile label="Committente" value={principalName} />
+            <SubjectTile label="Cliente" value={clientName} />
+            <SubjectTile label="Controparte" value={counterpartyName} />
+          </div>
+
+          <Separator />
+
+          <div className="space-y-3 rounded-md border border-border p-3">
             <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <CardTitle className="text-base">Cruscotto pratica</CardTitle>
-                <CardDescription>
-                  Stato operativo, soggetti e prossima azione consigliata.
-                </CardDescription>
+              <div className="flex items-center gap-2">
+                <ListChecks className="size-4 text-muted-foreground" />
+                <p className="text-sm font-medium">Workflow recupero crediti</p>
               </div>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={downloadDossier}
-                disabled={dossierDownloadsDisabled}
-              >
-                <Download className="mr-1 size-4" />
-                Dossier Excel
-              </Button>
+              <WorkflowPriorityBadge workflow={workflow} />
             </div>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid gap-3 md:grid-cols-3">
-              <SubjectTile label="Committente" value={principalName} />
-              <SubjectTile label="Cliente" value={clientName} />
-              <SubjectTile label="Controparte" value={counterpartyName} />
+            <div className="grid gap-3 sm:grid-cols-3">
+              <WorkflowField label="Stato operativo" value={workflow.stage} />
+              <WorkflowField label="Prossima azione" value={workflow.action} />
+              <WorkflowField label="Motivo" value={workflow.reason} />
             </div>
+            <p className="text-sm text-muted-foreground">{nextAction}</p>
+          </div>
+        </CardContent>
+      </Card>
 
-            <Separator />
+      {detailsSlot}
 
-            <div className="space-y-3 rounded-md border border-border p-3">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <ListChecks className="size-4 text-muted-foreground" />
-                  <p className="text-sm font-medium">Workflow recupero crediti</p>
-                </div>
-                <WorkflowPriorityBadge workflow={workflow} />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <WorkflowField label="Stato operativo" value={workflow.stage} />
-                <WorkflowField label="Prossima azione" value={workflow.action} />
-                <WorkflowField label="Motivo" value={workflow.reason} />
-              </div>
-              <p className="text-sm text-muted-foreground">{nextAction}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Dossier esportabile</CardTitle>
-            <CardDescription>
-              Excel e PDF con soggetti, attività, fatture, allegati e storico della pratica.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <DossierLine icon={FileSpreadsheet} label="Formato dati" value="Excel .xlsx" />
-            <DossierLine icon={FileText} label="Formato lettura" value="PDF" />
-            <DossierLine icon={Receipt} label="Fatture" value={String(invoices.length)} />
-            <DossierLine icon={Paperclip} label="Allegati" value={String(totals.attachments)} />
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Button type="button" onClick={downloadDossier} disabled={dossierDownloadsDisabled}>
-                <Download className="mr-1 size-4" />
-                Excel
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => void downloadPdfDossier()}
-                disabled={dossierDownloadsDisabled}
-              >
-                <Download className="mr-1 size-4" />
-                PDF
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <CaseTimeline
+        timeline={timeline}
+        isLoading={isLoading}
+        onEditActivity={(activityId) => {
+          const activity = activities.find((item) => item.id === activityId);
+          if (activity) setEditingActivity(activity);
+        }}
+      />
+      {editingActivity ? (
+        <CaseActivityDialog
+          caseRow={caseActivityContext}
+          activity={editingActivity}
+          open={Boolean(editingActivity)}
+          trigger={null}
+          onOpenChange={(nextOpen) => {
+            if (!nextOpen) setEditingActivity(null);
+          }}
+        />
+      ) : null}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
         <Card>
@@ -370,8 +370,6 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
           </CardContent>
         </Card>
       </div>
-
-      <CaseTimeline timeline={timeline} isLoading={isLoading} />
     </div>
   );
 }
@@ -379,9 +377,11 @@ export function CaseOperationsPanel({ caseRow }: { caseRow: CaseOperationsCase }
 export function CaseTimeline({
   timeline,
   isLoading,
+  onEditActivity,
 }: {
   timeline: CaseTimelineItem[];
   isLoading?: boolean;
+  onEditActivity?: (activityId: string) => void;
 }) {
   return (
     <Card>
@@ -399,28 +399,45 @@ export function CaseTimeline({
         ) : (
           <ol className="space-y-3">
             {timeline.map((item) => (
-              <li key={item.id} className="rounded-md border border-border p-3">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="font-medium">{item.title}</p>
-                      <Badge variant="outline">{item.meta}</Badge>
-                    </div>
-                    <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+              <li key={item.id}>
+                {item.activityId && onEditActivity ? (
+                  <button
+                    type="button"
+                    className="w-full rounded-md border border-border p-3 text-left transition hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label={`Modifica attività ${item.title}`}
+                    onClick={() => onEditActivity(item.activityId as string)}
+                  >
+                    <TimelineItemContent item={item} />
+                  </button>
+                ) : (
+                  <div className="rounded-md border border-border p-3">
+                    <TimelineItemContent item={item} />
                   </div>
-                  <div className="text-right">
-                    <p className="text-xs text-muted-foreground">{formatDate(item.date)}</p>
-                    {item.amount ? (
-                      <p className="text-sm font-medium">{formatCurrency(item.amount)}</p>
-                    ) : null}
-                  </div>
-                </div>
+                )}
               </li>
             ))}
           </ol>
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function TimelineItemContent({ item }: { item: CaseTimelineItem }) {
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-2">
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="font-medium">{item.title}</p>
+          <Badge variant="outline">{item.meta}</Badge>
+        </div>
+        <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+      </div>
+      <div className="text-right">
+        <p className="text-xs text-muted-foreground">{formatDate(item.date)}</p>
+        {item.amount ? <p className="text-sm font-medium">{formatCurrency(item.amount)}</p> : null}
+      </div>
+    </div>
   );
 }
 
@@ -434,7 +451,7 @@ function useCaseActivities(caseId: string) {
         .eq("case_id", caseId)
         .order("activity_date", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as ActivityRow[];
+      return (data ?? []) as OperationsActivityRow[];
     },
   });
 }
@@ -732,26 +749,6 @@ function SubjectTile({ label, value }: { label: string; value: string }) {
     <div>
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="truncate text-sm font-medium">{value}</p>
-    </div>
-  );
-}
-
-function DossierLine({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-3">
-      <span className="flex items-center gap-2 text-muted-foreground">
-        <Icon className="size-4" />
-        {label}
-      </span>
-      <span className="font-medium">{value}</span>
     </div>
   );
 }

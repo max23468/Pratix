@@ -81,6 +81,7 @@ export type CaseTimelineItem = {
   description: string;
   meta: string;
   amount?: number | null;
+  activityId?: string | null;
 };
 
 export function buildCaseTimelineItems({
@@ -124,6 +125,7 @@ export function buildCaseTimelineItems({
         .join(" · "),
       meta: caseActivityStatusLabels[activity.status] ?? activity.status,
       amount: Number(activity.amount) || 0,
+      activityId: activity.id,
     });
 
     attachments.forEach((attachment) => {

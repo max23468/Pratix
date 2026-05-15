@@ -55,7 +55,7 @@ export function UserMenu() {
         <DropdownMenuItem asChild>
           <Link to="/impostazioni">
             <Settings className="mr-2 size-4" />
-            Impostazioni professione
+            Impostazioni
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
