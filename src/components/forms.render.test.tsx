@@ -13,6 +13,7 @@ import { PrincipalForm } from "./principal-form";
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => vi.fn(),
+  useRouter: () => null,
 }));
 
 vi.mock("@tanstack/react-start", () => ({

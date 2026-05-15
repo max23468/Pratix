@@ -1406,7 +1406,7 @@ function ReviewStep({
                         <div className="flex flex-col gap-1">
                           <span className="font-medium">{activity.description}</span>
                           <span className="text-xs text-muted-foreground">
-                            {priceItemKindLabels[activity.kind]} · {activity.code}
+                            {priceItemKindLabels[activity.kind]} · {activity.name}
                           </span>
                         </div>
                       </TableCell>

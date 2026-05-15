@@ -210,7 +210,7 @@ export function CaseActivitiesTab({ caseRow }: { caseRow: CaseActivityContext })
                     <div className="flex flex-col gap-1">
                       <span className="font-medium">{activity.description}</span>
                       <span className="text-xs text-muted-foreground">
-                        {priceItemKindLabels[activity.kind]} · {activity.snapshot_price_code}
+                        {priceItemKindLabels[activity.kind]} · {activity.snapshot_price_name}
                       </span>
                       {activity.case_activity_hearings?.length ? (
                         <span className="text-xs text-muted-foreground">

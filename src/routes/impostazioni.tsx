@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useId, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Building2, Save, Tags } from "lucide-react";
+import { Save } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -187,8 +187,8 @@ function SettingsPage() {
 
       <Tabs defaultValue="professione" className="space-y-4">
         <TabsList className="flex flex-wrap">
-          <TabsTrigger value="professione">Professione</TabsTrigger>
-          <TabsTrigger value="fiscale">Fiscale</TabsTrigger>
+          <TabsTrigger value="professione">Dati professionali</TabsTrigger>
+          <TabsTrigger value="fiscale">Fiscalità</TabsTrigger>
           <TabsTrigger value="pagamenti">Pagamenti</TabsTrigger>
           <TabsTrigger value="fatturazione">Fatturazione</TabsTrigger>
         </TabsList>
@@ -380,26 +380,6 @@ function SettingsPage() {
                 Esempio: con prefisso "FT-" e prossimo numero 7, la prossima fattura sarà{" "}
                 <strong>FT-7</strong>. L'anno si resetta automaticamente al cambio di anno solare.
               </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Recupero crediti</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-3 sm:grid-cols-2">
-              <Button variant="outline" asChild className="justify-start">
-                <Link to="/committenti">
-                  <Building2 className="mr-2 size-4" />
-                  Committenti
-                </Link>
-              </Button>
-              <Button variant="outline" asChild className="justify-start">
-                <Link to="/prezzi">
-                  <Tags className="mr-2 size-4" />
-                  Prezzi
-                </Link>
-              </Button>
             </CardContent>
           </Card>
         </TabsContent>

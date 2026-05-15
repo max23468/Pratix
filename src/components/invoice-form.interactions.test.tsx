@@ -131,6 +131,7 @@ vi.mock("sonner", () => ({ toast }));
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => navigate,
+  useRouter: () => null,
 }));
 
 vi.mock("@tanstack/react-start", () => ({

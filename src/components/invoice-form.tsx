@@ -26,6 +26,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { computeInvoice, type InvoiceLineInput } from "@/lib/invoice-calc";
@@ -132,6 +133,7 @@ export function InvoiceForm() {
   const [paymentMethod, setPaymentMethod] = useState("Bonifico bancario");
   const [notes, setNotes] = useState("");
   const [selection, setSelection] = useState<Record<string, BillingItemStatus>>({});
+  const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", "invoice-form", user?.id],
@@ -280,6 +282,7 @@ export function InvoiceForm() {
       toast.success(`Fattura ${invoice.number}/${invoice.year} generata`);
       qc.invalidateQueries({ queryKey: ["invoices"] });
       qc.invalidateQueries({ queryKey: ["activities"] });
+      if (finishSave()) return;
       navigate({ to: "/fatture/$invoiceId", params: { invoiceId: invoice.invoiceId } });
     },
     onError: (error: Error) => toast.error(error.message),
@@ -291,7 +294,11 @@ export function InvoiceForm() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]">
+    <form
+      ref={formRef}
+      onSubmit={handleSubmit}
+      className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]"
+    >
       <div className="space-y-4">
         <Card>
           <CardHeader>
@@ -303,7 +310,13 @@ export function InvoiceForm() {
           <CardContent className="grid gap-4 md:grid-cols-2">
             <div className="flex flex-col gap-2 md:col-span-2">
               <Label htmlFor="principal_id">Committente</Label>
-              <Select value={principalId} onValueChange={setPrincipalId}>
+              <Select
+                value={principalId}
+                onValueChange={(value) => {
+                  markDirty();
+                  setPrincipalId(value);
+                }}
+              >
                 <SelectTrigger id="principal_id">
                   <SelectValue placeholder="Seleziona committente" />
                 </SelectTrigger>
@@ -317,21 +330,51 @@ export function InvoiceForm() {
               </Select>
             </div>
 
-            <DateField id="period_start" label="Da" value={periodStart} onChange={setPeriodStart} />
-            <DateField id="period_end" label="A" value={periodEnd} onChange={setPeriodEnd} />
+            <DateField
+              id="period_start"
+              label="Da"
+              value={periodStart}
+              onChange={(value) => {
+                markDirty();
+                setPeriodStart(value);
+              }}
+            />
+            <DateField
+              id="period_end"
+              label="A"
+              value={periodEnd}
+              onChange={(value) => {
+                markDirty();
+                setPeriodEnd(value);
+              }}
+            />
             <DateField
               id="issue_date"
               label="Data fattura"
               value={issueDate}
-              onChange={setIssueDate}
+              onChange={(value) => {
+                markDirty();
+                setIssueDate(value);
+              }}
             />
-            <DateField id="due_date" label="Scadenza" value={dueDate} onChange={setDueDate} />
+            <DateField
+              id="due_date"
+              label="Scadenza"
+              value={dueDate}
+              onChange={(value) => {
+                markDirty();
+                setDueDate(value);
+              }}
+            />
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="invoice_status">Stato fattura</Label>
               <Select
                 value={invoiceStatus}
-                onValueChange={(value) => setInvoiceStatus(value as typeof invoiceStatus)}
+                onValueChange={(value) => {
+                  markDirty();
+                  setInvoiceStatus(value as typeof invoiceStatus);
+                }}
               >
                 <SelectTrigger id="invoice_status">
                   <SelectValue />
@@ -348,7 +391,10 @@ export function InvoiceForm() {
               <Input
                 id="payment_method"
                 value={paymentMethod}
-                onChange={(event) => setPaymentMethod(event.target.value)}
+                onChange={(event) => {
+                  markDirty();
+                  setPaymentMethod(event.target.value);
+                }}
               />
             </div>
           </CardContent>
@@ -395,12 +441,13 @@ export function InvoiceForm() {
                       <TableCell>
                         <Select
                           value={selection[activity.id] ?? "included"}
-                          onValueChange={(value) =>
+                          onValueChange={(value) => {
+                            markDirty();
                             setSelection((current) => ({
                               ...current,
                               [activity.id]: value as BillingItemStatus,
-                            }))
-                          }
+                            }));
+                          }}
                         >
                           <SelectTrigger className="w-32">
                             <SelectValue />
@@ -455,7 +502,10 @@ export function InvoiceForm() {
           <CardContent>
             <Textarea
               value={notes}
-              onChange={(event) => setNotes(event.target.value)}
+              onChange={(event) => {
+                markDirty();
+                setNotes(event.target.value);
+              }}
               placeholder="Note interne o descrizione da riportare in fattura"
             />
           </CardContent>
@@ -471,32 +521,55 @@ export function InvoiceForm() {
             <SwitchRow
               label="Spese generali"
               checked={includeGeneralExpenses}
-              onCheckedChange={setIncludeGeneralExpenses}
+              onCheckedChange={(value) => {
+                markDirty();
+                setIncludeGeneralExpenses(value);
+              }}
             />
             <NumberField
               id="general_expenses_rate"
               label="Percentuale spese generali"
               value={generalExpensesRate}
-              onChange={setGeneralExpensesRate}
+              onChange={(value) => {
+                markDirty();
+                setGeneralExpensesRate(value);
+              }}
               disabled={!includeGeneralExpenses}
             />
             <NumberField
               id="cassa_rate"
               label="Cassa Forense"
               value={cassaRate}
-              onChange={setCassaRate}
+              onChange={(value) => {
+                markDirty();
+                setCassaRate(value);
+              }}
             />
-            <NumberField id="vat_rate" label="IVA" value={vatRate} onChange={setVatRate} />
+            <NumberField
+              id="vat_rate"
+              label="IVA"
+              value={vatRate}
+              onChange={(value) => {
+                markDirty();
+                setVatRate(value);
+              }}
+            />
             <SwitchRow
               label="Ritenuta d'acconto"
               checked={applyWithholding}
-              onCheckedChange={setApplyWithholding}
+              onCheckedChange={(value) => {
+                markDirty();
+                setApplyWithholding(value);
+              }}
             />
             <NumberField
               id="withholding_rate"
               label="Aliquota ritenuta"
               value={withholdingRate}
-              onChange={setWithholdingRate}
+              onChange={(value) => {
+                markDirty();
+                setWithholdingRate(value);
+              }}
               disabled={!applyWithholding}
             />
           </CardContent>
@@ -535,6 +608,7 @@ export function InvoiceForm() {
           </CardContent>
         </Card>
       </div>
+      {guardDialog}
     </form>
   );
 }

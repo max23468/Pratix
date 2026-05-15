@@ -26,6 +26,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 
@@ -81,8 +82,12 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
   const [selectedPrincipalIds, setSelectedPrincipalIds] = useState<string[]>([]);
 
   const isEdit = Boolean(initial?.id);
+  const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
 
-  const upd = (k: keyof ClientRow, v: string) => setForm((f) => ({ ...f, [k]: v }));
+  const upd = (k: keyof ClientRow, v: string) => {
+    markDirty();
+    setForm((f) => ({ ...f, [k]: v }));
+  };
 
   const { data: principals = [] } = useQuery({
     queryKey: ["principals", "client-form"],
@@ -114,6 +119,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
   }, [linkedPrincipalIds]);
 
   const togglePrincipal = (principalId: string, checked: boolean) => {
+    markDirty();
     setSelectedPrincipalIds((current) =>
       checked ? [...current, principalId] : current.filter((id) => id !== principalId),
     );
@@ -158,6 +164,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
       qc.invalidateQueries({ queryKey: ["clients"] });
       qc.invalidateQueries({ queryKey: ["client", id] });
       qc.invalidateQueries({ queryKey: ["principal-clients", id] });
+      if (finishSave()) return;
       onSaved(id);
     },
     onError: (e: Error) => toast.error(e.message),
@@ -191,7 +198,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Anagrafica</CardTitle>
@@ -431,6 +438,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
           </Button>
         </div>
       </div>
+      {guardDialog}
     </form>
   );
 }

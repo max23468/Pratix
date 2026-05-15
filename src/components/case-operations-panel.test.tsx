@@ -81,6 +81,39 @@ describe("case operations timeline", () => {
     expect(html).toContain("In corso");
   });
 
+  it("rende cliccabili le Attività della timeline quando è disponibile l'azione di modifica", async () => {
+    const onEditActivity = vi.fn();
+    render(
+      <CaseTimeline
+        timeline={[
+          {
+            id: "activity-activity-1",
+            activityId: "activity-1",
+            date: "2026-05-03",
+            title: "Udienza",
+            description: "Compenso / Onorario",
+            meta: "Da fatturare",
+            amount: 120,
+          },
+          {
+            id: "invoice-invoice-1",
+            date: "2026-05-05",
+            title: "Fattura TST1/2026",
+            description: "Scadenza 05/06/2026",
+            meta: "Bozza",
+            amount: 150,
+          },
+        ]}
+        onEditActivity={onEditActivity}
+      />,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Modifica attività Udienza" }));
+
+    expect(onEditActivity).toHaveBeenCalledWith("activity-1");
+    expect(screen.queryByRole("button", { name: /Fattura TST1/ })).toBeNull();
+  });
+
   it("assegna priorità alta alle Attività maturate da fatturare", () => {
     const activities = [
       {
