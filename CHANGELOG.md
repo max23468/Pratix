@@ -12,6 +12,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 - **Fatture**: il dettaglio chiarisce che riportare una fattura in bozza mantiene le Attività collegate alla stessa fattura.
 - **Fatture**: annullando il pagamento, una fattura già scaduta torna insoluta invece che semplicemente emessa.
+- **Account e Impostazioni**: le tab di navigazione restano dentro il menu su iPhone, senza testo tagliato o voci che sbordano.
+- **Novità**: le release storiche con lo stesso numero non generano più chiavi duplicate nella UI.
 
 ## [1.6.0] — 2026-05-16
 
