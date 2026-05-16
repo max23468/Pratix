@@ -12,15 +12,15 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 - **Commenti Codex**: preservate le date udienza nei rendiconti rigenerati e reso robusto il merge delle Controparti composte con soggetti sovrapposti.
 
+### Sotto il cofano
+
+- **Workflow Codex**: la inbox continua ad aggiornarsi senza autorizzare commenti automatici sulle PR.
+
 ## [1.7.5] — 2026-05-17
 
 ### Correzioni
 
 - **Commenti Codex**: corretti i problemi ancora actionable su fatture, rendiconti Excel, controllo duplicati, import legacy, ordinamenti mobile, login passwordless e UI delle novità.
-
-### Sotto il cofano
-
-- **Workflow Codex**: autorizzati i commenti automatici sulle PR quando la inbox rileva thread actionable.
 
 ## [1.7.4] — 2026-05-17
 
