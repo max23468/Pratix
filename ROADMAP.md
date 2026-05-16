@@ -68,7 +68,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Scheda economica della Pratica     | Compensi, rimborsi spese, maturato, da fatturare, fatturato, incassato e residuo operativo                                                                               |
 | ✅    | Controlli qualità dati             | Avvisi su soggetti mancanti, Attività senza allegati, importi da fatturare e Fatture in bozza                                                                            |
 | ✅    | Workflow recupero crediti          | Il cruscotto Pratica mostra stato operativo, priorità, prossima azione e motivo calcolati da Attività, Fatture, stato e qualità dati                                     |
-| 🟡    | Tabelle ordinabili e persistenti   | Intestazioni cliccabili per le liste operative; preferenza ordinamento sincronizzata per utente fra dispositivi tramite Supabase                                         |
+| ✅    | Tabelle ordinabili e persistenti   | Intestazioni cliccabili per le liste operative; preferenza ordinamento sincronizzata per utente fra dispositivi tramite Supabase                                         |
 
 ## 4. Funzionalità di prodotto
 
@@ -108,7 +108,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Recupero password                            | Non necessario: `/recupera-password` e `/reimposta-password` indirizzano al login via email                                                                                |
 | ✅    | Messaggi auth generici (no user enumeration) | Login e registrazione                                                                                                                                                      |
 | ✅    | Area Account separata da Impostazioni        | `/account` con tab Profilo / Accesso e sicurezza / Aspetto / Notifiche / Dati, accesso da menu utente in topbar                                                            |
-| ✅    | Passkey                                      | Opzione sperimentale Supabase per aggiungere/rimuovere passkey e accedere rapidamente dal login                                                                            |
+| 🟡    | Passkey                                      | Opzione sperimentale Supabase già implementata ma nascosta dietro `VITE_ENABLE_PASSKEYS=true` finché WebAuthn non è disponibile sul progetto hosted                        |
 | ✅    | CAPTCHA Auth predisposto ma non attivo       | Supporto Turnstile nel codice se `VITE_TURNSTILE_SITE_KEY` è configurata; integrazione Cloudflare non attiva per scelta attuale                                            |
 | ✅    | Registrazione con conferma email             | Registrazione aperta; se Supabase richiede conferma, la UI mostra lo stato email invece di forzare la dashboard                                                            |
 | ✅    | Template email auth in italiano              | Magic Link aggiornato in Supabase e tracciato in `supabase/templates`; conferma account e cambio email da mantenere allineati                                              |

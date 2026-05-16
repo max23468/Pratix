@@ -11,7 +11,7 @@ Pratix è operativo fuori da Lovable:
 
 - codice e collaborazione su GitHub;
 - produzione su Vercel: `https://pratix.vercel.app`;
-- backend, auth e dati sul progetto Supabase di proprietà;
+- backend, Auth passwordless e dati sul progetto Supabase di proprietà;
 - login reale, dashboard, clienti, pratiche, dettaglio pratica e impostazioni
   verificati in produzione;
 - Vercel Toolbar disattivata in produzione;
@@ -145,8 +145,9 @@ Prima di toccare produzione, chiedere a Lovable:
 3. Quali dati non sono esportabili direttamente da Lovable Cloud?
 4. Posso ottenere l'UUID dell'utente esistente e l'elenco di tutte le tabelle
    con righe associate a quell'utente?
-5. Le password hash dell'utente auth sono esportabili oppure devo forzare un
-   reset password nel nuovo backend?
+5. I dati dell'utente auth sono esportabili preservando UUID/email oppure devo
+   creare un nuovo utente e verificare l'accesso via link email nel nuovo
+   backend?
 6. Ci sono edge functions, webhook, cron o secrets configurati fuori dal repo?
 7. Dopo la migrazione posso disconnettere GitHub e chiudere Lovable senza
    perdere storico o file?
@@ -166,7 +167,7 @@ Mi serve un inventario completo e pratico dello stato attuale:
 4. Elenca tutte le migrations applicate e dimmi se quelle presenti in `supabase/migrations/` sono complete.
 5. Esporta o indicami come esportare i dati `public` dell'unico utente esistente, senza includere dati sensibili non necessari.
 6. Forniscimi l'UUID dell'utente esistente e l'elenco di tutte le tabelle con righe collegate a quell'utente.
-7. Dimmi se posso esportare l'utente auth preservando UUID e password hash. Se no, conferma che la strategia corretta è creare un nuovo utente nel nuovo Supabase, forzare reset password e rimappare i `user_id`.
+7. Dimmi se posso esportare l'utente auth preservando UUID ed email. Se no, conferma che la strategia corretta è creare un nuovo utente nel nuovo Supabase, verificare l'accesso via link email e rimappare i `user_id`.
 8. Elenca tutti i secrets configurati oggi, solo come nomi e scopo, senza mostrare valori.
 9. Elenca eventuali Edge Functions, webhook, cron, API routes o integrazioni che dipendono da Lovable Cloud o da secrets Lovable.
 10. Elenca quali variabili ambiente dovrò configurare su Vercel e quali invece servono solo in Supabase.
@@ -189,7 +190,9 @@ Output atteso:
 ## Fase 2 — Preparazione nuovo backend
 
 1. Creare il progetto Supabase di proprietà.
-2. Configurare Auth email/password.
+2. Configurare Auth via link email passwordless. Le passkey restano opzionali e
+   dietro `VITE_ENABLE_PASSKEYS=true` finché WebAuthn è disponibile sul
+   progetto hosted.
 3. Applicare `supabase/schema.sql`.
 4. Applicare eventuali migrations in `supabase/migrations/` non incluse nella
    baseline.
@@ -203,9 +206,9 @@ Output atteso:
 
 Per l'unico utente esistente ci sono due opzioni:
 
-- **Opzione semplice**: creare un nuovo utente nel nuovo Supabase, forzare reset
-  password, poi rimappare tutti i `user_id` esportati dal vecchio UUID al nuovo
-  UUID.
+- **Opzione semplice**: creare un nuovo utente nel nuovo Supabase, inviare il
+  link email di accesso e poi rimappare tutti i `user_id` esportati dal vecchio
+  UUID al nuovo UUID.
 - **Opzione conservativa**: preservare l'UUID auth originale, solo se Lovable
   fornisce un export auth compatibile e testabile.
 
@@ -218,7 +221,7 @@ creato. Se la creazione con UUID esplicito non è supportata o fallisce, usare i
 nuovo UUID generato da Supabase e rimappare `profiles.id` più tutti i futuri
 `user_id` importati.
 
-Script locale preparato:
+Script locale storico preparato per la migrazione 2026-05-02:
 
 ```bash
 SUPABASE_URL="https://<project-ref>.supabase.co" \
@@ -230,9 +233,10 @@ PRATIX_MIGRATION_FULL_NAME="<nome-opzionale>" \
 node scripts/recreate-supabase-user.mjs
 ```
 
-Il link di recovery stampato dallo script contiene un token: usarlo localmente
-per impostare la password definitiva e non incollarlo in chat, issue, log o
-documenti.
+Il link di recovery stampato dallo script contiene un token: usarlo solo
+localmente e non incollarlo in chat, issue, log o documenti. Nel flusso
+corrente dell'app l'accesso utente passa da link sicuro via email, non da
+password tradizionale.
 
 ## Fase 3 — Preparazione runtime fuori Lovable
 
@@ -248,7 +252,7 @@ documenti.
    - login;
    - CRUD principali;
    - generazione PDF/XML fattura;
-   - reset password.
+   - login via link email;
 
 Stato locale:
 
@@ -288,8 +292,8 @@ Checklist minima:
 - i dati migrati sono visibili solo all'utente corretto;
 - le route autenticate non espongono dati senza sessione;
 - i download PDF/XML funzionano;
-- password reset torna al dominio Vercel;
-- la mail di recupero password arriva tramite Supabase Auth e la
+- le redirect Auth tornano al dominio Vercel;
+- la mail di accesso via link sicuro arriva tramite Supabase Auth e la
   personalizzazione brand resta tracciata come attività post-cutover;
 - nessuna variabile segreta è presente in git.
 
@@ -321,9 +325,8 @@ Da non migrare:
    login reale verificato in produzione.**
 5. Deployare la versione puntata al nuovo backend. **Completato su Vercel.**
 6. Testare end-to-end su Vercel. **Completato sui flussi principali.**
-7. Accedere con la password temporanea di migrazione e cambiarla dall'area
-   Account appena l'app punta al nuovo Supabase. **Completato in locale il
-   2026-05-02.**
+7. Verificare l'accesso dell'utente migrato sul nuovo Supabase. **Completato in
+   produzione il 2026-05-02; il flusso corrente usa link email passwordless.**
 8. Tenere Lovable in sola lettura per una finestra breve di rollback.
    **In corso per prudenza.**
 9. Quando la verifica è conclusa, disconnettere o chiudere Lovable.
@@ -369,12 +372,12 @@ separatamente.
 
 | Rischio                                  | Mitigazione                                                                                      |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| Export auth incompleto                   | Con un solo utente, creare nuovo utente e forzare reset password                                 |
+| Export auth incompleto                   | Con un solo utente, creare nuovo utente e verificare accesso via link email                      |
 | UUID auth non preservabile via Admin API | Test su progetto Supabase vuoto; fallback con nuovo UUID e rimappatura `profiles.id` / `user_id` |
 | `user_id` diverso nel nuovo backend      | Script SQL di rimappatura controllato tabella per tabella                                        |
 | Config Lovable nascosta                  | Inventario prima della migrazione, poi rimozione graduale                                        |
 | Config Vercel errata                     | Preview deployment e log Vercel prima del cutover                                                |
-| Env mancanti in produzione               | Checklist Environment Variables e test login/reset password                                      |
+| Env mancanti in produzione               | Checklist Environment Variables e test login via link email                                      |
 | File generati non allineati              | Rigenerare types dal nuovo Supabase                                                              |
 
 ## Criteri di completamento
@@ -383,9 +386,7 @@ La migrazione tecnica è completata quando:
 
 - il dominio Vercel `*.vercel.app` serve Pratix in HTTPS;
 - Pratix usa solo il nuovo backend;
-- l'utente esistente accede o ha completato reset password;
-- la password temporanea di migrazione è stata sostituita con una password
-  definitiva dall'area Account (**completato in locale il 2026-05-02**);
+- l'utente esistente accede via link email sul nuovo backend;
 - i dati migrati sono coerenti;
 - build e lint passano;
 - non esistono secrets del vecchio ambiente necessari al runtime;

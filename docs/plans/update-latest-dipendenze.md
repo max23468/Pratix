@@ -427,9 +427,11 @@ Esito Fase 6 (2026-05-09):
 4. smoke mobile completato sulla landing a 390x844 senza overflow orizzontale;
 5. tema verificato con persistenza `pratix.theme` in modalità `dark` e `light`;
 6. form pubblici verificati dopo idratazione React:
-   - login con credenziali errate mostra `Credenziali non valide`;
+   - login via email valida il formato dell'indirizzo e mostra lo stato di invio
+     link quando Supabase risponde correttamente;
    - registrazione valida la lunghezza di nome e cognome;
-   - recupero password mostra lo stato `Controlla la tua casella.`;
+   - le pagine legacy di recupero/reimpostazione password rimandano al percorso
+     senza password;
 7. route protette non autenticate (`/dashboard`, `/pratiche`, `/attivita`,
    `/committenti`, `/clienti`, `/controparti`, `/fatture`, `/fatture/nuova`,
    `/creazione-guidata`, `/account`, `/impostazioni`, `/novita`) reindirizzano

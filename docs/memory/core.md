@@ -56,7 +56,7 @@ Da usare per logo e asset di marca che non devono invertirsi col tema.
 
 ## Glossario obbligatorio
 
-✅ Committente · Cliente · Controparte · Pratica · Attività · Compenso/Onorario · Prezzi · Rimborso spese · Fattura · Rendiconto Excel
+✅ Committente · Cliente · Controparte · Pratica · Attività · Compenso/Onorario · Prezzi · Rimborso spese · Fattura · Rendiconto Excel · Bollo/Marca da bollo
 ❌ Caso · Assistito · Deadline · Costi
 
 Pratix resta per avvocati freelance, non per studi associati o team multi-ruolo. "Studio" non è più vietata in assoluto, ma non va usata per riposizionare il prodotto verso studi associati. **Attività** è ora termine centrale: indica le registrazioni operative e fatturabili dentro una pratica. La sezione `/attivita` è la vista globale di inserimento rapido; la tab nella pratica resta la vista contestuale delle stesse righe.
@@ -92,8 +92,10 @@ rilasciata vanno nel changelog come `Non versionato` e non devono modificare
 
 ## Stack
 
-TanStack Start + Supabase di proprietà + Vercel. Supabase Storage usa il bucket
-privato `pratix-documents` con path owner-scoped `<user_id>/<area>/...`.
+TanStack Start + Supabase di proprietà + Vercel. Supabase Auth usa il percorso
+passwordless via link email; le passkey restano dietro `VITE_ENABLE_PASSKEYS=true`
+finché WebAuthn non è disponibile sul progetto hosted. Supabase Storage usa il
+bucket privato `pratix-documents` con path owner-scoped `<user_id>/<area>/...`.
 Observability resta Vercel-first: Web Analytics, Speed Insights e runtime logs
 strutturati prima di introdurre servizi esterni. Lingua italiana, `lang="it"`.
 **Mai modificare**: `src/integrations/supabase/types.ts`, `src/routeTree.gen.ts`, `.env`.

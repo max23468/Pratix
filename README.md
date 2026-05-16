@@ -46,7 +46,7 @@ di proprietà del progetto come backend e Vercel per pubblicazione e preview.
 
 ## Documentazione approfondita
 
-- 📖 [Guide tematiche](./docs/guides/) — architettura, database, fatturazione, tema, tono di voce, deploy
+- 📖 [Guide tematiche](./docs/guides/) — architettura, database, fatturazione, tema, tono di voce, deploy, release e smoke test
 - 🧠 [Memoria di progetto](./docs/memory/) — regole sempre attive (specchio leggibile di `mem://`)
 - 🧭 [Decision log (ADR)](./docs/decisions/) — perché abbiamo scelto cosa
 - 📚 [Glossario di dominio](./docs/glossario.md) — termini legali e fiscali italiani
@@ -54,7 +54,7 @@ di proprietà del progetto come backend e Vercel per pubblicazione e preview.
 ## Stack tecnico
 
 - **Frontend**: TanStack Start v1 (React 19, Vite 7, file-based routing)
-- **Backend**: Supabase di proprietà del progetto con RLS, auth, edge functions e storage
+- **Backend**: Supabase di proprietà del progetto con RLS, Auth passwordless, passkey dietro feature flag e Storage privato
 - **Deploy**: Vercel, produzione su `https://pratix.vercel.app`
 - **Styling**: Tailwind v4 con token semantici in `src/styles.css`
 - **UI**: shadcn/ui + Radix + lucide-react

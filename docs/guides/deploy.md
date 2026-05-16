@@ -209,7 +209,7 @@ Verifiche minime su ogni preview:
 
 - login e logout;
 - navigazione nelle route principali;
-- recupero password solo se la redirect URL è configurata in Supabase;
+- pagine legacy `/recupera-password` e `/reimposta-password` mostrano il percorso senza password e rimandano al login via email;
 - nessun errore evidente nei log Vercel;
 - nessun test distruttivo sul database condiviso.
 
@@ -231,7 +231,7 @@ Checklist minima:
 - [ ] `npm run lint` ok oppure issue note e non correlate alla modifica
 - [ ] `npm audit --audit-level=moderate` ok se sono cambiate dipendenze
 - [ ] Supabase advisors verificati quando cambiano schema, RLS, Storage o auth
-- [ ] Recupero password attivo
+- [ ] Login passwordless via link email verificato
 - [ ] Pagine Privacy e Termini presenti
 - [ ] Meta tag e og:image sulle pagine pubbliche
 - [ ] Errori auth generici (no enumeration)
