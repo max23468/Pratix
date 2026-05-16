@@ -10,6 +10,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 - **Documentazione**: riallineate istruzioni operative, guide, roadmap e glossario allo stato pubblicato fino a Pratix 1.4.0.
 
+## [1.4.1] — 2026-05-16
+
+### Correzioni
+
+- **Fatture**: le bozze possono essere riaperte, modificate e poi segnate come emesse; nel dettaglio i download PDF/XML e i rendiconti sono raccolti nel box Documenti.
+
 ## [1.4.0] — 2026-05-16
 
 ### Novità
@@ -805,6 +811,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.4.1]: #141--2026-05-16
 [1.4.0]: #140--2026-05-16
 [1.3.4]: #134--2026-05-16
 [1.3.3]: #133--2026-05-16

@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { InvoiceForm } from "@/components/invoice-form";
 
 export const Route = createFileRoute("/fatture/nuova")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    bozza: typeof search.bozza === "string" ? search.bozza : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Nuova fattura · Pratix" },
@@ -21,20 +24,31 @@ export const Route = createFileRoute("/fatture/nuova")({
 });
 
 function NewInvoicePage() {
+  const { bozza } = Route.useSearch();
+  const isEditingDraft = Boolean(bozza);
+
   return (
     <AppLayout>
       <PageHeader
-        title="Nuova fattura"
-        description="Estrai attività, decidi inclusioni e rinvii, poi genera fattura e rendiconti Excel."
+        title={isEditingDraft ? "Modifica bozza" : "Nuova fattura"}
+        description={
+          isEditingDraft
+            ? "Aggiorna attività, regole fiscali e note prima di emettere la fattura."
+            : "Estrai attività, decidi inclusioni e rinvii, poi genera fattura e rendiconti Excel."
+        }
         actions={
           <Button asChild variant="outline">
-            <Link to="/fatture">
-              <ArrowLeft className="mr-2 size-4" /> Torna alle fatture
+            <Link
+              to={isEditingDraft ? "/fatture/$invoiceId" : "/fatture"}
+              params={isEditingDraft ? { invoiceId: bozza! } : undefined}
+            >
+              <ArrowLeft className="mr-2 size-4" />
+              {isEditingDraft ? "Torna alla fattura" : "Torna alle fatture"}
             </Link>
           </Button>
         }
       />
-      <InvoiceForm />
+      <InvoiceForm draftInvoiceRef={bozza} />
     </AppLayout>
   );
 }

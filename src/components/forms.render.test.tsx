@@ -22,6 +22,7 @@ vi.mock("@tanstack/react-start", () => ({
 
 vi.mock("@/server/invoices.functions", () => ({
   createBillingInvoiceFn: {},
+  updateDraftBillingInvoiceFn: {},
 }));
 
 vi.mock("@/lib/auth-context", () => ({
