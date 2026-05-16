@@ -25,7 +25,7 @@ La 1.0 include il prodotto già costruito e documentato:
 4. attività fatturabili con compensi/onorari e rimborsi spese;
 5. fatturazione per committente e periodo;
 6. PDF fattura, XML FatturaPA, ZIP fatture e rendiconti Excel;
-7. import archivio manuale ed Excel strutturato;
+7. Creazione guidata manuale;
 8. dossier Pratica Excel e PDF;
 9. export dati personali e cancellazione account;
 10. qualità operativa già consolidata: build, lint, test, coverage, smoke
@@ -62,8 +62,8 @@ La 1.0 è pronta solo se tutti questi punti sono veri.
 3. Gli export chiave sono scaricabili e apribili:
    PDF fattura, XML FatturaPA, ZIP fatture, rendiconti Excel, dossier Pratica
    Excel/PDF, export dati personali.
-4. L'import archivio è utilizzabile sia da Excel sia con inserimento guidato
-   manuale.
+4. La Creazione guidata manuale è utilizzabile per trascrivere una pratica da
+   archivio.
 5. I testi restano coerenti con tono, glossario e target freelance.
 6. La landing non promette funzionalità post-1.0 come invio SDI, area cliente
    esterna o suite contabile completa.
@@ -207,9 +207,9 @@ Controlli autenticati:
    `114,00`.
 7. Download fattura e rendiconti verificati: PDF, XML SdI, rendiconto compensi
    Excel e rendiconto rimborsi spese Excel.
-8. Import archivio verificato in produzione: route accessibile, wizard manuale
-   e tab Excel strutturato presenti. Non è stata creata una nuova riga perché
-   la fixture anonima già esistente copre il flusso import con allegato.
+8. Creazione guidata verificata in produzione: route accessibile e wizard
+   manuale presenti. Non è stata creata una nuova riga perché la fixture anonima
+   già esistente copre il flusso con allegato.
 9. Export dati personali verificato in produzione: download JSON e archivio
    CSV/ZIP completati. La cancellazione account non è stata eseguita perché è
    distruttiva; la presenza del comando è stata verificata nella tab Dati.
@@ -243,10 +243,9 @@ Esito 2026-05-09: completata dopo controllo `Codex feedback inbox`.
 
 Thread P2 assorbiti nel diff 1.0:
 
-1. Import Excel: la validazione aspetta il caricamento o refresh delle Pratiche
-   esistenti prima di pianificare righe da creare o aggiornare.
-2. Import Excel: se il lookup delle Pratiche fallisce, il pulsante resta
-   disponibile come retry guidato.
+1. Import Excel: questi thread sono storici e superati da ADR 0016, che rimuove
+   l'import Excel strutturato.
+2. Creazione guidata: resta il flusso manuale con staging e conferma.
 3. Dossier Pratica: i download dal cruscotto sono disabilitati anche durante il
    refresh dei dati necessari al dossier.
 4. Workflow recupero crediti: il calcolo delle Fatture insolute confronta la

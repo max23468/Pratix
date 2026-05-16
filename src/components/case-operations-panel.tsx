@@ -216,9 +216,9 @@ export function CaseOperationsPanel({
             </Link>
           </Button>
           <Button asChild size="sm" variant="outline">
-            <Link to="/import-archivio">
+            <Link to="/creazione-guidata">
               <Upload className="mr-1 size-4" />
-              Import archivio
+              Creazione guidata
             </Link>
           </Button>
           <Button

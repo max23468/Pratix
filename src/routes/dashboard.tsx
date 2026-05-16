@@ -5,8 +5,8 @@ import {
   Briefcase,
   Building2,
   ChevronDown,
+  FileInput,
   FileWarning,
-  FileUp,
   ListChecks,
   Plus,
   Receipt,
@@ -48,7 +48,7 @@ type CreateActionPath =
   | "/controparti/nuova"
   | "/fatture/nuova"
   | "/prezzi/nuovo"
-  | "/import-archivio";
+  | "/creazione-guidata";
 
 const CREATE_ACTIONS: Array<{
   to: CreateActionPath;
@@ -93,10 +93,10 @@ const CREATE_ACTIONS: Array<{
     description: "Crea un set annuale per committente",
   },
   {
-    to: "/import-archivio",
-    icon: FileUp,
-    title: "Import archivio",
-    description: "Importa o trascrivi nuove pratiche",
+    to: "/creazione-guidata",
+    icon: FileInput,
+    title: "Creazione guidata",
+    description: "Trascrivi una pratica passo per passo",
   },
 ];
 
@@ -246,6 +246,11 @@ function DashboardContent() {
         description="Pratiche, attività, fatture e rimborsi da tenere sotto controllo."
         actions={
           <>
+            <Link to="/creazione-guidata">
+              <Button size="sm" variant="outline">
+                <FileInput className="mr-1 size-4" /> Creazione guidata
+              </Button>
+            </Link>
             <CreateMenu />
           </>
         }
@@ -317,10 +322,10 @@ function DashboardContent() {
             description={`${formatCurrency(data?.toInvoiceAmount ?? 0)} maturati`}
           />
           <ActionLink
-            to="/import-archivio"
-            icon={FileUp}
-            title="Importa archivio"
-            description="Trascrivi o importa nuove pratiche"
+            to="/creazione-guidata"
+            icon={FileInput}
+            title="Creazione guidata"
+            description="Trascrivi una pratica con controllo finale"
           />
         </CardContent>
       </Card>
@@ -450,7 +455,7 @@ function ActionLink({
   title,
   description,
 }: {
-  to: "/attivita" | "/fatture/nuova" | "/import-archivio";
+  to: "/attivita" | "/fatture/nuova" | "/creazione-guidata";
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   title: string;
   description: string;

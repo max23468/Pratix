@@ -43,7 +43,7 @@ Copre funzioni senza rete, Supabase, browser o storage:
 - template prezzi recupero crediti;
 - parser changelog, formattazione e label operative;
 - schemi auth usati da login, registrazione e recupero password;
-- parser e helper Excel/import quando isolabili.
+- helper di Creazione guidata/import quando isolabili.
 
 Gate: `npm test`.
 
@@ -76,7 +76,7 @@ Copre i flussi che il professionista usa davvero:
 - Pratiche, Attività, Committenti, Clienti e Controparti;
 - fattura da committente/periodo;
 - dettaglio fattura, PDF, XML e rendiconti Excel;
-- import archivio con allegati e fatturazione successiva.
+- Creazione guidata con allegati e fatturazione successiva.
 
 Si eseguono con account/fixture di test riconoscibili e dati anonimi.
 
@@ -210,8 +210,7 @@ Questo incremento ha portato la suite a 107 test distribuiti su 37 file,
 aggiungendo:
 
 - test PDF fattura, inclusi regime forfettario fallback e output multipagina;
-- test parser Excel su shared strings, inline strings, celle numeriche, foglio
-  fallback e input non validi;
+- test helper Creazione guidata/import rimasti nel prodotto;
 - smoke render SSR per form, navigazione, onboarding, Turnstile e tab Attività;
 - test interattivi jsdom sulle validazioni principali di Committenti, Clienti,
   Controparti, Pratiche, Prezzi e Fatture;

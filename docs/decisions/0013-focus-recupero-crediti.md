@@ -60,7 +60,8 @@ rendiconti Excel nel formato del committente diventano il nuovo nucleo prodotto.
   rimborsi spese Art. 15.
 - Gli allegati sono facoltativi e ammessi sia per compensi sia per rimborsi,
   con upload, download, anteprima, nome descrittivo, note e tipo documento.
-- L'import deve essere sia manuale guidato sia da Excel strutturato.
+- L'import archivio è stato successivamente ristretto alla Creazione guidata
+  manuale da ADR 0016.
 - La fattura al committente richiede anche rendiconti Excel nel formato fornito
   dal committente.
 - Le regole operative su glossario, roadmap e futuri interventi devono
@@ -82,3 +83,4 @@ rendiconti Excel nel formato del committente diventano il nuovo nucleo prodotto.
 
 - [Piano evoluzione recupero crediti](../plans/evoluzione-recupero-crediti.md)
 - [ADR 0005 — Target freelance](./0005-target-freelance-no-studio.md)
+- [ADR 0016 — Creazione guidata manuale](./0016-creazione-guidata-manuale.md)

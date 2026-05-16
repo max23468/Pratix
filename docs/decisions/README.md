@@ -74,3 +74,4 @@ Link a issue, PR, documenti, conversazioni rilevanti.
 | [0013](./0013-focus-recupero-crediti.md)               | Focus recupero crediti                                 | Accettato                          |
 | [0014](./0014-attivita-termine-prodotto.md)            | Attivita come termine di prodotto                      | Accettato                          |
 | [0015](./0015-inbox-event-driven-commenti-codex.md)    | Inbox event-driven commenti Codex                      | Accettato                          |
+| [0016](./0016-creazione-guidata-manuale.md)            | Creazione guidata manuale                              | Accettato                          |

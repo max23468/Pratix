@@ -186,7 +186,7 @@ function Landing() {
               {
                 icon: ListChecks,
                 title: "Operatività",
-                desc: "Attività, stati e import archivio restano dentro lo stesso flusso.",
+                desc: "Attività, stati e Creazione guidata restano dentro lo stesso flusso.",
               },
               {
                 icon: Receipt,

@@ -41,7 +41,7 @@ npm run smoke:a11y
 ```
 
 Il comando aggiunge dashboard, anagrafiche, pratiche, attività, fatture,
-novità, account, impostazioni e import archivio.
+novità, account, impostazioni e Creazione guidata.
 
 Lo smoke autenticato parte solo se sono disponibili `SUPABASE_SERVICE_ROLE_KEY`
 e `SUPABASE_URL` oppure `VITE_SUPABASE_URL`. Per usare una casella diversa da
