@@ -779,6 +779,66 @@ export type Database = {
           },
         ]
       }
+      duplicate_reviews: {
+        Row: {
+          confidence: string
+          created_at: string
+          detected_at: string
+          entity_type: string
+          id: string
+          kept_record_id: string | null
+          left_record_id: string
+          merged_record_id: string | null
+          note: string | null
+          reasons: string[]
+          resolved_at: string | null
+          right_record_id: string
+          score: number
+          snapshot: Json
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          confidence?: string
+          created_at?: string
+          detected_at?: string
+          entity_type: string
+          id?: string
+          kept_record_id?: string | null
+          left_record_id: string
+          merged_record_id?: string | null
+          note?: string | null
+          reasons?: string[]
+          resolved_at?: string | null
+          right_record_id: string
+          score?: number
+          snapshot?: Json
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          confidence?: string
+          created_at?: string
+          detected_at?: string
+          entity_type?: string
+          id?: string
+          kept_record_id?: string | null
+          left_record_id?: string
+          merged_record_id?: string | null
+          note?: string | null
+          reasons?: string[]
+          resolved_at?: string | null
+          right_record_id?: string
+          score?: number
+          snapshot?: Json
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       import_rows: {
         Row: {
           applied_case_id: string | null

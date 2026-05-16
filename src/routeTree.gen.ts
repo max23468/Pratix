@@ -19,6 +19,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImpostazioniRouteImport } from './routes/impostazioni'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CreazioneGuidataRouteImport } from './routes/creazione-guidata'
+import { Route as ControlloDuplicatiRouteImport } from './routes/controllo-duplicati'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PrezziIndexRouteImport } from './routes/prezzi.index'
@@ -90,6 +91,11 @@ const DashboardRoute = DashboardRouteImport.update({
 const CreazioneGuidataRoute = CreazioneGuidataRouteImport.update({
   id: '/creazione-guidata',
   path: '/creazione-guidata',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ControlloDuplicatiRoute = ControlloDuplicatiRouteImport.update({
+  id: '/controllo-duplicati',
+  path: '/controllo-duplicati',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountRoute = AccountRouteImport.update({
@@ -207,6 +213,7 @@ const ApiCronDailyRoute = ApiCronDailyRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/controllo-duplicati': typeof ControlloDuplicatiRoute
   '/creazione-guidata': typeof CreazioneGuidataRoute
   '/dashboard': typeof DashboardRoute
   '/impostazioni': typeof ImpostazioniRoute
@@ -241,6 +248,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/controllo-duplicati': typeof ControlloDuplicatiRoute
   '/creazione-guidata': typeof CreazioneGuidataRoute
   '/dashboard': typeof DashboardRoute
   '/impostazioni': typeof ImpostazioniRoute
@@ -276,6 +284,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/controllo-duplicati': typeof ControlloDuplicatiRoute
   '/creazione-guidata': typeof CreazioneGuidataRoute
   '/dashboard': typeof DashboardRoute
   '/impostazioni': typeof ImpostazioniRoute
@@ -312,6 +321,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/account'
+    | '/controllo-duplicati'
     | '/creazione-guidata'
     | '/dashboard'
     | '/impostazioni'
@@ -346,6 +356,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/account'
+    | '/controllo-duplicati'
     | '/creazione-guidata'
     | '/dashboard'
     | '/impostazioni'
@@ -380,6 +391,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/account'
+    | '/controllo-duplicati'
     | '/creazione-guidata'
     | '/dashboard'
     | '/impostazioni'
@@ -415,6 +427,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
+  ControlloDuplicatiRoute: typeof ControlloDuplicatiRoute
   CreazioneGuidataRoute: typeof CreazioneGuidataRoute
   DashboardRoute: typeof DashboardRoute
   ImpostazioniRoute: typeof ImpostazioniRoute
@@ -517,6 +530,13 @@ declare module '@tanstack/react-router' {
       path: '/creazione-guidata'
       fullPath: '/creazione-guidata'
       preLoaderRoute: typeof CreazioneGuidataRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/controllo-duplicati': {
+      id: '/controllo-duplicati'
+      path: '/controllo-duplicati'
+      fullPath: '/controllo-duplicati'
+      preLoaderRoute: typeof ControlloDuplicatiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account': {
@@ -679,6 +699,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
+  ControlloDuplicatiRoute: ControlloDuplicatiRoute,
   CreazioneGuidataRoute: CreazioneGuidataRoute,
   DashboardRoute: DashboardRoute,
   ImpostazioniRoute: ImpostazioniRoute,

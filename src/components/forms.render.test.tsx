@@ -25,6 +25,10 @@ vi.mock("@/server/invoices.functions", () => ({
   updateDraftBillingInvoiceFn: {},
 }));
 
+vi.mock("@/server/duplicates.functions", () => ({
+  findDuplicateCandidatesFn: {},
+}));
+
 vi.mock("@/lib/auth-context", () => ({
   useAuth: () => ({
     user: { id: "user-test", email: "avvocato@example.test" },

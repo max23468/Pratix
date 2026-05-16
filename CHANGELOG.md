@@ -10,6 +10,23 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 - **Documentazione**: riallineate istruzioni operative, guide, roadmap e glossario allo stato pubblicato fino a Pratix 1.4.0.
 
+## [1.5.0] — 2026-05-16
+
+### Novità
+
+- **Controllo duplicati**: aggiunta l'area `/controllo-duplicati` per rilevare, confrontare, rimandare, segnare come non duplicati o unire potenziali duplicati su Committenti, Clienti, Controparti e Pratiche.
+- **Avvisi preventivi**: i form di creazione e le anagrafiche rapide da Pratica avvisano prima del salvataggio quando un nuovo record somiglia a dati già presenti.
+
+### Sotto il cofano
+
+- **Matching duplicati**: introdotti normalizzazione name-first, decisioni persistenti `duplicate_reviews`, RLS owner-scoped e merge prudente dei collegamenti operativi.
+
+## [Non versionato] — 2026-05-16
+
+### Non versionato
+
+- **Piano controllo duplicati**: definita la futura area `/controllo-duplicati` con ricalcolo manuale, avvisi preventivi nei form, matching basato su nomi/ragioni sociali e merge prudente per Committenti, Clienti, Controparti e Pratiche.
+
 ## [1.4.1] — 2026-05-16
 
 ### Correzioni
@@ -811,6 +828,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.5.0]: #150--2026-05-16
 [1.4.1]: #141--2026-05-16
 [1.4.0]: #140--2026-05-16
 [1.3.4]: #134--2026-05-16
