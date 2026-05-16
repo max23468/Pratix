@@ -23,6 +23,7 @@ describe("computeInvoice", () => {
           ...ordinaryOptions,
           includeGeneralExpenses: true,
           generalExpensesRate: 10,
+          includeStampDuty: true,
         },
       ),
     ).toEqual({
@@ -49,6 +50,7 @@ describe("computeInvoice", () => {
       withholdingRate: 20,
       applyWithholding: true,
       taxRegime: "forfettario",
+      includeStampDuty: true,
     });
 
     expect(result).toMatchObject({
@@ -72,5 +74,36 @@ describe("computeInvoice", () => {
 
     expect(result.taxableFees).toBe(100.01);
     expect(result.totalAmount).toBe(126.89);
+  });
+
+  it("non applica il bollo quando la preferenza è disattiva", () => {
+    const result = computeInvoice(
+      [
+        { kind: "fee", quantity: 1, unit_price: 100 },
+        { kind: "expense_art15", quantity: 1, unit_price: 100 },
+      ],
+      {
+        ...ordinaryOptions,
+        includeStampDuty: false,
+      },
+    );
+
+    expect(result.stampAmount).toBe(0);
+    expect(result.totalAmount).toBe(226.88);
+  });
+
+  it("applica la soglia forfettaria al totale con cassa", () => {
+    const result = computeInvoice([{ kind: "fee", quantity: 1, unit_price: 75 }], {
+      cassaRate: 4,
+      vatRate: 22,
+      withholdingRate: 20,
+      applyWithholding: false,
+      taxRegime: "forfettario",
+      includeStampDuty: true,
+    });
+
+    expect(result.cassaAmount).toBe(3);
+    expect(result.stampAmount).toBe(2);
+    expect(result.totalAmount).toBe(80);
   });
 });

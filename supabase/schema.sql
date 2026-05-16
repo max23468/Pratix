@@ -576,6 +576,7 @@ CREATE TABLE public.profiles (
   vat_rate                    numeric NOT NULL DEFAULT 22.00,
   withholding_rate            numeric NOT NULL DEFAULT 20.00,
   apply_withholding           boolean NOT NULL DEFAULT true,
+  include_stamp_duty          boolean NOT NULL DEFAULT false,
   iban                        text,
   bank_name                   text,
   invoice_number_prefix       text,

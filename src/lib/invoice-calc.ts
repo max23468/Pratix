@@ -24,6 +24,8 @@ export type InvoiceCalcOptions = {
   includeGeneralExpenses?: boolean;
   /** Percentuale spese generali. Per il recupero crediti il default operativo è 10%. */
   generalExpensesRate?: number;
+  /** Addebita il bollo quando ricorrono le condizioni fiscali. */
+  includeStampDuty?: boolean;
 };
 
 export type InvoiceCalcResult = {
@@ -58,7 +60,7 @@ const lineAmount = (l: InvoiceLineInput): number =>
  *  - IVA = (compensi + spese generali + eventuali spese imponibili legacy + cassa) × vatRate%
  *  - Ritenuta = (compensi + spese generali + eventuali spese imponibili legacy) × withholdingRate%
  *  - Spese Art. 15 = anticipazioni in nome e per conto (escluse IVA, escluse ritenuta)
- *  - Bollo €2 se Art. 15 > €77,47 oppure (in forfettario) se totale > €77,47
+ *  - Bollo €2, se abilitato, su Art. 15 > €77,47 oppure (in forfettario) se base + cassa > €77,47
  *  - Totale = imponibile + cassa + IVA + Art.15 + bollo
  *  - Netto a pagare = totale − ritenuta
  */
@@ -104,8 +106,9 @@ export function computeInvoice(
   // Bollo €2: su Art.15 > 77,47 oppure (forfettario) su totale > 77,47
   const stampThreshold = 77.47;
   const stampAmount = (() => {
+    if (!options.includeStampDuty) return 0;
     if (art15Expenses > stampThreshold) return 2;
-    if (isForfettario && taxableTotal > stampThreshold) return 2;
+    if (isForfettario && taxableTotal + cassaAmount > stampThreshold) return 2;
     return 0;
   })();
 

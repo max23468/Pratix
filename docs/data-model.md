@@ -45,7 +45,8 @@ Contiene tre famiglie di dati:
 - **Anagrafica e fiscale**: nome, business name (denominazione attività), CF,
   P.IVA, REA, ordine professionale, indirizzo.
 - **Configurazione fatturazione**: regime fiscale, aliquote di default
-  (cassa, IVA, ritenuta), IBAN, prefisso e contatore numerazione fatture.
+  (cassa, IVA, ritenuta), preferenza bollo, IBAN, prefisso e contatore
+  numerazione fatture.
 - **Stato applicazione**: `onboarding_completed`,
   `last_seen_changelog_version` (per la campanella "Novità"), `logo_url`.
 
@@ -229,6 +230,8 @@ compatibile con lo schema storico. I campi `include_general_expenses`,
 congelano le spese generali opzionali. La cassa forense si calcola solo su
 compensi + spese generali + eventuali spese imponibili legacy, non sui rimborsi
 Art. 15.
+Il bollo viene incluso solo se la preferenza `profiles.include_stamp_duty` è
+attiva al momento della generazione.
 
 ### `billing_runs`
 

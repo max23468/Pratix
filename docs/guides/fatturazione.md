@@ -57,7 +57,8 @@ base_iva           = base_cassa + contributo_cpa
 iva                = base_iva * 0.22
 ritenuta_acconto   = base_cassa * 0.20         (se committente sostituto d'imposta)
 rimborsi_art15     = somma rimborsi spese
-totale_documento   = base_iva + iva + rimborsi_art15
+bollo              = 2.00                    (solo se abilitato e sopra soglia)
+totale_documento   = base_iva + iva + rimborsi_art15 + bollo
 netto_a_pagare     = totale_documento - ritenuta_acconto
 ```
 
@@ -69,9 +70,20 @@ spese_generali     = compensi * 0.10           (solo se flag attivo)
 base_cassa         = compensi + spese_generali + spese_imponibili_legacy
 contributo_cpa     = base_cassa * 0.04
 rimborsi_art15     = somma rimborsi spese
-totale_documento   = base_cassa + contributo_cpa + rimborsi_art15
+bollo              = 2.00                    (solo se abilitato e sopra soglia)
+totale_documento   = base_cassa + contributo_cpa + rimborsi_art15 + bollo
 netto_a_pagare     = totale_documento
 ```
+
+## Bollo
+
+- Il bollo è disattivo di default.
+- Si abilita da _Impostazioni → Fatturazione → Bollo_.
+- Quando è disattivo non viene addebitato, non entra nei totali e non compare
+  nel riepilogo della fattura.
+- Quando è attivo, Pratix addebita 2 € solo se la fattura supera la soglia
+  prevista per rimborsi Art. 15 o, in regime forfettario, per il totale imponibile
+  con Cassa Forense.
 
 ## Numerazione
 
@@ -92,6 +104,7 @@ netto_a_pagare     = totale_documento
 | Generazione PDF di cortesia      | ✅              |
 | Calcoli forfettario / ordinario  | ✅              |
 | Cassa Forense 4%                 | ✅              |
+| Bollo opzionale                  | ✅              |
 | Ritenuta d'acconto condizionata  | ✅              |
 | Numerazione progressiva          | ✅              |
 | Fatturazione committente/periodo | ✅              |

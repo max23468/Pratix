@@ -78,7 +78,11 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
           .eq("id", data.principalId)
           .eq("user_id", userId)
           .single(),
-        supabase.from("profiles").select("tax_regime").eq("id", userId).single(),
+        supabase
+          .from("profiles")
+          .select("tax_regime, include_stamp_duty")
+          .eq("id", userId)
+          .single(),
       ]);
     if (principalError) throw principalError;
     if (profileError) throw profileError;
@@ -113,6 +117,7 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
       taxRegime: profile?.tax_regime === "forfettario" ? "forfettario" : "ordinario",
       includeGeneralExpenses: data.includeGeneralExpenses,
       generalExpensesRate: Number(data.generalExpensesRate),
+      includeStampDuty: Boolean(profile?.include_stamp_duty),
     });
 
     const { number, year } = await reserveNextInvoiceNumber(supabase, userId);

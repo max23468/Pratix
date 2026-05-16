@@ -247,7 +247,7 @@ describe("server functions fatture", () => {
     });
     supabase.queue(
       "profiles:select:single",
-      { data: { tax_regime: "ordinario" }, error: null },
+      { data: { tax_regime: "ordinario", include_stamp_duty: false }, error: null },
       {
         data: { invoice_year: 2026, invoice_next_number: 12, invoice_number_prefix: "" },
         error: null,
