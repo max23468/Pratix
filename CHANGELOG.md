@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.7.6] — 2026-05-17
+
+### Correzioni
+
+- **Commenti Codex**: preservate le date udienza nei rendiconti rigenerati e reso robusto il merge delle Controparti composte con soggetti sovrapposti.
+
 ## [1.7.5] — 2026-05-17
 
 ### Correzioni
@@ -919,6 +925,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.7.6]: #176--2026-05-17
 [1.7.5]: #175--2026-05-17
 [1.7.4]: #174--2026-05-17
 [1.7.3]: #173--2026-05-16

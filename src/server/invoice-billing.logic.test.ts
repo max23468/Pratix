@@ -232,6 +232,7 @@ describe("selezioni e attività fatturabili", () => {
       buildBillingExportRowsFromInvoiceLines(
         [
           {
+            case_activity_id: "activity-fee",
             practice_number: 42,
             client_name: "Cliente snapshot",
             counterparty_name: "Controparte snapshot",
@@ -241,6 +242,10 @@ describe("selezioni e attività fatturabili", () => {
             quantity: "2",
             unit_price: "125",
             amount: "250",
+            case_activity_hearings: [
+              { hearing_date: "2026-05-20", position: 2 },
+              { hearing_date: "2026-05-10", position: 1 },
+            ],
           },
           {
             practice_number: 43,
@@ -266,7 +271,7 @@ describe("selezioni e attività fatturabili", () => {
         quantity: 2,
         unitPrice: 125,
         amount: 250,
-        hearingDates: [],
+        hearingDates: ["2026-05-10", "2026-05-20"],
       },
     ]);
   });

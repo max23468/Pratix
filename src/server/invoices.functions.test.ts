@@ -435,6 +435,7 @@ describe("server functions fatture", () => {
     supabase.queue("invoice_lines:select:many", {
       data: [
         {
+          case_activity_id: "activity-1",
           practice_number: 42,
           client_name: "Cliente snapshot",
           counterparty_name: "Controparte snapshot",
@@ -445,6 +446,13 @@ describe("server functions fatture", () => {
           unit_price: 120,
           amount: 360,
         },
+      ],
+      error: null,
+    });
+    supabase.queue("case_activity_hearings:select:many", {
+      data: [
+        { activity_id: "activity-1", hearing_date: "2026-05-20", position: 2 },
+        { activity_id: "activity-1", hearing_date: "2026-05-10", position: 1 },
       ],
       error: null,
     });
@@ -480,7 +488,7 @@ describe("server functions fatture", () => {
           quantity: 3,
           unitPrice: 120,
           amount: 360,
-          hearingDates: [],
+          hearingDates: ["2026-05-10", "2026-05-20"],
         },
       ],
     });
