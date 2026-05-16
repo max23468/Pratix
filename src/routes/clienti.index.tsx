@@ -44,22 +44,12 @@ type ClientListRow = {
   first_name: string | null;
   last_name: string | null;
   business_name: string | null;
-  tax_code: string | null;
-  vat_number: string | null;
   email: string | null;
   address_city: string | null;
   created_at: string;
 };
 
-const clientiSortKeys = [
-  "name",
-  "kind",
-  "principals",
-  "tax",
-  "email",
-  "city",
-  "created_at",
-] as const;
+const clientiSortKeys = ["name", "kind", "principals", "email", "city", "created_at"] as const;
 
 type ClientiSortKey = (typeof clientiSortKeys)[number];
 
@@ -152,11 +142,6 @@ function ClientiList() {
         label: "Committenti",
         getValue: (client) => principalNamesByClient[client.id]?.join(", ") || null,
       },
-      {
-        key: "tax",
-        label: "CF / P.IVA",
-        getValue: (client) => client.vat_number || client.tax_code,
-      },
       { key: "email", label: "Email", getValue: (client) => client.email },
       { key: "city", label: "Città", getValue: (client) => client.address_city },
       {
@@ -196,8 +181,6 @@ function ClientiList() {
       return (
         name.includes(term) ||
         principalNames.includes(term) ||
-        (c.tax_code ?? "").toLowerCase().includes(term) ||
-        (c.vat_number ?? "").toLowerCase().includes(term) ||
         (c.email ?? "").toLowerCase().includes(term)
       );
     });
@@ -229,7 +212,7 @@ function ClientiList() {
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Cerca per nome, CF, P.IVA, email…"
+            placeholder="Cerca per nome, committente o email…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             className="pl-9"
@@ -276,7 +259,6 @@ function ClientiList() {
                 sort={sort}
                 onSort={setSort}
               />
-              <SortableTableHead columnKey="tax" label="CF / P.IVA" sort={sort} onSort={setSort} />
               <SortableTableHead columnKey="email" label="Email" sort={sort} onSort={setSort} />
               <SortableTableHead columnKey="city" label="Città" sort={sort} onSort={setSort} />
             </TableRow>
@@ -341,9 +323,6 @@ function ClientiList() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {principalNamesByClient[c.id]?.join(", ") || "—"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {c.vat_number || c.tax_code || "—"}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {c.email ?? "—"}

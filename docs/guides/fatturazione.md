@@ -33,8 +33,8 @@ Pratix oggi **genera** il file XML; **non** lo invia ancora a SDI (vedi roadmap)
 ### Regime ordinario
 
 - IVA al **22%** sull'imponibile
-- **Ritenuta d'acconto 20%** sull'imponibile, se il cliente è **sostituto d'imposta** (azienda, partita IVA, ente)
-- No ritenuta verso persone fisiche private
+- **Ritenuta d'acconto 20%** sull'imponibile, se il committente è **sostituto d'imposta** (azienda, partita IVA, ente)
+- No ritenuta verso committenti persone fisiche private
 
 ## Cassa Forense
 
@@ -78,11 +78,11 @@ netto_a_pagare     = totale_documento
 - Numerazione progressiva annuale, reset a inizio anno.
 - Configurabile in _Impostazioni → Numerazione_.
 
-## Ricezione cliente (codice destinatario / PEC)
+## Ricezione committente (codice destinatario / PEC)
 
 - **Codice destinatario** SDI: 7 caratteri.
-- Se il cliente non ha un codice, si usa `0000000` e si valorizza la **PEC**.
-- Per privati senza PEC né codice: `0000000` + e-mail nel campo descrittivo (la fattura va in cassetto fiscale del cliente).
+- Se il committente non ha un codice, si usa `0000000` e si valorizza la **PEC**.
+- Per privati senza PEC né codice: `0000000` + e-mail nel campo descrittivo (la fattura va in cassetto fiscale del committente).
 
 ## Cosa Pratix oggi fa
 

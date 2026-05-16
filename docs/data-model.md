@@ -64,6 +64,10 @@ viene emessa al committente. `kind` distingue persona fisica (`individual`) da
 soggetto giuridico (`company`); a seconda del tipo si valorizzano
 `first_name`+`last_name` o `business_name`.
 
+Contiene solo dati anagrafici e di contatto utili alla pratica: i campi fiscali,
+PEC e codice destinatario SDI vivono sui committenti, perché sono i soli
+destinatari della fattura.
+
 La stessa anagrafica cliente può essere collegata a più committenti tramite
 `principal_clients`.
 

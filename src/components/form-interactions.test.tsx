@@ -279,9 +279,8 @@ describe("interazioni form anagrafiche", () => {
         initial={{
           first_name: " Ada ",
           last_name: " Rossi ",
-          tax_code: " rssdaa80a01h501a ",
           email: " ada@example.test ",
-          sdi_code: "abcdefg",
+          phone: " 3331234567 ",
         }}
         onSaved={onSaved}
         onCancel={vi.fn()}
@@ -297,9 +296,8 @@ describe("interazioni form anagrafiche", () => {
       expect.objectContaining({
         first_name: "Ada",
         last_name: "Rossi",
-        tax_code: "rssdaa80a01h501a",
         email: "ada@example.test",
-        sdi_code: "abcdefg",
+        phone: "3331234567",
       }),
     );
     expect(query.delete).toHaveBeenCalled();
@@ -357,7 +355,7 @@ describe("interazioni form anagrafiche", () => {
         initial={{
           kind: "company",
           business_name: " Alfa S.r.l. ",
-          vat_number: " 12345678901 ",
+          email: " amministrazione@alfa.test ",
         }}
         onSaved={onSaved}
         onCancel={vi.fn()}
@@ -373,7 +371,7 @@ describe("interazioni form anagrafiche", () => {
       expect.objectContaining({
         kind: "company",
         business_name: "Alfa S.r.l.",
-        vat_number: "12345678901",
+        email: "amministrazione@alfa.test",
       }),
     );
     expect(query.insert).toHaveBeenCalledWith([
