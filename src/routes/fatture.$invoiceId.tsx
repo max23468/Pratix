@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -38,6 +39,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { downloadBytes } from "@/lib/invoice-file-exports";
 import type { InvoiceLineKind } from "@/lib/invoice-calc";
 import { invoiceLineKindLabels } from "@/lib/invoice-calc";
 import type { InvoicePdfData } from "@/lib/invoice-pdf";
@@ -66,6 +68,8 @@ const readServerResult = async <T,>(result: T | { data: T } | Response) => {
   return unwrapServerResult<T>(result);
 };
 
+const XLSX_MIME_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+
 export const Route = createFileRoute("/fatture/$invoiceId")({
   head: () => ({
     meta: [
@@ -87,6 +91,7 @@ function InvoiceDetailPage() {
   const navigate = useNavigate();
   const generateInvoiceXml = useServerFn(generateInvoiceXmlFn);
   const qc = useQueryClient();
+  const [downloadingExportId, setDownloadingExportId] = useState<string | null>(null);
 
   const { data, isLoading } = useQuery({
     queryKey: ["invoice", invoiceId],
@@ -283,15 +288,25 @@ function InvoiceDetailPage() {
     });
   };
 
-  const downloadExport = async (storagePath: string, fileName: string) => {
-    const { data: signed, error } = await supabase.storage
-      .from(PRATIX_DOCUMENTS_BUCKET)
-      .createSignedUrl(storagePath, 60, { download: fileName });
-    if (error) {
-      toast.error(error.message);
-      return;
+  const downloadExport = async (exportId: string, storagePath: string, fileName: string) => {
+    setDownloadingExportId(exportId);
+    try {
+      const { data: file, error } = await supabase.storage
+        .from(PRATIX_DOCUMENTS_BUCKET)
+        .download(storagePath);
+      if (error) throw error;
+      if (!file) throw new Error("Rendiconto Excel non disponibile");
+
+      downloadBytes({
+        bytes: new Uint8Array(await file.arrayBuffer()),
+        fileName,
+        mimeType: file.type || XLSX_MIME_TYPE,
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Download rendiconto non riuscito");
+    } finally {
+      setDownloadingExportId(null);
     }
-    if (signed?.signedUrl) window.open(signed.signedUrl, "_blank", "noopener,noreferrer");
   };
 
   if (isLoading || !data) {
@@ -474,11 +489,14 @@ function InvoiceDetailPage() {
                   key={item.id}
                   type="button"
                   variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => downloadExport(item.storage_path, item.file_name)}
+                  className="w-full min-w-0 justify-start overflow-hidden"
+                  disabled={downloadingExportId === item.id}
+                  onClick={() => void downloadExport(item.id, item.storage_path, item.file_name)}
                 >
-                  <FileSpreadsheet className="mr-2 size-4" />
-                  {item.file_name}
+                  <FileSpreadsheet className="mr-2 size-4 shrink-0" />
+                  <span className="min-w-0 truncate text-left">
+                    {downloadingExportId === item.id ? "Preparazione download…" : item.file_name}
+                  </span>
                 </Button>
               ))}
             </CardContent>
