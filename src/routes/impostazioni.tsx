@@ -61,6 +61,7 @@ type ProfileForm = {
   vat_rate: number;
   withholding_rate: number;
   apply_withholding: boolean;
+  include_stamp_duty: boolean;
   bank_name: string;
   iban: string;
   invoice_number_prefix: string;
@@ -88,6 +89,7 @@ const empty: ProfileForm = {
   vat_rate: 22,
   withholding_rate: 20,
   apply_withholding: true,
+  include_stamp_duty: false,
   bank_name: "",
   iban: "",
   invoice_number_prefix: "",
@@ -137,6 +139,7 @@ function SettingsPage() {
       vat_rate: Number(data.vat_rate ?? 22),
       withholding_rate: Number(data.withholding_rate ?? 20),
       apply_withholding: data.apply_withholding ?? true,
+      include_stamp_duty: data.include_stamp_duty ?? false,
       bank_name: data.bank_name ?? "",
       iban: data.iban ?? "",
       invoice_number_prefix: data.invoice_number_prefix ?? "",
@@ -358,6 +361,27 @@ function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="fatturazione" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Bollo</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-start justify-between gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="include-stamp-duty">Includi bollo in fattura</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Se attivo, Pratix addebita 2 € quando la fattura supera la soglia prevista.
+                  </p>
+                </div>
+                <Switch
+                  id="include-stamp-duty"
+                  checked={form.include_stamp_duty}
+                  onCheckedChange={(v) => set("include_stamp_duty", v)}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle>Numerazione fatture</CardTitle>

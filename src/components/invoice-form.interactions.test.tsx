@@ -16,6 +16,7 @@ const { toast, navigate, createBillingInvoice, setProfileTaxRegime, supabase } =
           vat_rate: 22,
           withholding_rate: 20,
           tax_regime: profileTaxRegime,
+          include_stamp_duty: false,
         },
         error: null,
       };
@@ -293,5 +294,17 @@ describe("InvoiceForm", () => {
     expect(summaryCard).not.toBeNull();
     expect(within(summaryCard as HTMLElement).queryByText("IVA")).toBeNull();
     expect(within(summaryCard as HTMLElement).getByText("Cassa Forense")).toBeTruthy();
+  });
+
+  it("non mostra il bollo nel riepilogo quando la preferenza è disattiva", async () => {
+    render(<InvoiceForm />, { wrapper: Wrapper });
+
+    await screen.findByText("Banca Test");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[0], "principal-1");
+    await screen.findByText("Contributo unificato");
+
+    const summaryCard = screen.getByText("Riepilogo").parentElement?.parentElement;
+    expect(summaryCard).not.toBeNull();
+    expect(within(summaryCard as HTMLElement).queryByText("Bollo")).toBeNull();
   });
 });

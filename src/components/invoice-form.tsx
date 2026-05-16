@@ -143,7 +143,7 @@ export function InvoiceForm() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
-        .select("cassa_rate, vat_rate, withholding_rate, tax_regime")
+        .select("cassa_rate, vat_rate, withholding_rate, tax_regime, include_stamp_duty")
         .eq("id", user!.id)
         .single();
       if (error) throw error;
@@ -166,6 +166,7 @@ export function InvoiceForm() {
   });
 
   const selectedPrincipal = principals.find((principal) => principal.id === principalId) ?? null;
+  const includeStampDuty = Boolean(profile?.include_stamp_duty);
 
   useEffect(() => {
     if (!profile) return;
@@ -239,12 +240,14 @@ export function InvoiceForm() {
       taxRegime: isForfettario ? "forfettario" : "ordinario",
       includeGeneralExpenses,
       generalExpensesRate,
+      includeStampDuty,
     });
   }, [
     applyWithholding,
     cassaRate,
     generalExpensesRate,
     includeGeneralExpenses,
+    includeStampDuty,
     includedActivities,
     isForfettario,
     vatRate,
@@ -609,7 +612,7 @@ export function InvoiceForm() {
             <SummaryRow label="Cassa Forense" value={totals.cassaAmount} />
             {!isForfettario && <SummaryRow label="IVA" value={totals.vatAmount} />}
             <SummaryRow label="Rimborsi Art. 15" value={totals.art15Expenses} />
-            <SummaryRow label="Bollo" value={totals.stampAmount} />
+            {totals.stampAmount > 0 && <SummaryRow label="Bollo" value={totals.stampAmount} />}
             <div className="border-t border-border pt-3">
               <SummaryRow label="Totale documento" value={totals.totalAmount} strong />
               <SummaryRow label="Netto a pagare" value={totals.netToPay} strong />

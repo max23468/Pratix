@@ -1354,6 +1354,7 @@ export type Database = {
           full_name: string | null
           iban: string | null
           id: string
+          include_stamp_duty: boolean
           invoice_next_number: number
           invoice_number_prefix: string | null
           invoice_public_code_next_number: number
@@ -1392,6 +1393,7 @@ export type Database = {
           full_name?: string | null
           iban?: string | null
           id: string
+          include_stamp_duty?: boolean
           invoice_next_number?: number
           invoice_number_prefix?: string | null
           invoice_public_code_next_number?: number
@@ -1430,6 +1432,7 @@ export type Database = {
           full_name?: string | null
           iban?: string | null
           id?: string
+          include_stamp_duty?: boolean
           invoice_next_number?: number
           invoice_number_prefix?: string | null
           invoice_public_code_next_number?: number

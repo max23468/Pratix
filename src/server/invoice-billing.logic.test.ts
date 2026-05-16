@@ -179,6 +179,7 @@ describe("selezioni e attività fatturabili", () => {
       client_id: "client-1",
       payment_method: "Bonifico",
       net_to_pay: 1296.18,
+      stamp_amount: 2,
     });
     expect(
       buildInvoiceLineRows({
