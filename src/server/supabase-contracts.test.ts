@@ -23,6 +23,7 @@ const userOwnedTables = [
   "billing_exports",
   "imports",
   "import_rows",
+  "duplicate_reviews",
 ] as const;
 
 describe("contratti Supabase recupero crediti", () => {

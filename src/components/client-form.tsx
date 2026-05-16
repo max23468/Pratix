@@ -1,10 +1,12 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { AlertCircle, Trash2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DuplicateWarningPanel } from "@/components/duplicate-warning-panel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,8 +32,11 @@ import {
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import type { DuplicateCandidate } from "@/lib/duplicate-matching";
 import { routeRef } from "@/lib/public-route-code";
+import { canUseAuthHeaders, getAuthHeaders, readServerResult } from "@/lib/server-functions";
 import { useSubmitLock } from "@/lib/submit-lock";
+import { findDuplicateCandidatesFn } from "@/server/duplicates.functions";
 
 type ClientRow = {
   id?: string;
@@ -77,7 +82,10 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
   const [form, setForm] = useState<ClientRow>({ ...empty, ...(initial ?? {}) });
   const [selectedPrincipalIds, setSelectedPrincipalIds] = useState<string[]>([]);
   const [principalLinkError, setPrincipalLinkError] = useState<string | null>(null);
+  const [duplicateCandidates, setDuplicateCandidates] = useState<DuplicateCandidate[]>([]);
+  const [duplicateOverride, setDuplicateOverride] = useState(false);
   const saveLock = useSubmitLock();
+  const findDuplicates = useServerFn(findDuplicateCandidatesFn);
 
   const isEdit = Boolean(initial?.id);
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
@@ -180,7 +188,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
     onError: (e: Error) => toast.error(e.message),
   });
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (form.kind === "individual" && !form.first_name?.trim() && !form.last_name?.trim()) {
       toast.error("Inserisci nome e cognome");
@@ -198,6 +206,29 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
       setPrincipalLinkError(message);
       toast.error(message);
       return;
+    }
+    if (!isEdit && !duplicateOverride && canUseAuthHeaders()) {
+      const candidates = await readServerResult<DuplicateCandidate[]>(
+        await findDuplicates({
+          data: {
+            entityType: "client",
+            draft: {
+              kind: form.kind,
+              first_name: form.first_name?.trim() || null,
+              last_name: form.last_name?.trim() || null,
+              business_name: form.business_name?.trim() || null,
+              email: form.email?.trim() || null,
+              phone: form.phone?.trim() || null,
+            },
+          },
+          headers: await getAuthHeaders(),
+        }),
+      );
+      if (candidates.length > 0) {
+        setDuplicateCandidates(candidates);
+        toast.error("Controlla i potenziali duplicati prima di creare il cliente");
+        return;
+      }
     }
     if (!saveLock.acquire()) return;
     saveMutation.mutate();
@@ -256,6 +287,17 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
           )}
         </CardContent>
       </Card>
+
+      <DuplicateWarningPanel
+        candidates={duplicateCandidates}
+        onUseExisting={(record) => onSaved(record.publicCode || record.id)}
+        onCreateAnyway={() => {
+          setDuplicateOverride(true);
+          setDuplicateCandidates([]);
+          if (!saveLock.acquire()) return;
+          saveMutation.mutate();
+        }}
+      />
 
       <Card>
         <CardHeader>

@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DuplicateWarningPanel } from "@/components/duplicate-warning-panel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -29,8 +31,11 @@ import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { clientKindLabels, counterpartyKindLabels } from "@/lib/labels";
+import type { DuplicateCandidate } from "@/lib/duplicate-matching";
 import { routeRef } from "@/lib/public-route-code";
+import { canUseAuthHeaders, getAuthHeaders, readServerResult } from "@/lib/server-functions";
 import { useSubmitLock } from "@/lib/submit-lock";
+import { findDuplicateCandidatesFn } from "@/server/duplicates.functions";
 
 type CounterpartyKind = "individual" | "company" | "group";
 type SubjectKind = "individual" | "company";
@@ -96,9 +101,12 @@ export function CounterpartyForm({
   const [subjects, setSubjects] = useState<SubjectRow[]>(
     initialSubjects.length > 0 ? initialSubjects : [emptySubject(0)],
   );
+  const [duplicateCandidates, setDuplicateCandidates] = useState<DuplicateCandidate[]>([]);
+  const [duplicateOverride, setDuplicateOverride] = useState(false);
   const isEdit = Boolean(initial?.id);
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
   const saveLock = useSubmitLock();
+  const findDuplicates = useServerFn(findDuplicateCandidatesFn);
 
   const upd = <K extends keyof CounterpartyRow>(key: K, value: CounterpartyRow[K]) => {
     markDirty();
@@ -184,8 +192,34 @@ export function CounterpartyForm({
     onError: (error: Error) => toast.error(error.message),
   });
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (!isEdit && !duplicateOverride && canUseAuthHeaders()) {
+      const candidates = await readServerResult<DuplicateCandidate[]>(
+        await findDuplicates({
+          data: {
+            entityType: "counterparty",
+            draft: {
+              kind: form.kind,
+              first_name: form.kind === "individual" ? form.first_name?.trim() || null : null,
+              last_name: form.kind === "individual" ? form.last_name?.trim() || null : null,
+              business_name: form.kind !== "individual" ? form.business_name?.trim() || null : null,
+              subjectLabels: normalizedSubjects().map((subject) =>
+                subject.kind === "company"
+                  ? subject.business_name
+                  : [subject.first_name, subject.last_name].filter(Boolean).join(" "),
+              ),
+            },
+          },
+          headers: await getAuthHeaders(),
+        }),
+      );
+      if (candidates.length > 0) {
+        setDuplicateCandidates(candidates);
+        toast.error("Controlla i potenziali duplicati prima di creare la controparte");
+        return;
+      }
+    }
     if (!saveLock.acquire()) return;
     saveMutation.mutate();
   };
@@ -261,6 +295,17 @@ export function CounterpartyForm({
           </div>
         </CardContent>
       </Card>
+
+      <DuplicateWarningPanel
+        candidates={duplicateCandidates}
+        onUseExisting={(record) => onSaved(record.publicCode || record.id)}
+        onCreateAnyway={() => {
+          setDuplicateOverride(true);
+          setDuplicateCandidates([]);
+          if (!saveLock.acquire()) return;
+          saveMutation.mutate();
+        }}
+      />
 
       {form.kind === "group" && (
         <Card>

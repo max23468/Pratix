@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Plus, RefreshCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DuplicateWarningPanel } from "@/components/duplicate-warning-panel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -34,9 +36,12 @@ import {
   clientKindLabels,
   counterpartyKindLabels,
 } from "@/lib/labels";
+import type { DuplicateCandidate } from "@/lib/duplicate-matching";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { routeRef } from "@/lib/public-route-code";
+import { canUseAuthHeaders, getAuthHeaders, readServerResult } from "@/lib/server-functions";
 import { useSubmitLock } from "@/lib/submit-lock";
+import { findDuplicateCandidatesFn } from "@/server/duplicates.functions";
 
 type CaseRow = {
   id?: string;
@@ -159,11 +164,24 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
   const [quickCounterparty, setQuickCounterparty] =
     useState<QuickCounterpartyDraft>(emptyQuickCounterparty);
   const [quickCreatedClients, setQuickCreatedClients] = useState<ClientOption[]>([]);
+  const [duplicateCandidates, setDuplicateCandidates] = useState<DuplicateCandidate[]>([]);
+  const [quickPrincipalDuplicates, setQuickPrincipalDuplicates] = useState<DuplicateCandidate[]>(
+    [],
+  );
+  const [quickClientDuplicates, setQuickClientDuplicates] = useState<DuplicateCandidate[]>([]);
+  const [quickCounterpartyDuplicates, setQuickCounterpartyDuplicates] = useState<
+    DuplicateCandidate[]
+  >([]);
+  const duplicateOverrideRef = useRef(false);
+  const quickPrincipalOverrideRef = useRef(false);
+  const quickClientOverrideRef = useRef(false);
+  const quickCounterpartyOverrideRef = useRef(false);
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
   const saveLock = useSubmitLock();
   const quickPrincipalLock = useSubmitLock();
   const quickClientLock = useSubmitLock();
   const quickCounterpartyLock = useSubmitLock();
+  const findDuplicates = useServerFn(findDuplicateCandidatesFn);
 
   const upd = useCallback(
     <K extends keyof CaseRow>(key: K, value: CaseRow[K]) => {
@@ -268,6 +286,21 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       if (!user) throw new Error("Sessione non valida");
       const businessName = quickPrincipal.business_name.trim();
       if (!businessName) throw new Error("Inserisci il nome del committente");
+      if (!quickPrincipalOverrideRef.current && canUseAuthHeaders()) {
+        const candidates = await readServerResult<DuplicateCandidate[]>(
+          await findDuplicates({
+            data: {
+              entityType: "principal",
+              draft: { business_name: businessName },
+            },
+            headers: await getAuthHeaders(),
+          }),
+        );
+        if (candidates.length > 0) {
+          setQuickPrincipalDuplicates(candidates);
+          throw new Error("Controlla i potenziali duplicati prima di creare il committente");
+        }
+      }
 
       const payload = {
         user_id: user.id,
@@ -301,6 +334,8 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       upd("principal_id", principal.id);
       upd("client_id", null);
       setQuickPrincipal(emptyQuickPrincipal);
+      setQuickPrincipalDuplicates([]);
+      quickPrincipalOverrideRef.current = false;
       setQuickPrincipalOpen(false);
       toast.success("Committente creato");
     },
@@ -321,6 +356,26 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
 
       if (isIndividual && !firstName && !lastName) throw new Error("Inserisci nome e cognome");
       if (!isIndividual && !businessName) throw new Error("Inserisci la ragione sociale");
+      if (!quickClientOverrideRef.current && canUseAuthHeaders()) {
+        const candidates = await readServerResult<DuplicateCandidate[]>(
+          await findDuplicates({
+            data: {
+              entityType: "client",
+              draft: {
+                kind: quickClient.kind,
+                first_name: isIndividual ? firstName || null : null,
+                last_name: isIndividual ? lastName || null : null,
+                business_name: isIndividual ? null : businessName,
+              },
+            },
+            headers: await getAuthHeaders(),
+          }),
+        );
+        if (candidates.length > 0) {
+          setQuickClientDuplicates(candidates);
+          throw new Error("Controlla i potenziali duplicati prima di creare il cliente");
+        }
+      }
 
       const payload = {
         user_id: user.id,
@@ -367,6 +422,8 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       qc.invalidateQueries({ queryKey: ["principal-clients"] });
       upd("client_id", client.id);
       setQuickClient(emptyQuickClient);
+      setQuickClientDuplicates([]);
+      quickClientOverrideRef.current = false;
       setQuickClientOpen(false);
       toast.success("Cliente creato");
     },
@@ -387,6 +444,26 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       if (isIndividual && !firstName && !lastName) throw new Error("Inserisci nome e cognome");
       if (!isIndividual && !businessName) {
         throw new Error("Inserisci la ragione sociale o il nome del gruppo");
+      }
+      if (!quickCounterpartyOverrideRef.current && canUseAuthHeaders()) {
+        const candidates = await readServerResult<DuplicateCandidate[]>(
+          await findDuplicates({
+            data: {
+              entityType: "counterparty",
+              draft: {
+                kind: quickCounterparty.kind,
+                first_name: isIndividual ? firstName || null : null,
+                last_name: isIndividual ? lastName || null : null,
+                business_name: isIndividual ? null : businessName,
+              },
+            },
+            headers: await getAuthHeaders(),
+          }),
+        );
+        if (candidates.length > 0) {
+          setQuickCounterpartyDuplicates(candidates);
+          throw new Error("Controlla i potenziali duplicati prima di creare la controparte");
+        }
       }
 
       const payload = {
@@ -420,6 +497,8 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       qc.invalidateQueries({ queryKey: ["counterparties"] });
       upd("counterparty_id", counterparty.id);
       setQuickCounterparty(emptyQuickCounterparty);
+      setQuickCounterpartyDuplicates([]);
+      quickCounterpartyOverrideRef.current = false;
       setQuickCounterpartyOpen(false);
       toast.success("Controparte creata");
     },
@@ -440,6 +519,34 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       }
 
       const title = form.title.trim() || `Pratica ${practiceNumber}`;
+      if (!isEdit && !duplicateOverrideRef.current && canUseAuthHeaders()) {
+        const principal = form.principal_id;
+        const client = allClients.find((item) => item.id === form.client_id);
+        const candidates = await readServerResult<DuplicateCandidate[]>(
+          await findDuplicates({
+            data: {
+              entityType: "case",
+              draft: {
+                practice_number: practiceNumber,
+                title,
+                principal_id: principal,
+                client_id: form.client_id,
+                counterparty_id: form.counterparty_id,
+                authority: form.authority?.trim() || null,
+                rg_number: form.rg_number?.trim() || null,
+                principalName: principal,
+                clientName: client ? clientDisplayName(client) : null,
+              },
+            },
+            headers: await getAuthHeaders(),
+          }),
+        );
+        if (candidates.length > 0) {
+          setDuplicateCandidates(candidates);
+          throw new Error("Controlla i potenziali duplicati prima di creare la pratica");
+        }
+      }
+
       const payload = {
         user_id: user.id,
         principal_id: form.principal_id,
@@ -501,6 +608,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       qc.invalidateQueries({ queryKey: ["case", caseRow.id] });
       qc.invalidateQueries({ queryKey: ["case-credit-transfers", caseRow.id] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
+      duplicateOverrideRef.current = false;
       if (finishSave()) return;
       onSaved(routeRef(caseRow));
     },
@@ -580,6 +688,21 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                       }
                     />
                   </div>
+                  <DuplicateWarningPanel
+                    candidates={quickPrincipalDuplicates}
+                    onUseExisting={(record) => {
+                      upd("principal_id", record.id);
+                      upd("client_id", null);
+                      setQuickPrincipal(emptyQuickPrincipal);
+                      setQuickPrincipalDuplicates([]);
+                      setQuickPrincipalOpen(false);
+                    }}
+                    onCreateAnyway={() => {
+                      quickPrincipalOverrideRef.current = true;
+                      setQuickPrincipalDuplicates([]);
+                      if (quickPrincipalLock.acquire()) createQuickPrincipalMutation.mutate();
+                    }}
+                  />
                   <div className="flex justify-end gap-2">
                     <Button
                       type="button"
@@ -693,6 +816,20 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                       />
                     </div>
                   ) : null}
+                  <DuplicateWarningPanel
+                    candidates={quickClientDuplicates}
+                    onUseExisting={(record) => {
+                      upd("client_id", record.id);
+                      setQuickClient(emptyQuickClient);
+                      setQuickClientDuplicates([]);
+                      setQuickClientOpen(false);
+                    }}
+                    onCreateAnyway={() => {
+                      quickClientOverrideRef.current = true;
+                      setQuickClientDuplicates([]);
+                      if (quickClientLock.acquire()) createQuickClientMutation.mutate();
+                    }}
+                  />
                   <div className="flex justify-end gap-2">
                     <Button
                       type="button"
@@ -797,6 +934,20 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                       />
                     </div>
                   ) : null}
+                  <DuplicateWarningPanel
+                    candidates={quickCounterpartyDuplicates}
+                    onUseExisting={(record) => {
+                      upd("counterparty_id", record.id);
+                      setQuickCounterparty(emptyQuickCounterparty);
+                      setQuickCounterpartyDuplicates([]);
+                      setQuickCounterpartyOpen(false);
+                    }}
+                    onCreateAnyway={() => {
+                      quickCounterpartyOverrideRef.current = true;
+                      setQuickCounterpartyDuplicates([]);
+                      if (quickCounterpartyLock.acquire()) createQuickCounterpartyMutation.mutate();
+                    }}
+                  />
                   <div className="flex justify-end gap-2">
                     <Button
                       type="button"
@@ -897,6 +1048,17 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
           </div>
         </CardContent>
       </Card>
+
+      <DuplicateWarningPanel
+        candidates={duplicateCandidates}
+        onUseExisting={(record) => onSaved(record.publicCode || record.id)}
+        onCreateAnyway={() => {
+          duplicateOverrideRef.current = true;
+          setDuplicateCandidates([]);
+          if (!saveLock.acquire()) return;
+          saveMutation.mutate();
+        }}
+      />
 
       <Card>
         <CardHeader>

@@ -10,6 +10,7 @@ import {
   UserRoundSearch,
   Tags,
   ListChecks,
+  GitCompareArrows,
 } from "lucide-react";
 import {
   Sidebar,
@@ -35,6 +36,7 @@ const items = [
   { title: "Pratiche", url: "/pratiche" as const, icon: Briefcase },
   { title: "Attività", url: "/attivita" as const, icon: ListChecks },
   { title: "Fatture", url: "/fatture" as const, icon: Receipt },
+  { title: "Controllo duplicati", url: "/controllo-duplicati" as const, icon: GitCompareArrows },
   { title: "Impostazioni", url: "/impostazioni" as const, icon: Settings },
 ];
 

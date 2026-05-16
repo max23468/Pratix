@@ -1100,6 +1100,40 @@ CREATE INDEX idx_import_rows_user ON public.import_rows (user_id);
 CREATE INDEX idx_import_rows_import ON public.import_rows (import_id);
 CREATE INDEX idx_import_rows_status ON public.import_rows (status);
 
+CREATE TABLE public.duplicate_reviews (
+  id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id          uuid NOT NULL,
+  entity_type      text NOT NULL,
+  left_record_id   uuid NOT NULL,
+  right_record_id  uuid NOT NULL,
+  score            numeric NOT NULL DEFAULT 0,
+  confidence       text NOT NULL DEFAULT 'low',
+  reasons          text[] NOT NULL DEFAULT ARRAY[]::text[],
+  status           text NOT NULL DEFAULT 'open',
+  kept_record_id   uuid,
+  merged_record_id uuid,
+  snapshot         jsonb NOT NULL DEFAULT '{}'::jsonb,
+  note             text,
+  detected_at      timestamptz NOT NULL DEFAULT now(),
+  resolved_at      timestamptz,
+  created_at       timestamptz NOT NULL DEFAULT now(),
+  updated_at       timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT duplicate_reviews_entity_type_check CHECK (
+    entity_type IN ('principal', 'client', 'counterparty', 'case')
+  ),
+  CONSTRAINT duplicate_reviews_confidence_check CHECK (confidence IN ('high', 'medium', 'low')),
+  CONSTRAINT duplicate_reviews_status_check CHECK (
+    status IN ('open', 'snoozed', 'dismissed', 'merged')
+  ),
+  CONSTRAINT duplicate_reviews_score_range CHECK (score >= 0 AND score <= 1),
+  CONSTRAINT duplicate_reviews_distinct_records CHECK (left_record_id <> right_record_id),
+  CONSTRAINT duplicate_reviews_ordered_pair CHECK (left_record_id < right_record_id),
+  UNIQUE (user_id, entity_type, left_record_id, right_record_id)
+);
+CREATE INDEX idx_duplicate_reviews_user ON public.duplicate_reviews (user_id);
+CREATE INDEX idx_duplicate_reviews_status ON public.duplicate_reviews (status);
+CREATE INDEX idx_duplicate_reviews_entity ON public.duplicate_reviews (entity_type);
+
 
 -- ============================================================================
 -- FOREIGN KEYS
@@ -1259,6 +1293,10 @@ ALTER TABLE public.import_rows
   ADD CONSTRAINT import_rows_applied_case_owner_fkey
   FOREIGN KEY (applied_case_id, user_id) REFERENCES public.cases(id, user_id) ON DELETE SET NULL (applied_case_id);
 
+ALTER TABLE public.duplicate_reviews
+  ADD CONSTRAINT duplicate_reviews_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
 ALTER TABLE public.invoices
   ADD CONSTRAINT invoices_principal_owner_fkey
   FOREIGN KEY (principal_id, user_id) REFERENCES public.principals(id, user_id) ON DELETE RESTRICT,
@@ -1299,6 +1337,7 @@ CREATE TRIGGER billing_run_items_set_updated_at       BEFORE UPDATE ON public.bi
 CREATE TRIGGER billing_exports_set_updated_at         BEFORE UPDATE ON public.billing_exports         FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER imports_set_updated_at                 BEFORE UPDATE ON public.imports                 FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER import_rows_set_updated_at             BEFORE UPDATE ON public.import_rows             FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER duplicate_reviews_set_updated_at       BEFORE UPDATE ON public.duplicate_reviews      FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 
 CREATE TRIGGER cases_log_status_change
   AFTER INSERT OR UPDATE ON public.cases
@@ -1341,6 +1380,7 @@ GRANT EXECUTE ON FUNCTION public.get_next_practice_number() TO authenticated;
 REVOKE ALL ON FUNCTION public.apply_import_row(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.apply_import_row(uuid) TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_table_preferences TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.duplicate_reviews TO authenticated;
 
 
 -- ============================================================================
@@ -1371,6 +1411,7 @@ ALTER TABLE public.billing_run_items      ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.billing_exports        ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.imports                ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.import_rows            ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.duplicate_reviews      ENABLE ROW LEVEL SECURITY;
 
 -- profiles
 CREATE POLICY profiles_select_own ON public.profiles FOR SELECT TO authenticated USING ((select auth.uid()) = id);
@@ -1485,3 +1526,8 @@ CREATE POLICY import_rows_select_own ON public.import_rows FOR SELECT TO authent
 CREATE POLICY import_rows_insert_own ON public.import_rows FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
 CREATE POLICY import_rows_update_own ON public.import_rows FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
 CREATE POLICY import_rows_delete_own ON public.import_rows FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
+
+CREATE POLICY duplicate_reviews_select_own ON public.duplicate_reviews FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY duplicate_reviews_insert_own ON public.duplicate_reviews FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY duplicate_reviews_update_own ON public.duplicate_reviews FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY duplicate_reviews_delete_own ON public.duplicate_reviews FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);

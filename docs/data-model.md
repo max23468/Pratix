@@ -4,9 +4,10 @@
 > verità SQL è [`../supabase/schema.sql`](../supabase/schema.sql); questo file
 > spiega **cosa** rappresentano le tabelle e **perché** sono fatte così.
 
-Aggiornato a: **Pratix 1.4.0**. Include recupero crediti, Storage privato,
+Aggiornato a: **Pratix 1.5.0**. Include recupero crediti, Storage privato,
 preferenze tabellari sincronizzate, Creazione guidata manuale e fatturazione
-con bollo opzionale.
+con bollo opzionale. Include anche il Controllo duplicati con decisioni
+persistenti nella migration `20260516190816_duplicate_reviews`.
 
 ## Principi generali
 
@@ -293,6 +294,27 @@ Gli allegati caricati durante l'import guidato vengono salvati subito dopo la
 conferma, usando gli ID attività pre-generati nello staging e i metadati in
 `activity_attachments`.
 
+### `duplicate_reviews`
+
+Decisioni dell'utente sui potenziali duplicati rilevati dal Controllo duplicati.
+La tabella non contiene i dati sorgente canonici: conserva la coppia di record
+coinvolta, il tipo entità (`principal`, `client`, `counterparty`, `case`), lo
+score, la probabilità (`high`, `medium`, `low`), i motivi leggibili mostrati in
+UI e uno snapshot minimo utile a spiegare perché la coppia era stata proposta.
+
+`status` distingue:
+
+- `open`: sospetto aperto;
+- `snoozed`: controllo rimandato;
+- `dismissed`: coppia segnata come non duplicata;
+- `merged`: coppia risolta con unione prudente.
+
+Il vincolo `(user_id, entity_type, left_record_id, right_record_id)` impedisce
+di salvare due decisioni sulla stessa coppia. Gli ID della coppia sono ordinati
+in modo stabile (`left_record_id < right_record_id`), così la stessa coppia non
+viene riproposta invertendo i lati. Le decisioni `dismissed` e `merged`
+servono a non mostrare di nuovo falsi positivi o duplicati già risolti.
+
 ## Relazioni (logiche, non FK)
 
 ```
@@ -315,6 +337,7 @@ counterparties (1) ─── (N) counterparty_subjects
 cases (N) ─── (1) counterparties
 invoices (1) ─── (N) invoice_lines
 imports (1) ─── (N) import_rows
+profiles (1) ─── (N) duplicate_reviews
 ```
 
 ## Storage

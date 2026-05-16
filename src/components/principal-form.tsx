@@ -1,9 +1,11 @@
 import { useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Archive, ArchiveRestore } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DuplicateWarningPanel } from "@/components/duplicate-warning-panel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -11,8 +13,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import type { DuplicateCandidate } from "@/lib/duplicate-matching";
 import { routeRef } from "@/lib/public-route-code";
+import { canUseAuthHeaders, getAuthHeaders, readServerResult } from "@/lib/server-functions";
 import { useSubmitLock } from "@/lib/submit-lock";
+import { findDuplicateCandidatesFn } from "@/server/duplicates.functions";
 
 type PrincipalRow = {
   id?: string;
@@ -68,10 +73,13 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [form, setForm] = useState<PrincipalRow>({ ...empty, ...(initial ?? {}) });
+  const [duplicateCandidates, setDuplicateCandidates] = useState<DuplicateCandidate[]>([]);
+  const [duplicateOverride, setDuplicateOverride] = useState(false);
   const isEdit = Boolean(initial?.id);
   const isArchived = Boolean(form.archived_at);
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
   const saveLock = useSubmitLock();
+  const findDuplicates = useServerFn(findDuplicateCandidatesFn);
 
   const upd = <K extends keyof PrincipalRow>(k: K, v: PrincipalRow[K]) => {
     markDirty();
@@ -160,8 +168,39 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
     onError: (error: Error) => toast.error(error.message),
   });
 
-  const handleSubmit = (event: FormEvent) => {
+  const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
+    if (!form.business_name.trim()) {
+      toast.error("Inserisci la ragione sociale");
+      return;
+    }
+    if (!form.fees_enabled && !form.expense_reimbursements_enabled) {
+      toast.error("Abilita almeno compensi o rimborsi spese");
+      return;
+    }
+    if (!isEdit && !duplicateOverride && canUseAuthHeaders()) {
+      const candidates = await readServerResult<DuplicateCandidate[]>(
+        await findDuplicates({
+          data: {
+            entityType: "principal",
+            draft: {
+              business_name: form.business_name.trim(),
+              tax_code: form.tax_code?.trim() || null,
+              vat_number: form.vat_number?.trim() || null,
+              email: form.email?.trim() || null,
+              pec: form.pec?.trim() || null,
+              phone: form.phone?.trim() || null,
+            },
+          },
+          headers: await getAuthHeaders(),
+        }),
+      );
+      if (candidates.length > 0) {
+        setDuplicateCandidates(candidates);
+        toast.error("Controlla i potenziali duplicati prima di creare il committente");
+        return;
+      }
+    }
     if (!saveLock.acquire()) return;
     saveMutation.mutate();
   };
@@ -201,6 +240,17 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
           </div>
         </CardContent>
       </Card>
+
+      <DuplicateWarningPanel
+        candidates={duplicateCandidates}
+        onUseExisting={(record) => onSaved(record.publicCode || record.id)}
+        onCreateAnyway={() => {
+          setDuplicateOverride(true);
+          setDuplicateCandidates([]);
+          if (!saveLock.acquire()) return;
+          saveMutation.mutate();
+        }}
+      />
 
       <Card>
         <CardHeader>
