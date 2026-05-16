@@ -139,11 +139,23 @@ export function useUnsavedChangesGuard({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel onClick={stayHere}>Resta qui</AlertDialogCancel>
-          <Button type="button" variant="outline" onClick={leaveWithoutSaving}>
+          <AlertDialogCancel className="mt-0 w-full sm:w-auto" onClick={stayHere}>
+            Resta qui
+          </AlertDialogCancel>
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full sm:w-auto"
+            onClick={leaveWithoutSaving}
+          >
             Esci senza salvare
           </Button>
-          <Button type="button" onClick={saveAndContinue} disabled={isSaving}>
+          <Button
+            type="button"
+            className="w-full sm:w-auto"
+            onClick={saveAndContinue}
+            disabled={isSaving}
+          >
             {isSaving ? "Salvataggio..." : "Salva"}
           </Button>
         </AlertDialogFooter>

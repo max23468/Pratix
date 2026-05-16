@@ -297,10 +297,10 @@ export function InvoiceForm() {
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_360px]"
+      className="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_360px]"
     >
-      <div className="space-y-4">
-        <Card>
+      <div className="min-w-0 space-y-4">
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle>Dati fatturazione</CardTitle>
             <CardDescription>
@@ -400,7 +400,7 @@ export function InvoiceForm() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle>Attività</CardTitle>
             <CardDescription>
@@ -408,9 +408,9 @@ export function InvoiceForm() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
+            <div className="min-w-0 overflow-x-auto">
+              <Table className="block w-full sm:table">
+                <TableHeader className="hidden sm:table-header-group">
                   <TableRow>
                     <TableHead>Stato</TableHead>
                     <TableHead>Data</TableHead>
@@ -437,8 +437,11 @@ export function InvoiceForm() {
                     </TableRow>
                   )}
                   {activities.map((activity) => (
-                    <TableRow key={activity.id}>
-                      <TableCell>
+                    <TableRow
+                      key={activity.id}
+                      className="mb-3 block rounded-lg border border-border p-3 last:mb-0 sm:mb-0 sm:table-row sm:rounded-none sm:border-x-0 sm:border-t-0 sm:p-0"
+                    >
+                      <TableCell className="block p-0 pb-3 sm:table-cell sm:p-2">
                         <Select
                           value={selection[activity.id] ?? "included"}
                           onValueChange={(value) => {
@@ -449,7 +452,7 @@ export function InvoiceForm() {
                             }));
                           }}
                         >
-                          <SelectTrigger className="w-32">
+                          <SelectTrigger className="w-full sm:w-32" aria-label="Stato attività">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -461,31 +464,53 @@ export function InvoiceForm() {
                           </SelectContent>
                         </Select>
                       </TableCell>
-                      <TableCell>{formatDate(activity.activity_date)}</TableCell>
-                      <TableCell>
-                        {activity.cases?.practice_number
-                          ? `N. ${activity.cases.practice_number}`
-                          : "—"}
+                      <TableCell className="flex justify-between gap-3 text-sm sm:table-cell">
+                        <span className="shrink-0 text-muted-foreground sm:hidden">Data</span>
+                        <span className="text-right sm:text-left">
+                          {formatDate(activity.activity_date)}
+                        </span>
                       </TableCell>
-                      <TableCell>
-                        {activity.clients ? clientDisplayName(activity.clients) : "—"}
+                      <TableCell className="flex justify-between gap-3 text-sm sm:table-cell">
+                        <span className="shrink-0 text-muted-foreground sm:hidden">Pratica</span>
+                        <span className="min-w-0 break-words text-right sm:text-left">
+                          {activity.cases?.practice_number
+                            ? `N. ${activity.cases.practice_number}`
+                            : "—"}
+                        </span>
                       </TableCell>
-                      <TableCell>
-                        {activity.counterparties
-                          ? counterpartyDisplayName(activity.counterparties)
-                          : "—"}
+                      <TableCell className="flex justify-between gap-3 text-sm sm:table-cell">
+                        <span className="shrink-0 text-muted-foreground sm:hidden">Cliente</span>
+                        <span className="min-w-0 break-words text-right sm:text-left">
+                          {activity.clients ? clientDisplayName(activity.clients) : "—"}
+                        </span>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="flex justify-between gap-3 text-sm sm:table-cell">
+                        <span className="shrink-0 text-muted-foreground sm:hidden">
+                          Controparte
+                        </span>
+                        <span className="min-w-0 break-words text-right sm:text-left">
+                          {activity.counterparties
+                            ? counterpartyDisplayName(activity.counterparties)
+                            : "—"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="block text-sm sm:table-cell">
                         <div className="flex flex-col gap-1">
-                          <span>{activity.description}</span>
+                          <span className="text-muted-foreground sm:hidden">Voce</span>
+                          <span className="break-words">{activity.description}</span>
                           <span className="text-xs text-muted-foreground">
                             {activity.kind === "fee" ? "Compenso" : "Rimborso spese"} · Q.tà{" "}
                             {activity.quantity}
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {formatCurrency(Number(activity.amount))}
+                      <TableCell className="flex justify-between gap-3 text-sm font-medium sm:table-cell sm:text-right">
+                        <span className="shrink-0 font-normal text-muted-foreground sm:hidden">
+                          Totale
+                        </span>
+                        <span className="text-right">
+                          {formatCurrency(Number(activity.amount))}
+                        </span>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -495,7 +520,7 @@ export function InvoiceForm() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle>Note</CardTitle>
           </CardHeader>
@@ -512,8 +537,8 @@ export function InvoiceForm() {
         </Card>
       </div>
 
-      <div className="space-y-4">
-        <Card>
+      <div className="min-w-0 space-y-4">
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle>Regole fiscali</CardTitle>
           </CardHeader>
@@ -575,7 +600,7 @@ export function InvoiceForm() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle>Riepilogo</CardTitle>
             <CardDescription>{includedActivities.length} attività incluse</CardDescription>
@@ -593,7 +618,7 @@ export function InvoiceForm() {
               <SummaryRow label="Totale documento" value={totals.totalAmount} strong />
               <SummaryRow label="Netto a pagare" value={totals.netToPay} strong />
             </div>
-            <Badge variant="outline" className="gap-1">
+            <Badge variant="outline" className="max-w-full gap-1 whitespace-normal text-left">
               <FileSpreadsheet className="size-3.5" />
               Genera rendiconti compensi e rimborsi
             </Badge>
