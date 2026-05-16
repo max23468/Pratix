@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
-import { buildBillingWorkbook } from "@/lib/billing-xlsx";
+import { buildBillingWorkbook, type BillingExportKind } from "@/lib/billing-xlsx";
 import { computeInvoice } from "@/lib/invoice-calc";
 import { buildInvoiceXml } from "@/lib/invoice-xml";
 import { buildBillingExportStoragePath, PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
@@ -244,6 +244,74 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
       number,
       year,
       exports: savedExports,
+    };
+  });
+
+export const generateBillingExportFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input: { invoiceId: string; kind: BillingExportKind }) => {
+    if (!input?.invoiceId || typeof input.invoiceId !== "string") {
+      throw new Error("invoiceId mancante");
+    }
+    if (input.kind !== "fees" && input.kind !== "expenses") {
+      throw new Error("Tipo rendiconto non valido");
+    }
+    return input;
+  })
+  .handler(async ({ data, context }) => {
+    const { supabase, userId } = context;
+
+    const { data: invoice, error: invoiceError } = await supabase
+      .from("invoices")
+      .select("id, billing_run_id, principal_id")
+      .eq("id", data.invoiceId)
+      .eq("user_id", userId)
+      .single();
+    if (invoiceError) throw invoiceError;
+    if (!invoice?.billing_run_id) throw new Error("Rendiconto non disponibile");
+    if (!invoice.principal_id) throw new Error("Committente della fattura non trovato");
+
+    const [{ data: billingRun, error: runError }, { data: principal, error: principalError }] =
+      await Promise.all([
+        supabase
+          .from("billing_runs")
+          .select("period_start, period_end")
+          .eq("id", invoice.billing_run_id)
+          .eq("user_id", userId)
+          .single(),
+        supabase
+          .from("principals")
+          .select("business_name")
+          .eq("id", invoice.principal_id)
+          .eq("user_id", userId)
+          .single(),
+      ]);
+    if (runError) throw runError;
+    if (principalError) throw principalError;
+
+    const activityKind = data.kind === "fees" ? "fee" : "expense_reimbursement";
+    const { data: activities, error: activitiesError } = await supabase
+      .from("case_activities")
+      .select(
+        "id, case_id, principal_id, client_id, counterparty_id, activity_date, kind, status, invoice_id, description, quantity, unit_price, amount, postponed_count, cases(practice_number, title), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name), case_activity_hearings(hearing_date, position)",
+      )
+      .eq("user_id", userId)
+      .eq("invoice_id", invoice.id)
+      .eq("kind", activityKind);
+    if (activitiesError) throw activitiesError;
+
+    const file = buildBillingWorkbook({
+      kind: data.kind,
+      principalName: principal?.business_name ?? "committente",
+      periodStart: billingRun.period_start,
+      periodEnd: billingRun.period_end,
+      rows: buildBillingExportRows(activities as BillingActivity[], activityKind),
+    });
+
+    return {
+      bytesBase64: Buffer.from(file.bytes).toString("base64"),
+      fileName: file.fileName,
+      mimeType: file.mimeType,
     };
   });
 
