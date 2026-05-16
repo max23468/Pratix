@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.2.3] — 2026-05-16
+
+### Correzioni
+
+- **Fatture mobile**: la creazione di una nuova Fattura resta leggibile su iPhone e il dialog delle modifiche non salvate separa meglio i pulsanti.
+
 ## [1.2.2] — 2026-05-16
 
 ### Correzioni
@@ -649,6 +655,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.2.3]: #123--2026-05-16
 [1.2.2]: #122--2026-05-16
 [1.2.1]: #121--2026-05-16
 [1.2.0]: #120--2026-05-16
