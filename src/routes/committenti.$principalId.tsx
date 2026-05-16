@@ -71,7 +71,7 @@ function PrincipalDetail() {
             </Link>
             <Link to="/committenti">
               <Button variant="outline" size="sm">
-                <ArrowLeft className="mr-1 size-4" /> Indietro
+                <ArrowLeft className="mr-1 size-4" /> Torna ai committenti
               </Button>
             </Link>
           </>

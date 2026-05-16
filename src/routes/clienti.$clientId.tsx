@@ -71,7 +71,7 @@ function ClientDetail() {
             </Link>
             <Link to="/clienti">
               <Button variant="outline" size="sm">
-                <ArrowLeft className="mr-1 size-4" /> Indietro
+                <ArrowLeft className="mr-1 size-4" /> Torna ai clienti
               </Button>
             </Link>
           </>

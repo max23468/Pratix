@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.2.10] — 2026-05-16
+
+### Correzioni
+
+- **Navigazione**: i pulsanti header indicano la sezione di ritorno invece del generico "Indietro".
+
 ## [1.2.9] — 2026-05-16
 
 ### Correzioni
@@ -692,6 +698,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.2.10]: #1210--2026-05-16
 [1.2.9]: #129--2026-05-16
 [1.2.8]: #128--2026-05-16
 [1.2.7]: #127--2026-05-16

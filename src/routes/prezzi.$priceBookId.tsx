@@ -94,7 +94,7 @@ function PriceBookDetail() {
             </Link>
             <Link to="/prezzi">
               <Button variant="outline" size="sm">
-                <ArrowLeft className="mr-1 size-4" /> Indietro
+                <ArrowLeft className="mr-1 size-4" /> Torna ai prezzi
               </Button>
             </Link>
           </>

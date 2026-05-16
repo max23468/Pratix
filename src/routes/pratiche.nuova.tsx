@@ -31,7 +31,7 @@ function NewCase() {
         actions={
           <Link to="/pratiche">
             <Button size="sm" variant="outline">
-              <ArrowLeft className="mr-1 size-4" /> Indietro
+              <ArrowLeft className="mr-1 size-4" /> Torna alle pratiche
             </Button>
           </Link>
         }
