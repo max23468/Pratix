@@ -120,9 +120,9 @@ export function buildDebtCollectionWorkflow({
       action: "Completa soggetti e prima Attività.",
       reason: "Mancano dati essenziali per procedere.",
       priorityInsight: {
-        title: "Perché è priorità alta",
+        title: "Perché richiede intervento",
         description:
-          "Pratix la considera priorità alta perché la pratica è ancora in impostazione e non ha una base operativa completa.",
+          "Pratix richiede intervento perché la pratica è ancora in impostazione e non ha una base operativa completa.",
         items: setupItems.length > 0 ? setupItems : ["Dati essenziali incompleti"],
         nextStep: "Completa soggetti e prima Attività.",
       } satisfies CaseWorkflowPriorityInsight,
@@ -139,9 +139,9 @@ export function buildDebtCollectionWorkflow({
       action: "Sollecita il pagamento delle Fatture insolute.",
       reason: `${formatCurrency(overdueAmount)} risultano ancora aperti.`,
       priorityInsight: {
-        title: "Perché è priorità alta",
+        title: "Perché richiede intervento",
         description:
-          "Pratix la considera priorità alta perché ci sono Fatture scadute o già segnate come insolute.",
+          "Pratix richiede intervento perché ci sono Fatture scadute o già segnate come insolute.",
         items: [
           `${formatCurrency(overdueAmount)} ancora aperti`,
           overdueInvoices.length > 0
@@ -183,9 +183,9 @@ export function buildDebtCollectionWorkflow({
       action: "Prepara la Fattura per le Attività maturate.",
       reason: `${formatCurrency(totals.toInvoice)} sono da fatturare.`,
       priorityInsight: {
-        title: "Perché è priorità alta",
+        title: "Perché richiede intervento",
         description:
-          "Pratix la considera priorità alta perché ci sono Attività maturate non ancora collegate a una Fattura.",
+          "Pratix richiede intervento perché ci sono Attività maturate non ancora collegate a una Fattura.",
         items: [
           `${formatCurrency(totals.toInvoice)} da fatturare`,
           formatCount(
