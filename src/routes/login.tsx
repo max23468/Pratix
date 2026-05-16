@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { loginSchema } from "@/lib/auth-schemas";
+import { PASSKEYS_ENABLED, passkeysUnavailableMessage } from "@/lib/passkeys";
 import { useSubmitLock } from "@/lib/submit-lock";
 import { isTurnstileEnabled } from "@/lib/turnstile";
 
@@ -70,6 +71,10 @@ function LoginPage() {
   };
 
   const handlePasskeySignIn = async () => {
+    if (!PASSKEYS_ENABLED) {
+      toast.error(passkeysUnavailableMessage());
+      return;
+    }
     if (!passkeySupported) {
       toast.error("Le passkey non sono disponibili su questo dispositivo.");
       return;
@@ -138,7 +143,7 @@ function LoginPage() {
             </form>
           )}
 
-          {passkeySupported ? (
+          {PASSKEYS_ENABLED && passkeySupported ? (
             <div className="mt-4">
               <Button
                 type="button"

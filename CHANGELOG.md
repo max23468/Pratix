@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.3.1] — 2026-05-16
+
+### Correzioni
+
+- **Passkey**: nascosto l'accesso rapido dietro feature flag finché Supabase Auth non rende disponibile la configurazione WebAuthn sul progetto hosted; il link via email resta il flusso gratuito stabile.
+
 ## [1.3.0] — 2026-05-16
 
 ### Novità
@@ -771,6 +777,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.3.1]: #131--2026-05-16
 [1.3.0]: #130--2026-05-16
 [1.2.19]: #1219--2026-05-16
 [1.2.18]: #1218--2026-05-16
