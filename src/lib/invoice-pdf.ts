@@ -2,7 +2,7 @@
 import { jsPDF } from "jspdf";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { invoiceLineKindLabels, type InvoiceLineKind } from "@/lib/invoice-calc";
-import { clientDisplayName, taxRegimeLabels } from "@/lib/labels";
+import { clientDisplayName } from "@/lib/labels";
 
 export type InvoicePdfData = {
   invoice: {
@@ -279,9 +279,6 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
     const wrap = doc.splitTextToSize(data.invoice.notes, pageWidth - 2 * MARGIN);
     doc.text(wrap, MARGIN, y);
   }
-
-  // suppress unused import warning
-  void taxRegimeLabels;
 
   return doc;
 }

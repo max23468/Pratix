@@ -1,6 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export const unwrapServerResult = <T>(result: T | { data: T }) =>
+const unwrapServerResult = <T>(result: T | { data: T }) =>
   "data" in Object(result) ? (result as { data: T }).data : (result as T);
 
 export async function readServerResult<T>(result: T | { data: T } | Response) {

@@ -6,6 +6,19 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.7.4] — 2026-05-17
+
+### Sotto il cofano
+
+- **Bonifica codice**: rimossi componenti UI shadcn non usati, dipendenze frontend collegate e duplicazioni locali degli helper per server functions.
+- **Supabase Auth**: azzerati gli hash password legacy rimasti, rimosso lo script storico che creava utenti con password temporanea e mantenuto il flusso passwordless via link email.
+
+## [Non versionato] — 2026-05-17
+
+### Non versionato
+
+- **Workflow Codex**: autorizzati i commenti automatici sulle PR quando la inbox rileva thread actionable.
+
 ## [1.7.3] — 2026-05-16
 
 ### Correzioni
@@ -898,6 +911,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.7.4]: #174--2026-05-17
 [1.7.3]: #173--2026-05-16
 [1.7.2]: #172--2026-05-16
 [1.7.1]: #171--2026-05-16

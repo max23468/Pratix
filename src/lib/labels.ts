@@ -19,17 +19,6 @@ export const caseStatusVariant: Record<
   archived: "secondary",
 };
 
-export const caseMatterLabels: Record<string, string> = {
-  civile: "Civile",
-  penale: "Penale",
-  lavoro: "Lavoro",
-  famiglia: "Famiglia",
-  amministrativo: "Amministrativo",
-  tributario: "Tributario",
-  commerciale: "Commerciale",
-  altro: "Altro",
-};
-
 export type InvoiceStatus = "draft" | "issued" | "paid" | "overdue";
 
 export const invoiceStatusLabels: Record<InvoiceStatus, string> = {

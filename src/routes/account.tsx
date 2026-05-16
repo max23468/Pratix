@@ -43,6 +43,7 @@ import {
 } from "@/lib/personal-data-export";
 import { APP_VERSION, BUILD_DATE } from "@/lib/version";
 import { downloadBytes } from "@/lib/invoice-file-exports";
+import { readServerResult } from "@/lib/server-functions";
 import { useSubmitLock } from "@/lib/submit-lock";
 import { deleteAccountFn } from "@/server/account.functions";
 
@@ -95,21 +96,6 @@ type PasskeyListItem = {
   friendly_name?: string;
   created_at: string;
   last_used_at?: string;
-};
-
-const unwrapServerResult = <T,>(result: T | { data: T }) =>
-  "data" in Object(result) ? (result as { data: T }).data : (result as T);
-
-const readServerResult = async <T,>(result: T | { data: T } | Response) => {
-  if (result instanceof Response) {
-    if (!result.ok) throw new Error(await result.text());
-    const contentType = result.headers.get("content-type") ?? "";
-    if (contentType.includes("application/json")) {
-      return unwrapServerResult<T>(await result.json());
-    }
-    throw new Error("Risposta server non valida");
-  }
-  return unwrapServerResult<T>(result);
 };
 
 function AccountPage() {
