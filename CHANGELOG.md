@@ -6,6 +6,10 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Sotto il cofano
+
+- **Supabase Auth**: bonificati gli hash password residui degli utenti email esistenti; il magic link resta generabile per tutti e 3 gli utenti.
+
 ## [1.7.3] — 2026-05-16
 
 ### Correzioni

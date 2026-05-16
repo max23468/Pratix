@@ -159,12 +159,12 @@ Al 2026-05-16 il percorso free-tier scelto è:
 - Secure Email Change non attivo per scelta attuale;
 - Leaked Password Protection lasciata fuori perché richiede un piano a pagamento
   e perché la UI non espone più password.
-- Bonifica password residue: al 2026-05-16 il progetto Supabase contiene ancora
-  hash password per gli utenti creati prima del passaggio passwordless. Supabase
-  non espone nel `config.toml` un toggle separato per disabilitare
-  `signInWithPassword` mantenendo attivi magic link e provider email; non
-  modificare direttamente `auth.users.encrypted_password` senza decisione
-  esplicita, perché è una bonifica irreversibile e di basso livello.
+- Bonifica password residue: al 2026-05-16 gli hash password degli utenti
+  email esistenti sono stati rimossi da `auth.users.encrypted_password`; i 3
+  utenti restano idonei al magic link perché conservano email e identità
+  `email`. Supabase non espone nel `config.toml` un toggle separato per
+  disabilitare `signInWithPassword` mantenendo attivi magic link e provider
+  email.
 
 Se un test di registrazione reale incontra `over_email_send_rate_limit`, non
 alzare subito i limiti: attendi il reset della finestra Supabase e riprova con
