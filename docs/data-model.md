@@ -63,7 +63,9 @@ Le tabelle operative principali (`clients`, `principals`, `counterparties`,
 utente, pensato per URL leggibili e riferimenti non sensibili. I prefissi sono:
 `CL` per clienti, `CM` per committenti, `CP` per controparti, `PR` per pratiche,
 `PZ` per prezzi e `FT` per fatture. Il trigger `assign_public_code` preserva i
-codici già assegnati e genera il prossimo progressivo in modo atomico.
+codici già assegnati e genera il prossimo progressivo in modo atomico usando
+contatori persistenti su `profiles`, così un codice non viene riusato dopo la
+cancellazione di una riga.
 
 ### `clients`
 

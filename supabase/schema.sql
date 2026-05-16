@@ -203,12 +203,25 @@ SET search_path = public
 AS $$
 DECLARE
   prefix text;
+  counter_column text;
   next_number integer;
 BEGIN
   prefix := TG_ARGV[0];
+  counter_column := TG_ARGV[1];
 
   IF prefix IS NULL OR prefix !~ '^[A-Z]{2}$' THEN
     RAISE EXCEPTION 'public_code prefix must be two uppercase letters';
+  END IF;
+
+  IF counter_column NOT IN (
+    'client_public_code_next_number',
+    'principal_public_code_next_number',
+    'counterparty_public_code_next_number',
+    'case_public_code_next_number',
+    'price_book_public_code_next_number',
+    'invoice_public_code_next_number'
+  ) THEN
+    RAISE EXCEPTION 'invalid public_code counter column';
   END IF;
 
   IF TG_OP = 'UPDATE' THEN
@@ -216,27 +229,21 @@ BEGIN
     RETURN NEW;
   END IF;
 
-  IF NEW.public_code IS NOT NULL AND length(btrim(NEW.public_code)) > 0 THEN
-    NEW.public_code := upper(btrim(NEW.public_code));
-    RETURN NEW;
-  END IF;
+  PERFORM pg_advisory_xact_lock(hashtextextended('public_code:' || NEW.user_id::text || ':' || prefix, 0));
 
-  PERFORM pg_advisory_xact_lock(hashtextextended(TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME || ':' || NEW.user_id::text, 0));
-
-  EXECUTE format(
-    'SELECT COALESCE(MAX(substring(public_code from %L)::integer), 0) + 1
-       FROM %I.%I
-      WHERE user_id = $1
-        AND public_code ~ %L',
-    '^' || prefix || '-([0-9]{5})$',
-    TG_TABLE_SCHEMA,
-    TG_TABLE_NAME,
-    '^' || prefix || '-[0-9]{5}$'
-  )
+  EXECUTE format('SELECT %I FROM public.profiles WHERE id = $1 FOR UPDATE', counter_column)
   INTO next_number
   USING NEW.user_id;
 
+  IF next_number IS NULL THEN
+    RAISE EXCEPTION 'profile required for public_code generation';
+  END IF;
+
   NEW.public_code := prefix || '-' || lpad(next_number::text, 5, '0');
+
+  EXECUTE format('UPDATE public.profiles SET %I = $2 WHERE id = $1', counter_column)
+  USING NEW.user_id, next_number + 1;
+
   RETURN NEW;
 END;
 $$;
@@ -574,6 +581,12 @@ CREATE TABLE public.profiles (
   invoice_number_prefix       text,
   invoice_next_number         integer NOT NULL DEFAULT 1,
   invoice_year                integer NOT NULL DEFAULT (EXTRACT(year FROM now()))::integer,
+  client_public_code_next_number integer NOT NULL DEFAULT 1,
+  principal_public_code_next_number integer NOT NULL DEFAULT 1,
+  counterparty_public_code_next_number integer NOT NULL DEFAULT 1,
+  case_public_code_next_number integer NOT NULL DEFAULT 1,
+  price_book_public_code_next_number integer NOT NULL DEFAULT 1,
+  invoice_public_code_next_number integer NOT NULL DEFAULT 1,
   logo_url                    text,
   onboarding_completed        boolean NOT NULL DEFAULT false,
   last_seen_changelog_version text,
@@ -1262,20 +1275,20 @@ ALTER TABLE public.invoice_lines
 
 CREATE TRIGGER profiles_set_updated_at        BEFORE UPDATE ON public.profiles        FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER clients_set_updated_at         BEFORE UPDATE ON public.clients         FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER clients_assign_public_code     BEFORE INSERT OR UPDATE OF public_code ON public.clients FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('CL');
+CREATE TRIGGER clients_assign_public_code     BEFORE INSERT OR UPDATE OF public_code ON public.clients FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('CL', 'client_public_code_next_number');
 CREATE TRIGGER user_table_preferences_set_updated_at BEFORE UPDATE ON public.user_table_preferences FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER cases_set_updated_at           BEFORE UPDATE ON public.cases           FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER invoices_set_updated_at        BEFORE UPDATE ON public.invoices        FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER invoices_assign_public_code    BEFORE INSERT OR UPDATE OF public_code ON public.invoices FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('FT');
+CREATE TRIGGER invoices_assign_public_code    BEFORE INSERT OR UPDATE OF public_code ON public.invoices FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('FT', 'invoice_public_code_next_number');
 CREATE TRIGGER principals_set_updated_at              BEFORE UPDATE ON public.principals              FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER principals_assign_public_code          BEFORE INSERT OR UPDATE OF public_code ON public.principals FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('CM');
+CREATE TRIGGER principals_assign_public_code          BEFORE INSERT OR UPDATE OF public_code ON public.principals FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('CM', 'principal_public_code_next_number');
 CREATE TRIGGER principal_clients_set_updated_at       BEFORE UPDATE ON public.principal_clients       FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER counterparties_set_updated_at          BEFORE UPDATE ON public.counterparties          FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER counterparties_assign_public_code      BEFORE INSERT OR UPDATE OF public_code ON public.counterparties FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('CP');
+CREATE TRIGGER counterparties_assign_public_code      BEFORE INSERT OR UPDATE OF public_code ON public.counterparties FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('CP', 'counterparty_public_code_next_number');
 CREATE TRIGGER counterparty_subjects_set_updated_at   BEFORE UPDATE ON public.counterparty_subjects   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER case_credit_transfers_set_updated_at   BEFORE UPDATE ON public.case_credit_transfers   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER price_books_set_updated_at             BEFORE UPDATE ON public.price_books             FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
-CREATE TRIGGER price_books_assign_public_code         BEFORE INSERT OR UPDATE OF public_code ON public.price_books FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('PZ');
+CREATE TRIGGER price_books_assign_public_code         BEFORE INSERT OR UPDATE OF public_code ON public.price_books FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('PZ', 'price_book_public_code_next_number');
 CREATE TRIGGER price_items_set_updated_at             BEFORE UPDATE ON public.price_items             FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER case_activities_set_updated_at         BEFORE UPDATE ON public.case_activities         FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER case_activity_hearings_set_updated_at  BEFORE UPDATE ON public.case_activity_hearings  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
@@ -1298,7 +1311,7 @@ CREATE TRIGGER cases_assign_practice_number
 CREATE TRIGGER cases_assign_public_code
   BEFORE INSERT OR UPDATE OF public_code
   ON public.cases
-  FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('PR');
+  FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('PR', 'case_public_code_next_number');
 
 CREATE TRIGGER case_activities_set_amount
   BEFORE INSERT OR UPDATE OF quantity, unit_price
