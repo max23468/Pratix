@@ -56,6 +56,13 @@ type ResolveDuplicateInput = {
   keepRecordId?: string | null;
 };
 
+export type DuplicateSummaryResult = {
+  openCount: number;
+  highConfidenceCount: number;
+  snoozedCount: number;
+  resolvedCount: number;
+};
+
 const asDb = (client: unknown) => client as UntypedSupabase;
 
 export const scanDuplicateCandidatesFn = createServerFn({ method: "POST" })
@@ -87,6 +94,21 @@ export const scanDuplicateCandidatesFn = createServerFn({ method: "POST" })
           : candidate;
       }),
       resolvedCandidates: scan.resolvedCandidates,
+    };
+  });
+
+export const getDuplicateSummaryFn = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }): Promise<DuplicateSummaryResult> => {
+    const data = await loadDuplicateScanData(context.supabase, context.userId);
+    const scan = scanDuplicateCandidates(data);
+    const open = scan.openCandidates.filter((candidate) => candidate.status === "open");
+    return {
+      openCount: open.length,
+      highConfidenceCount: open.filter((candidate) => candidate.confidence === "high").length,
+      snoozedCount: scan.openCandidates.filter((candidate) => candidate.status === "snoozed")
+        .length,
+      resolvedCount: scan.resolvedCandidates.length,
     };
   });
 
