@@ -195,6 +195,52 @@ BEGIN
 END;
 $$;
 
+-- Genera codici pubblici stabili per URL leggibili e non sensibili.
+CREATE OR REPLACE FUNCTION public.assign_public_code()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = public
+AS $$
+DECLARE
+  prefix text;
+  next_number integer;
+BEGIN
+  prefix := TG_ARGV[0];
+
+  IF prefix IS NULL OR prefix !~ '^[A-Z]{2}$' THEN
+    RAISE EXCEPTION 'public_code prefix must be two uppercase letters';
+  END IF;
+
+  IF TG_OP = 'UPDATE' THEN
+    NEW.public_code := OLD.public_code;
+    RETURN NEW;
+  END IF;
+
+  IF NEW.public_code IS NOT NULL AND length(btrim(NEW.public_code)) > 0 THEN
+    NEW.public_code := upper(btrim(NEW.public_code));
+    RETURN NEW;
+  END IF;
+
+  PERFORM pg_advisory_xact_lock(hashtextextended(TG_TABLE_SCHEMA || '.' || TG_TABLE_NAME || ':' || NEW.user_id::text, 0));
+
+  EXECUTE format(
+    'SELECT COALESCE(MAX(substring(public_code from %L)::integer), 0) + 1
+       FROM %I.%I
+      WHERE user_id = $1
+        AND public_code ~ %L',
+    '^' || prefix || '-([0-9]{5})$',
+    TG_TABLE_SCHEMA,
+    TG_TABLE_NAME,
+    '^' || prefix || '-[0-9]{5}$'
+  )
+  INTO next_number
+  USING NEW.user_id;
+
+  NEW.public_code := prefix || '-' || lpad(next_number::text, 5, '0');
+  RETURN NEW;
+END;
+$$;
+
 -- Conferma una riga di import archivio in una singola transazione database.
 CREATE OR REPLACE FUNCTION public.apply_import_row(p_import_row_id uuid)
 RETURNS uuid
@@ -537,6 +583,7 @@ CREATE TABLE public.profiles (
 
 CREATE TABLE public.clients (
   id               uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  public_code      text NOT NULL,
   user_id          uuid NOT NULL,
   kind             public.client_kind NOT NULL DEFAULT 'individual',
   first_name       text,
@@ -552,6 +599,8 @@ CREATE TABLE public.clients (
   notes            text,
   created_at       timestamptz NOT NULL DEFAULT now(),
   updated_at       timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT clients_public_code_format CHECK (public_code ~ '^CL-[0-9]{5}$'),
+  UNIQUE (user_id, public_code),
   UNIQUE (id, user_id)
 );
 CREATE INDEX idx_clients_user ON public.clients (user_id);
@@ -570,6 +619,7 @@ CREATE INDEX idx_user_table_preferences_user ON public.user_table_preferences (u
 
 CREATE TABLE public.cases (
   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  public_code  text NOT NULL,
   user_id      uuid NOT NULL,
   client_id    uuid,
   case_number  text NOT NULL,
@@ -591,7 +641,9 @@ CREATE TABLE public.cases (
   notes        text,
   created_at   timestamptz NOT NULL DEFAULT now(),
   updated_at   timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT cases_public_code_format CHECK (public_code ~ '^PR-[0-9]{5}$'),
   CONSTRAINT cases_practice_number_positive CHECK (practice_number > 0),
+  UNIQUE (user_id, public_code),
   UNIQUE (user_id, case_number),
   UNIQUE (user_id, practice_number),
   UNIQUE (id, user_id)
@@ -615,6 +667,7 @@ CREATE INDEX idx_case_status_history_user ON public.case_status_history (user_id
 
 CREATE TABLE public.invoices (
   id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  public_code        text NOT NULL,
   user_id            uuid NOT NULL,
   client_id          uuid NOT NULL,
   case_id            uuid,
@@ -647,6 +700,8 @@ CREATE TABLE public.invoices (
   notes              text,
   created_at         timestamptz NOT NULL DEFAULT now(),
   updated_at         timestamptz NOT NULL DEFAULT now(),
+  CONSTRAINT invoices_public_code_format CHECK (public_code ~ '^FT-[0-9]{5}$'),
+  UNIQUE (user_id, public_code),
   UNIQUE (user_id, year, number),
   UNIQUE (id, user_id)
 );
@@ -679,6 +734,7 @@ CREATE INDEX idx_invoice_lines_user    ON public.invoice_lines (user_id);
 
 CREATE TABLE public.principals (
   id                              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  public_code                     text NOT NULL,
   user_id                         uuid NOT NULL,
   business_name                   text NOT NULL,
   tax_code                        text,
@@ -704,6 +760,8 @@ CREATE TABLE public.principals (
   CONSTRAINT principals_general_expenses_rate_non_negative CHECK (default_general_expenses_rate >= 0),
   CONSTRAINT principals_cassa_rate_non_negative CHECK (default_cassa_rate >= 0),
   CONSTRAINT principals_economics_at_least_one_enabled CHECK (fees_enabled OR expense_reimbursements_enabled),
+  CONSTRAINT principals_public_code_format CHECK (public_code ~ '^CM-[0-9]{5}$'),
+  UNIQUE (user_id, public_code),
   UNIQUE (id, user_id)
 );
 CREATE INDEX idx_principals_user ON public.principals (user_id);
@@ -728,6 +786,7 @@ CREATE INDEX idx_principal_clients_client ON public.principal_clients (client_id
 
 CREATE TABLE public.counterparties (
   id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  public_code    text NOT NULL,
   user_id        uuid NOT NULL,
   kind           public.counterparty_kind NOT NULL DEFAULT 'company',
   first_name     text,
@@ -740,6 +799,8 @@ CREATE TABLE public.counterparties (
     (kind = 'individual' AND length(btrim(coalesce(first_name, '') || ' ' || coalesce(last_name, ''))) > 0)
     OR (kind IN ('company', 'group') AND length(btrim(coalesce(business_name, ''))) > 0)
   ),
+  CONSTRAINT counterparties_public_code_format CHECK (public_code ~ '^CP-[0-9]{5}$'),
+  UNIQUE (user_id, public_code),
   UNIQUE (id, user_id)
 );
 CREATE INDEX idx_counterparties_user ON public.counterparties (user_id);
@@ -783,6 +844,7 @@ CREATE INDEX idx_case_credit_transfers_new_client ON public.case_credit_transfer
 
 CREATE TABLE public.price_books (
   id                              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  public_code                     text NOT NULL,
   user_id                         uuid NOT NULL,
   principal_id                    uuid NOT NULL,
   year                            integer NOT NULL,
@@ -797,6 +859,8 @@ CREATE TABLE public.price_books (
   CONSTRAINT price_books_year_range CHECK (year BETWEEN 2000 AND 2100),
   CONSTRAINT price_books_dates_order CHECK (valid_to IS NULL OR valid_to >= valid_from),
   CONSTRAINT price_books_economics_at_least_one_enabled CHECK (fees_enabled OR expense_reimbursements_enabled),
+  CONSTRAINT price_books_public_code_format CHECK (public_code ~ '^PZ-[0-9]{5}$'),
+  UNIQUE (user_id, public_code),
   UNIQUE (user_id, principal_id, year),
   UNIQUE (id, user_id)
 );
@@ -1198,15 +1262,20 @@ ALTER TABLE public.invoice_lines
 
 CREATE TRIGGER profiles_set_updated_at        BEFORE UPDATE ON public.profiles        FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER clients_set_updated_at         BEFORE UPDATE ON public.clients         FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER clients_assign_public_code     BEFORE INSERT OR UPDATE OF public_code ON public.clients FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('CL');
 CREATE TRIGGER user_table_preferences_set_updated_at BEFORE UPDATE ON public.user_table_preferences FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER cases_set_updated_at           BEFORE UPDATE ON public.cases           FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER invoices_set_updated_at        BEFORE UPDATE ON public.invoices        FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER invoices_assign_public_code    BEFORE INSERT OR UPDATE OF public_code ON public.invoices FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('FT');
 CREATE TRIGGER principals_set_updated_at              BEFORE UPDATE ON public.principals              FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER principals_assign_public_code          BEFORE INSERT OR UPDATE OF public_code ON public.principals FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('CM');
 CREATE TRIGGER principal_clients_set_updated_at       BEFORE UPDATE ON public.principal_clients       FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER counterparties_set_updated_at          BEFORE UPDATE ON public.counterparties          FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER counterparties_assign_public_code      BEFORE INSERT OR UPDATE OF public_code ON public.counterparties FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('CP');
 CREATE TRIGGER counterparty_subjects_set_updated_at   BEFORE UPDATE ON public.counterparty_subjects   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER case_credit_transfers_set_updated_at   BEFORE UPDATE ON public.case_credit_transfers   FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER price_books_set_updated_at             BEFORE UPDATE ON public.price_books             FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER price_books_assign_public_code         BEFORE INSERT OR UPDATE OF public_code ON public.price_books FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('PZ');
 CREATE TRIGGER price_items_set_updated_at             BEFORE UPDATE ON public.price_items             FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER case_activities_set_updated_at         BEFORE UPDATE ON public.case_activities         FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER case_activity_hearings_set_updated_at  BEFORE UPDATE ON public.case_activity_hearings  FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
@@ -1225,6 +1294,11 @@ CREATE TRIGGER cases_assign_practice_number
   BEFORE INSERT OR UPDATE OF case_number, practice_number, user_id
   ON public.cases
   FOR EACH ROW EXECUTE FUNCTION public.assign_case_practice_number();
+
+CREATE TRIGGER cases_assign_public_code
+  BEFORE INSERT OR UPDATE OF public_code
+  ON public.cases
+  FOR EACH ROW EXECUTE FUNCTION public.assign_public_code('PR');
 
 CREATE TRIGGER case_activities_set_amount
   BEFORE INSERT OR UPDATE OF quantity, unit_price
@@ -1247,6 +1321,7 @@ REVOKE EXECUTE ON FUNCTION public.handle_new_user() FROM PUBLIC, anon, authentic
 REVOKE EXECUTE ON FUNCTION public.log_case_status_change() FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.set_updated_at() FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.assign_case_practice_number() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.assign_public_code() FROM PUBLIC, anon, authenticated;
 REVOKE EXECUTE ON FUNCTION public.set_case_activity_amount() FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.get_next_practice_number() TO authenticated;
 REVOKE ALL ON FUNCTION public.apply_import_row(uuid) FROM PUBLIC;

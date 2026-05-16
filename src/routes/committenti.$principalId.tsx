@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { PrincipalForm } from "@/components/principal-form";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { publicCodeLookup } from "@/lib/public-route-code";
 
 export const Route = createFileRoute("/committenti/$principalId")({
   head: () => ({
@@ -30,10 +31,11 @@ function PrincipalDetail() {
   const { data, isLoading } = useQuery({
     queryKey: ["principal", principalId],
     queryFn: async () => {
+      const lookup = publicCodeLookup(principalId);
       const { data, error } = await supabase
         .from("principals")
         .select("*")
-        .eq("id", principalId)
+        .eq(lookup.column, lookup.value)
         .maybeSingle();
       if (error) throw error;
       return data;

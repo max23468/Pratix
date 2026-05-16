@@ -20,6 +20,7 @@ import { TableEmptyState } from "@/components/table-empty-state";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { clientDisplayName, clientKindLabels } from "@/lib/labels";
+import { routeRef } from "@/lib/public-route-code";
 import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
@@ -40,6 +41,7 @@ type ClientiSearch = {
 
 type ClientListRow = {
   id: string;
+  public_code: string;
   kind: string;
   first_name: string | null;
   last_name: string | null;
@@ -304,15 +306,17 @@ function ClientiList() {
                     role="link"
                     tabIndex={0}
                     aria-label={`Apri cliente ${displayName}`}
-                    onClick={(event) => handleClickableTableRowClick(event, () => openClient(c.id))}
+                    onClick={(event) =>
+                      handleClickableTableRowClick(event, () => openClient(routeRef(c)))
+                    }
                     onKeyDown={(event) =>
-                      handleClickableTableRowKeyDown(event, () => openClient(c.id))
+                      handleClickableTableRowKeyDown(event, () => openClient(routeRef(c)))
                     }
                   >
                     <TableCell>
                       <Link
                         to="/clienti/$clientId"
-                        params={{ clientId: c.id }}
+                        params={{ clientId: routeRef(c) }}
                         className="font-medium hover:underline"
                       >
                         {displayName}

@@ -39,6 +39,7 @@ import {
   type ClientDisplayData,
   type CounterpartyDisplayData,
 } from "@/lib/labels";
+import { routeRef } from "@/lib/public-route-code";
 
 type CreateActionPath =
   | "/pratiche/nuova"
@@ -139,7 +140,7 @@ function DashboardContent() {
           supabase
             .from("cases")
             .select(
-              "id, case_number, practice_number, title, status, updated_at, principal:principals(business_name), client:clients(kind, first_name, last_name, business_name), counterparty:counterparties(kind, first_name, last_name, business_name)",
+              "id, public_code, case_number, practice_number, title, status, updated_at, principal:principals(business_name), client:clients(kind, first_name, last_name, business_name), counterparty:counterparties(kind, first_name, last_name, business_name)",
             )
             .order("updated_at", { ascending: false })
             .limit(5),
@@ -346,7 +347,7 @@ function DashboardContent() {
                   <li key={c.id} className="py-2.5">
                     <Link
                       to="/pratiche/$caseId"
-                      params={{ caseId: c.id }}
+                      params={{ caseId: routeRef(c) }}
                       className="flex items-center justify-between gap-2"
                     >
                       <div className="min-w-0">

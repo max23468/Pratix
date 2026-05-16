@@ -38,6 +38,7 @@ import {
   type ClientDisplayData,
 } from "@/lib/labels";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { routeRef } from "@/lib/public-route-code";
 import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
@@ -54,6 +55,7 @@ import { generateInvoiceXmlFn } from "@/server/invoices.functions";
 
 type InvoiceListRow = {
   id: string;
+  public_code: string;
   number: string;
   year: number;
   issue_date: string;
@@ -216,7 +218,7 @@ function InvoicesIndex() {
       const { data, error } = await supabase
         .from("invoices")
         .select(
-          "id, number, year, issue_date, due_date, status, total_amount, net_to_pay, client:clients(id, kind, first_name, last_name, business_name), principal:principals(id, business_name)",
+          "id, public_code, number, year, issue_date, due_date, status, total_amount, net_to_pay, client:clients(id, kind, first_name, last_name, business_name), principal:principals(id, business_name)",
         )
         .order("issue_date", { ascending: false });
       if (error) throw error;
@@ -627,16 +629,16 @@ function InvoicesIndex() {
                       tabIndex={0}
                       aria-label={`Apri fattura ${i.number}/${i.year}`}
                       onClick={(event) =>
-                        handleClickableTableRowClick(event, () => openInvoice(i.id))
+                        handleClickableTableRowClick(event, () => openInvoice(routeRef(i)))
                       }
                       onKeyDown={(event) =>
-                        handleClickableTableRowKeyDown(event, () => openInvoice(i.id))
+                        handleClickableTableRowKeyDown(event, () => openInvoice(routeRef(i)))
                       }
                     >
                       <TableCell>
                         <Link
                           to="/fatture/$invoiceId"
-                          params={{ invoiceId: i.id }}
+                          params={{ invoiceId: routeRef(i) }}
                           className="font-medium hover:underline"
                         >
                           {i.number}/{i.year}

@@ -41,6 +41,7 @@ const EMPTY_ACTIVITIES: ActivityRow[] = [];
 
 type CreateBillingInvoiceResult = {
   invoiceId: string;
+  invoiceRef: string;
   billingRunId: string;
   number: string;
   year: number;
@@ -286,7 +287,7 @@ export function InvoiceForm() {
       qc.invalidateQueries({ queryKey: ["invoices"] });
       qc.invalidateQueries({ queryKey: ["activities"] });
       if (finishSave()) return;
-      navigate({ to: "/fatture/$invoiceId", params: { invoiceId: invoice.invoiceId } });
+      navigate({ to: "/fatture/$invoiceId", params: { invoiceId: invoice.invoiceRef } });
     },
     onError: (error: Error) => toast.error(error.message),
     onSettled: createInvoiceLock.release,

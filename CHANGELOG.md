@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.2.14] — 2026-05-16
+
+### Sotto il cofano
+
+- **Schema**: sincronizzati i codici pubblici stabili per URL leggibili su anagrafiche, pratiche, prezzi e fatture, con tipi Supabase rigenerati.
+
 ## [1.2.13] — 2026-05-16
 
 ### Correzioni
@@ -720,6 +726,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.2.14]: #1214--2026-05-16
 [1.2.13]: #1213--2026-05-16
 [1.2.12]: #1212--2026-05-16
 [1.2.11]: #1211--2026-05-16

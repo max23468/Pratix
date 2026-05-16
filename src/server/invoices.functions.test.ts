@@ -267,7 +267,10 @@ describe("server functions fatture", () => {
       error: null,
     });
     supabase.queue("billing_runs:insert:single", { data: { id: "run-1" }, error: null });
-    supabase.queue("invoices:insert:single", { data: { id: "invoice-1" }, error: null });
+    supabase.queue("invoices:insert:single", {
+      data: { id: "invoice-1", public_code: "FT-00001" },
+      error: null,
+    });
     supabase.queue(
       "billing_exports:insert:single",
       { data: { id: "export-fees", file_name: "compensi-committente.xlsx" }, error: null },
@@ -279,7 +282,13 @@ describe("server functions fatture", () => {
 
     const result = await handlerOf<
       { data: typeof billingInput; context: { supabase: FakeSupabase; userId: string } },
-      { invoiceId: string; billingRunId: string; number: string; exports: unknown[] }
+      {
+        invoiceId: string;
+        invoiceRef: string;
+        billingRunId: string;
+        number: string;
+        exports: unknown[];
+      }
     >(createBillingInvoiceFn)({
       data: billingInput,
       context: { supabase, userId: "user-1" },
@@ -287,6 +296,7 @@ describe("server functions fatture", () => {
 
     expect(result).toMatchObject({
       invoiceId: "invoice-1",
+      invoiceRef: "FT-00001",
       billingRunId: "run-1",
       number: "12",
       exports: [

@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { counterpartyDisplayName } from "@/lib/labels";
+import { publicCodeLookup } from "@/lib/public-route-code";
 
 export const Route = createFileRoute("/controparti/$counterpartyId")({
   head: () => ({
@@ -31,19 +32,21 @@ function CounterpartyDetail() {
   const { data, isLoading } = useQuery({
     queryKey: ["counterparty", counterpartyId],
     queryFn: async () => {
-      const [
-        { data: counterparty, error: counterpartyError },
-        { data: subjects, error: subjectsError },
-      ] = await Promise.all([
-        supabase.from("counterparties").select("*").eq("id", counterpartyId).maybeSingle(),
-        supabase
-          .from("counterparty_subjects")
-          .select("*")
-          .eq("counterparty_id", counterpartyId)
-          .order("position", { ascending: true }),
-      ]);
-
+      const lookup = publicCodeLookup(counterpartyId);
+      const { data: counterparty, error: counterpartyError } = await supabase
+        .from("counterparties")
+        .select("*")
+        .eq(lookup.column, lookup.value)
+        .maybeSingle();
       if (counterpartyError) throw counterpartyError;
+
+      if (!counterparty) return { counterparty, subjects: [] };
+
+      const { data: subjects, error: subjectsError } = await supabase
+        .from("counterparty_subjects")
+        .select("*")
+        .eq("counterparty_id", counterparty.id)
+        .order("position", { ascending: true });
       if (subjectsError) throw subjectsError;
 
       return { counterparty, subjects: subjects ?? [] };

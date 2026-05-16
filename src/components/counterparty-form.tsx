@@ -29,6 +29,7 @@ import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { clientKindLabels, counterpartyKindLabels } from "@/lib/labels";
+import { routeRef } from "@/lib/public-route-code";
 import { useSubmitLock } from "@/lib/submit-lock";
 
 type CounterpartyKind = "individual" | "company" | "group";
@@ -36,6 +37,7 @@ type SubjectKind = "individual" | "company";
 
 type CounterpartyRow = {
   id?: string;
+  public_code?: string | null;
   kind: CounterpartyKind;
   first_name: string | null;
   last_name: string | null;
@@ -150,19 +152,19 @@ export function CounterpartyForm({
           : await createCounterparty(payload);
 
       if (form.kind === "group") {
-        await syncSubjects(counterpartyId, user.id, normalizedSubjects());
+        await syncSubjects(counterpartyId.id, user.id, normalizedSubjects());
       } else {
-        await deleteSubjects(counterpartyId);
+        await deleteSubjects(counterpartyId.id);
       }
 
       return counterpartyId;
     },
-    onSuccess: (id) => {
+    onSuccess: (counterparty) => {
       toast.success(isEdit ? "Controparte aggiornata" : "Controparte creata");
       qc.invalidateQueries({ queryKey: ["counterparties"] });
-      qc.invalidateQueries({ queryKey: ["counterparty", id] });
+      qc.invalidateQueries({ queryKey: ["counterparty", counterparty.id] });
       if (finishSave()) return;
-      onSaved(id);
+      onSaved(routeRef(counterparty));
     },
     onError: (error: Error) => toast.error(error.message),
     onSettled: saveLock.release,
@@ -421,10 +423,10 @@ async function createCounterparty(payload: {
   const { data, error } = await supabase
     .from("counterparties")
     .insert(payload)
-    .select("id")
+    .select("id, public_code")
     .single();
   if (error) throw error;
-  return data.id;
+  return data as { id: string; public_code: string | null };
 }
 
 async function updateCounterparty(
@@ -442,10 +444,10 @@ async function updateCounterparty(
     .from("counterparties")
     .update(payload)
     .eq("id", id)
-    .select("id")
+    .select("id, public_code")
     .single();
   if (error) throw error;
-  return data.id;
+  return data as { id: string; public_code: string | null };
 }
 
 async function deleteSubjects(counterpartyId: string) {

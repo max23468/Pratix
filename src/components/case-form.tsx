@@ -35,10 +35,12 @@ import {
   counterpartyKindLabels,
 } from "@/lib/labels";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
+import { routeRef } from "@/lib/public-route-code";
 import { useSubmitLock } from "@/lib/submit-lock";
 
 type CaseRow = {
   id?: string;
+  public_code?: string | null;
   principal_id: string | null;
   client_id: string | null;
   counterparty_id: string | null;
@@ -466,7 +468,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
           .from("cases")
           .update(payload)
           .eq("id", initial.id)
-          .select("id")
+          .select("id, public_code")
           .single();
         if (error) throw error;
 
@@ -482,21 +484,25 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
           if (transferError) throw transferError;
         }
 
-        return data.id;
+        return data as { id: string; public_code: string | null };
       }
 
-      const { data, error } = await supabase.from("cases").insert(payload).select("id").single();
+      const { data, error } = await supabase
+        .from("cases")
+        .insert(payload)
+        .select("id, public_code")
+        .single();
       if (error) throw error;
-      return data.id;
+      return data as { id: string; public_code: string | null };
     },
-    onSuccess: (id) => {
+    onSuccess: (caseRow) => {
       toast.success(isEdit ? "Pratica aggiornata" : "Pratica creata");
       qc.invalidateQueries({ queryKey: ["cases"] });
-      qc.invalidateQueries({ queryKey: ["case", id] });
-      qc.invalidateQueries({ queryKey: ["case-credit-transfers", id] });
+      qc.invalidateQueries({ queryKey: ["case", caseRow.id] });
+      qc.invalidateQueries({ queryKey: ["case-credit-transfers", caseRow.id] });
       qc.invalidateQueries({ queryKey: ["dashboard"] });
       if (finishSave()) return;
-      onSaved(id);
+      onSaved(routeRef(caseRow));
     },
     onError: (error: Error) => toast.error(error.message),
     onSettled: saveLock.release,
