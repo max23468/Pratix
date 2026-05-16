@@ -501,12 +501,16 @@ function StatCard({
   const valueCls = tone === "danger" ? "text-destructive" : "text-foreground";
   return (
     <Card className="border-border/70 shadow-soft">
-      <CardContent className="flex items-center gap-3 p-4">
-        <div className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${iconCls}`}>
+      <CardContent className="flex min-h-[7rem] flex-col items-start gap-2 p-3 sm:min-h-0 sm:flex-row sm:items-center sm:gap-3 sm:p-4">
+        <div
+          className={`flex size-9 shrink-0 items-center justify-center rounded-lg sm:size-10 ${iconCls}`}
+        >
           <Icon className="size-5" strokeWidth={1.6} />
         </div>
-        <div className="min-w-0">
-          <p className="text-xs leading-snug font-medium text-muted-foreground">{label}</p>
+        <div className="min-w-0 self-stretch sm:self-auto">
+          <p className="text-[11px] leading-snug font-medium text-muted-foreground sm:text-xs">
+            {label}
+          </p>
           <p
             className={`font-display tabular text-lg leading-tight font-semibold tracking-tight break-words sm:text-xl ${valueCls}`}
           >
