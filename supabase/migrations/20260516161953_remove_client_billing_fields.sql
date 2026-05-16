@@ -1,0 +1,5 @@
+ALTER TABLE public.clients
+  DROP COLUMN IF EXISTS tax_code,
+  DROP COLUMN IF EXISTS vat_number,
+  DROP COLUMN IF EXISTS pec,
+  DROP COLUMN IF EXISTS sdi_code;

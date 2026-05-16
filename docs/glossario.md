@@ -22,33 +22,33 @@ Termini legali, fiscali e di prodotto usati in Pratix. Pensato per chi lavora al
 
 ## Fatturazione elettronica
 
-| Termine                           | Significato                                                                                                        |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| **FatturaPA**                     | Standard italiano XML per la fatturazione elettronica obbligatoria, gestito dal Sistema di Interscambio (SDI).     |
-| **SDI** (Sistema di Interscambio) | Hub dell'Agenzia delle Entrate che riceve, valida e instrada le fatture elettroniche.                              |
-| **TD06**                          | Tipo documento "Parcella": usato per le prestazioni professionali degli avvocati. È il tipo che Pratix genera.     |
-| **PEC**                           | Posta Elettronica Certificata, indirizzo legale per ricevere comunicazioni ufficiali e fatture.                    |
-| **Codice destinatario**           | Codice di 7 caratteri identificativo del canale di ricezione SDI del cliente. Se assente si usa `0000000` con PEC. |
-| **CedentePrestatore**             | Chi emette la fattura (l'avvocato in Pratix).                                                                      |
-| **CessionarioCommittente**        | Chi riceve la fattura (nel nuovo flusso Pratix, il committente).                                                   |
+| Termine                           | Significato                                                                                                            |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| **FatturaPA**                     | Standard italiano XML per la fatturazione elettronica obbligatoria, gestito dal Sistema di Interscambio (SDI).         |
+| **SDI** (Sistema di Interscambio) | Hub dell'Agenzia delle Entrate che riceve, valida e instrada le fatture elettroniche.                                  |
+| **TD06**                          | Tipo documento "Parcella": usato per le prestazioni professionali degli avvocati. È il tipo che Pratix genera.         |
+| **PEC**                           | Posta Elettronica Certificata, indirizzo legale per ricevere comunicazioni ufficiali e fatture.                        |
+| **Codice destinatario**           | Codice di 7 caratteri identificativo del canale di ricezione SDI del committente. Se assente si usa `0000000` con PEC. |
+| **CedentePrestatore**             | Chi emette la fattura (l'avvocato in Pratix).                                                                          |
+| **CessionarioCommittente**        | Chi riceve la fattura (nel nuovo flusso Pratix, il committente).                                                       |
 
 ## Regimi fiscali italiani per avvocati
 
-| Termine                 | Significato                                                                                                                                                      |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Regime forfettario**  | Regime agevolato sotto soglia di ricavi (oggi 85.000 €). Niente IVA in fattura, niente ritenuta d'acconto, imposta sostitutiva al 5% o 15%.                      |
-| **Regime ordinario**    | Regime standard: IVA al 22% applicata, ritenuta d'acconto del 20% se il cliente è sostituto d'imposta.                                                           |
-| **Ritenuta d'acconto**  | Trattenuta del 20% sull'imponibile, versata dal cliente all'erario. Si applica solo nel regime ordinario verso sostituti d'imposta (aziende, partite IVA, enti). |
-| **Sostituto d'imposta** | Cliente obbligato a trattenere e versare la ritenuta (tipicamente azienda o ente). Le persone fisiche private non lo sono.                                       |
-| **Imposta sostitutiva** | Imposta che nel regime forfettario sostituisce IRPEF e addizionali.                                                                                              |
+| Termine                 | Significato                                                                                                                                                          |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Regime forfettario**  | Regime agevolato sotto soglia di ricavi (oggi 85.000 €). Niente IVA in fattura, niente ritenuta d'acconto, imposta sostitutiva al 5% o 15%.                          |
+| **Regime ordinario**    | Regime standard: IVA al 22% applicata, ritenuta d'acconto del 20% se il committente è sostituto d'imposta.                                                           |
+| **Ritenuta d'acconto**  | Trattenuta del 20% sull'imponibile, versata dal committente all'erario. Si applica solo nel regime ordinario verso sostituti d'imposta (aziende, partite IVA, enti). |
+| **Sostituto d'imposta** | Committente obbligato a trattenere e versare la ritenuta (tipicamente azienda o ente). Le persone fisiche private non lo sono.                                       |
+| **Imposta sostitutiva** | Imposta che nel regime forfettario sostituisce IRPEF e addizionali.                                                                                                  |
 
 ## Cassa Forense
 
-| Termine                          | Significato                                                                                                                |
-| -------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| **Cassa Forense**                | Ente di previdenza obbligatoria per gli avvocati italiani.                                                                 |
-| **Contributo integrativo (CPA)** | 4% applicato in fattura sull'imponibile, addebitato al cliente, versato alla Cassa Forense. Spesso indicato come "CPA 4%". |
-| **Contributo soggettivo**        | Contributo personale del professionista alla Cassa Forense, **non** in fattura.                                            |
+| Termine                          | Significato                                                                                                                    |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Cassa Forense**                | Ente di previdenza obbligatoria per gli avvocati italiani.                                                                     |
+| **Contributo integrativo (CPA)** | 4% applicato in fattura sull'imponibile, addebitato al committente, versato alla Cassa Forense. Spesso indicato come "CPA 4%". |
+| **Contributo soggettivo**        | Contributo personale del professionista alla Cassa Forense, **non** in fattura.                                                |
 
 ## Anagrafica
 

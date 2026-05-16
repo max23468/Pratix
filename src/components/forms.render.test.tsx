@@ -74,7 +74,6 @@ describe("form applicative principali", () => {
           first_name: "Ada",
           last_name: "Rossi",
           business_name: null,
-          tax_code: "RSSDAA80A01H501U",
         }}
         onSaved={noop}
         onCancel={noop}
@@ -84,7 +83,8 @@ describe("form applicative principali", () => {
     expect(html).toContain("Tipo cliente");
     expect(html).toContain("Nome");
     expect(html).toContain("Cognome");
-    expect(html).toContain("Codice fiscale");
+    expect(html).toContain("Contatti");
+    expect(html).not.toContain("Codice fiscale");
   });
 
   it("renderizza la form Controparte gruppo con soggetti multipli", () => {

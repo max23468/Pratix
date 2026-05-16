@@ -38,12 +38,8 @@ type ClientRow = {
   first_name: string | null;
   last_name: string | null;
   business_name: string | null;
-  tax_code: string | null;
-  vat_number: string | null;
   email: string | null;
   phone: string | null;
-  pec: string | null;
-  sdi_code: string | null;
   address_street: string | null;
   address_city: string | null;
   address_zip: string | null;
@@ -57,12 +53,8 @@ const empty: ClientRow = {
   first_name: "",
   last_name: "",
   business_name: "",
-  tax_code: "",
-  vat_number: "",
   email: "",
   phone: "",
-  pec: "",
-  sdi_code: "",
   address_street: "",
   address_city: "",
   address_zip: "",
@@ -142,12 +134,8 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
         first_name: form.first_name?.trim() || null,
         last_name: form.last_name?.trim() || null,
         business_name: form.business_name?.trim() || null,
-        tax_code: form.tax_code?.trim() || null,
-        vat_number: form.vat_number?.trim() || null,
         email: form.email?.trim() || null,
         phone: form.phone?.trim() || null,
-        pec: form.pec?.trim() || null,
-        sdi_code: form.sdi_code?.trim() || null,
         address_street: form.address_street?.trim() || null,
         address_city: form.address_city?.trim() || null,
         address_zip: form.address_zip?.trim() || null,
@@ -264,25 +252,6 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
               />
             </div>
           )}
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="tc">Codice fiscale</Label>
-              <Input
-                id="tc"
-                value={form.tax_code ?? ""}
-                onChange={(e) => upd("tax_code", e.target.value.toUpperCase())}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="vat">Partita IVA</Label>
-              <Input
-                id="vat"
-                value={form.vat_number ?? ""}
-                onChange={(e) => upd("vat_number", e.target.value)}
-              />
-            </div>
-          </div>
         </CardContent>
       </Card>
 
@@ -330,7 +299,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Contatti e fatturazione elettronica</CardTitle>
+          <CardTitle className="text-base">Contatti</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
@@ -349,24 +318,6 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
                 id="phone"
                 value={form.phone ?? ""}
                 onChange={(e) => upd("phone", e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="pec">PEC</Label>
-              <Input
-                id="pec"
-                type="email"
-                value={form.pec ?? ""}
-                onChange={(e) => upd("pec", e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="sdi">Codice destinatario SdI</Label>
-              <Input
-                id="sdi"
-                value={form.sdi_code ?? ""}
-                onChange={(e) => upd("sdi_code", e.target.value.toUpperCase().slice(0, 7))}
-                placeholder="7 caratteri o 0000000"
               />
             </div>
           </div>
@@ -476,12 +427,8 @@ async function createClient(payload: {
   first_name: string | null;
   last_name: string | null;
   business_name: string | null;
-  tax_code: string | null;
-  vat_number: string | null;
   email: string | null;
   phone: string | null;
-  pec: string | null;
-  sdi_code: string | null;
   address_street: string | null;
   address_city: string | null;
   address_zip: string | null;
@@ -501,12 +448,8 @@ async function updateClient(
     first_name: string | null;
     last_name: string | null;
     business_name: string | null;
-    tax_code: string | null;
-    vat_number: string | null;
     email: string | null;
     phone: string | null;
-    pec: string | null;
-    sdi_code: string | null;
     address_street: string | null;
     address_city: string | null;
     address_zip: string | null;
