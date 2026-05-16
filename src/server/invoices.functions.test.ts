@@ -45,8 +45,10 @@ vi.mock("@/lib/billing-xlsx", () => ({
   ),
 }));
 
+import { buildBillingWorkbook } from "@/lib/billing-xlsx";
 import {
   createBillingInvoiceFn,
+  generateBillingExportFn,
   generateInvoiceXmlFn,
   reserveInvoiceNumber,
 } from "./invoices.functions";
@@ -308,6 +310,68 @@ describe("server functions fatture", () => {
     expect(supabase.callsFor("case_activities", "update")).toHaveLength(2);
     expect(supabase.uploads).toHaveLength(2);
     expect(supabase.uploads[0].path).toContain("billing-exports/run-1/");
+  });
+
+  it("rigenera un rendiconto Excel scaricabile dai dati della fattura", async () => {
+    const supabase = new FakeSupabase();
+    supabase.queue("invoices:select:single", {
+      data: { id: "invoice-1", billing_run_id: "run-1", principal_id: "principal-1" },
+      error: null,
+    });
+    supabase.queue("billing_runs:select:single", {
+      data: { period_start: "2026-05-01", period_end: "2026-05-31" },
+      error: null,
+    });
+    supabase.queue("principals:select:single", {
+      data: { business_name: "Banca Test" },
+      error: null,
+    });
+    supabase.queue("case_activities:select:many", {
+      data: [billingActivity],
+      error: null,
+    });
+
+    const result = await handlerOf<
+      {
+        data: { invoiceId: string; kind: "fees" | "expenses" };
+        context: { supabase: FakeSupabase; userId: string };
+      },
+      { bytesBase64: string; fileName: string; mimeType: string }
+    >(generateBillingExportFn)({
+      data: { invoiceId: "invoice-1", kind: "fees" },
+      context: { supabase, userId: "user-1" },
+    });
+
+    expect(result).toEqual({
+      bytesBase64: Buffer.from([1, 2, 3]).toString("base64"),
+      fileName: "compensi-committente.xlsx",
+      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    expect(buildBillingWorkbook).toHaveBeenLastCalledWith({
+      kind: "fees",
+      principalName: "Banca Test",
+      periodStart: "2026-05-01",
+      periodEnd: "2026-05-31",
+      rows: [
+        {
+          practiceNumber: 42,
+          clientName: "Ada Rossi",
+          counterpartyName: "Beta S.p.A.",
+          activityDate: "2026-05-10",
+          description: "Redazione diffida",
+          quantity: 2,
+          unitPrice: 500,
+          amount: 1000,
+          hearingDates: ["2026-05-20"],
+        },
+      ],
+    });
+    expect(supabase.callsFor("case_activities", "select")[0].filters).toEqual(
+      expect.arrayContaining([
+        ["invoice_id", "invoice-1"],
+        ["kind", "fee"],
+      ]),
+    );
   });
 
   it("genera XML usando il committente come soggetto fatturato", async () => {

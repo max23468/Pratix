@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.2.18] — 2026-05-16
+
+### Correzioni
+
+- **Rendiconti Excel**: i bottoni nel dettaglio Fattura rigenerano file `.xlsx` compatibili al download, evitando di servire rendiconti storici salvati in formato fragile.
+
 ## [1.2.17] — 2026-05-16
 
 ### Correzioni
@@ -744,6 +750,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.2.18]: #1218--2026-05-16
 [1.2.17]: #1217--2026-05-16
 [1.2.16]: #1216--2026-05-16
 [1.2.15]: #1215--2026-05-16

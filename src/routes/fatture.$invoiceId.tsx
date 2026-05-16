@@ -46,11 +46,26 @@ import type { InvoicePdfData } from "@/lib/invoice-pdf";
 import { invoiceStatusLabels, invoiceStatusVariant } from "@/lib/labels";
 import { publicCodeLookup } from "@/lib/public-route-code";
 import { PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
-import { generateInvoiceXmlFn } from "@/server/invoices.functions";
+import { generateBillingExportFn, generateInvoiceXmlFn } from "@/server/invoices.functions";
 
 type GenerateInvoiceXmlResult = {
   xml: string;
   filename: string;
+};
+
+type GenerateBillingExportResult = {
+  bytesBase64: string;
+  fileName: string;
+  mimeType: string;
+};
+
+const bytesFromBase64 = (value: string) => {
+  const binary = window.atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
 };
 
 const unwrapServerResult = <T,>(result: T | { data: T }) =>
@@ -90,6 +105,7 @@ function InvoiceDetailPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const generateInvoiceXml = useServerFn(generateInvoiceXmlFn);
+  const generateBillingExport = useServerFn(generateBillingExportFn);
   const qc = useQueryClient();
   const [downloadingExportId, setDownloadingExportId] = useState<string | null>(null);
 
@@ -288,19 +304,25 @@ function InvoiceDetailPage() {
     });
   };
 
-  const downloadExport = async (exportId: string, storagePath: string, fileName: string) => {
+  const downloadExport = async (exportId: string, kind: "fees" | "expenses") => {
     setDownloadingExportId(exportId);
     try {
-      const { data: file, error } = await supabase.storage
-        .from(PRATIX_DOCUMENTS_BUCKET)
-        .download(storagePath);
-      if (error) throw error;
-      if (!file) throw new Error("Rendiconto Excel non disponibile");
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+      if (!token) throw new Error("Sessione non valida. Accedi di nuovo.");
+      const resolvedInvoiceId = data?.invoice.id;
+      if (!resolvedInvoiceId) throw new Error("Fattura non caricata");
+
+      const result = await generateBillingExport({
+        data: { invoiceId: resolvedInvoiceId, kind },
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const payload = await readServerResult<GenerateBillingExportResult>(result);
 
       downloadBytes({
-        bytes: new Uint8Array(await file.arrayBuffer()),
-        fileName,
-        mimeType: file.type || XLSX_MIME_TYPE,
+        bytes: bytesFromBase64(payload.bytesBase64),
+        fileName: payload.fileName,
+        mimeType: payload.mimeType || XLSX_MIME_TYPE,
       });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Download rendiconto non riuscito");
@@ -491,7 +513,12 @@ function InvoiceDetailPage() {
                   variant="outline"
                   className="w-full min-w-0 justify-start overflow-hidden"
                   disabled={downloadingExportId === item.id}
-                  onClick={() => void downloadExport(item.id, item.storage_path, item.file_name)}
+                  onClick={() =>
+                    void downloadExport(
+                      item.id,
+                      item.kind === "fees" || item.kind === "expenses" ? item.kind : "fees",
+                    )
+                  }
                 >
                   <FileSpreadsheet className="mr-2 size-4 shrink-0" />
                   <span className="min-w-0 truncate text-left">
