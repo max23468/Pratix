@@ -213,7 +213,7 @@ describe("InvoiceForm", () => {
     cleanup();
   });
 
-  it("genera una fattura con attività incluse, rinviate e regole fiscali aggiornate", async () => {
+  it("crea una fattura emessa con attività incluse, rinviate e regole fiscali aggiornate", async () => {
     render(<InvoiceForm />, { wrapper: Wrapper });
 
     await screen.findByText("Banca Test");
@@ -221,21 +221,20 @@ describe("InvoiceForm", () => {
     await screen.findByText("Redazione diffida");
     await screen.findByText("Contributo unificato");
 
-    await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "issued");
     await userEvent.clear(screen.getByLabelText("Pagamento"));
     await userEvent.type(screen.getByLabelText("Pagamento"), "Carta");
     await userEvent.clear(screen.getByLabelText("Percentuale spese generali (%)"));
     await userEvent.type(screen.getByLabelText("Percentuale spese generali (%)"), "12");
     await userEvent.clear(screen.getByLabelText("IVA (%)"));
     await userEvent.type(screen.getByLabelText("IVA (%)"), "10");
-    await userEvent.selectOptions(screen.getAllByRole("combobox")[3], "postponed");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[2], "postponed");
     await userEvent.type(
       screen.getByPlaceholderText("Note interne o descrizione da riportare in fattura"),
       "Note fattura",
     );
-    await userEvent.click(screen.getByRole("button", { name: /Genera fattura e rendiconti/ }));
+    await userEvent.click(screen.getByRole("button", { name: /Crea fattura/ }));
 
-    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Fattura 12/2026 generata"));
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Fattura 12/2026 creata"));
     expect(createBillingInvoice).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({
@@ -260,19 +259,26 @@ describe("InvoiceForm", () => {
     });
   });
 
-  it("ignora submit fattura ripetuti mentre la generazione è in corso", async () => {
+  it("salva una fattura in bozza e ignora submit ripetuti durante il salvataggio", async () => {
     render(<InvoiceForm />, { wrapper: Wrapper });
 
     await screen.findByText("Banca Test");
     await userEvent.selectOptions(screen.getAllByRole("combobox")[0], "principal-1");
     await screen.findByText("Redazione diffida");
 
-    const button = screen.getByRole("button", { name: /Genera fattura/ });
+    const button = screen.getByRole("button", { name: /Salva bozza/ });
     fireEvent.click(button);
     fireEvent.click(button);
 
-    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Fattura 12/2026 generata"));
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Bozza 12/2026 salvata"));
     expect(createBillingInvoice).toHaveBeenCalledTimes(1);
+    expect(createBillingInvoice).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          status: "draft",
+        }),
+      }),
+    );
   });
 
   it("nasconde l'IVA dal riepilogo per il regime forfettario", async () => {

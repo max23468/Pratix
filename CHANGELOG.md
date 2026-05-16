@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.3.2] — 2026-05-16
+
+### Correzioni
+
+- **Fatture**: la creazione distingue fra "Salva bozza" e "Crea fattura"; dal dettaglio una bozza può essere segnata come emessa prima di essere segnata pagata.
+
 ## [1.3.1] — 2026-05-16
 
 ### Correzioni
@@ -777,6 +783,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.3.2]: #132--2026-05-16
 [1.3.1]: #131--2026-05-16
 [1.3.0]: #130--2026-05-16
 [1.2.19]: #1219--2026-05-16
