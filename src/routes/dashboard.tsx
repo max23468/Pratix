@@ -32,7 +32,6 @@ import {
 import { TableEmptyState } from "@/components/table-empty-state";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import type { DuplicateCandidate } from "@/lib/duplicate-matching";
 import { formatCurrency } from "@/lib/format";
 import {
   caseStatusLabels,
@@ -44,7 +43,7 @@ import {
 } from "@/lib/labels";
 import { routeRef } from "@/lib/public-route-code";
 import { getAuthHeaders, readServerResult } from "@/lib/server-functions";
-import { scanDuplicateCandidatesFn } from "@/server/duplicates.functions";
+import { getDuplicateSummaryFn, type DuplicateSummaryResult } from "@/server/duplicates.functions";
 
 type CreateActionPath =
   | "/pratiche/nuova"
@@ -105,17 +104,7 @@ const CREATE_ACTIONS: Array<{
   },
 ];
 
-type DuplicateScanResult = {
-  openCandidates: DuplicateCandidate[];
-  resolvedCandidates: DuplicateCandidate[];
-};
-
-type DuplicateSummary = {
-  openCount: number;
-  highConfidenceCount: number;
-  snoozedCount: number;
-  resolvedCount: number;
-};
+type DuplicateSummary = DuplicateSummaryResult;
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -142,7 +131,7 @@ export const Route = createFileRoute("/dashboard")({
 function DashboardContent() {
   const { user } = useAuth();
   const userId = user?.id;
-  const scanDuplicates = useServerFn(scanDuplicateCandidatesFn);
+  const getDuplicateSummary = useServerFn(getDuplicateSummaryFn);
 
   const { data, isLoading } = useQuery({
     enabled: !!userId,
@@ -261,21 +250,12 @@ function DashboardContent() {
     enabled: !!userId,
     queryKey: ["dashboard-duplicate-summary", userId],
     staleTime: 60_000,
-    queryFn: async (): Promise<DuplicateSummary> => {
-      const scan = await readServerResult<DuplicateScanResult>(
-        await scanDuplicates({
+    queryFn: async (): Promise<DuplicateSummary> =>
+      readServerResult<DuplicateSummary>(
+        await getDuplicateSummary({
           headers: await getAuthHeaders(),
         }),
-      );
-      const open = scan.openCandidates.filter((candidate) => candidate.status === "open");
-      return {
-        openCount: open.length,
-        highConfidenceCount: open.filter((candidate) => candidate.confidence === "high").length,
-        snoozedCount: scan.openCandidates.filter((candidate) => candidate.status === "snoozed")
-          .length,
-        resolvedCount: scan.resolvedCandidates.length,
-      };
-    },
+      ),
   });
 
   return (
@@ -343,12 +323,6 @@ function DashboardContent() {
         />
       </div>
 
-      <DuplicateSummaryBox
-        summary={duplicateSummary.data}
-        isLoading={duplicateSummary.isLoading}
-        isError={duplicateSummary.isError}
-      />
-
       <Card className="mt-4 border-border/70 shadow-soft">
         <CardHeader>
           <CardTitle className="text-base">Prossime azioni operative</CardTitle>
@@ -374,6 +348,8 @@ function DashboardContent() {
           />
         </CardContent>
       </Card>
+
+      <DuplicateSummaryBox summary={duplicateSummary.data} isLoading={duplicateSummary.isLoading} />
 
       <div className="mt-6 grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
         <Card className="min-w-0">
@@ -474,27 +450,25 @@ function DashboardContent() {
 function DuplicateSummaryBox({
   summary,
   isLoading,
-  isError,
 }: {
   summary?: DuplicateSummary;
   isLoading: boolean;
-  isError: boolean;
 }) {
+  if (!isLoading && !summary) {
+    return null;
+  }
+
   const openCount = summary?.openCount ?? 0;
   const highConfidenceCount = summary?.highConfidenceCount ?? 0;
   const hasOpen = openCount > 0;
   const badgeText = isLoading
     ? "Controllo…"
-    : isError
-      ? "Non disponibile"
-      : hasOpen
-        ? `${openCount} da verificare`
-        : "Dati in ordine";
-  const description = isError
-    ? "La sintesi non è disponibile in questo momento."
     : hasOpen
-      ? "Ci sono coppie da rivedere prima di creare nuovi dati operativi."
-      : "Non risultano potenziali duplicati aperti.";
+      ? `${openCount} da verificare`
+      : "Dati in ordine";
+  const description = hasOpen
+    ? "Ci sono coppie da rivedere prima di creare nuovi dati operativi."
+    : "Non risultano potenziali duplicati aperti.";
 
   return (
     <Card className="mt-4 border-border/70 shadow-soft">
