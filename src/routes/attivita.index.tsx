@@ -5,6 +5,7 @@ import { Pencil, Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { CaseActivityDialog, type CaseActivityDialogActivity } from "@/components/case-activities";
+import { SortableTableHead } from "@/components/sortable-table-head";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -37,12 +38,38 @@ import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
 } from "@/lib/table-row-navigation";
+import {
+  parseTableSortDirection,
+  parseTableSortKey,
+  sortRows,
+  usePersistentTableSort,
+  type SortableColumn,
+  type TableSort,
+} from "@/lib/table-sorting";
+
+const attivitaSortKeys = [
+  "activity_date",
+  "case",
+  "activity",
+  "status",
+  "quantity",
+  "amount",
+] as const;
+
+type AttivitaSortKey = (typeof attivitaSortKeys)[number];
+
+const attivitaDefaultSort: TableSort<AttivitaSortKey> = {
+  key: "activity_date",
+  direction: "desc",
+};
 
 export const Route = createFileRoute("/attivita/")({
   validateSearch: (search: Record<string, unknown>): ActivitiesSearch => ({
     q: parseTextSearch(search.q),
     status: parseFilterValue(search.status, caseActivityStatusLabels),
     kind: parseFilterValue(search.kind, priceItemKindLabels),
+    sort: parseTableSortKey(search.sort, attivitaSortKeys),
+    dir: parseTableSortDirection(search.dir),
   }),
   head: () => ({
     meta: [
@@ -69,6 +96,8 @@ type ActivitiesSearch = {
   q?: string;
   status?: string;
   kind?: string;
+  sort?: AttivitaSortKey;
+  dir?: "asc" | "desc";
 };
 
 type GlobalActivityRow = CaseActivityDialogActivity & {
@@ -81,6 +110,8 @@ function ActivitiesList() {
   const q = search.q ?? "";
   const status = search.status ?? "all";
   const kind = search.kind ?? "all";
+  const urlSort =
+    search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
 
   const updateSearch = (next: ActivitiesSearch) =>
     navigate({
@@ -88,6 +119,8 @@ function ActivitiesList() {
         q: next.q?.trim() ? next.q : undefined,
         status: next.status && next.status !== "all" ? next.status : undefined,
         kind: next.kind && next.kind !== "all" ? next.kind : undefined,
+        sort: next.sort ?? search.sort,
+        dir: next.dir ?? search.dir,
       },
       replace: true,
     });
@@ -108,6 +141,52 @@ function ActivitiesList() {
     },
   });
 
+  const attivitaColumns = useMemo<readonly SortableColumn<GlobalActivityRow, AttivitaSortKey>[]>(
+    () => [
+      {
+        key: "activity_date",
+        label: "Data",
+        valueType: "date",
+        defaultDirection: "desc",
+        getValue: (activity) => activity.activity_date,
+      },
+      {
+        key: "case",
+        label: "Pratica",
+        valueType: "number",
+        getValue: (activity) => activity.cases?.practice_number,
+      },
+      { key: "activity", label: "Attività", getValue: (activity) => activity.description },
+      {
+        key: "status",
+        label: "Stato",
+        getValue: (activity) => caseActivityStatusLabels[activity.status] ?? activity.status,
+      },
+      {
+        key: "quantity",
+        label: "Quantità",
+        valueType: "number",
+        getValue: (activity) => activity.quantity,
+      },
+      {
+        key: "amount",
+        label: "Totale",
+        valueType: "number",
+        defaultDirection: "desc",
+        getValue: (activity) => activity.amount,
+      },
+    ],
+    [],
+  );
+
+  const { sort, setSort } = usePersistentTableSort({
+    section: "attivita",
+    columns: attivitaColumns,
+    defaultSort: attivitaDefaultSort,
+    urlSort,
+    onSortChange: (next) => updateSearch({ q, status, kind, sort: next.key, dir: next.direction }),
+  });
+
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     return data.filter((activity) => {
@@ -123,6 +202,11 @@ function ActivitiesList() {
       );
     });
   }, [data, kind, q, status]);
+
+  const sorted = useMemo(
+    () => sortRows(filtered, attivitaColumns, sort),
+    [attivitaColumns, filtered, sort],
+  );
 
   const totals = filtered.reduce(
     (acc, activity) => {
@@ -199,12 +283,36 @@ function ActivitiesList() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Data</TableHead>
-              <TableHead>Pratica</TableHead>
-              <TableHead>Attività</TableHead>
-              <TableHead>Stato</TableHead>
-              <TableHead className="text-right">Quantità</TableHead>
-              <TableHead className="text-right">Totale</TableHead>
+              <SortableTableHead
+                columnKey="activity_date"
+                label="Data"
+                sort={sort}
+                onSort={setSort}
+              />
+              <SortableTableHead columnKey="case" label="Pratica" sort={sort} onSort={setSort} />
+              <SortableTableHead
+                columnKey="activity"
+                label="Attività"
+                sort={sort}
+                onSort={setSort}
+              />
+              <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={setSort} />
+              <SortableTableHead
+                columnKey="quantity"
+                label="Quantità"
+                sort={sort}
+                onSort={setSort}
+                align="right"
+                className="text-right"
+              />
+              <SortableTableHead
+                columnKey="amount"
+                label="Totale"
+                sort={sort}
+                onSort={setSort}
+                align="right"
+                className="text-right"
+              />
               <TableHead className="w-12" />
             </TableRow>
           </TableHeader>
@@ -215,7 +323,7 @@ function ActivitiesList() {
                   Caricamento…
                 </TableCell>
               </TableRow>
-            ) : filtered.length === 0 ? (
+            ) : sorted.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
                   <TableEmptyState
@@ -244,7 +352,7 @@ function ActivitiesList() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((activity) => {
+              sorted.map((activity) => {
                 const caseId = activity.cases?.id;
                 const editTitle = activity.invoice_id
                   ? "Le voci collegate a una Fattura non si modificano"

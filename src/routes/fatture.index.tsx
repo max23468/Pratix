@@ -6,6 +6,7 @@ import { Archive, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
+import { SortableTableHead } from "@/components/sortable-table-head";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -18,14 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -48,6 +42,14 @@ import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
 } from "@/lib/table-row-navigation";
+import {
+  parseTableSortDirection,
+  parseTableSortKey,
+  sortRows,
+  usePersistentTableSort,
+  type SortableColumn,
+  type TableSort,
+} from "@/lib/table-sorting";
 import { generateInvoiceXmlFn } from "@/server/invoices.functions";
 
 type InvoiceListRow = {
@@ -67,6 +69,63 @@ type GenerateInvoiceXmlResult = {
   xml: string;
   filename: string;
 };
+
+const fattureSortKeys = [
+  "number",
+  "issue_date",
+  "principal",
+  "due_date",
+  "status",
+  "total_amount",
+  "net_to_pay",
+] as const;
+
+type FattureSortKey = (typeof fattureSortKeys)[number];
+
+const fattureDefaultSort: TableSort<FattureSortKey> = { key: "issue_date", direction: "desc" };
+
+const fattureColumns: readonly SortableColumn<InvoiceListRow, FattureSortKey>[] = [
+  { key: "number", label: "Numero", getValue: (invoice) => `${invoice.number}/${invoice.year}` },
+  {
+    key: "issue_date",
+    label: "Data",
+    valueType: "date",
+    defaultDirection: "desc",
+    getValue: (invoice) => invoice.issue_date,
+  },
+  {
+    key: "principal",
+    label: "Committente",
+    getValue: (invoice) =>
+      invoice.principal?.business_name || clientDisplayName(invoice.client as ClientDisplayData),
+  },
+  {
+    key: "due_date",
+    label: "Scadenza",
+    valueType: "date",
+    defaultDirection: "desc",
+    getValue: (invoice) => invoice.due_date,
+  },
+  {
+    key: "status",
+    label: "Stato",
+    getValue: (invoice) => invoiceStatusLabels[invoice.status] ?? invoice.status,
+  },
+  {
+    key: "total_amount",
+    label: "Totale",
+    valueType: "number",
+    defaultDirection: "desc",
+    getValue: (invoice) => invoice.total_amount,
+  },
+  {
+    key: "net_to_pay",
+    label: "Netto",
+    valueType: "number",
+    defaultDirection: "desc",
+    getValue: (invoice) => invoice.net_to_pay,
+  },
+];
 
 const unwrapServerResult = <T,>(result: T | { data: T }) =>
   "data" in Object(result) ? (result as { data: T }).data : (result as T);
@@ -90,6 +149,8 @@ export const Route = createFileRoute("/fatture/")({
     year: parseYearSearch(search.year),
     from: parseDateSearch(search.from),
     to: parseDateSearch(search.to),
+    sort: parseTableSortKey(search.sort, fattureSortKeys),
+    dir: parseTableSortDirection(search.dir),
   }),
   head: () => ({
     meta: [
@@ -108,6 +169,8 @@ type InvoicesSearch = {
   year?: string;
   from?: string;
   to?: string;
+  sort?: FattureSortKey;
+  dir?: "asc" | "desc";
 };
 
 function InvoicesIndex() {
@@ -120,6 +183,10 @@ function InvoicesIndex() {
   const year = routeSearch.year ?? "all";
   const periodStart = routeSearch.from ?? "";
   const periodEnd = routeSearch.to ?? "";
+  const urlSort =
+    routeSearch.sort && routeSearch.dir
+      ? { key: routeSearch.sort, direction: routeSearch.dir }
+      : undefined;
   const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const hasInvoiceFilters = Boolean(
     search.trim() || status !== "all" || year !== "all" || periodStart || periodEnd,
@@ -133,6 +200,8 @@ function InvoicesIndex() {
         year: next.year && next.year !== "all" ? next.year : undefined,
         from: next.from || undefined,
         to: next.to || undefined,
+        sort: next.sort ?? routeSearch.sort,
+        dir: next.dir ?? routeSearch.dir,
       },
       replace: true,
     });
@@ -175,6 +244,25 @@ function InvoicesIndex() {
       return i.number.toLowerCase().includes(q) || name.includes(q);
     });
   }, [data, periodEnd, periodStart, search, status, year]);
+
+  const { sort, setSort } = usePersistentTableSort({
+    section: "fatture",
+    columns: fattureColumns,
+    defaultSort: fattureDefaultSort,
+    urlSort,
+    onSortChange: (next) =>
+      updateSearch({
+        q: search,
+        status,
+        year,
+        from: periodStart,
+        to: periodEnd,
+        sort: next.key,
+        dir: next.direction,
+      }),
+  });
+
+  const sorted = useMemo(() => sortRows(filtered, fattureColumns, sort), [filtered, sort]);
 
   const totals = useMemo(() => {
     return filtered.reduce(
@@ -452,13 +540,52 @@ function InvoicesIndex() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Numero</TableHead>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Committente</TableHead>
-                  <TableHead>Scadenza</TableHead>
-                  <TableHead>Stato</TableHead>
-                  <TableHead className="text-right">Totale</TableHead>
-                  <TableHead className="text-right">Netto</TableHead>
+                  <SortableTableHead
+                    columnKey="number"
+                    label="Numero"
+                    sort={sort}
+                    onSort={setSort}
+                  />
+                  <SortableTableHead
+                    columnKey="issue_date"
+                    label="Data"
+                    sort={sort}
+                    onSort={setSort}
+                  />
+                  <SortableTableHead
+                    columnKey="principal"
+                    label="Committente"
+                    sort={sort}
+                    onSort={setSort}
+                  />
+                  <SortableTableHead
+                    columnKey="due_date"
+                    label="Scadenza"
+                    sort={sort}
+                    onSort={setSort}
+                  />
+                  <SortableTableHead
+                    columnKey="status"
+                    label="Stato"
+                    sort={sort}
+                    onSort={setSort}
+                  />
+                  <SortableTableHead
+                    columnKey="total_amount"
+                    label="Totale"
+                    sort={sort}
+                    onSort={setSort}
+                    align="right"
+                    className="text-right"
+                  />
+                  <SortableTableHead
+                    columnKey="net_to_pay"
+                    label="Netto"
+                    sort={sort}
+                    onSort={setSort}
+                    align="right"
+                    className="text-right"
+                  />
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -469,7 +596,7 @@ function InvoicesIndex() {
                     </TableCell>
                   </TableRow>
                 )}
-                {!isLoading && filtered.length === 0 && (
+                {!isLoading && sorted.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
                       <TableEmptyState
@@ -490,7 +617,7 @@ function InvoicesIndex() {
                     </TableCell>
                   </TableRow>
                 )}
-                {filtered.map((i) => {
+                {sorted.map((i) => {
                   const isOverdue = i.status === "issued" && i.due_date && i.due_date < today;
                   return (
                     <TableRow

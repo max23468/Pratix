@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
+import { SortableTableHead } from "@/components/sortable-table-head";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,21 +17,93 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
 } from "@/lib/table-row-navigation";
+import {
+  parseTableSortDirection,
+  parseTableSortKey,
+  sortRows,
+  usePersistentTableSort,
+  type SortableColumn,
+  type TableSort,
+} from "@/lib/table-sorting";
+
+type CommittentiSearch = {
+  sort?: CommittentiSortKey;
+  dir?: "asc" | "desc";
+};
+
+type PrincipalListRow = {
+  id: string;
+  business_name: string;
+  tax_code: string | null;
+  vat_number: string | null;
+  email: string | null;
+  address_city: string | null;
+  fees_enabled: boolean;
+  expense_reimbursements_enabled: boolean;
+  archived_at: string | null;
+  created_at: string;
+};
+
+const committentiSortKeys = [
+  "business_name",
+  "status",
+  "economics",
+  "tax",
+  "email",
+  "city",
+  "created_at",
+] as const;
+
+type CommittentiSortKey = (typeof committentiSortKeys)[number];
+
+const committentiDefaultSort: TableSort<CommittentiSortKey> = {
+  key: "created_at",
+  direction: "desc",
+};
+
+const committentiColumns: readonly SortableColumn<PrincipalListRow, CommittentiSortKey>[] = [
+  {
+    key: "business_name",
+    label: "Ragione sociale",
+    getValue: (principal) => principal.business_name,
+  },
+  {
+    key: "status",
+    label: "Stato",
+    getValue: (principal) => (principal.archived_at ? "Archiviato" : "Attivo"),
+  },
+  {
+    key: "economics",
+    label: "Regole economiche",
+    getValue: economicRulesLabel,
+  },
+  {
+    key: "tax",
+    label: "CF / P.IVA",
+    getValue: (principal) => principal.vat_number || principal.tax_code,
+  },
+  { key: "email", label: "Email", getValue: (principal) => principal.email },
+  { key: "city", label: "Citta", getValue: (principal) => principal.address_city },
+  {
+    key: "created_at",
+    label: "Creazione",
+    valueType: "date",
+    defaultDirection: "desc",
+    getValue: (principal) => principal.created_at,
+  },
+];
 
 export const Route = createFileRoute("/committenti/")({
+  validateSearch: (search: Record<string, unknown>): CommittentiSearch => ({
+    sort: parseTableSortKey(search.sort, committentiSortKeys),
+    dir: parseTableSortDirection(search.dir),
+  }),
   head: () => ({
     meta: [
       { title: "Committenti · Pratix" },
@@ -54,9 +127,12 @@ export const Route = createFileRoute("/committenti/")({
 
 function CommittentiList() {
   const navigate = Route.useNavigate();
+  const search = Route.useSearch();
   const [q, setQ] = useState("");
   const [status, setStatus] = useState("active");
   const [economics, setEconomics] = useState("all");
+  const urlSort =
+    search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
 
   const { data, isLoading } = useQuery({
     queryKey: ["principals"],
@@ -64,12 +140,21 @@ function CommittentiList() {
       const { data, error } = await supabase
         .from("principals")
         .select(
-          "id, business_name, tax_code, vat_number, email, address_city, fees_enabled, expense_reimbursements_enabled, archived_at",
+          "id, business_name, tax_code, vat_number, email, address_city, fees_enabled, expense_reimbursements_enabled, archived_at, created_at",
         )
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as PrincipalListRow[];
     },
+  });
+
+  const { sort, setSort } = usePersistentTableSort({
+    section: "committenti",
+    columns: committentiColumns,
+    defaultSort: committentiDefaultSort,
+    urlSort,
+    onSortChange: (next) =>
+      navigate({ search: { sort: next.key, dir: next.direction }, replace: true }),
   });
 
   const filtered = useMemo(() => {
@@ -104,6 +189,8 @@ function CommittentiList() {
         .some((value) => value?.toLowerCase().includes(term));
     });
   }, [data, economics, q, status]);
+
+  const sorted = useMemo(() => sortRows(filtered, committentiColumns, sort), [filtered, sort]);
 
   const openPrincipal = (principalId: string) =>
     navigate({ to: "/committenti/$principalId", params: { principalId } });
@@ -160,12 +247,22 @@ function CommittentiList() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Ragione sociale</TableHead>
-              <TableHead>Stato</TableHead>
-              <TableHead>Regole economiche</TableHead>
-              <TableHead>CF / P.IVA</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Città</TableHead>
+              <SortableTableHead
+                columnKey="business_name"
+                label="Ragione sociale"
+                sort={sort}
+                onSort={setSort}
+              />
+              <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={setSort} />
+              <SortableTableHead
+                columnKey="economics"
+                label="Regole economiche"
+                sort={sort}
+                onSort={setSort}
+              />
+              <SortableTableHead columnKey="tax" label="CF / P.IVA" sort={sort} onSort={setSort} />
+              <SortableTableHead columnKey="email" label="Email" sort={sort} onSort={setSort} />
+              <SortableTableHead columnKey="city" label="Città" sort={sort} onSort={setSort} />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -175,7 +272,7 @@ function CommittentiList() {
                   Caricamento…
                 </TableCell>
               </TableRow>
-            ) : filtered.length === 0 ? (
+            ) : sorted.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
                   <TableEmptyState
@@ -200,7 +297,7 @@ function CommittentiList() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((principal) => (
+              sorted.map((principal) => (
                 <TableRow
                   key={principal.id}
                   className="cursor-pointer"

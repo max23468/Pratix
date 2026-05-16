@@ -560,6 +560,18 @@ CREATE TABLE public.clients (
 );
 CREATE INDEX idx_clients_user ON public.clients (user_id);
 
+CREATE TABLE public.user_table_preferences (
+  id             uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id        uuid NOT NULL,
+  section        text NOT NULL CHECK (length(trim(section)) > 0),
+  sort_key       text NOT NULL CHECK (length(trim(sort_key)) > 0),
+  sort_direction text NOT NULL CHECK (sort_direction IN ('asc', 'desc')),
+  created_at     timestamptz NOT NULL DEFAULT now(),
+  updated_at     timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (user_id, section)
+);
+CREATE INDEX idx_user_table_preferences_user ON public.user_table_preferences (user_id);
+
 CREATE TABLE public.cases (
   id           uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id      uuid NOT NULL,
@@ -1027,6 +1039,10 @@ ALTER TABLE public.clients
   ADD CONSTRAINT clients_user_id_fkey
   FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
+ALTER TABLE public.user_table_preferences
+  ADD CONSTRAINT user_table_preferences_user_id_fkey
+  FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+
 ALTER TABLE public.cases
   ADD CONSTRAINT cases_user_id_fkey
   FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -1186,6 +1202,7 @@ ALTER TABLE public.invoice_lines
 
 CREATE TRIGGER profiles_set_updated_at        BEFORE UPDATE ON public.profiles        FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER clients_set_updated_at         BEFORE UPDATE ON public.clients         FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
+CREATE TRIGGER user_table_preferences_set_updated_at BEFORE UPDATE ON public.user_table_preferences FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER cases_set_updated_at           BEFORE UPDATE ON public.cases           FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER invoices_set_updated_at        BEFORE UPDATE ON public.invoices        FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
 CREATE TRIGGER principals_set_updated_at              BEFORE UPDATE ON public.principals              FOR EACH ROW EXECUTE FUNCTION public.set_updated_at();
@@ -1238,6 +1255,7 @@ REVOKE EXECUTE ON FUNCTION public.set_case_activity_amount() FROM PUBLIC, anon, 
 GRANT EXECUTE ON FUNCTION public.get_next_practice_number() TO authenticated;
 REVOKE ALL ON FUNCTION public.apply_import_row(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.apply_import_row(uuid) TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_table_preferences TO authenticated;
 
 
 -- ============================================================================
@@ -1248,6 +1266,7 @@ GRANT EXECUTE ON FUNCTION public.apply_import_row(uuid) TO authenticated;
 
 ALTER TABLE public.profiles            ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.clients             ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_table_preferences ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cases               ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.case_status_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.invoices            ENABLE ROW LEVEL SECURITY;
@@ -1278,6 +1297,12 @@ CREATE POLICY clients_select_own ON public.clients FOR SELECT TO authenticated U
 CREATE POLICY clients_insert_own ON public.clients FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
 CREATE POLICY clients_update_own ON public.clients FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
 CREATE POLICY clients_delete_own ON public.clients FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
+
+-- user_table_preferences
+CREATE POLICY user_table_preferences_select_own ON public.user_table_preferences FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);
+CREATE POLICY user_table_preferences_insert_own ON public.user_table_preferences FOR INSERT TO authenticated WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY user_table_preferences_update_own ON public.user_table_preferences FOR UPDATE TO authenticated USING ((select auth.uid()) = user_id) WITH CHECK ((select auth.uid()) = user_id);
+CREATE POLICY user_table_preferences_delete_own ON public.user_table_preferences FOR DELETE TO authenticated USING ((select auth.uid()) = user_id);
 
 -- cases
 CREATE POLICY cases_select_own ON public.cases FOR SELECT TO authenticated USING ((select auth.uid()) = user_id);

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
+import { SortableTableHead } from "@/components/sortable-table-head";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -16,14 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import {
   compareCounterparties,
@@ -34,8 +28,41 @@ import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
 } from "@/lib/table-row-navigation";
+import {
+  parseTableSortDirection,
+  parseTableSortKey,
+  sortRows,
+  usePersistentTableSort,
+  type SortableColumn,
+  type TableSort,
+} from "@/lib/table-sorting";
+
+type ContropartiSearch = {
+  sort?: ContropartiSortKey;
+  dir?: "asc" | "desc";
+};
+
+type CounterpartyListRow = {
+  id: string;
+  kind: string;
+  first_name: string | null;
+  last_name: string | null;
+  business_name: string | null;
+  notes: string | null;
+  updated_at: string;
+};
+
+const contropartiSortKeys = ["name", "kind", "subjects", "notes", "updated_at"] as const;
+
+type ContropartiSortKey = (typeof contropartiSortKeys)[number];
+
+const contropartiDefaultSort: TableSort<ContropartiSortKey> = { key: "name", direction: "asc" };
 
 export const Route = createFileRoute("/controparti/")({
+  validateSearch: (search: Record<string, unknown>): ContropartiSearch => ({
+    sort: parseTableSortKey(search.sort, contropartiSortKeys),
+    dir: parseTableSortDirection(search.dir),
+  }),
   head: () => ({
     meta: [
       { title: "Controparti · Pratix" },
@@ -59,8 +86,11 @@ export const Route = createFileRoute("/controparti/")({
 
 function ContropartiList() {
   const navigate = Route.useNavigate();
+  const search = Route.useSearch();
   const [q, setQ] = useState("");
   const [kind, setKind] = useState("all");
+  const urlSort =
+    search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
 
   const { data: counterparties, isLoading } = useQuery({
     queryKey: ["counterparties"],
@@ -69,7 +99,7 @@ function ContropartiList() {
         .from("counterparties")
         .select("id, kind, first_name, last_name, business_name, notes, updated_at");
       if (error) throw error;
-      return (data ?? []).slice().sort(compareCounterparties);
+      return (data ?? []) as CounterpartyListRow[];
     },
   });
 
@@ -91,6 +121,49 @@ function ContropartiList() {
     }, {});
   }, [subjects]);
 
+  const contropartiColumns = useMemo<
+    readonly SortableColumn<CounterpartyListRow, ContropartiSortKey>[]
+  >(
+    () => [
+      {
+        key: "name",
+        label: "Nome",
+        compare: compareCounterparties,
+        getValue: counterpartyDisplayName,
+      },
+      {
+        key: "kind",
+        label: "Tipo",
+        getValue: (counterparty) => counterpartyKindLabels[counterparty.kind] ?? counterparty.kind,
+      },
+      {
+        key: "subjects",
+        label: "Soggetti",
+        valueType: "number",
+        getValue: (counterparty) =>
+          counterparty.kind === "group" ? (subjectCounts[counterparty.id] ?? 0) : null,
+      },
+      { key: "notes", label: "Note", getValue: (counterparty) => counterparty.notes },
+      {
+        key: "updated_at",
+        label: "Aggiornamento",
+        valueType: "date",
+        defaultDirection: "desc",
+        getValue: (counterparty) => counterparty.updated_at,
+      },
+    ],
+    [subjectCounts],
+  );
+
+  const { sort, setSort } = usePersistentTableSort({
+    section: "controparti",
+    columns: contropartiColumns,
+    defaultSort: contropartiDefaultSort,
+    urlSort,
+    onSortChange: (next) =>
+      navigate({ search: { sort: next.key, dir: next.direction }, replace: true }),
+  });
+
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     if (!counterparties) return [];
@@ -101,6 +174,11 @@ function ContropartiList() {
       return name.includes(term) || (counterparty.notes ?? "").toLowerCase().includes(term);
     });
   }, [counterparties, kind, q]);
+
+  const sorted = useMemo(
+    () => sortRows(filtered, contropartiColumns, sort, compareCounterparties),
+    [contropartiColumns, filtered, sort],
+  );
 
   const openCounterparty = (counterpartyId: string) =>
     navigate({ to: "/controparti/$counterpartyId", params: { counterpartyId } });
@@ -148,10 +226,15 @@ function ContropartiList() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Soggetti</TableHead>
-              <TableHead>Note</TableHead>
+              <SortableTableHead columnKey="name" label="Nome" sort={sort} onSort={setSort} />
+              <SortableTableHead columnKey="kind" label="Tipo" sort={sort} onSort={setSort} />
+              <SortableTableHead
+                columnKey="subjects"
+                label="Soggetti"
+                sort={sort}
+                onSort={setSort}
+              />
+              <SortableTableHead columnKey="notes" label="Note" sort={sort} onSort={setSort} />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -161,7 +244,7 @@ function ContropartiList() {
                   Caricamento…
                 </TableCell>
               </TableRow>
-            ) : filtered.length === 0 ? (
+            ) : sorted.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} className="py-10 text-center text-sm text-muted-foreground">
                   <TableEmptyState
@@ -184,7 +267,7 @@ function ContropartiList() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((counterparty) => {
+              sorted.map((counterparty) => {
                 const displayName = counterpartyDisplayName(counterparty);
                 return (
                   <TableRow

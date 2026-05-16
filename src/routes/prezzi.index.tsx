@@ -4,26 +4,63 @@ import { useQuery } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
+import { SortableTableHead } from "@/components/sortable-table-head";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { priceBookStatusLabels, priceBookStatusVariant } from "@/lib/labels";
 import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
 } from "@/lib/table-row-navigation";
+import {
+  parseTableSortDirection,
+  parseTableSortKey,
+  sortRows,
+  usePersistentTableSort,
+  type SortableColumn,
+  type TableSort,
+} from "@/lib/table-sorting";
+
+type PrezziSearch = {
+  sort?: PrezziSortKey;
+  dir?: "asc" | "desc";
+};
+
+type PriceBookListRow = {
+  id: string;
+  principal_id: string;
+  year: number;
+  status: string;
+  fees_enabled: boolean;
+  expense_reimbursements_enabled: boolean;
+  valid_from: string;
+  valid_to: string | null;
+  updated_at: string;
+};
+
+const prezziSortKeys = [
+  "principal",
+  "year",
+  "status",
+  "rules",
+  "items",
+  "validity",
+  "updated_at",
+] as const;
+
+type PrezziSortKey = (typeof prezziSortKeys)[number];
+
+const prezziDefaultSort: TableSort<PrezziSortKey> = { key: "year", direction: "desc" };
 
 export const Route = createFileRoute("/prezzi/")({
+  validateSearch: (search: Record<string, unknown>): PrezziSearch => ({
+    sort: parseTableSortKey(search.sort, prezziSortKeys),
+    dir: parseTableSortDirection(search.dir),
+  }),
   head: () => ({
     meta: [
       { title: "Prezzi · Pratix" },
@@ -47,7 +84,10 @@ export const Route = createFileRoute("/prezzi/")({
 
 function PrezziList() {
   const navigate = Route.useNavigate();
+  const search = Route.useSearch();
   const [q, setQ] = useState("");
+  const urlSort =
+    search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
 
   const { data: priceBooks = [], isLoading } = useQuery({
     queryKey: ["price-books"],
@@ -60,7 +100,7 @@ function PrezziList() {
         .order("year", { ascending: false })
         .order("updated_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as PriceBookListRow[];
     },
   });
 
@@ -106,6 +146,60 @@ function PrezziList() {
     );
   }, [priceItems]);
 
+  const prezziColumns = useMemo<readonly SortableColumn<PriceBookListRow, PrezziSortKey>[]>(
+    () => [
+      {
+        key: "principal",
+        label: "Committente",
+        getValue: (book) => principalNameById.get(book.principal_id),
+      },
+      {
+        key: "year",
+        label: "Anno",
+        valueType: "number",
+        defaultDirection: "desc",
+        getValue: (book) => book.year,
+      },
+      {
+        key: "status",
+        label: "Stato",
+        getValue: (book) => priceBookStatusLabels[book.status] ?? book.status,
+      },
+      { key: "rules", label: "Regole", getValue: rulesLabel },
+      {
+        key: "items",
+        label: "Voci",
+        valueType: "number",
+        defaultDirection: "desc",
+        getValue: (book) => countsByBook[book.id]?.enabled ?? 0,
+      },
+      {
+        key: "validity",
+        label: "Validità",
+        valueType: "date",
+        defaultDirection: "desc",
+        getValue: (book) => book.valid_from,
+      },
+      {
+        key: "updated_at",
+        label: "Aggiornamento",
+        valueType: "date",
+        defaultDirection: "desc",
+        getValue: (book) => book.updated_at,
+      },
+    ],
+    [countsByBook, principalNameById],
+  );
+
+  const { sort, setSort } = usePersistentTableSort({
+    section: "prezzi",
+    columns: prezziColumns,
+    defaultSort: prezziDefaultSort,
+    urlSort,
+    onSortChange: (next) =>
+      navigate({ search: { sort: next.key, dir: next.direction }, replace: true }),
+  });
+
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     if (!term) return priceBooks;
@@ -118,6 +212,18 @@ function PrezziList() {
       );
     });
   }, [priceBooks, principalNameById, q]);
+
+  const sorted = useMemo(
+    () =>
+      sortRows(
+        filtered,
+        prezziColumns,
+        sort,
+        (a, b) =>
+          b.year - a.year || new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
+      ),
+    [filtered, prezziColumns, sort],
+  );
 
   const openPriceBook = (priceBookId: string) =>
     navigate({ to: "/prezzi/$priceBookId", params: { priceBookId } });
@@ -152,12 +258,22 @@ function PrezziList() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Committente</TableHead>
-              <TableHead>Anno</TableHead>
-              <TableHead>Stato</TableHead>
-              <TableHead>Regole</TableHead>
-              <TableHead>Voci</TableHead>
-              <TableHead>Validità</TableHead>
+              <SortableTableHead
+                columnKey="principal"
+                label="Committente"
+                sort={sort}
+                onSort={setSort}
+              />
+              <SortableTableHead columnKey="year" label="Anno" sort={sort} onSort={setSort} />
+              <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={setSort} />
+              <SortableTableHead columnKey="rules" label="Regole" sort={sort} onSort={setSort} />
+              <SortableTableHead columnKey="items" label="Voci" sort={sort} onSort={setSort} />
+              <SortableTableHead
+                columnKey="validity"
+                label="Validità"
+                sort={sort}
+                onSort={setSort}
+              />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -167,14 +283,14 @@ function PrezziList() {
                   Caricamento…
                 </TableCell>
               </TableRow>
-            ) : filtered.length === 0 ? (
+            ) : sorted.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
                   {q ? "Nessun risultato." : "Nessun prezzo. Crea il primo set annuale."}
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((book) => {
+              sorted.map((book) => {
                 const counts = countsByBook[book.id] ?? { fees: 0, expenses: 0, enabled: 0 };
                 const principalName = principalNameById.get(book.principal_id) ?? "—";
                 return (

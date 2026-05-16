@@ -49,6 +49,13 @@ Contiene tre famiglie di dati:
 - **Stato applicazione**: `onboarding_completed`,
   `last_seen_changelog_version` (per la campanella "Novità"), `logo_url`.
 
+### `user_table_preferences`
+
+Preferenze UI sincronizzate fra dispositivi per l'utente autenticato. Ogni riga
+identifica una sezione tabellare (`section`) e l'ultimo ordinamento scelto
+(`sort_key`, `sort_direction`). Le policy RLS limitano lettura e scrittura al
+proprietario della riga.
+
 ### `clients`
 
 Rubrica clienti dell'avvocato. Nel nuovo dominio recupero crediti il cliente è
@@ -270,7 +277,9 @@ conferma, usando gli ID attività pre-generati nello staging e i metadati in
 ## Relazioni (logiche, non FK)
 
 ```
-profiles (1) ─── (N) principals ─── (N) price_books ─── (N) price_items
+profiles (1) ─── (N) user_table_preferences
+       │
+       └──── (N) principals ─── (N) price_books ─── (N) price_items
                       │
                       ├── (N) principal_clients ─── (N) clients
                       │
