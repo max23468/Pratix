@@ -5,6 +5,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { Archive, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { AppLayout } from "@/components/app-layout";
+import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { PageHeader } from "@/components/page-header";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import { Button } from "@/components/ui/button";
@@ -530,6 +531,7 @@ function InvoicesIndex() {
             <Button
               type="button"
               variant="outline"
+              className="w-full lg:w-auto"
               onClick={() => exportZipMutation.mutate()}
               disabled={exportZipMutation.isPending || filtered.length === 0}
             >
@@ -538,7 +540,92 @@ function InvoicesIndex() {
             </Button>
           </div>
 
-          <div className="overflow-x-auto">
+          <div className="md:hidden">
+            <MobileSortSelect columns={fattureColumns} sort={sort} onSort={setSort} />
+          </div>
+
+          <div className="space-y-3 md:hidden">
+            {isLoading ? (
+              <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>
+            ) : sorted.length === 0 ? (
+              <Card className="p-4">
+                <TableEmptyState
+                  title={hasInvoiceFilters ? "Nessuna fattura trovata" : "Nessuna fattura"}
+                  description={
+                    hasInvoiceFilters
+                      ? "Modifica ricerca, stato, anno o periodo per ampliare i risultati."
+                      : "Crea una fattura partendo dalle attività da fatturare."
+                  }
+                  action={
+                    !hasInvoiceFilters ? (
+                      <Button size="sm" asChild>
+                        <Link to="/fatture/nuova">Nuova fattura</Link>
+                      </Button>
+                    ) : undefined
+                  }
+                />
+              </Card>
+            ) : (
+              sorted.map((i) => {
+                const isOverdue = i.status === "issued" && i.due_date && i.due_date < today;
+                const billedName =
+                  i.principal?.business_name || clientDisplayName(i.client as ClientDisplayData);
+                return (
+                  <Link
+                    key={i.id}
+                    to="/fatture/$invoiceId"
+                    params={{ invoiceId: routeRef(i) }}
+                    className="block rounded-md border border-border bg-card p-4 shadow-soft transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <div className="flex min-w-0 items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">
+                          Fattura {i.number}/{i.year}
+                        </p>
+                        <p className="mt-1 truncate text-xs text-muted-foreground">{billedName}</p>
+                      </div>
+                      <Badge
+                        variant={
+                          isOverdue ? "destructive" : invoiceStatusVariant[i.status] || "outline"
+                        }
+                        className="shrink-0"
+                      >
+                        {isOverdue ? "Scaduta" : invoiceStatusLabels[i.status] || i.status}
+                      </Badge>
+                    </div>
+                    <dl className="mt-3 grid gap-2 text-xs text-muted-foreground">
+                      <div className="flex min-w-0 justify-between gap-3">
+                        <dt>Data</dt>
+                        <dd className="text-right">{formatDate(i.issue_date)}</dd>
+                      </div>
+                      <div className="flex min-w-0 justify-between gap-3">
+                        <dt>Scadenza</dt>
+                        <dd
+                          className={
+                            isOverdue ? "text-right font-medium text-destructive" : "text-right"
+                          }
+                        >
+                          {formatDate(i.due_date)}
+                        </dd>
+                      </div>
+                      <div className="flex min-w-0 justify-between gap-3">
+                        <dt>Totale</dt>
+                        <dd className="text-right">{formatCurrency(Number(i.total_amount))}</dd>
+                      </div>
+                      <div className="flex min-w-0 justify-between gap-3">
+                        <dt>Netto</dt>
+                        <dd className="text-right font-medium text-foreground">
+                          {formatCurrency(Number(i.net_to_pay))}
+                        </dd>
+                      </div>
+                    </dl>
+                  </Link>
+                );
+              })
+            )}
+          </div>
+
+          <div className="hidden overflow-x-auto md:block">
             <Table>
               <TableHeader>
                 <TableRow>

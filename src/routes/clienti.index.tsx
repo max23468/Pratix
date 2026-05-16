@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
+import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { PageHeader } from "@/components/page-header";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import { Button } from "@/components/ui/button";
@@ -249,7 +250,73 @@ function ClientiList() {
         </Select>
       </div>
 
-      <Card>
+      <div className="mb-4 md:hidden">
+        <MobileSortSelect columns={clientiColumns} sort={sort} onSort={setSort} />
+      </div>
+
+      <div className="space-y-3 md:hidden">
+        {isLoading ? (
+          <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>
+        ) : sorted.length === 0 ? (
+          <Card className="p-4">
+            <TableEmptyState
+              title={
+                q || kind !== "all" || principalId !== "all"
+                  ? "Nessun cliente trovato"
+                  : "Nessun cliente"
+              }
+              description={
+                q || kind !== "all" || principalId !== "all"
+                  ? "Modifica ricerca o filtri per ampliare i risultati."
+                  : "Aggiungi il primo cliente e collegalo ai committenti interessati."
+              }
+              action={
+                !q && kind === "all" && principalId === "all" ? (
+                  <Button size="sm" asChild>
+                    <Link to="/clienti/nuovo">Nuovo cliente</Link>
+                  </Button>
+                ) : undefined
+              }
+            />
+          </Card>
+        ) : (
+          sorted.map((c) => {
+            const displayName = clientDisplayName(c);
+            return (
+              <Link
+                key={c.id}
+                to="/clienti/$clientId"
+                params={{ clientId: routeRef(c) }}
+                className="block rounded-md border border-border bg-card p-4 shadow-soft transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {principalNamesByClient[c.id]?.join(", ") || "Nessun committente collegato"}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="shrink-0">
+                    {clientKindLabels[c.kind] ?? c.kind}
+                  </Badge>
+                </div>
+                <dl className="mt-3 grid gap-2 text-xs text-muted-foreground">
+                  <div className="flex min-w-0 justify-between gap-3">
+                    <dt>Email</dt>
+                    <dd className="min-w-0 truncate text-right">{c.email ?? "—"}</dd>
+                  </div>
+                  <div className="flex min-w-0 justify-between gap-3">
+                    <dt>Città</dt>
+                    <dd className="min-w-0 truncate text-right">{c.address_city ?? "—"}</dd>
+                  </div>
+                </dl>
+              </Link>
+            );
+          })
+        )}
+      </div>
+
+      <Card className="hidden min-w-0 md:block">
         <Table>
           <TableHeader>
             <TableRow>

@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
+import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { PageHeader } from "@/components/page-header";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import { Badge } from "@/components/ui/badge";
@@ -224,7 +225,66 @@ function ContropartiList() {
         </Select>
       </div>
 
-      <Card>
+      <div className="mb-4 md:hidden">
+        <MobileSortSelect columns={contropartiColumns} sort={sort} onSort={setSort} />
+      </div>
+
+      <div className="space-y-3 md:hidden">
+        {isLoading ? (
+          <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>
+        ) : sorted.length === 0 ? (
+          <Card className="p-4">
+            <TableEmptyState
+              title={q || kind !== "all" ? "Nessuna controparte trovata" : "Nessuna controparte"}
+              description={
+                q || kind !== "all"
+                  ? "Modifica ricerca o filtro per ampliare i risultati."
+                  : "Aggiungi la prima controparte per collegarla alle pratiche."
+              }
+              action={
+                !q && kind === "all" ? (
+                  <Button size="sm" asChild>
+                    <Link to="/controparti/nuova">Nuova controparte</Link>
+                  </Button>
+                ) : undefined
+              }
+            />
+          </Card>
+        ) : (
+          sorted.map((counterparty) => {
+            const displayName = counterpartyDisplayName(counterparty);
+            return (
+              <Link
+                key={counterparty.id}
+                to="/controparti/$counterpartyId"
+                params={{ counterpartyId: routeRef(counterparty) }}
+                className="block rounded-md border border-border bg-card p-4 shadow-soft transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {counterparty.kind === "group"
+                        ? `${subjectCounts[counterparty.id] ?? 0} soggetti`
+                        : "Controparte singola"}
+                    </p>
+                  </div>
+                  <Badge variant="outline" className="shrink-0">
+                    {counterpartyKindLabels[counterparty.kind] ?? counterparty.kind}
+                  </Badge>
+                </div>
+                {counterparty.notes && (
+                  <p className="mt-3 line-clamp-2 text-xs text-muted-foreground">
+                    {counterparty.notes}
+                  </p>
+                )}
+              </Link>
+            );
+          })
+        )}
+      </div>
+
+      <Card className="hidden min-w-0 md:block">
         <Table>
           <TableHeader>
             <TableRow>

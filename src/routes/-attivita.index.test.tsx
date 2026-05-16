@@ -152,8 +152,9 @@ describe("pagina Attività", () => {
   it("permette di aprire la modifica delle Attività non fatturate dalla lista globale", () => {
     renderRoute();
 
-    const editableRow = screen.getByText("Partecipazione udienza").closest("tr")!;
-    const invoicedRow = screen.getByText("Contributo unificato").closest("tr")!;
+    const table = screen.getByRole("table");
+    const editableRow = within(table).getByText("Partecipazione udienza").closest("tr")!;
+    const invoicedRow = within(table).getByText("Contributo unificato").closest("tr")!;
 
     expect(within(editableRow).getAllByRole("button", { name: /Modifica/i })[0].disabled).toBe(
       false,

@@ -18,6 +18,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 - **Documentazione**: riallineate istruzioni operative, guide, roadmap e glossario allo stato pubblicato fino a Pratix 1.4.0.
 
+## [1.5.1] — 2026-05-16
+
+### Correzioni
+
+- **UI mobile**: dashboard, listati operativi e controlli di navigazione restano leggibili e utilizzabili su iPhone senza aree tagliate o tabelle da trascinare orizzontalmente.
+
 ## [1.5.0] — 2026-05-16
 
 ### Novità

@@ -35,9 +35,9 @@ export function UserMenu() {
           variant="ghost"
           size="icon"
           aria-label="Apri menu account"
-          className="relative size-8 rounded-full"
+          className="relative size-11 rounded-full sm:size-8"
         >
-          <span className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+          <span className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary sm:size-7">
             {initial}
           </span>
         </Button>
