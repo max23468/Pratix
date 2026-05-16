@@ -88,7 +88,8 @@ describe("form applicative principali", () => {
     expect(html).toContain("Tipo cliente");
     expect(html).toContain("Nome");
     expect(html).toContain("Cognome");
-    expect(html).toContain("Contatti");
+    expect(html).not.toContain("Contatti");
+    expect(html).not.toContain("Indirizzo");
     expect(html).not.toContain("Codice fiscale");
   });
 

@@ -333,8 +333,7 @@ BEGIN
       kind,
       first_name,
       last_name,
-      business_name,
-      address_country
+      business_name
     )
     VALUES (
       v_user_id,
@@ -344,8 +343,7 @@ BEGIN
       CASE WHEN v_normalized #>> '{client,kind}' = 'individual'
         THEN nullif(v_normalized #>> '{client,lastName}', '') ELSE NULL END,
       CASE WHEN v_normalized #>> '{client,kind}' = 'company'
-        THEN nullif(v_normalized #>> '{client,businessName}', '') ELSE NULL END,
-      'IT'
+        THEN nullif(v_normalized #>> '{client,businessName}', '') ELSE NULL END
     )
     RETURNING id INTO v_client_id;
   END IF;
@@ -603,13 +601,6 @@ CREATE TABLE public.clients (
   first_name       text,
   last_name        text,
   business_name    text,
-  email            text,
-  phone            text,
-  address_street   text,
-  address_city     text,
-  address_zip      text,
-  address_province text,
-  address_country  text DEFAULT 'IT',
   notes            text,
   created_at       timestamptz NOT NULL DEFAULT now(),
   updated_at       timestamptz NOT NULL DEFAULT now(),
