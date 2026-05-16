@@ -136,7 +136,7 @@ export function GlobalSearch() {
         .limit(6);
       const clientQuery = supabase
         .from("clients")
-        .select("id, public_code, kind, first_name, last_name, business_name, email, created_at")
+        .select("id, public_code, kind, first_name, last_name, business_name, created_at")
         .order("created_at", { ascending: false })
         .limit(6);
       const invoiceQuery = supabase
@@ -150,7 +150,7 @@ export function GlobalSearch() {
       if (hasTerm) {
         caseQuery.or(`title.ilike.${likeTerm},case_number.ilike.${likeTerm}`);
         clientQuery.or(
-          `first_name.ilike.${likeTerm},last_name.ilike.${likeTerm},business_name.ilike.${likeTerm},email.ilike.${likeTerm}`,
+          `first_name.ilike.${likeTerm},last_name.ilike.${likeTerm},business_name.ilike.${likeTerm}`,
         );
         invoiceQuery.ilike("number", likeTerm);
       }
@@ -177,7 +177,7 @@ export function GlobalSearch() {
         id: `client-${item.id}`,
         kind: "client",
         title: clientDisplayName(item),
-        subtitle: item.email ?? "Cliente",
+        subtitle: "Cliente",
         clientRef: routeRef(item),
       }));
 

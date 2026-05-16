@@ -632,58 +632,37 @@ export type Database = {
       }
       clients: {
         Row: {
-          address_city: string | null
-          address_country: string | null
-          address_province: string | null
-          address_street: string | null
-          address_zip: string | null
           business_name: string | null
           created_at: string
-          email: string | null
           first_name: string | null
           id: string
           kind: Database["public"]["Enums"]["client_kind"]
           last_name: string | null
           notes: string | null
-          phone: string | null
           public_code: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          address_city?: string | null
-          address_country?: string | null
-          address_province?: string | null
-          address_street?: string | null
-          address_zip?: string | null
           business_name?: string | null
           created_at?: string
-          email?: string | null
           first_name?: string | null
           id?: string
           kind?: Database["public"]["Enums"]["client_kind"]
           last_name?: string | null
           notes?: string | null
-          phone?: string | null
           public_code: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          address_city?: string | null
-          address_country?: string | null
-          address_province?: string | null
-          address_street?: string | null
-          address_zip?: string | null
           business_name?: string | null
           created_at?: string
-          email?: string | null
           first_name?: string | null
           id?: string
           kind?: Database["public"]["Enums"]["client_kind"]
           last_name?: string | null
           notes?: string | null
-          phone?: string | null
           public_code?: string
           updated_at?: string
           user_id?: string

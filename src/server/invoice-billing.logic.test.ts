@@ -246,27 +246,21 @@ describe("selezioni e attività fatturabili", () => {
 });
 
 describe("billedPartyForInvoiceXml", () => {
-  it("preferisce il committente fattura e usa il cliente come fallback", () => {
+  it("usa il committente fattura e blocca il fallback sul cliente", () => {
     expect(
-      billedPartyForInvoiceXml(
-        {
-          business_name: "Banca Test",
-          tax_code: "01234567890",
-          vat_number: "01234567890",
-          sdi_code: "ABC1234",
-          pec: "banca@example.test",
-          address_street: "Via Roma 1",
-          address_zip: "00100",
-          address_city: "Roma",
-          address_province: "RM",
-          address_country: "IT",
-        },
-        { business_name: "Cliente ignorato" },
-      ),
+      billedPartyForInvoiceXml({
+        business_name: "Banca Test",
+        tax_code: "01234567890",
+        vat_number: "01234567890",
+        sdi_code: "ABC1234",
+        pec: "banca@example.test",
+        address_street: "Via Roma 1",
+        address_zip: "00100",
+        address_city: "Roma",
+        address_province: "RM",
+        address_country: "IT",
+      }),
     ).toMatchObject({ kind: "company", business_name: "Banca Test" });
-    expect(billedPartyForInvoiceXml(null, { business_name: "Cliente" })).toMatchObject({
-      business_name: "Cliente",
-    });
-    expect(() => billedPartyForInvoiceXml(null, null)).toThrow("Committente della fattura");
+    expect(() => billedPartyForInvoiceXml(null)).toThrow("Committente della fattura");
   });
 });

@@ -574,7 +574,7 @@ export const generateInvoiceXmlFn = createServerFn({ method: "POST" })
     if (lErr) throw lErr;
     if (principalErr) throw principalErr;
     if (cErr && !principal) throw cErr;
-    const billedParty = billedPartyForInvoiceXml(principal as InvoiceXmlPrincipal | null, client);
+    const billedParty = billedPartyForInvoiceXml(principal as InvoiceXmlPrincipal | null);
 
     const result = buildInvoiceXml({
       invoice: {
