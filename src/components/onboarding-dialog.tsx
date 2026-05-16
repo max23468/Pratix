@@ -21,6 +21,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useSubmitLock } from "@/lib/submit-lock";
 
 /**
  * Wizard mostrato al primo accesso: raccoglie i dati essenziali della professione
@@ -29,6 +30,7 @@ import { useAuth } from "@/lib/auth-context";
 export function OnboardingDialog() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const submitLock = useSubmitLock();
   const [open, setOpen] = useState(true);
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
@@ -75,6 +77,7 @@ export function OnboardingDialog() {
       setOpen(false);
     },
     onError: (e: Error) => toast.error(e.message),
+    onSettled: submitLock.release,
   });
 
   const handleNext = (e: FormEvent) => {
@@ -88,6 +91,7 @@ export function OnboardingDialog() {
     } else if (step === 2) {
       setStep(3);
     } else {
+      if (!submitLock.acquire()) return;
       mutation.mutate();
     }
   };

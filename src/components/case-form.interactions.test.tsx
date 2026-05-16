@@ -228,6 +228,23 @@ describe("CaseForm", () => {
     expect(onSaved).toHaveBeenCalledWith("case-1");
   });
 
+  it("ignora submit pratica ripetuti mentre il salvataggio è in corso", async () => {
+    render(<CaseForm onSaved={vi.fn()} onCancel={vi.fn()} />, { wrapper: Wrapper });
+
+    await screen.findByText("Banca Test");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[0], "principal-1");
+    await screen.findByText("Ada Rossi");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "client-1");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[2], "counterparty-1");
+
+    const form = screen.getByRole("button", { name: "Salva" }).closest("form")!;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Pratica creata"));
+    expect(query.insert).toHaveBeenCalledTimes(1);
+  });
+
   it("crea anagrafiche minime rapide e le collega alla nuova pratica", async () => {
     single
       .mockResolvedValueOnce({ data: { id: "principal-new" }, error: null })

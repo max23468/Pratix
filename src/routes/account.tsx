@@ -43,6 +43,7 @@ import {
 } from "@/lib/personal-data-export";
 import { APP_VERSION, BUILD_DATE } from "@/lib/version";
 import { downloadBytes } from "@/lib/invoice-file-exports";
+import { useSubmitLock } from "@/lib/submit-lock";
 import { deleteAccountFn } from "@/server/account.functions";
 
 export const Route = createFileRoute("/account")({
@@ -94,6 +95,7 @@ function AccountPage() {
   const qc = useQueryClient();
   const navigate = useNavigate();
   const [form, setForm] = useState<ProfileForm>({ full_name: "", email: "", phone: "" });
+  const saveLock = useSubmitLock();
 
   const { data, isLoading } = useQuery({
     queryKey: ["profile-account", user?.id],
@@ -131,6 +133,7 @@ function AccountPage() {
       qc.invalidateQueries({ queryKey: ["profile-full"] });
     },
     onError: (err: Error) => toast.error(err.message),
+    onSettled: saveLock.release,
   });
 
   return (
@@ -195,7 +198,9 @@ function AccountPage() {
 
           <div className="flex justify-end">
             <Button
-              onClick={() => saveMutation.mutate()}
+              onClick={() => {
+                if (saveLock.acquire()) saveMutation.mutate();
+              }}
               disabled={saveMutation.isPending || isLoading}
             >
               <Save className="mr-2 size-4" />
@@ -373,6 +378,7 @@ function DataExportCard() {
 function EmailAccessCard({ email }: { email: string }) {
   const [nextEmail, setNextEmail] = useState(email);
   const [currentPassword, setCurrentPassword] = useState("");
+  const submitLock = useSubmitLock();
 
   useEffect(() => setNextEmail(email), [email]);
 
@@ -400,6 +406,7 @@ function EmailAccessCard({ email }: { email: string }) {
       setCurrentPassword("");
     },
     onError: (err: Error) => toast.error(err.message),
+    onSettled: submitLock.release,
   });
 
   return (
@@ -439,7 +446,9 @@ function EmailAccessCard({ email }: { email: string }) {
           <Button
             type="button"
             variant="outline"
-            onClick={() => mutation.mutate()}
+            onClick={() => {
+              if (submitLock.acquire()) mutation.mutate();
+            }}
             disabled={mutation.isPending || !nextEmail || !currentPassword}
           >
             <MailCheck className="mr-2 size-4" />
@@ -455,6 +464,7 @@ function ChangePasswordCard({ email }: { email: string }) {
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
+  const submitLock = useSubmitLock();
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -479,6 +489,7 @@ function ChangePasswordCard({ email }: { email: string }) {
       setConfirm("");
     },
     onError: (err: Error) => toast.error(err.message),
+    onSettled: submitLock.release,
   });
 
   return (
@@ -528,7 +539,9 @@ function ChangePasswordCard({ email }: { email: string }) {
         </div>
         <div className="flex justify-end">
           <Button
-            onClick={() => mutation.mutate()}
+            onClick={() => {
+              if (submitLock.acquire()) mutation.mutate();
+            }}
             disabled={mutation.isPending || !current || !next || !confirm}
           >
             {mutation.isPending ? "Aggiornamento…" : "Aggiorna password"}
@@ -549,6 +562,7 @@ function DeleteAccountCard({
   const deleteAccount = useServerFn(deleteAccountFn);
   const [currentPassword, setCurrentPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
+  const submitLock = useSubmitLock();
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -576,6 +590,7 @@ function DeleteAccountCard({
       await onDeleted();
     },
     onError: (err: Error) => toast.error(err.message),
+    onSettled: submitLock.release,
   });
 
   return (
@@ -633,7 +648,9 @@ function DeleteAccountCard({
               <AlertDialogFooter>
                 <AlertDialogCancel>Annulla</AlertDialogCancel>
                 <AlertDialogAction
-                  onClick={() => mutation.mutate()}
+                  onClick={() => {
+                    if (submitLock.acquire()) mutation.mutate();
+                  }}
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
                   Elimina definitivamente

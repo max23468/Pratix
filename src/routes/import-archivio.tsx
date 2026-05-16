@@ -41,6 +41,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/lib/auth-context";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { useSubmitLock } from "@/lib/submit-lock";
 import {
   applyImportPreviewPlan,
   summarizeImportPreviewPlan,
@@ -374,6 +375,8 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<ImportDraft>(() => initialDraft());
   const [staged, setStaged] = useState<StagedImport | null>(null);
+  const prepareLock = useSubmitLock();
+  const confirmLock = useSubmitLock();
 
   const { data: principals = [] } = useQuery({
     queryKey: ["principals", "import-archive"],
@@ -553,6 +556,7 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
       toast.success("Anteprima pronta");
     },
     onError: (error: Error) => toast.error(error.message),
+    onSettled: prepareLock.release,
   });
 
   const confirmMutation = useMutation({
@@ -587,6 +591,7 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
       onImported(caseId);
     },
     onError: (error: Error) => toast.error(error.message),
+    onSettled: confirmLock.release,
   });
 
   const steps = ["Soggetti", "Pratica", "Attività", "Riepilogo"];
@@ -596,8 +601,11 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
       onSubmit={(event) => {
         event.preventDefault();
         if (step < 3) setStep((current) => current + 1);
-        else if (!staged) prepareMutation.mutate();
-        else confirmMutation.mutate();
+        else if (!staged) {
+          if (prepareLock.acquire()) prepareMutation.mutate();
+        } else if (confirmLock.acquire()) {
+          confirmMutation.mutate();
+        }
       }}
       className="space-y-4"
     >
@@ -1436,6 +1444,8 @@ function ExcelImportPanel() {
   const [columnMap, setColumnMap] = useState<Record<number, ExcelColumnKey>>({});
   const [previewRows, setPreviewRows] = useState<ExcelPreviewRow[]>([]);
   const [stagedRows, setStagedRows] = useState<ExcelStagedRow[]>([]);
+  const stageLock = useSubmitLock();
+  const confirmLock = useSubmitLock();
 
   const { data: principals = [] } = useQuery({
     queryKey: ["principals", "import-archive", "excel"],
@@ -1670,6 +1680,7 @@ function ExcelImportPanel() {
       toast.success("Staging pronto");
     },
     onError: (error: Error) => toast.error(error.message),
+    onSettled: stageLock.release,
   });
 
   const confirmMutation = useMutation({
@@ -1728,6 +1739,7 @@ function ExcelImportPanel() {
       }
     },
     onError: (error: Error) => toast.error(error.message),
+    onSettled: confirmLock.release,
   });
 
   return (
@@ -1912,7 +1924,9 @@ function ExcelImportPanel() {
               stats.valid === 0 ||
               hasImportedStagedRows
             }
-            onClick={() => stageMutation.mutate()}
+            onClick={() => {
+              if (stageLock.acquire()) stageMutation.mutate();
+            }}
           >
             {hasImportedStagedRows
               ? "Staging importato"
@@ -1923,7 +1937,9 @@ function ExcelImportPanel() {
           <Button
             type="button"
             disabled={confirmMutation.isPending || importableStagedRowsCount === 0}
-            onClick={() => confirmMutation.mutate()}
+            onClick={() => {
+              if (confirmLock.acquire()) confirmMutation.mutate();
+            }}
           >
             <CheckCircle2 className="mr-1 size-4" />
             {isPartialImportComplete

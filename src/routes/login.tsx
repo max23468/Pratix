@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { loginSchema } from "@/lib/auth-schemas";
+import { useSubmitLock } from "@/lib/submit-lock";
 import { isTurnstileEnabled } from "@/lib/turnstile";
 
 export const Route = createFileRoute("/login")({
@@ -30,6 +31,7 @@ function LoginPage() {
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaResetSignal, setCaptchaResetSignal] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const submitLock = useSubmitLock();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -42,6 +44,7 @@ function LoginPage() {
       toast.error("Completa la verifica di sicurezza.");
       return;
     }
+    if (!submitLock.acquire()) return;
     setSubmitting(true);
     const { error } = await supabase.auth.signInWithPassword({
       email: parsed.data.email,
@@ -49,6 +52,7 @@ function LoginPage() {
       ...(captchaToken ? { options: { captchaToken } } : {}),
     });
     setSubmitting(false);
+    submitLock.release();
     setCaptchaResetSignal((current) => current + 1);
     if (error) {
       toast.error("Credenziali non valide");

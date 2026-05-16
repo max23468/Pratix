@@ -32,6 +32,7 @@ import { useAuth } from "@/lib/auth-context";
 import { computeInvoice, type InvoiceLineInput } from "@/lib/invoice-calc";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { counterpartyDisplayName, clientDisplayName } from "@/lib/labels";
+import { useSubmitLock } from "@/lib/submit-lock";
 import { createBillingInvoiceFn } from "@/server/invoices.functions";
 
 type BillingItemStatus = "included" | "postponed" | "excluded";
@@ -134,6 +135,7 @@ export function InvoiceForm() {
   const [notes, setNotes] = useState("");
   const [selection, setSelection] = useState<Record<string, BillingItemStatus>>({});
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
+  const createInvoiceLock = useSubmitLock();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", "invoice-form", user?.id],
@@ -286,10 +288,12 @@ export function InvoiceForm() {
       navigate({ to: "/fatture/$invoiceId", params: { invoiceId: invoice.invoiceId } });
     },
     onError: (error: Error) => toast.error(error.message),
+    onSettled: createInvoiceLock.release,
   });
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+    if (!createInvoiceLock.acquire()) return;
     createInvoice.mutate();
   };
 

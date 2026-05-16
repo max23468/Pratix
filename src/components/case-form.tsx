@@ -35,6 +35,7 @@ import {
   counterpartyKindLabels,
 } from "@/lib/labels";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
+import { useSubmitLock } from "@/lib/submit-lock";
 
 type CaseRow = {
   id?: string;
@@ -157,6 +158,10 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
     useState<QuickCounterpartyDraft>(emptyQuickCounterparty);
   const [quickCreatedClients, setQuickCreatedClients] = useState<ClientOption[]>([]);
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
+  const saveLock = useSubmitLock();
+  const quickPrincipalLock = useSubmitLock();
+  const quickClientLock = useSubmitLock();
+  const quickCounterpartyLock = useSubmitLock();
 
   const upd = useCallback(
     <K extends keyof CaseRow>(key: K, value: CaseRow[K]) => {
@@ -298,6 +303,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       toast.success("Committente creato");
     },
     onError: (error: Error) => toast.error(error.message),
+    onSettled: quickPrincipalLock.release,
   });
 
   const createQuickClientMutation = useMutation({
@@ -363,6 +369,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       toast.success("Cliente creato");
     },
     onError: (error: Error) => toast.error(error.message),
+    onSettled: quickClientLock.release,
   });
 
   const createQuickCounterpartyMutation = useMutation({
@@ -415,6 +422,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       toast.success("Controparte creata");
     },
     onError: (error: Error) => toast.error(error.message),
+    onSettled: quickCounterpartyLock.release,
   });
 
   const saveMutation = useMutation({
@@ -491,6 +499,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       onSaved(id);
     },
     onError: (error: Error) => toast.error(error.message),
+    onSettled: saveLock.release,
   });
 
   const deleteMutation = useMutation({
@@ -509,6 +518,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+    if (!saveLock.acquire()) return;
     saveMutation.mutate();
   };
 
@@ -577,7 +587,9 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                     </Button>
                     <Button
                       type="button"
-                      onClick={() => createQuickPrincipalMutation.mutate()}
+                      onClick={() => {
+                        if (quickPrincipalLock.acquire()) createQuickPrincipalMutation.mutate();
+                      }}
                       disabled={createQuickPrincipalMutation.isPending}
                     >
                       {createQuickPrincipalMutation.isPending ? "Creazione…" : "Crea"}
@@ -688,7 +700,9 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                     </Button>
                     <Button
                       type="button"
-                      onClick={() => createQuickClientMutation.mutate()}
+                      onClick={() => {
+                        if (quickClientLock.acquire()) createQuickClientMutation.mutate();
+                      }}
                       disabled={createQuickClientMutation.isPending}
                     >
                       {createQuickClientMutation.isPending ? "Creazione…" : "Crea"}
@@ -790,7 +804,10 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                     </Button>
                     <Button
                       type="button"
-                      onClick={() => createQuickCounterpartyMutation.mutate()}
+                      onClick={() => {
+                        if (quickCounterpartyLock.acquire())
+                          createQuickCounterpartyMutation.mutate();
+                      }}
                       disabled={createQuickCounterpartyMutation.isPending}
                     >
                       {createQuickCounterpartyMutation.isPending ? "Creazione…" : "Crea"}

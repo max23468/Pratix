@@ -304,6 +304,26 @@ describe("interazioni form anagrafiche", () => {
     expect(onSaved).toHaveBeenCalledWith("saved-id");
   });
 
+  it("ignora submit cliente ripetuti mentre il salvataggio è in corso", async () => {
+    renderWithClient(
+      <ClientForm
+        initial={{
+          first_name: " Ada ",
+          last_name: " Rossi ",
+        }}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    const form = screen.getByRole("button", { name: "Salva" }).closest("form")!;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Cliente creato"));
+    expect(query.insert).toHaveBeenCalledTimes(1);
+  });
+
   it("crea cliente società collegandolo ai committenti selezionati", async () => {
     const onSaved = vi.fn();
     renderWithClient(
@@ -338,6 +358,23 @@ describe("interazioni form anagrafiche", () => {
       },
     ]);
     expect(onSaved).toHaveBeenCalledWith("saved-id");
+  });
+
+  it("ignora submit committente ripetuti mentre il salvataggio è in corso", async () => {
+    renderWithClient(
+      <PrincipalForm
+        initial={{ business_name: " Banca Test " }}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    const form = screen.getByRole("button", { name: "Salva" }).closest("form")!;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Committente creato"));
+    expect(query.insert).toHaveBeenCalledTimes(1);
   });
 
   it("blocca cliente società senza ragione sociale", async () => {
@@ -456,6 +493,23 @@ describe("interazioni form anagrafiche", () => {
     expect(query.delete).toHaveBeenCalled();
     expect(query.insert).not.toHaveBeenCalled();
     expect(onSaved).toHaveBeenCalledWith("counterparty-1");
+  });
+
+  it("ignora submit controparte ripetuti mentre il salvataggio è in corso", async () => {
+    renderWithClient(
+      <CounterpartyForm
+        initial={{ kind: "company", business_name: " Beta S.p.A. " }}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    const form = screen.getByRole("button", { name: "Salva" }).closest("form")!;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Controparte creata"));
+    expect(query.insert).toHaveBeenCalledTimes(1);
   });
 
   it("valida Prezzi senza committente e intercetta codici duplicati", async () => {
@@ -648,5 +702,43 @@ describe("interazioni form anagrafiche", () => {
       }),
     ]);
     expect(onSaved).toHaveBeenCalledWith("saved-id");
+  });
+
+  it("ignora submit Prezzi ripetuti mentre il salvataggio è in corso", async () => {
+    renderWithClient(
+      <PriceBookForm
+        initial={{
+          principal_id: "principal-1",
+          year: 2026,
+          status: "draft",
+          fees_enabled: true,
+          expense_reimbursements_enabled: true,
+          valid_from: "2026-01-01",
+          valid_to: "2026-12-31",
+          notes: null,
+        }}
+        initialItems={[
+          {
+            kind: "fee",
+            code: "DIFF",
+            name: "Diffida",
+            invoice_description: null,
+            unit_price: 120,
+            is_enabled: true,
+            requires_hearing_dates: false,
+            sort_order: 10,
+          },
+        ]}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    const form = screen.getByRole("button", { name: "Salva" }).closest("form")!;
+    fireEvent.submit(form);
+    fireEvent.submit(form);
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Prezzi creati"));
+    expect(query.insert).toHaveBeenCalledTimes(2);
   });
 });

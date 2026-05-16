@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useSubmitLock } from "@/lib/submit-lock";
 
 type PrincipalRow = {
   id?: string;
@@ -68,6 +69,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
   const isEdit = Boolean(initial?.id);
   const isArchived = Boolean(form.archived_at);
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
+  const saveLock = useSubmitLock();
 
   const upd = <K extends keyof PrincipalRow>(k: K, v: PrincipalRow[K]) => {
     markDirty();
@@ -131,6 +133,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
       onSaved(id);
     },
     onError: (error: Error) => toast.error(error.message),
+    onSettled: saveLock.release,
   });
 
   const archiveMutation = useMutation({
@@ -157,6 +160,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+    if (!saveLock.acquire()) return;
     saveMutation.mutate();
   };
 

@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactElement, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -225,6 +225,21 @@ describe("CaseActivityDialog", () => {
         unit_price: 120,
       }),
     );
+  });
+
+  it("ignora submit attività ripetuti mentre il salvataggio è in corso", async () => {
+    renderDialog();
+
+    await userEvent.click(screen.getByRole("button", { name: /Attività/ }));
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "item-1");
+    await screen.findByDisplayValue("Redazione diffida");
+
+    const button = screen.getByRole("button", { name: "Salva" });
+    fireEvent.click(button);
+    fireEvent.click(button);
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Voce fatturabile registrata"));
+    expect(query.insert).toHaveBeenCalledTimes(1);
   });
 
   it("registra una voce con udienze e allegato", async () => {
