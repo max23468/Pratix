@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.2.7] — 2026-05-16
+
+### Correzioni
+
+- **Fatture**: il riepilogo non mostra più la riga IVA per i profili in regime forfettario.
+
 ## [1.2.6] — 2026-05-16
 
 ### Correzioni
@@ -674,6 +680,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.2.7]: #127--2026-05-16
 [1.2.6]: #126--2026-05-16
 [1.2.5]: #125--2026-05-16
 [1.2.4]: #124--2026-05-16

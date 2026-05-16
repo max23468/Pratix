@@ -294,6 +294,7 @@ function InvoiceDetailPage() {
   }
 
   const billedName = data.principal?.business_name ?? data.client?.business_name ?? "—";
+  const isForfettario = data.profile?.tax_regime === "forfettario";
 
   return (
     <AppLayout>
@@ -431,7 +432,9 @@ function InvoiceDetailPage() {
                 />
               )}
               <SummaryRow label="Cassa" value={formatCurrency(Number(data.invoice.cassa_amount))} />
-              <SummaryRow label="IVA" value={formatCurrency(Number(data.invoice.vat_amount))} />
+              {!isForfettario && (
+                <SummaryRow label="IVA" value={formatCurrency(Number(data.invoice.vat_amount))} />
+              )}
               <SummaryRow
                 label="Rimborsi Art. 15"
                 value={formatCurrency(Number(data.invoice.art15_expenses))}
