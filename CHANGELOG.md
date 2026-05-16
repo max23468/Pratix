@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.2.5] — 2026-05-16
+
+### Correzioni
+
+- **Dashboard mobile**: rimossa l'azione rapida Prezzi dall'header, verificata la leggibilità degli otto KPI principali su iPhone e allineato il conteggio delle Fatture scadute alla data locale.
+
 ## [1.2.4] — 2026-05-16
 
 ### Correzioni
@@ -662,6 +668,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.2.5]: #125--2026-05-16
 [1.2.4]: #124--2026-05-16
 [1.2.3]: #123--2026-05-16
 [1.2.2]: #122--2026-05-16
