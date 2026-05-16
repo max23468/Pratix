@@ -464,7 +464,10 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
     saveInvoice.mutate(status);
   };
 
-  if (isEditingDraft && draftLoading) {
+  const isDraftFormHydrated =
+    !isEditingDraft || Boolean(draftData && loadedDraftId === draftData.invoice.id);
+
+  if (isEditingDraft && (draftLoading || !isDraftFormHydrated)) {
     return (
       <Card>
         <CardHeader>
@@ -475,7 +478,11 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
     );
   }
 
-  const submitDisabled = saveInvoice.isPending || includedActivities.length === 0 || draftLoading;
+  const submitDisabled =
+    saveInvoice.isPending ||
+    includedActivities.length === 0 ||
+    draftLoading ||
+    !isDraftFormHydrated;
 
   return (
     <form

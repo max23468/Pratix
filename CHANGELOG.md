@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.5.2] — 2026-05-16
+
+### Correzioni
+
+- **Fatture**: entrando in modifica di una bozza, il form non segnala più modifiche non salvate se l'utente esce senza aver cambiato dati.
+
 ## [1.5.1] — 2026-05-16
 
 ### Correzioni
@@ -39,6 +45,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ### Non versionato
 
+- **Documentazione**: riallineate istruzioni operative, guide, roadmap e glossario allo stato pubblicato fino a Pratix 1.4.0.
 - **Piano controllo duplicati**: definita la futura area `/controllo-duplicati` con ricalcolo manuale, avvisi preventivi nei form, matching basato su nomi/ragioni sociali e merge prudente per Committenti, Clienti, Controparti e Pratiche.
 
 ## [1.4.1] — 2026-05-16
@@ -842,6 +849,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.5.2]: #152--2026-05-16
 [1.5.1]: #151--2026-05-16
 [1.5.0]: #150--2026-05-16
 [1.4.1]: #141--2026-05-16

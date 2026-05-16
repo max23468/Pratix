@@ -15,8 +15,14 @@ const {
   updateDraftBillingInvoiceFn,
   setProfileTaxRegime,
   supabase,
+  setEmitProgrammaticSelectChanges,
+  shouldEmitProgrammaticSelectChanges,
+  setActiveBlocker,
+  getActiveBlocker,
 } = vi.hoisted(() => {
   let profileTaxRegime: "ordinario" | "forfettario" = "ordinario";
+  let emitProgrammaticSelectChanges = false;
+  let activeBlocker: { blockerFn: () => boolean | Promise<boolean> } | null = null;
   const dataFor = (table: string) => {
     if (table === "invoices") {
       return {
@@ -185,6 +191,14 @@ const {
     setProfileTaxRegime: (regime: "ordinario" | "forfettario") => {
       profileTaxRegime = regime;
     },
+    setEmitProgrammaticSelectChanges: (value: boolean) => {
+      emitProgrammaticSelectChanges = value;
+    },
+    shouldEmitProgrammaticSelectChanges: () => emitProgrammaticSelectChanges,
+    setActiveBlocker: (blocker: { blockerFn: () => boolean | Promise<boolean> } | null) => {
+      activeBlocker = blocker;
+    },
+    getActiveBlocker: () => activeBlocker,
     supabase: {
       from: vi.fn((table: string) => builderFor(table)),
       auth: {
@@ -200,7 +214,14 @@ vi.mock("sonner", () => ({ toast }));
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => navigate,
-  useRouter: () => null,
+  useRouter: () => ({
+    history: {
+      block: (blocker: { blockerFn: () => boolean | Promise<boolean> }) => {
+        setActiveBlocker(blocker);
+        return () => setActiveBlocker(null);
+      },
+    },
+  }),
 }));
 
 vi.mock("@tanstack/react-start", () => ({
@@ -221,28 +242,46 @@ vi.mock("@/lib/auth-context", () => ({
   }),
 }));
 
-vi.mock("@/components/ui/select", () => ({
-  Select: ({
-    value,
-    onValueChange,
-    children,
-  }: {
-    value: string;
-    onValueChange: (value: string) => void;
-    children: ReactNode;
-  }) => (
-    <select value={value} onChange={(event) => onValueChange(event.target.value)}>
-      <option value="">Seleziona</option>
-      {children}
-    </select>
-  ),
-  SelectTrigger: ({ children }: { children: ReactNode }) => <>{children}</>,
-  SelectValue: () => null,
-  SelectContent: ({ children }: { children: ReactNode }) => <>{children}</>,
-  SelectItem: ({ value, children }: { value: string; children: ReactNode }) => (
-    <option value={value}>{children}</option>
-  ),
-}));
+vi.mock("@/components/ui/select", async () => {
+  const React = await vi.importActual<typeof import("react")>("react");
+  return {
+    Select: ({
+      value,
+      onValueChange,
+      children,
+    }: {
+      value: string;
+      onValueChange: (value: string) => void;
+      children: ReactNode;
+    }) => {
+      const previousValue = React.useRef(value);
+
+      React.useEffect(() => {
+        if (
+          shouldEmitProgrammaticSelectChanges() &&
+          previousValue.current !== value &&
+          value.length > 0
+        ) {
+          onValueChange(value);
+        }
+        previousValue.current = value;
+      }, [onValueChange, value]);
+
+      return (
+        <select value={value} onChange={(event) => onValueChange(event.target.value)}>
+          <option value="">Seleziona</option>
+          {children}
+        </select>
+      );
+    },
+    SelectTrigger: ({ children }: { children: ReactNode }) => <>{children}</>,
+    SelectValue: () => null,
+    SelectContent: ({ children }: { children: ReactNode }) => <>{children}</>,
+    SelectItem: ({ value, children }: { value: string; children: ReactNode }) => (
+      <option value={value}>{children}</option>
+    ),
+  };
+});
 
 vi.mock("@/components/ui/switch", () => ({
   Switch: ({
@@ -273,6 +312,7 @@ describe("InvoiceForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     setProfileTaxRegime("ordinario");
+    setEmitProgrammaticSelectChanges(false);
   });
 
   afterEach(() => {
@@ -368,6 +408,23 @@ describe("InvoiceForm", () => {
         }),
       }),
     );
+  });
+
+  it("non segnala modifiche non salvate dopo il solo caricamento di una bozza", async () => {
+    setEmitProgrammaticSelectChanges(true);
+    render(<InvoiceForm draftInvoiceRef="FT-00001" />, { wrapper: Wrapper });
+
+    await screen.findByText("Banca Test");
+    await screen.findByText("Redazione diffida");
+
+    const blocker = getActiveBlocker();
+    expect(blocker).not.toBeNull();
+    const result = await Promise.race([
+      Promise.resolve(blocker!.blockerFn()),
+      new Promise((resolve) => window.setTimeout(() => resolve("blocked"), 0)),
+    ]);
+    expect(result).toBe(false);
+    expect(screen.queryByText("Modifiche non salvate")).toBeNull();
   });
 
   it("nasconde l'IVA dal riepilogo per il regime forfettario", async () => {
