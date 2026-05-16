@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.2.15] — 2026-05-16
+
+### Correzioni
+
+- **URL leggibili**: impedito il riuso dei codici pubblici dopo la cancellazione di clienti, committenti, controparti, pratiche, prezzi o fatture.
+
 ## [1.2.14] — 2026-05-16
 
 ### Sotto il cofano
@@ -726,6 +732,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.2.15]: #1215--2026-05-16
 [1.2.14]: #1214--2026-05-16
 [1.2.13]: #1213--2026-05-16
 [1.2.12]: #1212--2026-05-16
