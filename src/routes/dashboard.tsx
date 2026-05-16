@@ -191,7 +191,7 @@ function DashboardContent() {
       const invoicesToCollect = invoices.filter(
         (invoice) => invoice.status === "issued" || invoice.status === "overdue",
       );
-      const today = new Date().toISOString().slice(0, 10);
+      const today = localDateKey(new Date());
       const overdueInvoices = invoices.filter(
         (invoice) =>
           invoice.status === "overdue" ||
@@ -245,11 +245,6 @@ function DashboardContent() {
         description="Pratiche, attività, fatture e rimborsi da tenere sotto controllo."
         actions={
           <>
-            <Link to="/prezzi">
-              <Button size="sm" variant="outline">
-                <Tags className="mr-1 size-4" /> Prezzi
-              </Button>
-            </Link>
             <Link to="/fatture/nuova">
               <Button size="sm" variant="outline">
                 <Receipt className="mr-1 size-4" /> Fattura
@@ -511,9 +506,9 @@ function StatCard({
           <Icon className="size-5" strokeWidth={1.6} />
         </div>
         <div className="min-w-0">
-          <p className="truncate text-xs font-medium text-muted-foreground">{label}</p>
+          <p className="text-xs leading-snug font-medium text-muted-foreground">{label}</p>
           <p
-            className={`font-display tabular truncate text-xl font-semibold tracking-tight ${valueCls}`}
+            className={`font-display tabular text-lg leading-tight font-semibold tracking-tight break-words sm:text-xl ${valueCls}`}
           >
             {value}
           </p>
@@ -521,4 +516,12 @@ function StatCard({
       </CardContent>
     </Card>
   );
+}
+
+function localDateKey(date: Date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
 }
