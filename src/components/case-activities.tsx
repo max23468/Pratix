@@ -1,10 +1,26 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Download, Eye, Paperclip, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  Check,
+  ChevronsUpDown,
+  Download,
+  Eye,
+  Paperclip,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Command,
+  CommandEmpty,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -15,6 +31,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -42,6 +59,7 @@ import {
 import { activityCaseLabel, type CaseActivityContext } from "@/lib/case-activities";
 import { buildActivityAttachmentStoragePath, PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
 import { useSubmitLock } from "@/lib/submit-lock";
+import { cn } from "@/lib/utils";
 
 type PriceBookRow = {
   id: string;
@@ -113,6 +131,19 @@ type CaseOption = CaseActivityContext & {
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+const caseOptionCollator = new Intl.Collator("it", { numeric: true, sensitivity: "base" });
+
+const caseOptionTitle = (option: CaseOption) => option.title?.trim() || activityCaseLabel(option);
+
+const caseOptionSearchValue = (option: CaseOption) =>
+  [caseOptionTitle(option), activityCaseLabel(option), option.principals?.business_name]
+    .filter((value): value is string => Boolean(value))
+    .join(" ");
+
+const compareCaseOptions = (a: CaseOption, b: CaseOption) =>
+  caseOptionCollator.compare(caseOptionTitle(a), caseOptionTitle(b)) ||
+  caseOptionCollator.compare(activityCaseLabel(a), activityCaseLabel(b));
 
 const currentYearFromDate = (value: string) => {
   const date = new Date(value);
@@ -332,6 +363,77 @@ function AttachmentList({ attachments }: { attachments: ActivityAttachment[] }) 
   );
 }
 
+function CasePicker({
+  id,
+  options,
+  selectedCaseId,
+  onSelect,
+}: {
+  id: string;
+  options: CaseOption[];
+  selectedCaseId: string;
+  onSelect: (caseId: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const selectedOption = options.find((option) => option.id === selectedCaseId);
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          id={id}
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          aria-label="Seleziona pratica"
+          className="justify-between"
+        >
+          <span
+            className={cn(
+              "min-w-0 flex-1 truncate text-left",
+              !selectedOption && "text-muted-foreground",
+            )}
+          >
+            {selectedOption ? caseOptionTitle(selectedOption) : "Seleziona pratica"}
+          </span>
+          <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="z-[60] w-[--radix-popover-trigger-width] p-0">
+        <Command>
+          <CommandInput placeholder="Cerca pratica…" />
+          <CommandList>
+            <CommandEmpty>Nessuna pratica trovata.</CommandEmpty>
+            {options.map((option) => {
+              const label = activityCaseLabel(option);
+              const title = caseOptionTitle(option);
+              const isSelected = option.id === selectedCaseId;
+
+              return (
+                <CommandItem
+                  key={option.id}
+                  value={caseOptionSearchValue(option)}
+                  onSelect={() => {
+                    onSelect(option.id);
+                    setOpen(false);
+                  }}
+                >
+                  <Check className={cn("size-4", isSelected ? "opacity-100" : "opacity-0")} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-medium">{title}</span>
+                    <span className="block truncate text-xs text-muted-foreground">{label}</span>
+                  </span>
+                </CommandItem>
+              );
+            })}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 async function openAttachment(attachment: ActivityAttachment, mode: "preview" | "download") {
   const { data, error } = await supabase.storage
     .from(PRATIX_DOCUMENTS_BUCKET)
@@ -399,9 +501,10 @@ export function CaseActivityDialog({
       return (data ?? []) as CaseOption[];
     },
   });
+  const sortedCaseOptions = useMemo(() => [...caseOptions].sort(compareCaseOptions), [caseOptions]);
 
   const selectedCase =
-    caseRow ?? caseOptions.find((option) => option.id === selectedCaseId) ?? null;
+    caseRow ?? sortedCaseOptions.find((option) => option.id === selectedCaseId) ?? null;
 
   const { data: priceBooks = [] } = useQuery({
     queryKey: ["price-books", "activity", selectedCase?.principal_id, activityYear],
@@ -723,24 +826,15 @@ export function CaseActivityDialog({
           {!caseRow && (
             <div className="flex flex-col gap-2">
               <Label htmlFor="case_id">Pratica</Label>
-              <Select
-                value={selectedCaseId}
-                onValueChange={(value) => {
+              <CasePicker
+                id="case_id"
+                options={sortedCaseOptions}
+                selectedCaseId={selectedCaseId}
+                onSelect={(value) => {
                   setSelectedCaseId(value);
                   setPriceItemId("");
                 }}
-              >
-                <SelectTrigger id="case_id">
-                  <SelectValue placeholder="Seleziona pratica" />
-                </SelectTrigger>
-                <SelectContent>
-                  {caseOptions.map((option) => (
-                    <SelectItem key={option.id} value={option.id}>
-                      {activityCaseLabel(option)}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
             </div>
           )}
 
