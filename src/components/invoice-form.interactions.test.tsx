@@ -6,9 +6,57 @@ import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { toast, navigate, createBillingInvoice, setProfileTaxRegime, supabase } = vi.hoisted(() => {
+const {
+  toast,
+  navigate,
+  createBillingInvoice,
+  updateDraftBillingInvoice,
+  createBillingInvoiceFn,
+  updateDraftBillingInvoiceFn,
+  setProfileTaxRegime,
+  supabase,
+} = vi.hoisted(() => {
   let profileTaxRegime: "ordinario" | "forfettario" = "ordinario";
   const dataFor = (table: string) => {
+    if (table === "invoices") {
+      return {
+        data: {
+          id: "invoice-1",
+          principal_id: "principal-1",
+          issue_date: "2026-06-01",
+          due_date: "2026-06-30",
+          status: "draft",
+          billing_run_id: "run-1",
+          include_general_expenses: true,
+          general_expenses_rate: 10,
+          cassa_rate: 4,
+          vat_rate: 22,
+          withholding_rate: 20,
+          apply_withholding: true,
+          payment_method: "Bonifico bancario",
+          notes: "Bozza da completare",
+        },
+        error: null,
+      };
+    }
+    if (table === "billing_runs") {
+      return {
+        data: {
+          period_start: "2026-05-01",
+          period_end: "2026-05-31",
+        },
+        error: null,
+      };
+    }
+    if (table === "billing_run_items") {
+      return {
+        data: [
+          { activity_id: "activity-fee", status: "included" },
+          { activity_id: "activity-expense", status: "excluded" },
+        ],
+        error: null,
+      };
+    }
     if (table === "profiles") {
       return {
         data: {
@@ -42,6 +90,7 @@ const { toast, navigate, createBillingInvoice, setProfileTaxRegime, supabase } =
             activity_date: "2026-05-10",
             kind: "fee",
             status: "to_invoice",
+            invoice_id: null,
             description: "Redazione diffida",
             quantity: 2,
             unit_price: 500,
@@ -66,6 +115,7 @@ const { toast, navigate, createBillingInvoice, setProfileTaxRegime, supabase } =
             activity_date: "2026-05-11",
             kind: "expense_reimbursement",
             status: "to_invoice",
+            invoice_id: null,
             description: "Contributo unificato",
             quantity: 1,
             unit_price: 118.5,
@@ -95,6 +145,7 @@ const { toast, navigate, createBillingInvoice, setProfileTaxRegime, supabase } =
     const builder = {
       select: vi.fn(() => builder),
       eq: vi.fn(() => builder),
+      in: vi.fn(() => builder),
       is: vi.fn(() => builder),
       lte: vi.fn(() => builder),
       order: vi.fn(() => builder),
@@ -109,7 +160,19 @@ const { toast, navigate, createBillingInvoice, setProfileTaxRegime, supabase } =
   return {
     toast: { success: vi.fn(), error: vi.fn() },
     navigate: vi.fn(),
+    createBillingInvoiceFn: {},
+    updateDraftBillingInvoiceFn: {},
     createBillingInvoice: vi.fn(() =>
+      Promise.resolve({
+        invoiceId: "invoice-1",
+        invoiceRef: "FT-00001",
+        billingRunId: "run-1",
+        number: "12",
+        year: 2026,
+        exports: [],
+      }),
+    ),
+    updateDraftBillingInvoice: vi.fn(() =>
       Promise.resolve({
         invoiceId: "invoice-1",
         invoiceRef: "FT-00001",
@@ -141,11 +204,13 @@ vi.mock("@tanstack/react-router", () => ({
 }));
 
 vi.mock("@tanstack/react-start", () => ({
-  useServerFn: () => createBillingInvoice,
+  useServerFn: (serverFn: unknown) =>
+    serverFn === updateDraftBillingInvoiceFn ? updateDraftBillingInvoice : createBillingInvoice,
 }));
 
 vi.mock("@/server/invoices.functions", () => ({
-  createBillingInvoiceFn: {},
+  createBillingInvoiceFn,
+  updateDraftBillingInvoiceFn,
 }));
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase }));
@@ -277,6 +342,29 @@ describe("InvoiceForm", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           status: "draft",
+        }),
+      }),
+    );
+  });
+
+  it("aggiorna una bozza esistente e può segnarla come emessa", async () => {
+    render(<InvoiceForm draftInvoiceRef="FT-00001" />, { wrapper: Wrapper });
+
+    await screen.findByText("Banca Test");
+    await screen.findByText("Redazione diffida");
+    await userEvent.click(screen.getByRole("button", { name: /Segna come emessa/ }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Fattura 12/2026 emessa"));
+    expect(updateDraftBillingInvoice).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          invoiceId: "invoice-1",
+          principalId: "principal-1",
+          status: "issued",
+          selections: [
+            { activityId: "activity-fee", status: "included" },
+            { activityId: "activity-expense", status: "excluded" },
+          ],
         }),
       }),
     );

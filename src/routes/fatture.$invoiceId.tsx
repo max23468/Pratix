@@ -9,6 +9,7 @@ import {
   FileDown,
   FileSpreadsheet,
   FileText,
+  Pencil,
   Plus,
   Send,
   Trash2,
@@ -229,11 +230,15 @@ function InvoiceDetailPage() {
     mutationFn: async () => {
       const resolvedInvoiceId = data?.invoice.id;
       if (!resolvedInvoiceId) throw new Error("Fattura non caricata");
-      const { error } = await supabase
+      const { data: updatedInvoice, error } = await supabase
         .from("invoices")
         .update({ status: "issued", paid_at: null })
-        .eq("id", resolvedInvoiceId);
+        .eq("id", resolvedInvoiceId)
+        .eq("status", "draft")
+        .select("id")
+        .maybeSingle();
       if (error) throw error;
+      if (!updatedInvoice) throw new Error("Solo le fatture in bozza possono essere emesse");
     },
     onSuccess: () => {
       toast.success("Fattura segnata come emessa");
@@ -360,6 +365,7 @@ function InvoiceDetailPage() {
 
   const billedName = data.principal?.business_name ?? data.client?.business_name ?? "—";
   const isForfettario = data.profile?.tax_regime === "forfettario";
+  const canEditDraft = data.invoice.status === "draft";
   const canMarkIssued = data.invoice.status === "draft";
   const canMarkPaid = data.invoice.status === "issued" || data.invoice.status === "overdue";
 
@@ -380,59 +386,6 @@ function InvoiceDetailPage() {
                 <Plus className="mr-2 size-4" /> Nuova fattura
               </Link>
             </Button>
-            {canMarkIssued && (
-              <Button
-                variant="outline"
-                onClick={() => markIssuedMutation.mutate()}
-                disabled={markIssuedMutation.isPending}
-              >
-                <Send className="mr-2 size-4" /> Segna emessa
-              </Button>
-            )}
-            {canMarkPaid && (
-              <Button
-                variant="outline"
-                onClick={() => markPaidMutation.mutate()}
-                disabled={markPaidMutation.isPending}
-              >
-                <CheckCircle2 className="mr-2 size-4" /> Segna pagata
-              </Button>
-            )}
-            <Button variant="outline" onClick={handleDownloadPdf}>
-              <FileText className="mr-2 size-4" /> PDF
-            </Button>
-            <Button
-              onClick={() => downloadXmlMutation.mutate()}
-              disabled={downloadXmlMutation.isPending}
-            >
-              <FileDown className="mr-2 size-4" />
-              {downloadXmlMutation.isPending ? "Generazione…" : "XML SdI"}
-            </Button>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" size="icon" aria-label="Elimina fattura">
-                  <Trash2 className="size-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Eliminare la fattura?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Le attività collegate torneranno da fatturare e i rendiconti Excel verranno
-                    rimossi dallo storage.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annulla</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={() => deleteMutation.mutate()}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    Elimina
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
           </div>
         }
       />
@@ -530,9 +483,90 @@ function InvoiceDetailPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Rendiconti Excel</CardTitle>
+              <CardTitle>Azioni</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-2">
+              {canEditDraft && (
+                <Button asChild className="w-full justify-start">
+                  <Link
+                    to="/fatture/nuova"
+                    search={{ bozza: data.invoice.public_code ?? data.invoice.id }}
+                  >
+                    <Pencil className="mr-2 size-4" /> Modifica bozza
+                  </Link>
+                </Button>
+              )}
+              {canMarkIssued && (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => markIssuedMutation.mutate()}
+                  disabled={markIssuedMutation.isPending}
+                >
+                  <Send className="mr-2 size-4" /> Segna come emessa
+                </Button>
+              )}
+              {canMarkPaid && (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => markPaidMutation.mutate()}
+                  disabled={markPaidMutation.isPending}
+                >
+                  <CheckCircle2 className="mr-2 size-4" /> Segna come pagata
+                </Button>
+              )}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="destructive" className="w-full justify-start">
+                    <Trash2 className="mr-2 size-4" /> Elimina fattura
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Eliminare la fattura?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Le attività collegate torneranno da fatturare e i rendiconti Excel verranno
+                      rimossi dallo storage.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Annulla</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={() => deleteMutation.mutate()}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      Elimina
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Documenti</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={handleDownloadPdf}
+                >
+                  <FileText className="mr-2 size-4" /> PDF
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => downloadXmlMutation.mutate()}
+                  disabled={downloadXmlMutation.isPending}
+                >
+                  <FileDown className="mr-2 size-4" />
+                  {downloadXmlMutation.isPending ? "Generazione…" : "XML SdI"}
+                </Button>
+              </div>
               {data.exports.length === 0 && (
                 <p className="text-sm text-muted-foreground">Nessun rendiconto salvato.</p>
               )}

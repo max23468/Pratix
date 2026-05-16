@@ -35,6 +35,10 @@ export type CreateBillingInvoiceInput = {
   selections: BillingSelectionInput[];
 };
 
+export type UpdateDraftBillingInvoiceInput = CreateBillingInvoiceInput & {
+  invoiceId: string;
+};
+
 export type BillingActivity = {
   id: string;
   case_id: string | null;
@@ -102,6 +106,11 @@ export function validateCreateBillingInvoiceInput(input: CreateBillingInvoiceInp
   return input;
 }
 
+export function validateUpdateDraftBillingInvoiceInput(input: UpdateDraftBillingInvoiceInput) {
+  if (!input?.invoiceId) throw new Error("Fattura mancante");
+  return validateCreateBillingInvoiceInput(input);
+}
+
 export function selectedActivityIds(selections: BillingSelectionInput[]) {
   return selections.map((selection) => selection.activityId);
 }
@@ -131,6 +140,16 @@ export function firstIncludedClientId(included: BillingActivity[]) {
 export function assertIncludedActivitiesBillable(included: BillingActivity[]) {
   for (const activity of included) {
     if (activity.status !== "to_invoice" || activity.invoice_id) {
+      throw new Error("Una o più attività incluse risultano già fatturate");
+    }
+  }
+}
+
+export function assertIncludedActivitiesEditable(included: BillingActivity[], invoiceId: string) {
+  for (const activity of included) {
+    const alreadyInCurrentDraft = activity.invoice_id === invoiceId;
+    const stillBillable = activity.status === "to_invoice" && !activity.invoice_id;
+    if (!alreadyInCurrentDraft && !stillBillable) {
       throw new Error("Una o più attività incluse risultano già fatturate");
     }
   }
@@ -199,6 +218,45 @@ export function buildInvoiceRow({
     issue_date: input.issueDate,
     due_date: input.dueDate || null,
     status: input.status,
+    cassa_rate: input.cassaRate,
+    vat_rate: input.vatRate,
+    withholding_rate: input.withholdingRate,
+    apply_withholding: input.applyWithholding,
+    taxable_fees: totals.taxableFees,
+    taxable_expenses: totals.taxableExpenses,
+    art15_expenses: totals.art15Expenses,
+    general_expenses_amount: totals.generalExpensesAmount,
+    general_expenses_rate: input.generalExpensesRate,
+    include_general_expenses: input.includeGeneralExpenses,
+    cassa_base_amount: totals.cassaBaseAmount,
+    cassa_amount: totals.cassaAmount,
+    vat_amount: totals.vatAmount,
+    withholding_amount: totals.withholdingAmount,
+    stamp_amount: totals.stampAmount,
+    total_amount: totals.totalAmount,
+    net_to_pay: totals.netToPay,
+    payment_method: input.paymentMethod?.trim() || null,
+    notes: input.notes?.trim() || null,
+  };
+}
+
+export function buildInvoiceUpdateRow({
+  input,
+  firstIncluded,
+  totals,
+}: {
+  input: CreateBillingInvoiceInput;
+  firstIncluded: BillingActivity;
+  totals: BillingTotals;
+}) {
+  return {
+    client_id: firstIncluded.client_id,
+    case_id: firstIncluded.case_id,
+    principal_id: input.principalId,
+    issue_date: input.issueDate,
+    due_date: input.dueDate || null,
+    status: input.status,
+    paid_at: null,
     cassa_rate: input.cassaRate,
     vat_rate: input.vatRate,
     withholding_rate: input.withholdingRate,

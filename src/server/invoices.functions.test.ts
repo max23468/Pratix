@@ -51,6 +51,7 @@ import {
   generateBillingExportFn,
   generateInvoiceXmlFn,
   reserveInvoiceNumber,
+  updateDraftBillingInvoiceFn,
 } from "./invoices.functions";
 
 class FakeQueryBuilder {
@@ -76,6 +77,11 @@ class FakeQueryBuilder {
   insert(payload: unknown) {
     this.action = "insert";
     this.payload = payload;
+    return this;
+  }
+
+  delete() {
+    this.action = "delete";
     return this;
   }
 
@@ -136,6 +142,7 @@ class FakeSupabase {
         this.uploads.push({ bucket, path, body, options });
         return Promise.resolve({ error: null });
       },
+      remove: () => Promise.resolve({ error: null }),
     }),
   };
 
@@ -310,6 +317,94 @@ describe("server functions fatture", () => {
     expect(supabase.callsFor("case_activities", "update")).toHaveLength(2);
     expect(supabase.uploads).toHaveLength(2);
     expect(supabase.uploads[0].path).toContain("billing-exports/run-1/");
+  });
+
+  it("aggiorna una fattura in bozza senza riservare un nuovo numero", async () => {
+    const supabase = new FakeSupabase();
+    supabase.queue("invoices:select:single", {
+      data: {
+        id: "invoice-1",
+        public_code: "FT-00001",
+        number: "12",
+        year: 2026,
+        status: "draft",
+        billing_run_id: "run-1",
+      },
+      error: null,
+    });
+    supabase.queue("principals:select:single", {
+      data: {
+        id: "principal-1",
+        business_name: "Banca Test",
+        default_general_expenses_rate: 10,
+      },
+      error: null,
+    });
+    supabase.queue("profiles:select:single", {
+      data: { tax_regime: "ordinario" },
+      error: null,
+    });
+    supabase.queue("case_activities:select:many", {
+      data: [
+        { ...billingActivity, status: "invoiced", invoice_id: "invoice-1" },
+        {
+          ...billingActivity,
+          id: "activity-expense",
+          kind: "expense_reimbursement",
+          amount: 118.5,
+          quantity: 1,
+          unit_price: 118.5,
+          postponed_count: 1,
+        },
+      ],
+      error: null,
+    });
+    supabase.queue("billing_exports:select:many", {
+      data: [{ storage_path: "user-1/billing-exports/run-1/old.xlsx" }],
+      error: null,
+    });
+    supabase.queue(
+      "billing_exports:insert:single",
+      { data: { id: "export-fees", file_name: "compensi-committente.xlsx" }, error: null },
+      {
+        data: { id: "export-expenses", file_name: "rimborsi-spese-committente.xlsx" },
+        error: null,
+      },
+    );
+
+    const result = await handlerOf<
+      {
+        data: typeof billingInput & { invoiceId: string };
+        context: { supabase: FakeSupabase; userId: string };
+      },
+      {
+        invoiceId: string;
+        invoiceRef: string;
+        billingRunId: string;
+        number: string;
+        year: number;
+      }
+    >(updateDraftBillingInvoiceFn)({
+      data: { ...billingInput, invoiceId: "invoice-1", status: "issued" },
+      context: { supabase, userId: "user-1" },
+    });
+
+    expect(result).toMatchObject({
+      invoiceId: "invoice-1",
+      invoiceRef: "FT-00001",
+      billingRunId: "run-1",
+      number: "12",
+      year: 2026,
+    });
+    expect(supabase.callsFor("profiles", "update")).toHaveLength(0);
+    expect(supabase.callsFor("invoice_lines", "delete")).toHaveLength(1);
+    expect(supabase.callsFor("billing_run_items", "delete")).toHaveLength(1);
+    expect(supabase.callsFor("invoices", "update")[0].payload).toMatchObject({
+      status: "issued",
+      paid_at: null,
+      principal_id: "principal-1",
+    });
+    expect(supabase.uploads).toHaveLength(2);
   });
 
   it("rigenera un rendiconto Excel scaricabile dai dati della fattura", async () => {

@@ -31,8 +31,9 @@ import { useAuth } from "@/lib/auth-context";
 import { computeInvoice, type InvoiceLineInput } from "@/lib/invoice-calc";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { counterpartyDisplayName, clientDisplayName } from "@/lib/labels";
+import { publicCodeLookup } from "@/lib/public-route-code";
 import { useSubmitLock } from "@/lib/submit-lock";
-import { createBillingInvoiceFn } from "@/server/invoices.functions";
+import { createBillingInvoiceFn, updateDraftBillingInvoiceFn } from "@/server/invoices.functions";
 
 type BillingItemStatus = "included" | "postponed" | "excluded";
 
@@ -45,6 +46,30 @@ type CreateBillingInvoiceResult = {
   number: string;
   year: number;
   exports: Array<{ id: string; file_name: string }>;
+};
+
+type DraftInvoiceData = {
+  invoice: {
+    id: string;
+    principal_id: string | null;
+    issue_date: string;
+    due_date: string | null;
+    status: string;
+    billing_run_id: string | null;
+    include_general_expenses: boolean;
+    general_expenses_rate: number | string | null;
+    cassa_rate: number | string;
+    vat_rate: number | string;
+    withholding_rate: number | string;
+    apply_withholding: boolean;
+    payment_method: string | null;
+    notes: string | null;
+  };
+  billingRun: {
+    period_start: string;
+    period_end: string;
+  };
+  items: Array<{ activity_id: string; status: BillingItemStatus }>;
 };
 
 const unwrapServerResult = <T,>(result: T | { data: T }) =>
@@ -74,6 +99,7 @@ type ActivityRow = {
   activity_date: string;
   kind: "fee" | "expense_reimbursement";
   status: "to_invoice" | "invoiced";
+  invoice_id: string | null;
   description: string;
   quantity: number;
   unit_price: number;
@@ -113,12 +139,14 @@ const billingStatusLabels: Record<BillingItemStatus, string> = {
   excluded: "Escludi",
 };
 
-export function InvoiceForm() {
+export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const createBillingInvoice = useServerFn(createBillingInvoiceFn);
+  const updateDraftBillingInvoice = useServerFn(updateDraftBillingInvoiceFn);
   const qc = useQueryClient();
   const quarter = useMemo(() => currentQuarter(), []);
+  const isEditingDraft = Boolean(draftInvoiceRef);
   const [principalId, setPrincipalId] = useState("");
   const [periodStart, setPeriodStart] = useState(quarter.start);
   const [periodEnd, setPeriodEnd] = useState(quarter.end);
@@ -134,6 +162,7 @@ export function InvoiceForm() {
   const [paymentMethod, setPaymentMethod] = useState("Bonifico bancario");
   const [notes, setNotes] = useState("");
   const [selection, setSelection] = useState<Record<string, BillingItemStatus>>({});
+  const [loadedDraftId, setLoadedDraftId] = useState<string | null>(null);
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
   const createInvoiceLock = useSubmitLock();
 
@@ -168,36 +197,146 @@ export function InvoiceForm() {
   const selectedPrincipal = principals.find((principal) => principal.id === principalId) ?? null;
   const includeStampDuty = Boolean(profile?.include_stamp_duty);
 
+  const { data: draftData, isLoading: draftLoading } = useQuery({
+    queryKey: ["invoice-draft-edit", draftInvoiceRef, user?.id],
+    enabled: Boolean(user && draftInvoiceRef),
+    queryFn: async () => {
+      const lookup = publicCodeLookup(draftInvoiceRef!);
+      const { data: invoice, error: invoiceError } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq(lookup.column, lookup.value)
+        .eq("user_id", user!.id)
+        .single();
+      if (invoiceError) throw invoiceError;
+      if (invoice.status !== "draft") throw new Error("Solo le fatture in bozza sono modificabili");
+      if (!invoice.billing_run_id) throw new Error("Bozza senza rendiconto collegato");
+
+      const [{ data: billingRun, error: runError }, { data: items, error: itemsError }] =
+        await Promise.all([
+          supabase
+            .from("billing_runs")
+            .select("period_start, period_end")
+            .eq("id", invoice.billing_run_id)
+            .single(),
+          supabase
+            .from("billing_run_items")
+            .select("activity_id, status")
+            .eq("billing_run_id", invoice.billing_run_id),
+        ]);
+      if (runError) throw runError;
+      if (itemsError) throw itemsError;
+      if (!billingRun) throw new Error("Rendiconto della bozza non trovato");
+
+      return {
+        invoice,
+        billingRun,
+        items: (items ?? []).filter(
+          (item): item is { activity_id: string; status: BillingItemStatus } =>
+            typeof item.activity_id === "string" &&
+            (item.status === "included" ||
+              item.status === "postponed" ||
+              item.status === "excluded"),
+        ),
+      } satisfies DraftInvoiceData;
+    },
+  });
+
+  const draftActivityIds = useMemo(
+    () => (draftData?.items ?? []).map((item) => item.activity_id),
+    [draftData?.items],
+  );
+
+  const draftInvoiceDbId = draftData?.invoice.id ?? null;
+
   useEffect(() => {
-    if (!profile) return;
+    if (!profile || isEditingDraft) return;
     setCassaRate(Number(profile.cassa_rate ?? 4));
     setVatRate(Number(profile.vat_rate ?? 22));
     setWithholdingRate(Number(profile.withholding_rate ?? 20));
     setApplyWithholding(profile.tax_regime !== "forfettario");
-  }, [profile]);
+  }, [isEditingDraft, profile]);
 
   useEffect(() => {
-    if (!selectedPrincipal) return;
+    if (!selectedPrincipal || isEditingDraft) return;
     setGeneralExpensesRate(Number(selectedPrincipal.default_general_expenses_rate ?? 10));
     setCassaRate(Number(selectedPrincipal.default_cassa_rate ?? 4));
-  }, [selectedPrincipal]);
+  }, [isEditingDraft, selectedPrincipal]);
+
+  useEffect(() => {
+    if (!draftData || loadedDraftId === draftData.invoice.id) return;
+    setPrincipalId(draftData.invoice.principal_id ?? "");
+    setPeriodStart(draftData.billingRun.period_start);
+    setPeriodEnd(draftData.billingRun.period_end);
+    setIssueDate(draftData.invoice.issue_date);
+    setDueDate(draftData.invoice.due_date ?? "");
+    setIncludeGeneralExpenses(draftData.invoice.include_general_expenses);
+    setGeneralExpensesRate(Number(draftData.invoice.general_expenses_rate ?? 0));
+    setCassaRate(Number(draftData.invoice.cassa_rate));
+    setVatRate(Number(draftData.invoice.vat_rate));
+    setWithholdingRate(Number(draftData.invoice.withholding_rate));
+    setApplyWithholding(draftData.invoice.apply_withholding);
+    setPaymentMethod(draftData.invoice.payment_method ?? "");
+    setNotes(draftData.invoice.notes ?? "");
+    setSelection(
+      Object.fromEntries(draftData.items.map((item) => [item.activity_id, item.status] as const)),
+    );
+    setLoadedDraftId(draftData.invoice.id);
+  }, [draftData, loadedDraftId]);
 
   const { data: activities = EMPTY_ACTIVITIES, isLoading: activitiesLoading } = useQuery({
-    queryKey: ["billing-activities", principalId, periodStart, periodEnd],
-    enabled: Boolean(user && principalId && periodStart && periodEnd),
+    queryKey: [
+      "billing-activities",
+      principalId,
+      periodStart,
+      periodEnd,
+      draftInvoiceDbId,
+      draftActivityIds.join(","),
+    ],
+    enabled: Boolean(
+      user && principalId && periodStart && periodEnd && (!isEditingDraft || draftData),
+    ),
     queryFn: async () => {
-      const { data, error } = await supabase
+      const activitySelect =
+        "id, activity_date, kind, status, invoice_id, description, quantity, unit_price, amount, postponed_until, cases(practice_number, title), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)";
+      const availableQuery = supabase
         .from("case_activities")
-        .select(
-          "id, activity_date, kind, status, description, quantity, unit_price, amount, postponed_until, cases(practice_number, title), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
-        )
+        .select(activitySelect)
         .eq("principal_id", principalId)
         .eq("status", "to_invoice")
         .lte("activity_date", periodEnd)
         .order("activity_date", { ascending: true });
-      if (error) throw error;
-      return ((data ?? []) as ActivityRow[]).filter(
-        (activity) => !activity.postponed_until || activity.postponed_until <= periodEnd,
+
+      const draftActivitiesQuery =
+        draftActivityIds.length > 0
+          ? supabase
+              .from("case_activities")
+              .select(activitySelect)
+              .in("id", draftActivityIds)
+              .order("activity_date", { ascending: true })
+          : Promise.resolve({ data: [], error: null });
+
+      const [
+        { data: availableActivities, error: availableError },
+        { data: draftActivities, error: draftError },
+      ] = await Promise.all([availableQuery, draftActivitiesQuery]);
+      if (availableError) throw availableError;
+      if (draftError) throw draftError;
+
+      const activitiesById = new Map<string, ActivityRow>();
+      for (const activity of [
+        ...((availableActivities ?? []) as ActivityRow[]),
+        ...((draftActivities ?? []) as ActivityRow[]),
+      ]) {
+        activitiesById.set(activity.id, activity);
+      }
+
+      const draftIds = new Set(draftActivityIds);
+      return Array.from(activitiesById.values()).filter(
+        (activity) =>
+          draftIds.has(activity.id) ||
+          (activity.status === "to_invoice" &&
+            (!activity.postponed_until || activity.postponed_until <= periodEnd)),
       );
     },
   });
@@ -254,43 +393,57 @@ export function InvoiceForm() {
     withholdingRate,
   ]);
 
-  const createInvoice = useMutation({
+  const saveInvoice = useMutation({
     mutationFn: async (status: "draft" | "issued") => {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       if (!token) throw new Error("Sessione non valida. Accedi di nuovo.");
-      const result = await createBillingInvoice({
-        data: {
-          principalId,
-          periodStart,
-          periodEnd,
-          issueDate,
-          dueDate: dueDate || null,
-          status,
-          includeGeneralExpenses,
-          generalExpensesRate,
-          cassaRate,
-          vatRate,
-          withholdingRate,
-          applyWithholding,
-          paymentMethod,
-          notes,
-          selections: activities.map((activity) => ({
-            activityId: activity.id,
-            status: selection[activity.id] ?? "excluded",
-          })),
-        },
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const payload = {
+        principalId,
+        periodStart,
+        periodEnd,
+        issueDate,
+        dueDate: dueDate || null,
+        status,
+        includeGeneralExpenses,
+        generalExpensesRate,
+        cassaRate,
+        vatRate,
+        withholdingRate,
+        applyWithholding,
+        paymentMethod,
+        notes,
+        selections: activities.map((activity) => ({
+          activityId: activity.id,
+          status: selection[activity.id] ?? "excluded",
+        })),
+      };
+      const result = isEditingDraft
+        ? await updateDraftBillingInvoice({
+            data: {
+              ...payload,
+              invoiceId: draftData?.invoice.id ?? "",
+            },
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        : await createBillingInvoice({
+            data: payload,
+            headers: { Authorization: `Bearer ${token}` },
+          });
       return readServerResult<CreateBillingInvoiceResult>(result);
     },
     onSuccess: (invoice, status) => {
       toast.success(
-        status === "draft"
-          ? `Bozza ${invoice.number}/${invoice.year} salvata`
-          : `Fattura ${invoice.number}/${invoice.year} creata`,
+        isEditingDraft
+          ? status === "draft"
+            ? `Bozza ${invoice.number}/${invoice.year} aggiornata`
+            : `Fattura ${invoice.number}/${invoice.year} emessa`
+          : status === "draft"
+            ? `Bozza ${invoice.number}/${invoice.year} salvata`
+            : `Fattura ${invoice.number}/${invoice.year} creata`,
       );
       qc.invalidateQueries({ queryKey: ["invoices"] });
+      qc.invalidateQueries({ queryKey: ["invoice", draftInvoiceRef] });
       qc.invalidateQueries({ queryKey: ["activities"] });
       if (finishSave()) return;
       navigate({ to: "/fatture/$invoiceId", params: { invoiceId: invoice.invoiceRef } });
@@ -308,8 +461,21 @@ export function InvoiceForm() {
     const status = submitter?.value === "issued" ? "issued" : "draft";
     if (!createInvoiceLock.acquire()) return;
     setPendingInvoiceStatus(status);
-    createInvoice.mutate(status);
+    saveInvoice.mutate(status);
   };
+
+  if (isEditingDraft && draftLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Modifica bozza</CardTitle>
+          <CardDescription>Caricamento della fattura in bozza…</CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
+
+  const submitDisabled = saveInvoice.isPending || includedActivities.length === 0 || draftLoading;
 
   return (
     <form
@@ -628,7 +794,7 @@ export function InvoiceForm() {
                 value="draft"
                 variant="outline"
                 className="w-full"
-                disabled={createInvoice.isPending || includedActivities.length === 0}
+                disabled={submitDisabled}
               >
                 {pendingInvoiceStatus === "draft" && (
                   <Loader2 className="mr-2 size-4 animate-spin" />
@@ -640,12 +806,12 @@ export function InvoiceForm() {
                 name="invoiceStatus"
                 value="issued"
                 className="w-full"
-                disabled={createInvoice.isPending || includedActivities.length === 0}
+                disabled={submitDisabled}
               >
                 {pendingInvoiceStatus === "issued" && (
                   <Loader2 className="mr-2 size-4 animate-spin" />
                 )}
-                Crea fattura
+                {isEditingDraft ? "Segna come emessa" : "Crea fattura"}
               </Button>
             </div>
           </CardContent>
