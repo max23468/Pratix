@@ -69,37 +69,31 @@ function countItems(sections: ChangelogSection[]): number {
 }
 
 /* -------------------------------------------------------------------------- */
-/* Raggruppamento per serie MAJOR.MINOR                                       */
+/* Raggruppamento per maturità release                                        */
 /* -------------------------------------------------------------------------- */
 
-type Series = {
-  /** Es. "0.2" */
-  key: string;
-  /** Es. "0.2.x" */
-  label: string;
-  /** Patch ordinate dalla più recente alla più vecchia. */
-  entries: ChangelogEntry[];
+type ReleaseGroups = {
+  stable: ChangelogEntry[];
+  prerelease: ChangelogEntry[];
 };
 
-function seriesKey(version: string): string {
-  const parts = version.split(".");
-  if (parts.length < 2) return version;
-  return `${parts[0]}.${parts[1]}`;
+function isPrereleaseVersion(version: string): boolean {
+  const major = Number.parseInt(version.split(".")[0] ?? "", 10);
+  return Number.isFinite(major) && major < 1;
 }
 
-function groupBySeries(entries: ChangelogEntry[]): Series[] {
-  const map = new Map<string, ChangelogEntry[]>();
-  for (const e of entries) {
-    const k = seriesKey(e.version);
-    if (!map.has(k)) map.set(k, []);
-    map.get(k)!.push(e);
-  }
-  // Mantiene l'ordine in cui appaiono nel CHANGELOG (già dal più recente).
-  return [...map.entries()].map(([key, es]) => ({
-    key,
-    label: `${key}.x`,
-    entries: es,
-  }));
+function splitReleaseGroups(entries: ChangelogEntry[]): ReleaseGroups {
+  return entries.reduce<ReleaseGroups>(
+    (groups, entry) => {
+      if (isPrereleaseVersion(entry.version)) {
+        groups.prerelease.push(entry);
+      } else {
+        groups.stable.push(entry);
+      }
+      return groups;
+    },
+    { stable: [], prerelease: [] },
+  );
 }
 
 /* -------------------------------------------------------------------------- */
@@ -115,7 +109,7 @@ function NovitaPage() {
   }, [hasUnread]);
 
   const entries = releasedChangelog.length > 0 ? releasedChangelog : changelog;
-  const series = groupBySeries(entries);
+  const releaseGroups = splitReleaseGroups(entries);
 
   return (
     <AppLayout>
@@ -125,59 +119,28 @@ function NovitaPage() {
       />
 
       <div className="space-y-6">
-        {series.map((s, sIdx) => {
-          const [latest, ...older] = s.entries;
-          // La serie più in alto è la più recente: mostra l'ultima patch
-          // espansa, le precedenti della stessa serie collassate sotto.
-          // Le serie più vecchie hanno l'ultima patch espansa anche loro,
-          // così l'utente vede comunque cosa includeva quella serie.
-          return (
-            <Card key={s.key}>
-              <CardHeader className="space-y-1.5 pb-4">
-                <div className="flex flex-wrap items-baseline gap-2">
-                  <CardTitle className="font-display text-xl">Serie {s.label}</CardTitle>
-                  {sIdx === 0 && (
-                    <Badge variant="secondary" className="text-xs">
-                      Attuale
-                    </Badge>
-                  )}
-                  <span className="text-xs text-muted-foreground">
-                    {s.entries.length} {s.entries.length === 1 ? "versione" : "versioni"}
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-5">
-                {/* Ultima patch della serie — espansa */}
-                <ReleaseBlock entry={latest} prominent />
+        {releaseGroups.stable.map((entry) => (
+          <ReleaseCard key={entry.version} entry={entry} />
+        ))}
 
-                {/* Patch precedenti della stessa serie — collassate */}
-                {older.length > 0 && (
-                  <details className="group rounded-md border border-border/60 bg-muted/30">
-                    <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground">
-                      <span className="font-display">
-                        Versioni precedenti della serie {s.label}
-                      </span>
-                      <span className="text-muted-foreground">
-                        ({older.map((e) => e.version).join(" · ")})
-                      </span>
-                      <span className="ml-auto text-muted-foreground group-open:hidden">
-                        mostra
-                      </span>
-                      <span className="ml-auto hidden text-muted-foreground group-open:inline">
-                        nascondi
-                      </span>
-                    </summary>
-                    <div className="space-y-5 border-t border-border/60 px-3 py-4">
-                      {older.map((entry) => (
-                        <ReleaseBlock key={entry.version} entry={entry} />
-                      ))}
-                    </div>
-                  </details>
-                )}
-              </CardContent>
-            </Card>
-          );
-        })}
+        {releaseGroups.prerelease.length > 0 && (
+          <details className="group rounded-md border border-border/60 bg-muted/30">
+            <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground">
+              <span className="font-display text-foreground">Versioni pre-1.0</span>
+              <span>
+                {releaseGroups.prerelease.length}{" "}
+                {releaseGroups.prerelease.length === 1 ? "versione" : "versioni"}
+              </span>
+              <span className="ml-auto text-xs group-open:hidden">mostra</span>
+              <span className="ml-auto hidden text-xs group-open:inline">nascondi</span>
+            </summary>
+            <div className="space-y-4 border-t border-border/60 px-4 py-5">
+              {releaseGroups.prerelease.map((entry) => (
+                <ReleasePanel key={entry.version} entry={entry} />
+              ))}
+            </div>
+          </details>
+        )}
       </div>
     </AppLayout>
   );
@@ -187,43 +150,67 @@ function NovitaPage() {
 /* Blocco di una singola release                                              */
 /* -------------------------------------------------------------------------- */
 
-function ReleaseBlock({
-  entry,
-  prominent = false,
-}: {
-  entry: ChangelogEntry;
-  prominent?: boolean;
-}) {
+function ReleaseCard({ entry }: { entry: ChangelogEntry }) {
+  return (
+    <Card>
+      <CardHeader className="space-y-1.5 pb-4">
+        <ReleaseHeader entry={entry} />
+      </CardHeader>
+      <CardContent>
+        <ReleaseContent entry={entry} />
+      </CardContent>
+    </Card>
+  );
+}
+
+function ReleasePanel({ entry }: { entry: ChangelogEntry }) {
+  return (
+    <div className="rounded-md border border-border/60 bg-background px-4 py-4">
+      <ReleaseHeader entry={entry} compact />
+      <div className="mt-4">
+        <ReleaseContent entry={entry} compact />
+      </div>
+    </div>
+  );
+}
+
+function ReleaseHeader({ entry, compact = false }: { entry: ChangelogEntry; compact?: boolean }) {
   const isCurrent = entry.version === APP_VERSION;
   const dateLabel = formatDate(entry.date);
-  const groups = groupSections(entry.sections);
-  const internalCount = countItems(groups.internal);
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-baseline gap-2">
-        <h2
-          className={
-            prominent
-              ? "font-display text-base font-semibold text-foreground"
-              : "font-display text-sm font-semibold text-foreground"
-          }
-        >
-          v{entry.version}
-        </h2>
-        {isCurrent && (
-          <Badge variant="secondary" className="text-xs">
-            In uso
-          </Badge>
-        )}
-        {entry.unreleased && (
-          <Badge variant="outline" className="text-xs">
-            In preparazione
-          </Badge>
-        )}
-        {dateLabel && <span className="text-xs text-muted-foreground">{dateLabel}</span>}
-      </div>
+    <div className="flex flex-wrap items-baseline gap-2">
+      <CardTitle
+        className={
+          compact
+            ? "font-display text-base font-semibold text-foreground"
+            : "font-display text-xl font-semibold text-foreground"
+        }
+      >
+        v{entry.version}
+      </CardTitle>
+      {isCurrent && (
+        <Badge variant="secondary" className="text-xs">
+          In uso
+        </Badge>
+      )}
+      {entry.unreleased && (
+        <Badge variant="outline" className="text-xs">
+          In preparazione
+        </Badge>
+      )}
+      {dateLabel && <span className="text-xs text-muted-foreground">{dateLabel}</span>}
+    </div>
+  );
+}
 
+function ReleaseContent({ entry, compact = false }: { entry: ChangelogEntry; compact?: boolean }) {
+  const groups = groupSections(entry.sections);
+  const internalCount = countItems(groups.internal);
+  const internalGroups = groupItemsByArea(groups.internal);
+
+  return (
+    <div className={compact ? "space-y-3" : "space-y-4"}>
       {entry.intro && <p className="text-sm text-muted-foreground">{entry.intro}</p>}
 
       {entry.sections.length === 0 && !entry.intro && (
@@ -231,9 +218,11 @@ function ReleaseBlock({
       )}
 
       {groups.highlight.length > 0 && (
-        <CategoryBlock category="highlight" sections={groups.highlight} />
+        <CategoryBlock category="highlight" sections={groups.highlight} compact={compact} />
       )}
-      {groups.fix.length > 0 && <CategoryBlock category="fix" sections={groups.fix} />}
+      {groups.fix.length > 0 && (
+        <CategoryBlock category="fix" sections={groups.fix} compact={compact} />
+      )}
       {groups.internal.length > 0 && (
         <details className="group">
           <summary className="flex cursor-pointer list-none items-center gap-2 text-xs font-medium text-muted-foreground hover:text-foreground">
@@ -243,10 +232,10 @@ function ReleaseBlock({
             <span className="ml-1 hidden text-muted-foreground group-open:inline">nascondi</span>
           </summary>
           <div className="mt-3 space-y-3 border-l-2 border-border/60 pl-4">
-            {groups.internal.map((section) => (
-              <SectionList
-                key={section.title}
-                section={section}
+            {internalGroups.map((group) => (
+              <AreaGroupList
+                key={group.area}
+                group={group}
                 itemClass="text-xs text-muted-foreground/90"
               />
             ))}
@@ -260,13 +249,16 @@ function ReleaseBlock({
 function CategoryBlock({
   category,
   sections,
+  compact = false,
 }: {
   category: Category;
   sections: ChangelogSection[];
+  compact?: boolean;
 }) {
   const meta = CATEGORY_META[category];
   const Icon = category === "fix" ? sectionIcon(sections) : meta.icon;
   const isHighlight = category === "highlight";
+  const areaGroups = groupItemsByArea(sections);
 
   return (
     <div className="space-y-2">
@@ -274,12 +266,14 @@ function CategoryBlock({
         <Icon className={`size-4 ${meta.tone}`} strokeWidth={1.8} />
         <h3 className="text-sm font-semibold text-foreground">{meta.label}</h3>
       </div>
-      <div className={isHighlight ? "space-y-2" : "space-y-1.5"}>
-        {sections.map((section) => (
-          <SectionList
-            key={section.title}
-            section={section}
-            itemClass={isHighlight ? "text-sm text-foreground" : "text-sm text-muted-foreground"}
+      <div className={isHighlight ? "space-y-3" : "space-y-2.5"}>
+        {areaGroups.map((group) => (
+          <AreaGroupList
+            key={group.area}
+            group={group}
+            itemClass={
+              isHighlight && !compact ? "text-sm text-foreground" : "text-sm text-muted-foreground"
+            }
           />
         ))}
       </div>
@@ -291,15 +285,43 @@ function sectionIcon(sections: ChangelogSection[]) {
   return sections.some((s) => /sicurez/i.test(s.title)) ? ShieldCheck : Wrench;
 }
 
-function SectionList({ section, itemClass }: { section: ChangelogSection; itemClass: string }) {
+type AreaGroup = {
+  area: string;
+  items: string[];
+};
+
+function extractArea(text: string): { area: string; item: string } {
+  const match = text.match(/^\*\*([^*]+)\*\*:\s*(.+)$/);
+  if (!match) return { area: "Generale", item: text };
+  return { area: match[1].trim(), item: match[2].trim() };
+}
+
+function groupItemsByArea(sections: ChangelogSection[]): AreaGroup[] {
+  const groups = new Map<string, string[]>();
+  for (const section of sections) {
+    for (const item of section.items) {
+      const parsed = extractArea(item);
+      if (!groups.has(parsed.area)) groups.set(parsed.area, []);
+      groups.get(parsed.area)!.push(parsed.item);
+    }
+  }
+  return [...groups.entries()].map(([area, items]) => ({ area, items }));
+}
+
+function AreaGroupList({ group, itemClass }: { group: AreaGroup; itemClass: string }) {
   return (
-    <ul className="space-y-1.5 pl-5 [list-style:disc] marker:text-muted-foreground/50">
-      {section.items.map((item, i) => (
-        <li key={i} className={itemClass}>
-          <ChangelogItem text={item} />
-        </li>
-      ))}
-    </ul>
+    <div className="space-y-1.5">
+      <h4 className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">
+        {group.area}
+      </h4>
+      <ul className="space-y-1.5 pl-5 [list-style:disc] marker:text-muted-foreground/50">
+        {group.items.map((item, i) => (
+          <li key={i} className={itemClass}>
+            <ChangelogItem text={item} />
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

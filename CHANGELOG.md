@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.1.5] — 2026-05-16
+
+### Correzioni
+
+- **Novità**: ogni versione rilasciata ha un box dedicato, le voci sono raggruppate per area e le versioni pre-1.0 sono raccolte in una sezione chiusa di default.
+
 ## [1.1.4] — 2026-05-16
 
 ### Correzioni
@@ -625,6 +631,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.1.5]: #115--2026-05-16
 [1.1.4]: #114--2026-05-16
 [1.1.3]: #113--2026-05-16
 [1.1.2]: #112--2026-05-16
