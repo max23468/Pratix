@@ -164,7 +164,7 @@ Controllo Supabase:
 
 Usare account e fixture anonime. Verificare:
 
-1. home pubblica, login, registrazione, recupero password, privacy e termini;
+1. home pubblica, login, registrazione, pagine legacy no-password, privacy e termini;
 2. login con account test;
 3. onboarding già completato e profilo/account;
 4. creazione o riuso fixture recupero crediti;

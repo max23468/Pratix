@@ -19,14 +19,19 @@ docs/
 ├── guides/             ← guide tematiche operative
 │   ├── architettura.md
 │   ├── database.md
-│   ├── uscita-lovable.md
+│   ├── deploy.md
 │   ├── fatturazione.md
+│   ├── migrations.md
+│   ├── react-doctor.md
+│   ├── smoke-a11y.md
 │   ├── tema-e-design.md
 │   ├── tono-di-voce.md
-│   └── deploy.md
+│   ├── uscita-lovable.md
+│   └── versioning-e-release.md
 └── decisions/          ← Architecture Decision Records
     ├── README.md
-    └── 0001…0009-*.md
+    ├── template.md
+    └── 0001…0016-*.md
 ```
 
 ## Quando consultare cosa
@@ -42,6 +47,10 @@ docs/
 | Cambiare colori, tema, componenti                      | [`guides/tema-e-design.md`](./guides/tema-e-design.md)                           |
 | Scrivere microcopy o label                             | [`guides/tono-di-voce.md`](./guides/tono-di-voce.md)                             |
 | Pubblicare o configurare il dominio                    | [`guides/deploy.md`](./guides/deploy.md)                                         |
+| Gestire release e changelog                            | [`guides/versioning-e-release.md`](./guides/versioning-e-release.md)             |
+| Eseguire smoke test accessibilità/UI                   | [`guides/smoke-a11y.md`](./guides/smoke-a11y.md)                                 |
+| Lavorare sulle migrazioni Supabase                     | [`guides/migrations.md`](./guides/migrations.md)                                 |
+| Diagnosticare warning React ricorrenti                 | [`guides/react-doctor.md`](./guides/react-doctor.md)                             |
 | Sapere perché abbiamo scelto X                         | [`decisions/`](./decisions/)                                                     |
 | Capire un termine di dominio                           | [`glossario.md`](./glossario.md)                                                 |
 | Vedere le regole sempre attive                         | [`memory/core.md`](./memory/core.md)                                             |

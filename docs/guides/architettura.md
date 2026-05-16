@@ -5,7 +5,7 @@
 - **Framework**: TanStack Start v1 (full-stack React 19)
 - **Build**: Vite 7
 - **Routing**: file-based in `src/routes/`, route tree auto-generato
-- **Backend**: Supabase di proprietà del progetto — Postgres, Auth, Storage privato, Edge Functions
+- **Backend**: Supabase di proprietà del progetto — Postgres, Auth passwordless, passkey dietro feature flag e Storage privato
 - **Deploy**: Vercel
 - **Styling**: Tailwind v4 con `@import` in `src/styles.css`
 - **UI**: shadcn/ui + Radix + lucide-react
@@ -24,9 +24,9 @@ src/
 │   ├── pratiche.*.tsx      ← sezione pratiche
 │   ├── clienti.*.tsx       ← sezione clienti
 │   ├── fatture.*.tsx       ← sezione fatture
-│   ├── impostazioni.tsx    ← profilo, fiscale, pagamenti, numerazione, aspetto
+│   ├── impostazioni.tsx    ← configurazione fatturazione e preferenze operative
 │   ├── login.tsx, register.tsx
-│   └── api/                ← server routes (webhook, cron)
+│   └── api.*.ts            ← server routes (cron, webhook, endpoint HTTP)
 ├── components/
 │   ├── ui/                 ← shadcn primitives (non modificare a cuor leggero)
 │   ├── brand/              ← Logo e asset di marca
@@ -55,13 +55,13 @@ src/
 
 File-based, naming flat con punti:
 
-| File                           | URL                   |
-| ------------------------------ | --------------------- |
-| `routes/index.tsx`             | `/`                   |
-| `routes/dashboard.tsx`         | `/dashboard`          |
-| `routes/pratiche.index.tsx`    | `/pratiche`           |
-| `routes/pratiche.$id.tsx`      | `/pratiche/:id`       |
-| `routes/api/public/webhook.ts` | `/api/public/webhook` |
+| File                          | URL                 |
+| ----------------------------- | ------------------- |
+| `routes/index.tsx`            | `/`                 |
+| `routes/dashboard.tsx`        | `/dashboard`        |
+| `routes/pratiche.index.tsx`   | `/pratiche`         |
+| `routes/pratiche.$caseId.tsx` | `/pratiche/:caseId` |
+| `routes/api.cron.daily.ts`    | `/api/cron/daily`   |
 
 **Regole TanStack Start importanti** (sintesi):
 
@@ -69,7 +69,7 @@ File-based, naming flat con punti:
 - Mai modificare `src/routeTree.gen.ts`.
 - Ogni `<Link to="...">` deve puntare a un file di route esistente (typecheck rigido).
 - Ogni route con loader deve avere `errorComponent` e `notFoundComponent`.
-- Per webhook/cron usare `src/routes/api/public/*` con verifica firma.
+- Per webhook, cron o endpoint HTTP esterni usare server routes `src/routes/api.*.ts` o `src/routes/api.public.*.ts`, con verifica firma/HMAC quando l'endpoint è richiamato da terzi.
 
 ## Tema
 
@@ -88,10 +88,10 @@ Vedi [tema-e-design](./tema-e-design.md) per il dettaglio.
 ## Server-side
 
 - **Server functions**: `createServerFn` da `@tanstack/react-start` per RPC tipato.
-- **Server routes**: file in `src/routes/api/` per HTTP grezzo (webhook, cron).
+- **Server routes**: file `src/routes/api.*.ts` per HTTP grezzo (webhook, cron).
 - **Storage Supabase**: bucket privato `pratix-documents`, con path
   owner-scoped `<user_id>/<area>/...` e policy su `storage.objects`.
-- **Edge functions Supabase**: in `supabase/functions/`, deploy via Supabase CLI.
+- **Route API TanStack Start**: file `src/routes/api.*.ts`, pubblicati tramite Vercel insieme all'app.
 - **Runtime deploy**: Vercel tramite TanStack Start + Nitro.
 
 ## Convenzioni

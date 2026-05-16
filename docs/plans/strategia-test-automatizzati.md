@@ -42,7 +42,7 @@ Copre funzioni senza rete, Supabase, browser o storage:
 - rendiconti Excel generati in memoria;
 - template prezzi recupero crediti;
 - parser changelog, formattazione e label operative;
-- schemi auth usati da login, registrazione e recupero password;
+- schemi auth usati da login, registrazione e pagine legacy no-password;
 - helper di Creazione guidata/import quando isolabili.
 
 Gate: `npm test`.

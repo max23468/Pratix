@@ -23,7 +23,7 @@ In caso di conflitto, seguire sempre il livello più alto.
 Stack:
 
 - **Frontend**: React + TanStack Start v1 (Vite 7), routing **file-based** in `src/routes/`, server functions in `src/server/*.functions.ts`.
-- **Backend**: Supabase di proprietà del progetto. Database PostgreSQL con RLS sempre attiva, auth email/password, storage non ancora usato.
+- **Backend**: Supabase di proprietà del progetto. Database PostgreSQL con RLS sempre attiva, Auth passwordless via link email, passkey dietro feature flag e Storage privato attivo.
 - **Deploy**: Vercel, con produzione su `https://pratix.vercel.app`.
 - **UI**: Tailwind v4 (token in `src/styles.css`, mai hex inline), shadcn/Radix in `src/components/ui`, icone `lucide-react`.
 - **Lingua**: italiano, `lang="it"`.

@@ -4,8 +4,9 @@
 > verità SQL è [`../supabase/schema.sql`](../supabase/schema.sql); questo file
 > spiega **cosa** rappresentano le tabelle e **perché** sono fatte così.
 
-Aggiornato a: **Fase 2 recupero crediti** + migration
-`20260503202905_phase_2_debt_collection_schema`.
+Aggiornato a: **Pratix 1.4.0**. Include recupero crediti, Storage privato,
+preferenze tabellari sincronizzate, Creazione guidata manuale e fatturazione
+con bollo opzionale.
 
 ## Principi generali
 
