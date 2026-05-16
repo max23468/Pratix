@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
+import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { PageHeader } from "@/components/page-header";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,7 @@ import {
   clientDisplayName,
   counterpartyDisplayName,
 } from "@/lib/labels";
-import { formatDate } from "@/lib/format";
+import { formatCurrency, formatDate } from "@/lib/format";
 import { routeRef } from "@/lib/public-route-code";
 import {
   handleClickableTableRowClick,
@@ -299,7 +300,97 @@ function PraticheList() {
         </Select>
       </div>
 
-      <Card>
+      <div className="mb-4 md:hidden">
+        <MobileSortSelect columns={praticheColumns} sort={sort} onSort={setSort} />
+      </div>
+
+      <div className="space-y-3 md:hidden">
+        {isLoading ? (
+          <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>
+        ) : sorted.length === 0 ? (
+          <Card className="p-4">
+            <TableEmptyState
+              title={q || view !== "open" ? "Nessuna pratica trovata" : "Nessuna pratica aperta"}
+              description={
+                q || view !== "open"
+                  ? "Modifica ricerca, vista o ordinamento per ampliare i risultati."
+                  : "Crea la prima pratica e collega committente, cliente e controparte."
+              }
+              action={
+                !q && view === "open" ? (
+                  <Button size="sm" asChild>
+                    <Link to="/pratiche/nuova">Nuova pratica</Link>
+                  </Button>
+                ) : undefined
+              }
+            />
+          </Card>
+        ) : (
+          sorted.map((c) => {
+            const summary = activitySummaryByCase[c.id] ?? {
+              toInvoice: 0,
+              invoiced: 0,
+              toInvoiceAmount: 0,
+            };
+            return (
+              <Link
+                key={c.id}
+                to="/pratiche/$caseId"
+                params={{ caseId: routeRef(c) }}
+                className="block rounded-md border border-border bg-card p-4 shadow-soft transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Pratica {c.practice_number}
+                    </p>
+                    <p className="mt-1 truncate text-sm font-medium text-foreground">{c.title}</p>
+                  </div>
+                  <Badge variant={caseStatusVariant[c.status] ?? "outline"} className="shrink-0">
+                    {caseStatusLabels[c.status] ?? c.status}
+                  </Badge>
+                </div>
+                <dl className="mt-3 grid gap-2 text-xs text-muted-foreground">
+                  <div className="flex min-w-0 justify-between gap-3">
+                    <dt>Committente</dt>
+                    <dd className="min-w-0 truncate text-right">
+                      {c.principals?.business_name ?? "—"}
+                    </dd>
+                  </div>
+                  <div className="flex min-w-0 justify-between gap-3">
+                    <dt>Cliente</dt>
+                    <dd className="min-w-0 truncate text-right">
+                      {c.clients ? clientDisplayName(c.clients) : "—"}
+                    </dd>
+                  </div>
+                  <div className="flex min-w-0 justify-between gap-3">
+                    <dt>Controparte</dt>
+                    <dd className="min-w-0 truncate text-right">
+                      {c.counterparties ? counterpartyDisplayName(c.counterparties) : "—"}
+                    </dd>
+                  </div>
+                  <div className="flex min-w-0 justify-between gap-3">
+                    <dt>Fatturazione</dt>
+                    <dd className="min-w-0 truncate text-right">
+                      {summary.toInvoice > 0
+                        ? `${summary.toInvoice} da fatturare · ${formatCurrency(summary.toInvoiceAmount)}`
+                        : summary.invoiced > 0
+                          ? `${summary.invoiced} fatturate`
+                          : "—"}
+                    </dd>
+                  </div>
+                  <div className="flex min-w-0 justify-between gap-3">
+                    <dt>Aperta il</dt>
+                    <dd className="text-right">{formatDate(c.opened_at)}</dd>
+                  </div>
+                </dl>
+              </Link>
+            );
+          })
+        )}
+      </div>
+
+      <Card className="hidden min-w-0 md:block">
         <Table>
           <TableHeader>
             <TableRow>

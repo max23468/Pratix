@@ -3,12 +3,14 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
+import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { PageHeader } from "@/components/page-header";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { TableEmptyState } from "@/components/table-empty-state";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { priceBookStatusLabels, priceBookStatusVariant } from "@/lib/labels";
@@ -256,7 +258,76 @@ function PrezziList() {
         </div>
       </div>
 
-      <Card>
+      <div className="mb-4 md:hidden">
+        <MobileSortSelect columns={prezziColumns} sort={sort} onSort={setSort} />
+      </div>
+
+      <div className="space-y-3 md:hidden">
+        {isLoading ? (
+          <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>
+        ) : sorted.length === 0 ? (
+          <Card className="p-4">
+            <TableEmptyState
+              title={q ? "Nessun prezzo trovato" : "Nessun prezzo"}
+              description={
+                q
+                  ? "Modifica ricerca o ordinamento per ampliare i risultati."
+                  : "Crea il primo set annuale per un committente."
+              }
+              action={
+                !q ? (
+                  <Button size="sm" asChild>
+                    <Link to="/prezzi/nuovo">Nuovi prezzi</Link>
+                  </Button>
+                ) : undefined
+              }
+            />
+          </Card>
+        ) : (
+          sorted.map((book) => {
+            const counts = countsByBook[book.id] ?? { fees: 0, expenses: 0, enabled: 0 };
+            const principalName = principalNameById.get(book.principal_id) ?? "—";
+            return (
+              <Link
+                key={book.id}
+                to="/prezzi/$priceBookId"
+                params={{ priceBookId: routeRef(book) }}
+                className="block rounded-md border border-border bg-card p-4 shadow-soft transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-foreground">{principalName}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Anno {book.year}</p>
+                  </div>
+                  <Badge variant={priceBookStatusVariant[book.status]} className="shrink-0">
+                    {priceBookStatusLabels[book.status]}
+                  </Badge>
+                </div>
+                <dl className="mt-3 grid gap-2 text-xs text-muted-foreground">
+                  <div className="flex min-w-0 justify-between gap-3">
+                    <dt>Regole</dt>
+                    <dd className="min-w-0 truncate text-right">{rulesLabel(book)}</dd>
+                  </div>
+                  <div className="flex min-w-0 justify-between gap-3">
+                    <dt>Voci</dt>
+                    <dd className="min-w-0 truncate text-right">
+                      {counts.fees} compensi, {counts.expenses} rimborsi
+                    </dd>
+                  </div>
+                  <div className="flex min-w-0 justify-between gap-3">
+                    <dt>Validità</dt>
+                    <dd className="min-w-0 truncate text-right">
+                      {book.valid_from} → {book.valid_to ?? "senza fine"}
+                    </dd>
+                  </div>
+                </dl>
+              </Link>
+            );
+          })
+        )}
+      </div>
+
+      <Card className="hidden min-w-0 md:block">
         <Table>
           <TableHeader>
             <TableRow>

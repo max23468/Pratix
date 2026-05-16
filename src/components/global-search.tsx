@@ -244,7 +244,7 @@ export function GlobalSearch() {
         type="button"
         variant="ghost"
         size="icon"
-        className="sm:hidden"
+        className="size-11 sm:hidden"
         onClick={() => setOpen(true)}
         aria-label="Apri ricerca"
       >

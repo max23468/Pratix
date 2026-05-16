@@ -16,7 +16,7 @@ export function ChangelogBell() {
       variant="ghost"
       size="icon"
       aria-label={hasUnread ? "Novità disponibili" : "Novità"}
-      className="relative size-8"
+      className="relative size-11 sm:size-8"
     >
       <Link to="/novita">
         <Bell className="size-4" />

@@ -5,6 +5,7 @@ import { Pencil, Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { CaseActivityDialog, type CaseActivityDialogActivity } from "@/components/case-activities";
+import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -282,7 +283,116 @@ function ActivitiesList() {
         </Select>
       </div>
 
-      <Card>
+      <div className="mb-4 md:hidden">
+        <MobileSortSelect columns={attivitaColumns} sort={sort} onSort={setSort} />
+      </div>
+
+      <div className="space-y-3 md:hidden">
+        {isLoading ? (
+          <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>
+        ) : sorted.length === 0 ? (
+          <Card className="p-4">
+            <TableEmptyState
+              title={
+                q || status !== "all" || kind !== "all"
+                  ? "Nessuna attività trovata"
+                  : "Nessuna attività"
+              }
+              description={
+                q || status !== "all" || kind !== "all"
+                  ? "Modifica ricerca o filtri per ampliare i risultati."
+                  : "Registra compensi o rimborsi spese dalla pratica o da inserimento rapido."
+              }
+              action={
+                !q && status === "all" && kind === "all" ? (
+                  <CaseActivityDialog
+                    trigger={
+                      <Button size="sm">
+                        <Plus className="mr-1 size-4" /> Nuova attività
+                      </Button>
+                    }
+                  />
+                ) : undefined
+              }
+            />
+          </Card>
+        ) : (
+          sorted.map((activity) => {
+            const caseRef = activity.cases ? routeRef(activity.cases) : null;
+            const editTitle = activity.invoice_id
+              ? "Le voci collegate a una Fattura non si modificano"
+              : "Modifica voce";
+            return (
+              <Card key={activity.id} className="p-4">
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs text-muted-foreground">
+                      {formatDate(activity.activity_date)}
+                    </p>
+                    <p className="mt-1 truncate text-sm font-medium text-foreground">
+                      {activity.description}
+                    </p>
+                    <p className="mt-1 truncate text-xs text-muted-foreground">
+                      {priceItemKindLabels[activity.kind]} · {activity.snapshot_price_name}
+                    </p>
+                  </div>
+                  <Badge
+                    variant={caseActivityStatusVariant[activity.status] ?? "outline"}
+                    className="shrink-0"
+                  >
+                    {caseActivityStatusLabels[activity.status] ?? activity.status}
+                  </Badge>
+                </div>
+                <dl className="mt-3 grid gap-2 text-xs text-muted-foreground">
+                  <div className="flex min-w-0 justify-between gap-3">
+                    <dt>Pratica</dt>
+                    <dd className="min-w-0 truncate text-right">
+                      {activity.cases ? activityCaseLabel(activity.cases) : "—"}
+                    </dd>
+                  </div>
+                  <div className="flex min-w-0 justify-between gap-3">
+                    <dt>Quantità</dt>
+                    <dd className="text-right">{activity.quantity}</dd>
+                  </div>
+                  <div className="flex min-w-0 justify-between gap-3">
+                    <dt>Totale</dt>
+                    <dd className="text-right font-medium text-foreground">
+                      {formatCurrency(Number(activity.amount))}
+                    </dd>
+                  </div>
+                </dl>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  {caseRef && (
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to="/pratiche/$caseId" params={{ caseId: caseRef }}>
+                        Apri pratica
+                      </Link>
+                    </Button>
+                  )}
+                  <CaseActivityDialog
+                    caseRow={activity.cases ?? undefined}
+                    activity={activity}
+                    trigger={
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={Boolean(activity.invoice_id)}
+                        title={editTitle}
+                      >
+                        <Pencil className="mr-1 size-4" />
+                        Modifica
+                      </Button>
+                    }
+                  />
+                </div>
+              </Card>
+            );
+          })
+        )}
+      </div>
+
+      <Card className="hidden min-w-0 md:block">
         <Table>
           <TableHeader>
             <TableRow>

@@ -330,8 +330,8 @@ function DashboardContent() {
         </CardContent>
       </Card>
 
-      <div className="mt-6 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
-        <Card>
+      <div className="mt-6 grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle className="text-base">Pratiche recenti</CardTitle>
           </CardHeader>
@@ -343,7 +343,7 @@ function DashboardContent() {
                     <Link
                       to="/pratiche/$caseId"
                       params={{ caseId: routeRef(c) }}
-                      className="flex items-center justify-between gap-2"
+                      className="flex min-w-0 items-center justify-between gap-2"
                     >
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{c.title}</p>
@@ -355,7 +355,10 @@ function DashboardContent() {
                             : "—"}
                         </p>
                       </div>
-                      <Badge variant={caseStatusVariant[c.status] ?? "outline"}>
+                      <Badge
+                        variant={caseStatusVariant[c.status] ?? "outline"}
+                        className="shrink-0"
+                      >
                         {caseStatusLabels[c.status] ?? c.status}
                       </Badge>
                     </Link>
@@ -377,7 +380,7 @@ function DashboardContent() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle className="text-base">Committenti da fatturare</CardTitle>
           </CardHeader>
@@ -386,7 +389,10 @@ function DashboardContent() {
               <ul className="divide-y">
                 {data.principalSummaries.map((principal) => (
                   <li key={principal.principalId} className="py-2.5">
-                    <Link to="/fatture/nuova" className="flex items-center justify-between gap-3">
+                    <Link
+                      to="/fatture/nuova"
+                      className="flex min-w-0 items-center justify-between gap-3"
+                    >
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium">{principal.name}</p>
                         <p className="text-xs text-muted-foreground">
