@@ -177,12 +177,22 @@ function AccountPage() {
         }}
         className="space-y-4"
       >
-        <TabsList className="flex flex-wrap">
-          <TabsTrigger value="profilo">Profilo</TabsTrigger>
-          <TabsTrigger value="sicurezza">Accesso e sicurezza</TabsTrigger>
-          <TabsTrigger value="aspetto">Aspetto</TabsTrigger>
-          <TabsTrigger value="notifiche">Notifiche</TabsTrigger>
-          <TabsTrigger value="dati">Dati</TabsTrigger>
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:inline-flex sm:w-auto">
+          <TabsTrigger value="profilo" className="min-w-0 whitespace-normal text-center">
+            Profilo
+          </TabsTrigger>
+          <TabsTrigger value="sicurezza" className="min-w-0 whitespace-normal text-center">
+            Accesso e sicurezza
+          </TabsTrigger>
+          <TabsTrigger value="aspetto" className="min-w-0 whitespace-normal text-center">
+            Aspetto
+          </TabsTrigger>
+          <TabsTrigger value="notifiche" className="min-w-0 whitespace-normal text-center">
+            Notifiche
+          </TabsTrigger>
+          <TabsTrigger value="dati" className="min-w-0 whitespace-normal text-center">
+            Dati
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="profilo" className="space-y-4">

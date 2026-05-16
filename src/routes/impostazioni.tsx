@@ -194,11 +194,19 @@ function SettingsPage() {
       />
 
       <Tabs defaultValue="professione" className="space-y-4">
-        <TabsList className="flex flex-wrap">
-          <TabsTrigger value="professione">Dati professionali</TabsTrigger>
-          <TabsTrigger value="fiscale">Fiscalità</TabsTrigger>
-          <TabsTrigger value="pagamenti">Pagamenti</TabsTrigger>
-          <TabsTrigger value="fatturazione">Fatturazione</TabsTrigger>
+        <TabsList className="grid h-auto w-full grid-cols-2 gap-1 sm:inline-flex sm:w-auto">
+          <TabsTrigger value="professione" className="min-w-0 whitespace-normal text-center">
+            Dati professionali
+          </TabsTrigger>
+          <TabsTrigger value="fiscale" className="min-w-0 whitespace-normal text-center">
+            Fiscalità
+          </TabsTrigger>
+          <TabsTrigger value="pagamenti" className="min-w-0 whitespace-normal text-center">
+            Pagamenti
+          </TabsTrigger>
+          <TabsTrigger value="fatturazione" className="min-w-0 whitespace-normal text-center">
+            Fatturazione
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="professione" className="space-y-4">
