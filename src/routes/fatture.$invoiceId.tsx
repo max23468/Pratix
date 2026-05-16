@@ -305,7 +305,7 @@ function InvoiceDetailPage() {
           <div className="flex flex-wrap gap-2">
             <Button asChild variant="outline">
               <Link to="/fatture">
-                <ArrowLeft className="mr-2 size-4" /> Indietro
+                <ArrowLeft className="mr-2 size-4" /> Torna alle fatture
               </Link>
             </Button>
             <Button asChild>

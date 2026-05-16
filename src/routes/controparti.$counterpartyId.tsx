@@ -81,7 +81,7 @@ function CounterpartyDetail() {
             </Link>
             <Link to="/controparti">
               <Button variant="outline" size="sm">
-                <ArrowLeft className="mr-1 size-4" /> Indietro
+                <ArrowLeft className="mr-1 size-4" /> Torna alle controparti
               </Button>
             </Link>
           </>
