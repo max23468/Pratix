@@ -3,18 +3,30 @@ import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
   Briefcase,
+  Building2,
+  ChevronDown,
   FileWarning,
   FileUp,
   ListChecks,
   Plus,
   Receipt,
   Tags,
+  User,
+  Users,
 } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { TableEmptyState } from "@/components/table-empty-state";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -27,6 +39,65 @@ import {
   type ClientDisplayData,
   type CounterpartyDisplayData,
 } from "@/lib/labels";
+
+type CreateActionPath =
+  | "/pratiche/nuova"
+  | "/committenti/nuovo"
+  | "/clienti/nuovo"
+  | "/controparti/nuova"
+  | "/fatture/nuova"
+  | "/prezzi/nuovo"
+  | "/import-archivio";
+
+const CREATE_ACTIONS: Array<{
+  to: CreateActionPath;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  title: string;
+  description: string;
+}> = [
+  {
+    to: "/pratiche/nuova",
+    icon: Briefcase,
+    title: "Nuova pratica",
+    description: "Apri una nuova pratica operativa",
+  },
+  {
+    to: "/committenti/nuovo",
+    icon: Building2,
+    title: "Nuovo committente",
+    description: "Aggiungi chi affida l'incarico",
+  },
+  {
+    to: "/clienti/nuovo",
+    icon: User,
+    title: "Nuovo cliente",
+    description: "Registra una nuova anagrafica",
+  },
+  {
+    to: "/controparti/nuova",
+    icon: Users,
+    title: "Nuova controparte",
+    description: "Crea persona, società o gruppo",
+  },
+  {
+    to: "/fatture/nuova",
+    icon: Receipt,
+    title: "Nuova fattura",
+    description: "Prepara un documento da emettere",
+  },
+  {
+    to: "/prezzi/nuovo",
+    icon: Tags,
+    title: "Nuovi prezzi",
+    description: "Crea un set annuale per committente",
+  },
+  {
+    to: "/import-archivio",
+    icon: FileUp,
+    title: "Import archivio",
+    description: "Importa o trascrivi nuove pratiche",
+  },
+];
 
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
@@ -166,11 +237,7 @@ function DashboardContent() {
                 <ListChecks className="mr-1 size-4" /> Attività
               </Button>
             </Link>
-            <Link to="/pratiche/nuova">
-              <Button size="sm">
-                <Plus className="mr-1 size-4" /> Pratica
-              </Button>
-            </Link>
+            <CreateMenu />
           </>
         }
       />
@@ -324,6 +391,35 @@ function DashboardContent() {
         </Card>
       </div>
     </>
+  );
+}
+
+function CreateMenu() {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button size="sm" aria-label="Apri menu creazione">
+          <Plus className="mr-1 size-4" />
+          Crea
+          <ChevronDown className="ml-1 size-3.5" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-72">
+        <DropdownMenuLabel>Cosa vuoi creare?</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {CREATE_ACTIONS.map((action) => (
+          <DropdownMenuItem key={action.to} asChild>
+            <Link to={action.to} className="items-start gap-3 py-2">
+              <action.icon className="mt-0.5 size-4" strokeWidth={1.7} />
+              <span className="min-w-0">
+                <span className="block text-sm font-medium">{action.title}</span>
+                <span className="block text-xs text-muted-foreground">{action.description}</span>
+              </span>
+            </Link>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
