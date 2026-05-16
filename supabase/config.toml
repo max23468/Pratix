@@ -1,1 +1,37 @@
 project_id = "lgzdgvkrvfbbyowwstya"
+
+[auth]
+enabled = true
+site_url = "https://pratix.vercel.app/"
+additional_redirect_urls = [
+  "http://127.0.0.1:3300/dashboard",
+  "http://127.0.0.1:3301/dashboard",
+  "http://localhost:3000/dashboard",
+  "https://pratix-matteos-projects-9226d217.vercel.app/",
+  "https://pratix-matteos-projects-9226d217.vercel.app/**",
+  "https://pratix-*-matteos-projects-9226d217.vercel.app",
+  "https://pratix-*-matteos-projects-9226d217.vercel.app/**",
+  "https://pratix.vercel.app/dashboard",
+  "https://pratix.vercel.app/reimposta-password",
+  "https://pratix-max2348-matteos-projects-9226d217.vercel.app/",
+  "https://pratix-max2348-matteos-projects-9226d217.vercel.app/**",
+  "https://pratix-*-max2348-matteos-projects-9226d217.vercel.app",
+  "https://pratix-*-max2348-matteos-projects-9226d217.vercel.app/**",
+]
+
+[auth.mfa.totp]
+enroll_enabled = true
+verify_enabled = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = false
+enable_confirmations = true
+secure_password_change = false
+max_frequency = "1m0s"
+otp_length = 8
+otp_expiry = 3600
+
+[auth.email.template.magic_link]
+subject = "Accedi a Pratix"
+content_path = "./supabase/templates/magic_link.html"

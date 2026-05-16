@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 import { spawn } from "node:child_process";
 import process from "node:process";
+import { createClient } from "@supabase/supabase-js";
 import axe from "axe-core";
 import { webkit } from "playwright";
+import { loadEnv } from "vite";
 
 const PUBLIC_ROUTES = ["/", "/login", "/register", "/recupera-password", "/privacy", "/termini"];
 const AUTH_ROUTES = [
@@ -25,16 +27,24 @@ const VIEWPORTS = [
   { name: "tablet", width: 820, height: 1180 },
   { name: "mobile", width: 390, height: 844 },
 ];
+const DEFAULT_SMOKE_EMAIL = "codex.pratix.test.20260509@gmail.com";
 
 const args = new Set(process.argv.slice(2));
 const startServer = args.has("--start-server");
 const publicOnly = args.has("--public-only");
 const port = Number(process.env.PRATIX_SMOKE_PORT || 3300);
+const localEnv = loadEnv(
+  process.env.MODE || process.env.NODE_ENV || "development",
+  process.cwd(),
+  "",
+);
+const envValue = (name) => process.env[name] || localEnv[name] || "";
 const baseUrl =
-  process.env.PRATIX_SMOKE_BASE_URL ||
+  envValue("PRATIX_SMOKE_BASE_URL") ||
   (startServer ? `http://127.0.0.1:${port}` : "http://127.0.0.1:3000");
-const email = process.env.PRATIX_SMOKE_EMAIL || "";
-const password = process.env.PRATIX_SMOKE_PASSWORD || "";
+const email = envValue("PRATIX_SMOKE_EMAIL") || DEFAULT_SMOKE_EMAIL;
+const supabaseUrl = envValue("SUPABASE_URL") || envValue("VITE_SUPABASE_URL");
+const supabaseServiceRoleKey = envValue("SUPABASE_SERVICE_ROLE_KEY");
 
 let server;
 
@@ -89,21 +99,88 @@ async function newContext(browser, theme, viewport) {
 }
 
 async function login(page) {
-  await page.goto(`${baseUrl}/login`, { waitUntil: "domcontentloaded" });
-  await page.locator('input[type="email"]').click();
-  await page.locator('input[type="email"]').pressSequentially(email);
-  await page.locator('input[type="password"]').fill(password);
-  await page.getByRole("button", { name: /accedi/i }).click();
+  const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("email", email)
+    .maybeSingle();
+  if (profileError) {
+    throw new Error(`Profilo smoke non verificabile: ${profileError.message}`);
+  }
+  if (!profile) {
+    throw new Error("Smoke autenticato richiede un account test esistente in profiles.");
+  }
+
+  const { data, error } = await supabase.auth.admin.generateLink({
+    type: "magiclink",
+    email,
+    options: { redirectTo: `${baseUrl}/dashboard` },
+  });
+  if (error) throw new Error(`Magic link smoke non generato: ${error.message}`);
+  const actionLink = data.properties?.action_link;
+  if (!actionLink) throw new Error("Magic link smoke non ricevuto da Supabase.");
+
+  await page.goto(actionLink, { waitUntil: "domcontentloaded" });
   await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
   await page.waitForLoadState("networkidle", { timeout: 7_000 }).catch(() => undefined);
 }
 
+async function ensureDocumentReady(page, route) {
+  const hasBody = await page
+    .waitForFunction(() => Boolean(document.documentElement && document.body), undefined, {
+      timeout: 5_000,
+    })
+    .then(() => true)
+    .catch(() => false);
+  if (hasBody) return;
+
+  await page.reload({ waitUntil: "domcontentloaded" });
+  await page
+    .waitForFunction(() => Boolean(document.documentElement && document.body), undefined, {
+      timeout: 5_000,
+    })
+    .catch(() => {
+      throw new Error(`DOM non pronto per lo smoke della route ${route}`);
+    });
+}
+
+function isTransientPageError(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes("Execution context was destroyed") ||
+    message.includes("Importing a module script failed") ||
+    message.includes("Couldn't load preload assets")
+  );
+}
+
 async function auditPage(page, route, theme, viewport, authenticated, issues) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      await auditPageOnce(page, route, theme, viewport, authenticated, issues);
+      return;
+    } catch (error) {
+      if (attempt === 0 && isTransientPageError(error)) {
+        await page.goto(`${baseUrl}${route}`, { waitUntil: "domcontentloaded" });
+        await page.waitForLoadState("networkidle", { timeout: 7_000 }).catch(() => undefined);
+        await ensureDocumentReady(page, route);
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+
+async function auditPageOnce(page, route, theme, viewport, authenticated, issues) {
   const currentPath = new URL(page.url(), baseUrl).pathname;
   if (currentPath !== route) {
     await page.goto(`${baseUrl}${route}`, { waitUntil: "domcontentloaded" });
   }
   await page.waitForLoadState("networkidle", { timeout: 7_000 }).catch(() => undefined);
+  await ensureDocumentReady(page, route);
   await page.addScriptTag({ content: axe.source });
 
   const result = await page.evaluate(async () => {
@@ -200,7 +277,7 @@ async function run() {
     }
   }
 
-  const canAuditAuth = Boolean(!publicOnly && email && password);
+  const canAuditAuth = Boolean(!publicOnly && email && supabaseUrl && supabaseServiceRoleKey);
   if (canAuditAuth) {
     for (const viewport of VIEWPORTS) {
       for (const theme of THEMES) {
@@ -223,6 +300,7 @@ async function run() {
         baseUrl,
         audited,
         authenticated: canAuditAuth,
+        authMode: canAuditAuth ? "magiclink-admin" : "none",
         viewports: VIEWPORTS.map((viewport) => viewport.name),
         themes: THEMES,
         issueCount: issues.length,

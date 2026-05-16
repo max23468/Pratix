@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { Logo } from "@/components/brand/logo";
 import { toast } from "sonner";
@@ -24,11 +24,9 @@ export const Route = createFileRoute("/register")({
 });
 
 function RegisterPage() {
-  const navigate = useNavigate();
   const captchaEnabled = isTurnstileEnabled();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaResetSignal, setCaptchaResetSignal] = useState(0);
   const [submitting, setSubmitting] = useState(false);
@@ -37,7 +35,7 @@ function RegisterPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const parsed = registerSchema.safeParse({ fullName, email, password });
+    const parsed = registerSchema.safeParse({ fullName, email });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Dati non validi");
       return;
@@ -48,30 +46,27 @@ function RegisterPage() {
     }
     if (!submitLock.acquire()) return;
     setSubmitting(true);
-    const { data, error } = await supabase.auth.signUp({
-      email: parsed.data.email,
-      password: parsed.data.password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/dashboard`,
-        data: { full_name: parsed.data.fullName },
-        ...(captchaToken ? { captchaToken } : {}),
-      },
-    });
-    setSubmitting(false);
-    submitLock.release();
-    setCaptchaResetSignal((current) => current + 1);
-    if (error) {
-      // Messaggio generico per evitare user enumeration: non riveliamo se l'email è già registrata
-      toast.error("Registrazione non riuscita. Riprova o accedi se hai già un account.");
-      return;
-    }
-    if (!data.session) {
+    try {
+      const { error } = await supabase.auth.signInWithOtp({
+        email: parsed.data.email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+          data: { full_name: parsed.data.fullName },
+          ...(captchaToken ? { captchaToken } : {}),
+        },
+      });
+      if (error) {
+        // Messaggio generico per evitare user enumeration: non riveliamo se l'email è già registrata
+        toast.error("Invio non riuscito. Riprova tra poco o accedi se hai già un account.");
+        return;
+      }
       setConfirmationSent(true);
-      toast.success("Account creato. Controlla l'email per confermare l'accesso.");
-      return;
+      toast.success("Link inviato. Controlla l'email per entrare in Pratix.");
+    } finally {
+      setSubmitting(false);
+      submitLock.release();
+      setCaptchaResetSignal((current) => current + 1);
     }
-    toast.success("Account creato. Procedi con la configurazione della tua professione.");
-    navigate({ to: "/dashboard" });
   };
 
   return (
@@ -94,8 +89,8 @@ function RegisterPage() {
             >
               <p className="font-medium">Controlla la tua casella.</p>
               <p className="mt-1 text-muted-foreground">
-                Ti abbiamo inviato il link per confermare l'account. Dopo la conferma potrai
-                accedere a Pratix.
+                Ti abbiamo inviato il link per completare l'accesso. Dopo l'apertura del link potrai
+                entrare in Pratix.
               </p>
             </div>
           ) : (
@@ -120,24 +115,13 @@ function RegisterPage() {
                   required
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete="new-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
-              </div>
               <TurnstileChallenge
                 action="register"
                 onTokenChange={setCaptchaToken}
                 resetSignal={captchaResetSignal}
               />
               <Button type="submit" className="w-full" disabled={submitting}>
-                {submitting ? "Creazione account…" : "Crea account"}
+                {submitting ? "Invio in corso…" : "Invia link di accesso"}
               </Button>
             </form>
           )}

@@ -67,7 +67,7 @@ function loadTurnstileScript() {
 }
 
 type TurnstileChallengeProps = {
-  action: "login" | "register" | "password_recovery";
+  action: "login" | "register";
   onTokenChange: (token: string | null) => void;
   resetSignal: number;
 };

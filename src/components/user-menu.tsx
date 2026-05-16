@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { UserCircle, LogOut, Settings, KeyRound, FileInput } from "lucide-react";
+import { UserCircle, LogOut, Settings, Fingerprint, FileInput } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -48,8 +48,8 @@ export function UserMenu() {
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/account">
-            <KeyRound className="mr-2 size-4" />
-            Cambia password
+            <Fingerprint className="mr-2 size-4" />
+            Accesso e sicurezza
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>

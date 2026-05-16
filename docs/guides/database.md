@@ -120,35 +120,48 @@ Impostazioni operative desiderate nel dashboard Supabase:
 - Conferma email attiva per le nuove registrazioni.
 - Secure Email Change non attivo per scelta di prodotto attuale.
 - Leaked Password Protection: attivare se il progetto Supabase passa a un piano
-  Pro o superiore; sul piano gratuito l'advisor security continuerà a segnalarla.
-- Policy password standard: minimo applicativo 8 caratteri; non rafforzare i
-  requisiti Supabase finché il percorso resta volutamente leggero.
+  Pro o superiore; sul piano gratuito l'advisor security può continuare a
+  segnalarla anche se la UI non usa password.
+- Policy password: non centrale nel percorso corrente, perché login e
+  registrazione usano magic link via email.
+- Passkey: abilitate lato client come feature sperimentale Supabase; mantenere
+  magic link come fallback operativo.
 - Anonymous sign-ins disattivati.
 - Rate limits Auth rivisti e lasciati su valori prudenti per il piano gratuito.
 - Site URL produzione: `https://pratix.vercel.app/`.
 - Redirect URL produzione:
   - `https://pratix.vercel.app/dashboard`
   - `https://pratix.vercel.app/reimposta-password`
-- Template email Supabase personalizzati in italiano per conferma account e
-  recupero password, con link `{{ .ConfirmationURL }}`.
+- Template email Supabase personalizzati in italiano per conferma account, magic
+  link e cambio email, con link `{{ .ConfirmationURL }}`.
 
-La UI gestisce sia registrazione con sessione immediata sia registrazione con
-email da confermare. Il cambio password in-app richiede già la password attuale
-prima di chiamare Supabase.
+La UI usa `signInWithOtp` sia per login sia per registrazione. La registrazione
+passa `full_name` nei metadata Supabase, così il trigger profilo conserva il nome
+del professionista quando l'utente viene creato.
+
+Il template Magic Link è tracciato anche in `supabase/config.toml` e
+`supabase/templates/magic_link.html`; la configurazione remota va aggiornata con
+`supabase config push` solo dopo aver controllato il diff prodotto dal CLI.
 
 ### Stato corrente Auth
 
-Al 2026-05-03 il percorso free-tier scelto è:
+Al 2026-05-16 il percorso free-tier scelto è:
 
 - registrazione aperta;
-- email/password come metodo principale;
-- conferma email attiva e gestita dalla UI;
-- recupero password attivo con pagine `/recupera-password` e `/reimposta-password`;
-- link di reset assente, scaduto o non valido gestito con messaggio chiaro;
+- magic link via email come metodo principale;
+- passkey come accesso rapido sperimentale, con magic link come fallback;
+- `/recupera-password` e `/reimposta-password` restano come pagine informative
+  no-password per vecchi link o bookmark;
 - MFA non implementata per scelta attuale;
 - Secure Email Change non attivo per scelta attuale;
-- password policy Supabase non rafforzata oltre il minimo applicativo;
-- Leaked Password Protection lasciata fuori perché richiede un piano a pagamento.
+- Leaked Password Protection lasciata fuori perché richiede un piano a pagamento
+  e perché la UI non espone più password.
+- Bonifica password residue: al 2026-05-16 il progetto Supabase contiene ancora
+  hash password per gli utenti creati prima del passaggio passwordless. Supabase
+  non espone nel `config.toml` un toggle separato per disabilitare
+  `signInWithPassword` mantenendo attivi magic link e provider email; non
+  modificare direttamente `auth.users.encrypted_password` senza decisione
+  esplicita, perché è una bonifica irreversibile e di basso livello.
 
 Se un test di registrazione reale incontra `over_email_send_rate_limit`, non
 alzare subito i limiti: attendi il reset della finestra Supabase e riprova con
@@ -157,7 +170,7 @@ possono consumare il limite email.
 
 ### CAPTCHA
 
-Supabase Auth supporta CAPTCHA su registrazione, login e recupero password.
+Supabase Auth supporta CAPTCHA su registrazione e login.
 Pratix è predisposto per Cloudflare Turnstile, ma l'integrazione non è attiva
 nel percorso corrente: non creare widget Cloudflare e non configurare secret
 Turnstile finché non viene presa una nuova decisione.
@@ -173,19 +186,20 @@ Non salvare la secret key Turnstile in GitHub o nei file `.env` tracciati.
 
 ### Email Auth
 
-I template Supabase di conferma account e recupero password sono personalizzati
-in italiano. Custom SMTP e dominio email dedicato restano opzionali: non sono un
-blocco operativo nel percorso gratuito attuale.
+Il template Supabase Magic Link è personalizzato in italiano. Conferma account e
+cambio email devono restare allineati alla stessa linea editoriale quando
+vengono toccati. Custom SMTP e dominio email dedicato restano opzionali: non
+sono un blocco operativo nel percorso gratuito attuale.
 
 Template italiani attesi:
 
 - Confirm signup: oggetto `Conferma il tuo account Pratix`; testo breve con
   link di conferma e nota "Se non hai richiesto tu la registrazione, ignora
   questa email."
-- Reset password: oggetto `Reimposta la password di Pratix`; testo breve con
-  link valido per il tempo impostato in Supabase.
-- Change email: non attivo oggi; mantenere un testo neutro solo se la funzione
-  verrà attivata in futuro.
+- Magic Link: oggetto `Accedi a Pratix`; testo breve con link monouso e nota
+  "Se non hai richiesto tu l'accesso, ignora questa email."
+- Change email: testo neutro con conferma del nuovo indirizzo, se la funzione è
+  attiva nel dashboard Supabase.
 
 Non inserire dati personali, importi o riferimenti a clienti nei template Auth.
 
@@ -274,7 +288,8 @@ policy su `storage.objects`: bucket privato, path owner-scoped, nessuna policy
 
 - **Security — `Leaked Password Protection Disabled`**: warning accettato nel
   percorso gratuito corrente. La protezione richiede un piano Supabase a
-  pagamento, quindi non va trattata come blocco operativo free-tier.
+  pagamento; la UI non espone password, ma l'advisor può restare visibile sul
+  piano Free.
 - **Performance — foreign key senza indice**: gli avvisi su
   `case_status_history.user_id` e `invoice_lines.user_id` sono stati chiusi con
   la migration `20260502173000_add_fk_supporting_indexes.sql`.
