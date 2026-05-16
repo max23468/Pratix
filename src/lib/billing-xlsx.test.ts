@@ -19,7 +19,7 @@ const readWorkbookParts = (input: BillingWorkbookInput) => {
 };
 
 describe("buildBillingWorkbook", () => {
-  it("genera un rendiconto compensi con sheet, filename, header e celle attese", () => {
+  it("genera un rendiconto compensi con matrice larga allineata al template", () => {
     const {
       file,
       contentTypesXml,
@@ -39,10 +39,11 @@ describe("buildBillingWorkbook", () => {
           clientName: "Ada Rossi",
           counterpartyName: "Beta S.p.A.",
           activityDate: "2026-01-15",
-          description: "Accesso agli atti & verifica <documenti>",
+          description:
+            "Procedimenti ordinari, mediazione, esecutivi, concorsuali: udienza sostenuta",
           quantity: 2,
-          unitPrice: 25,
-          amount: 50,
+          unitPrice: 40,
+          amount: 80,
           hearingDates: ["2026-01-20", "2026-01-27"],
         },
       ],
@@ -57,19 +58,21 @@ describe("buildBillingWorkbook", () => {
     expect(appPropsXml).toContain("<Application>Pratix</Application>");
     expect(corePropsXml).toContain("<dc:creator>Pratix</dc:creator>");
     expect(workbookXml).toContain('sheet name="Compensi"');
-    expect(workbookXml).toContain("<bookViews>");
-    expect(worksheetXml).toContain("Rendiconto compensi");
-    expect(worksheetXml).toContain('<dimension ref="A1:I5"/>');
-    expect(worksheetXml).toContain("Prezzo unitario");
-    expect(worksheetXml).toContain("2026-01-20, 2026-01-27");
-    expect(worksheetXml).toContain("Accesso agli atti &amp; verifica &lt;documenti&gt;");
-    expect(worksheetXml).toContain('<c r="G5"><v>2</v></c>');
-    expect(worksheetXml).toContain('<c r="H5"><v>25</v></c>');
-    expect(worksheetXml).toContain('<c r="I5"><v>50</v></c>');
-    expect(stylesXml).toContain('<fills count="2">');
+    expect(worksheetXml).toContain('<dimension ref="A1:U9"/>');
+    expect(worksheetXml).toContain("ATTENZIONE: IL FOGLIO CONTIENE FORMULE");
+    expect(worksheetXml).toContain("DATA ATTIVITÀ");
+    expect(worksheetXml).toContain("NDG-DENOMINAZIONE");
+    expect(worksheetXml).toContain("Procedimenti ordinari / mediazione / esecutivi / concorsuali");
+    expect(worksheetXml).toContain("Data udienza");
+    expect(worksheetXml).toContain("42 - Beta S.p.A.");
+    expect(worksheetXml).toContain('<c r="P5" s="6"><v>2</v></c>');
+    expect(worksheetXml).toContain('<c r="Q5" s="5"><v>');
+    expect(worksheetXml).toContain("<f>SUM(P5:P5)*40</f>");
+    expect(worksheetXml).toContain("<f>SUM(D7:P7,S7:U7)</f>");
+    expect(stylesXml).toContain('<fills count="5">');
   });
 
-  it("genera un rendiconto rimborsi spese con fallback filename e colonne ridotte", () => {
+  it("genera un rendiconto rimborsi spese con colonne del template B:K", () => {
     const { file, workbookXml, worksheetXml } = readWorkbookParts({
       kind: "expenses",
       principalName: "   ",
@@ -81,7 +84,7 @@ describe("buildBillingWorkbook", () => {
           clientName: "Cliente",
           counterpartyName: "Controparte",
           activityDate: "2026-02-10",
-          description: "Contributo unificato",
+          description: "Costo notifica precetto",
           quantity: 1,
           unitPrice: 0,
           amount: 118.5,
@@ -90,12 +93,50 @@ describe("buildBillingWorkbook", () => {
     });
 
     expect(file.fileName).toBe("rimborsi-spese-committente-2026-02-01-2026-02-28.xlsx");
-    expect(workbookXml).toContain('sheet name="Rimborsi"');
-    expect(worksheetXml).toContain("Rendiconto rimborsi spese");
-    expect(worksheetXml).toContain("Importo");
+    expect(workbookXml).toContain('sheet name="Spese"');
+    expect(worksheetXml).toContain('<dimension ref="B1:K4"/>');
+    expect(worksheetXml).toContain("DATA SPESA");
+    expect(worksheetXml).toContain("COSTO NOTIFICA PRECETTO");
+    expect(worksheetXml).toContain("EVENTUALE IMPORTO DEL CONGUAGLIO");
     expect(worksheetXml).not.toContain("Prezzo unitario");
-    expect(worksheetXml).toContain('<c r="F5"><v>1</v></c>');
-    expect(worksheetXml).toContain('<c r="G5"><v>118.5</v></c>');
+    expect(worksheetXml).toContain('<c r="G2" s="7"><v>118.5</v></c>');
+    expect(worksheetXml).toContain("<f>SUM(G2:G2)</f>");
+  });
+
+  it("mappa le voci compenso 12 mesi sulle colonne dedicate", () => {
+    const { worksheetXml } = readWorkbookParts({
+      kind: "fees",
+      principalName: "Committente",
+      periodStart: "2026-01-01",
+      periodEnd: "2026-03-31",
+      rows: [
+        {
+          practiceNumber: 1,
+          clientName: "Cliente",
+          counterpartyName: "Controparte",
+          activityDate: "2026-01-10",
+          description:
+            "Pignoramento immobiliare diretto, decorrenza 12 mesi dall'udienza ex art. 569 c.p.c.",
+          quantity: 1,
+          unitPrice: 150,
+          amount: 150,
+        },
+        {
+          practiceNumber: 2,
+          clientName: "Cliente",
+          counterpartyName: "Controparte",
+          activityDate: "2026-01-11",
+          description:
+            "Intervento in procedura esecutiva immobiliare, decorrenza 12 mesi dal deposito",
+          quantity: 1,
+          unitPrice: 100,
+          amount: 100,
+        },
+      ],
+    });
+
+    expect(worksheetXml).toContain('<c r="J5" s="6"><v>1</v></c>');
+    expect(worksheetXml).toContain('<c r="M6" s="6"><v>1</v></c>');
   });
 
   it("mantiene compatto il nome file dei rendiconti con committenti lunghi", () => {

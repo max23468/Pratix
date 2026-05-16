@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.2.19] — 2026-05-16
+
+### Correzioni
+
+- **Rendiconti Excel**: riallineati i tracciati generati ai template onorari e rimborsi spese ricevuti, mantenendo la compatibilità dei file `.xlsx`.
+
 ## [1.2.18] — 2026-05-16
 
 ### Correzioni
@@ -750,6 +756,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.2.19]: #1219--2026-05-16
 [1.2.18]: #1218--2026-05-16
 [1.2.17]: #1217--2026-05-16
 [1.2.16]: #1216--2026-05-16
