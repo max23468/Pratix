@@ -33,6 +33,7 @@ const DEFAULT_SMOKE_EMAIL = "codex.pratix.test.20260509@gmail.com";
 const args = new Set(process.argv.slice(2));
 const startServer = args.has("--start-server");
 const publicOnly = args.has("--public-only");
+const authRequired = args.has("--auth-required");
 const port = Number(process.env.PRATIX_SMOKE_PORT || 3300);
 const localEnv = loadEnv(
   process.env.MODE || process.env.NODE_ENV || "development",
@@ -46,11 +47,6 @@ const baseUrl =
 const email = envValue("PRATIX_SMOKE_EMAIL") || DEFAULT_SMOKE_EMAIL;
 const supabaseUrl = envValue("SUPABASE_URL") || envValue("VITE_SUPABASE_URL");
 const supabaseServiceRoleKey = envValue("SUPABASE_SERVICE_ROLE_KEY");
-const supabasePublishableKey =
-  envValue("SUPABASE_PUBLISHABLE_KEY") ||
-  envValue("VITE_SUPABASE_PUBLISHABLE_KEY") ||
-  envValue("VITE_SUPABASE_ANON_KEY");
-const password = envValue("PRATIX_SMOKE_PASSWORD");
 
 let server;
 
@@ -105,11 +101,6 @@ async function newContext(browser, theme, viewport) {
 }
 
 async function login(page) {
-  if (!supabaseServiceRoleKey && password && supabasePublishableKey) {
-    await loginWithPassword(page);
-    return;
-  }
-
   const supabase = createClient(supabaseUrl, supabaseServiceRoleKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
@@ -136,34 +127,6 @@ async function login(page) {
   if (!actionLink) throw new Error("Magic link smoke non ricevuto da Supabase.");
 
   await page.goto(actionLink, { waitUntil: "domcontentloaded" });
-  await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
-  await page.waitForLoadState("networkidle", { timeout: 7_000 }).catch(() => undefined);
-}
-
-async function loginWithPassword(page) {
-  const supabase = createClient(supabaseUrl, supabasePublishableKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email,
-    password,
-  });
-  if (error) throw new Error(`Login smoke non riuscito: ${error.message}`);
-  if (!data.session) throw new Error("Sessione smoke non ricevuta da Supabase.");
-
-  const projectRef = new URL(supabaseUrl).hostname.split(".")[0];
-  await page.goto(baseUrl, { waitUntil: "domcontentloaded" });
-  await page.evaluate(
-    ({ storageKey, session }) => {
-      window.localStorage.setItem(storageKey, JSON.stringify(session));
-    },
-    {
-      storageKey: `sb-${projectRef}-auth-token`,
-      session: data.session,
-    },
-  );
-  await page.goto(`${baseUrl}/dashboard`, { waitUntil: "domcontentloaded" });
   await page.waitForURL(/\/dashboard/, { timeout: 15_000 });
   await page.waitForLoadState("networkidle", { timeout: 7_000 }).catch(() => undefined);
 }
@@ -316,12 +279,14 @@ async function run() {
     }
   }
 
-  const canAuditAuth = Boolean(
-    !publicOnly &&
-    email &&
-    supabaseUrl &&
-    (supabaseServiceRoleKey || (password && supabasePublishableKey)),
-  );
+  const canAuditAuth = Boolean(!publicOnly && email && supabaseUrl && supabaseServiceRoleKey);
+  if (authRequired && !canAuditAuth) {
+    throw new Error(
+      "Smoke autenticato richiesto ma non configurato: serve SUPABASE_SERVICE_ROLE_KEY. " +
+        "Usa npm run smoke:a11y:auth per recuperarla via Supabase CLI senza password.",
+    );
+  }
+
   if (canAuditAuth) {
     for (const viewport of VIEWPORTS) {
       for (const theme of THEMES) {
@@ -344,11 +309,7 @@ async function run() {
         baseUrl,
         audited,
         authenticated: canAuditAuth,
-        authMode: canAuditAuth
-          ? supabaseServiceRoleKey
-            ? "magiclink-admin"
-            : "password-session"
-          : "none",
+        authMode: canAuditAuth ? "magiclink-admin" : "none",
         viewports: VIEWPORTS.map((viewport) => viewport.name),
         themes: THEMES,
         issueCount: issues.length,

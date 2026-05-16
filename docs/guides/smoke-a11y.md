@@ -18,7 +18,9 @@ npm run smoke:a11y
 ```
 
 Il comando avvia il dev server su `127.0.0.1:3300`, disattiva Turnstile in
-locale e controlla le route pubbliche:
+locale e controlla le route pubbliche. Se la variabile
+`SUPABASE_SERVICE_ROLE_KEY` è già disponibile nella shell, include anche le
+route autenticate:
 
 - `/`
 - `/login`
@@ -29,24 +31,39 @@ locale e controlla le route pubbliche:
 
 ## Esecuzione autenticata
 
-Per includere le route autenticate, rendi disponibile la service role key
-Supabase nella shell. Lo script usa l'account test Pratix predefinito, genera un
-magic link server-side e lo usa solo dentro WebKit: non richiede password, non
-legge la casella email e non stampa il link in output. Non salvare la service
-role key nel repo.
+Per includere sempre le route autenticate, usa il comando dedicato:
+
+```bash
+npm run smoke:a11y:auth
+```
+
+Il comando recupera la service role key tramite Supabase CLI, la passa solo in
+memoria allo smoke e non la stampa né la salva su disco. Lo script usa l'account
+test Pratix predefinito, genera un magic link server-side e lo usa solo dentro
+WebKit: non richiede password e non legge la casella email.
+
+Il comando aggiunge dashboard, anagrafiche, pratiche, attività, fatture,
+novità, account, impostazioni, Controllo duplicati e Creazione guidata.
+
+Prerequisiti:
+
+- Supabase CLI autenticato sulla macchina locale;
+- `VITE_SUPABASE_PROJECT_ID` oppure `SUPABASE_URL`/`VITE_SUPABASE_URL`
+  disponibile nei file env locali;
+- account test presente in `profiles`.
+
+Per usare una casella diversa da quella test predefinita, esporta
+`PRATIX_SMOKE_EMAIL`. Le password non sono supportate: non usare
+`PRATIX_SMOKE_PASSWORD` né il vecchio item Portachiavi
+`pratix-codex-test-account`.
+
+Se vuoi fornire manualmente la service role da un provider sicuro, puoi ancora
+eseguire:
 
 ```bash
 SUPABASE_SERVICE_ROLE_KEY="<service-role-key-da-provider-sicuro>" \
-npm run smoke:a11y
+node scripts/smoke-a11y.mjs --start-server --auth-required
 ```
-
-Il comando aggiunge dashboard, anagrafiche, pratiche, attività, fatture,
-novità, account, impostazioni e Creazione guidata.
-
-Lo smoke autenticato parte solo se sono disponibili `SUPABASE_SERVICE_ROLE_KEY`
-e `SUPABASE_URL` oppure `VITE_SUPABASE_URL`. Per usare una casella diversa da
-quella test predefinita, esporta anche `PRATIX_SMOKE_EMAIL`. Se una variabile
-obbligatoria manca, il comando resta automaticamente sul perimetro pubblico.
 
 ## Esecuzione su produzione pubblica
 

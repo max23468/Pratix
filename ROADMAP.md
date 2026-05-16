@@ -69,6 +69,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Controlli qualità dati             | Avvisi su soggetti mancanti, Attività senza allegati, importi da fatturare e Fatture in bozza                                                                            |
 | ✅    | Workflow recupero crediti          | Il cruscotto Pratica mostra stato operativo, priorità, prossima azione e motivo calcolati da Attività, Fatture, stato e qualità dati                                     |
 | ✅    | Tabelle ordinabili e persistenti   | Intestazioni cliccabili per le liste operative; preferenza ordinamento sincronizzata per utente fra dispositivi tramite Supabase                                         |
+| ✅    | Sintesi duplicati in dashboard     | Box operativo con conteggi del Controllo duplicati e accesso diretto alla pagina dedicata                                                                                |
 
 ## 4. Funzionalità di prodotto
 

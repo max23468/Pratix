@@ -6,6 +6,16 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.7.0] — 2026-05-16
+
+### Novità
+
+- **Dashboard**: aggiunto un box di sintesi del Controllo duplicati con conteggi da verificare, alta probabilità, rimandati e risolti, più accesso diretto alla pagina dedicata.
+
+### Sotto il cofano
+
+- **Smoke test**: aggiunto un comando autenticato passwordless basato su magic link Supabase Admin e rimosso il fallback operativo al vecchio login con password.
+
 ## [1.6.1] — 2026-05-16
 
 ### Correzioni
@@ -870,6 +880,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.7.0]: #170--2026-05-16
 [1.6.1]: #161--2026-05-16
 [1.6.0]: #160--2026-05-16
 [1.5.3]: #153--2026-05-16
