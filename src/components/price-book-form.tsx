@@ -29,6 +29,7 @@ import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { priceBookStatusLabels, priceItemKindLabels } from "@/lib/labels";
+import { useSubmitLock } from "@/lib/submit-lock";
 import {
   createTemplateItems,
   defaultValidFrom,
@@ -96,6 +97,7 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
     initialItems.length > 0 ? initialItems : createTemplateItems(),
   );
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
+  const saveLock = useSubmitLock();
 
   const { data: principals = [] } = useQuery({
     queryKey: ["principals", "price-book-form"],
@@ -282,10 +284,12 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
       onSaved(id);
     },
     onError: (error: Error) => toast.error(error.message),
+    onSettled: saveLock.release,
   });
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+    if (!saveLock.acquire()) return;
     saveMutation.mutate();
   };
 

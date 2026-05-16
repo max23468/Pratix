@@ -105,12 +105,12 @@ export const Route = createFileRoute("/dashboard")({
       { title: "Dashboard · Pratix" },
       {
         name: "description",
-        content: "Pratiche, attività da fatturare e committenti da tenere sotto controllo.",
+        content: "Pratiche, attività, fatture e rimborsi da tenere sotto controllo.",
       },
       { property: "og:title", content: "Dashboard · Pratix" },
       {
         property: "og:description",
-        content: "Pratiche, attività da fatturare e committenti da tenere sotto controllo.",
+        content: "Pratiche, attività, fatture e rimborsi da tenere sotto controllo.",
       },
     ],
   }),
@@ -129,30 +129,34 @@ function DashboardContent() {
     enabled: !!userId,
     queryKey: ["dashboard", userId],
     queryFn: async () => {
-      const [casesRes, activitiesRes, recentCasesRes, principalsRes] = await Promise.all([
-        supabase.from("cases").select("id, status"),
-        supabase
-          .from("case_activities")
-          .select("id, kind, amount, principal_id")
-          .eq("status", "to_invoice"),
-        supabase
-          .from("cases")
-          .select(
-            "id, case_number, practice_number, title, status, updated_at, principal:principals(business_name), client:clients(kind, first_name, last_name, business_name), counterparty:counterparties(kind, first_name, last_name, business_name)",
-          )
-          .order("updated_at", { ascending: false })
-          .limit(5),
-        supabase.from("principals").select("id, business_name"),
-      ]);
+      const [casesRes, activitiesRes, invoicesRes, recentCasesRes, principalsRes] =
+        await Promise.all([
+          supabase.from("cases").select("id, status, principal_id, client_id, counterparty_id"),
+          supabase
+            .from("case_activities")
+            .select("id, case_id, kind, amount, principal_id, status"),
+          supabase.from("invoices").select("id, status, due_date, net_to_pay"),
+          supabase
+            .from("cases")
+            .select(
+              "id, case_number, practice_number, title, status, updated_at, principal:principals(business_name), client:clients(kind, first_name, last_name, business_name), counterparty:counterparties(kind, first_name, last_name, business_name)",
+            )
+            .order("updated_at", { ascending: false })
+            .limit(5),
+          supabase.from("principals").select("id, business_name"),
+        ]);
 
       if (casesRes.error) throw casesRes.error;
       if (activitiesRes.error) throw activitiesRes.error;
+      if (invoicesRes.error) throw invoicesRes.error;
       if (recentCasesRes.error) throw recentCasesRes.error;
       if (principalsRes.error) throw principalsRes.error;
 
       const cases = casesRes.data ?? [];
       const activities = activitiesRes.data ?? [];
-      const expenseActivityIds = activities
+      const invoices = invoicesRes.data ?? [];
+      const toInvoiceActivities = activities.filter((activity) => activity.status === "to_invoice");
+      const expenseActivityIds = toInvoiceActivities
         .filter((activity) => activity.kind === "expense_reimbursement")
         .map((activity) => activity.id);
       const attachmentsRes =
@@ -167,23 +171,41 @@ function DashboardContent() {
       const attachedActivityIds = new Set(
         (attachmentsRes.data ?? []).map((item) => item.activity_id),
       );
-      const openCases = cases.filter((c) => c.status === "open" || c.status === "in_progress");
-      const suspendedCases = cases.filter((c) => c.status === "suspended");
-      const closedCases = cases.filter((c) => c.status === "closed");
-      const archivedCases = cases.filter((c) => c.status === "archived");
-      const toInvoiceAmount = activities.reduce(
+      const activeCases = cases.filter((c) => c.status !== "closed" && c.status !== "archived");
+      const caseIdsWithActivities = new Set(activities.map((activity) => activity.case_id));
+      const casesWithoutActivities = activeCases.filter((c) => !caseIdsWithActivities.has(c.id));
+      const casesToComplete = activeCases.filter(
+        (c) =>
+          caseIdsWithActivities.has(c.id) &&
+          (!c.principal_id || !c.client_id || !c.counterparty_id),
+      );
+      const toInvoiceAmount = toInvoiceActivities.reduce(
         (sum, activity) => sum + Number(activity.amount ?? 0),
         0,
       );
-      const expenseWithoutAttachment = activities.filter(
+      const expenseWithoutAttachment = toInvoiceActivities.filter(
         (activity) =>
           activity.kind === "expense_reimbursement" && !attachedActivityIds.has(activity.id),
+      );
+      const draftInvoices = invoices.filter((invoice) => invoice.status === "draft");
+      const invoicesToCollect = invoices.filter(
+        (invoice) => invoice.status === "issued" || invoice.status === "overdue",
+      );
+      const today = new Date().toISOString().slice(0, 10);
+      const overdueInvoices = invoices.filter(
+        (invoice) =>
+          invoice.status === "overdue" ||
+          (invoice.status === "issued" && invoice.due_date && invoice.due_date < today),
+      );
+      const invoicesToCollectAmount = invoicesToCollect.reduce(
+        (sum, invoice) => sum + Number(invoice.net_to_pay ?? 0),
+        0,
       );
       const principalNames = new Map(
         (principalsRes.data ?? []).map((principal) => [principal.id, principal.business_name]),
       );
       const principalSummaries = Array.from(
-        activities
+        toInvoiceActivities
           .reduce((map, activity) => {
             const current = map.get(activity.principal_id) ?? {
               principalId: activity.principal_id,
@@ -202,12 +224,13 @@ function DashboardContent() {
         .slice(0, 4);
 
       return {
-        openCases: openCases.length,
-        suspendedCases: suspendedCases.length,
-        closedCases: closedCases.length,
-        archivedCases: archivedCases.length,
-        toInvoiceCount: activities.length,
+        casesWithoutActivities: casesWithoutActivities.length,
+        casesToComplete: casesToComplete.length,
+        toInvoiceCount: toInvoiceActivities.length,
         toInvoiceAmount,
+        draftInvoiceCount: draftInvoices.length,
+        invoicesToCollectAmount,
+        overdueInvoiceCount: overdueInvoices.length,
         expenseWithoutAttachmentCount: expenseWithoutAttachment.length,
         principalSummaries,
         recentCases: recentCasesRes.data ?? [],
@@ -219,7 +242,7 @@ function DashboardContent() {
     <>
       <PageHeader
         title="Dashboard"
-        description="Pratiche, attività da fatturare e committenti da tenere sotto controllo."
+        description="Pratiche, attività, fatture e rimborsi da tenere sotto controllo."
         actions={
           <>
             <Link to="/prezzi">
@@ -242,22 +265,17 @@ function DashboardContent() {
         }
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           icon={Briefcase}
-          label="Pratiche aperte"
-          value={isLoading ? "—" : String(data?.openCases ?? 0)}
+          label="Pratiche senza attività"
+          value={isLoading ? "—" : String(data?.casesWithoutActivities ?? 0)}
         />
         <StatCard
           icon={AlertTriangle}
-          label="Pratiche sospese"
-          value={isLoading ? "—" : String(data?.suspendedCases ?? 0)}
-          tone={data && data.suspendedCases > 0 ? "danger" : "default"}
-        />
-        <StatCard
-          icon={Briefcase}
-          label="Chiuse / archiviate"
-          value={isLoading ? "—" : `${data?.closedCases ?? 0} / ${data?.archivedCases ?? 0}`}
+          label="Pratiche da completare"
+          value={isLoading ? "—" : String(data?.casesToComplete ?? 0)}
+          tone={data && data.casesToComplete > 0 ? "danger" : "default"}
         />
         <StatCard
           icon={ListChecks}
@@ -269,6 +287,23 @@ function DashboardContent() {
           label="Maturato da fatturare"
           value={isLoading ? "—" : formatCurrency(data?.toInvoiceAmount ?? 0)}
           tone="gold"
+        />
+        <StatCard
+          icon={Receipt}
+          label="Fatture in bozza"
+          value={isLoading ? "—" : String(data?.draftInvoiceCount ?? 0)}
+        />
+        <StatCard
+          icon={Receipt}
+          label="Fatture da incassare"
+          value={isLoading ? "—" : formatCurrency(data?.invoicesToCollectAmount ?? 0)}
+          tone="gold"
+        />
+        <StatCard
+          icon={AlertTriangle}
+          label="Fatture scadute"
+          value={isLoading ? "—" : String(data?.overdueInvoiceCount ?? 0)}
+          tone={data && data.overdueInvoiceCount > 0 ? "danger" : "default"}
         />
         <StatCard
           icon={FileWarning}

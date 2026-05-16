@@ -41,6 +41,7 @@ import {
 } from "@/lib/labels";
 import { activityCaseLabel, type CaseActivityContext } from "@/lib/case-activities";
 import { buildActivityAttachmentStoragePath, PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
+import { useSubmitLock } from "@/lib/submit-lock";
 
 type PriceBookRow = {
   id: string;
@@ -380,6 +381,7 @@ export function CaseActivityDialog({
   const [attachmentNotes, setAttachmentNotes] = useState("");
   const isEditing = Boolean(activity);
   const open = controlledOpen ?? internalOpen;
+  const saveLock = useSubmitLock();
 
   const activityYear = currentYearFromDate(activityDate);
 
@@ -660,6 +662,7 @@ export function CaseActivityDialog({
       onSaved?.();
     },
     onError: (error: Error) => toast.error(error.message),
+    onSettled: saveLock.release,
   });
 
   const resetForm = () => {
@@ -694,6 +697,7 @@ export function CaseActivityDialog({
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+    if (!saveLock.acquire()) return;
     save.mutate();
   };
 

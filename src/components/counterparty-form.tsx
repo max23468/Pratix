@@ -29,6 +29,7 @@ import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { clientKindLabels, counterpartyKindLabels } from "@/lib/labels";
+import { useSubmitLock } from "@/lib/submit-lock";
 
 type CounterpartyKind = "individual" | "company" | "group";
 type SubjectKind = "individual" | "company";
@@ -95,6 +96,7 @@ export function CounterpartyForm({
   );
   const isEdit = Boolean(initial?.id);
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
+  const saveLock = useSubmitLock();
 
   const upd = <K extends keyof CounterpartyRow>(key: K, value: CounterpartyRow[K]) => {
     markDirty();
@@ -163,6 +165,7 @@ export function CounterpartyForm({
       onSaved(id);
     },
     onError: (error: Error) => toast.error(error.message),
+    onSettled: saveLock.release,
   });
 
   const deleteMutation = useMutation({
@@ -181,6 +184,7 @@ export function CounterpartyForm({
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+    if (!saveLock.acquire()) return;
     saveMutation.mutate();
   };
 

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { getPasswordUpdateErrorMessage, resetPasswordSchema } from "@/lib/auth-schemas";
+import { useSubmitLock } from "@/lib/submit-lock";
 
 export const Route = createFileRoute("/reimposta-password")({
   head: () => ({
@@ -34,6 +35,7 @@ function ResetPasswordPage() {
   const [submitting, setSubmitting] = useState(false);
   const [ready, setReady] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
+  const submitLock = useSubmitLock();
 
   // Quando l'utente arriva dal link email, Supabase imposta una sessione di
   // recovery. Aspettiamo che sia pronta prima di mostrare il form.
@@ -87,11 +89,13 @@ function ResetPasswordPage() {
       toast.error(parsed.error.issues[0]?.message ?? "Dati non validi");
       return;
     }
+    if (!submitLock.acquire()) return;
     setSubmitting(true);
     const { error } = await supabase.auth.updateUser({
       password: parsed.data.password,
     });
     setSubmitting(false);
+    submitLock.release();
     if (error) {
       toast.error(getPasswordUpdateErrorMessage(error.message));
       return;

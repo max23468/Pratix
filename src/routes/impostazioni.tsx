@@ -22,6 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { taxRegimeLabels } from "@/lib/labels";
+import { useSubmitLock } from "@/lib/submit-lock";
 
 export const Route = createFileRoute("/impostazioni")({
   head: () => ({
@@ -99,6 +100,7 @@ function SettingsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [form, setForm] = useState<ProfileForm>(empty);
+  const saveLock = useSubmitLock();
 
   const { data, isLoading } = useQuery({
     queryKey: ["profile-full", user?.id],
@@ -167,6 +169,7 @@ function SettingsPage() {
       qc.invalidateQueries({ queryKey: ["profile-invoice-defaults"] });
     },
     onError: (err: Error) => toast.error(err.message),
+    onSettled: saveLock.release,
   });
 
   return (
@@ -176,7 +179,9 @@ function SettingsPage() {
         description="Dati professionali, fiscalità, pagamenti e fatturazione. Account resta dedicato a profilo, accesso e tema."
         actions={
           <Button
-            onClick={() => saveMutation.mutate()}
+            onClick={() => {
+              if (saveLock.acquire()) saveMutation.mutate();
+            }}
             disabled={saveMutation.isPending || isLoading}
           >
             <Save className="mr-2 size-4" />

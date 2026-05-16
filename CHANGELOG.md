@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.2.4] — 2026-05-16
+
+### Correzioni
+
+- **Dashboard**: i KPI principali ora usano una griglia 4x2 su desktop e 2x4 su mobile, con pratiche senza attività, pratiche da completare, fatture e rimborsi operativi al posto del riepilogo chiuse/archiviate.
+- **Form**: i submit ripetuti durante un salvataggio non creano più duplicati nelle anagrafiche, nelle pratiche, nelle attività, nei prezzi e nelle fatture.
+
 ## [1.2.3] — 2026-05-16
 
 ### Correzioni
@@ -655,6 +662,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.2.4]: #124--2026-05-16
 [1.2.3]: #123--2026-05-16
 [1.2.2]: #122--2026-05-16
 [1.2.1]: #121--2026-05-16

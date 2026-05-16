@@ -29,6 +29,7 @@ import {
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useSubmitLock } from "@/lib/submit-lock";
 
 type ClientRow = {
   id?: string;
@@ -80,6 +81,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
   const qc = useQueryClient();
   const [form, setForm] = useState<ClientRow>({ ...empty, ...(initial ?? {}) });
   const [selectedPrincipalIds, setSelectedPrincipalIds] = useState<string[]>([]);
+  const saveLock = useSubmitLock();
 
   const isEdit = Boolean(initial?.id);
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
@@ -168,6 +170,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
       onSaved(id);
     },
     onError: (e: Error) => toast.error(e.message),
+    onSettled: saveLock.release,
   });
 
   const deleteMutation = useMutation({
@@ -194,6 +197,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
       toast.error("Inserisci la ragione sociale");
       return;
     }
+    if (!saveLock.acquire()) return;
     saveMutation.mutate();
   };
 

@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { forgotPasswordSchema } from "@/lib/auth-schemas";
+import { useSubmitLock } from "@/lib/submit-lock";
 import { isTurnstileEnabled } from "@/lib/turnstile";
 
 export const Route = createFileRoute("/recupera-password")({
@@ -37,6 +38,7 @@ function ForgotPasswordPage() {
   const [captchaResetSignal, setCaptchaResetSignal] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
+  const submitLock = useSubmitLock();
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -49,6 +51,7 @@ function ForgotPasswordPage() {
       toast.error("Completa la verifica di sicurezza.");
       return;
     }
+    if (!submitLock.acquire()) return;
     setSubmitting(true);
     // Tentiamo l'invio. Anche in caso di errore mostriamo lo stesso messaggio
     // generico per evitare user enumeration.
@@ -57,6 +60,7 @@ function ForgotPasswordPage() {
       ...(captchaToken ? { captchaToken } : {}),
     });
     setSubmitting(false);
+    submitLock.release();
     setCaptchaResetSignal((current) => current + 1);
     setSent(true);
   };
