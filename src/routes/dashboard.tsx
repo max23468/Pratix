@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
@@ -7,6 +8,7 @@ import {
   ChevronDown,
   FileInput,
   FileWarning,
+  GitCompareArrows,
   ListChecks,
   Plus,
   Receipt,
@@ -30,6 +32,7 @@ import {
 import { TableEmptyState } from "@/components/table-empty-state";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import type { DuplicateCandidate } from "@/lib/duplicate-matching";
 import { formatCurrency } from "@/lib/format";
 import {
   caseStatusLabels,
@@ -40,6 +43,8 @@ import {
   type CounterpartyDisplayData,
 } from "@/lib/labels";
 import { routeRef } from "@/lib/public-route-code";
+import { getAuthHeaders, readServerResult } from "@/lib/server-functions";
+import { scanDuplicateCandidatesFn } from "@/server/duplicates.functions";
 
 type CreateActionPath =
   | "/pratiche/nuova"
@@ -100,6 +105,18 @@ const CREATE_ACTIONS: Array<{
   },
 ];
 
+type DuplicateScanResult = {
+  openCandidates: DuplicateCandidate[];
+  resolvedCandidates: DuplicateCandidate[];
+};
+
+type DuplicateSummary = {
+  openCount: number;
+  highConfidenceCount: number;
+  snoozedCount: number;
+  resolvedCount: number;
+};
+
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
@@ -125,6 +142,7 @@ export const Route = createFileRoute("/dashboard")({
 function DashboardContent() {
   const { user } = useAuth();
   const userId = user?.id;
+  const scanDuplicates = useServerFn(scanDuplicateCandidatesFn);
 
   const { data, isLoading } = useQuery({
     enabled: !!userId,
@@ -239,6 +257,27 @@ function DashboardContent() {
     },
   });
 
+  const duplicateSummary = useQuery({
+    enabled: !!userId,
+    queryKey: ["dashboard-duplicate-summary", userId],
+    staleTime: 60_000,
+    queryFn: async (): Promise<DuplicateSummary> => {
+      const scan = await readServerResult<DuplicateScanResult>(
+        await scanDuplicates({
+          headers: await getAuthHeaders(),
+        }),
+      );
+      const open = scan.openCandidates.filter((candidate) => candidate.status === "open");
+      return {
+        openCount: open.length,
+        highConfidenceCount: open.filter((candidate) => candidate.confidence === "high").length,
+        snoozedCount: scan.openCandidates.filter((candidate) => candidate.status === "snoozed")
+          .length,
+        resolvedCount: scan.resolvedCandidates.length,
+      };
+    },
+  });
+
   return (
     <>
       <PageHeader
@@ -303,6 +342,12 @@ function DashboardContent() {
           tone={data && data.expenseWithoutAttachmentCount > 0 ? "danger" : "default"}
         />
       </div>
+
+      <DuplicateSummaryBox
+        summary={duplicateSummary.data}
+        isLoading={duplicateSummary.isLoading}
+        isError={duplicateSummary.isError}
+      />
 
       <Card className="mt-4 border-border/70 shadow-soft">
         <CardHeader>
@@ -423,6 +468,106 @@ function DashboardContent() {
         </Card>
       </div>
     </>
+  );
+}
+
+function DuplicateSummaryBox({
+  summary,
+  isLoading,
+  isError,
+}: {
+  summary?: DuplicateSummary;
+  isLoading: boolean;
+  isError: boolean;
+}) {
+  const openCount = summary?.openCount ?? 0;
+  const highConfidenceCount = summary?.highConfidenceCount ?? 0;
+  const hasOpen = openCount > 0;
+  const badgeText = isLoading
+    ? "Controllo…"
+    : isError
+      ? "Non disponibile"
+      : hasOpen
+        ? `${openCount} da verificare`
+        : "Dati in ordine";
+  const description = isError
+    ? "La sintesi non è disponibile in questo momento."
+    : hasOpen
+      ? "Ci sono coppie da rivedere prima di creare nuovi dati operativi."
+      : "Non risultano potenziali duplicati aperti.";
+
+  return (
+    <Card className="mt-4 border-border/70 shadow-soft">
+      <CardContent className="flex flex-col gap-4 p-4 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex min-w-0 items-start gap-3">
+          <span
+            className={`flex size-10 shrink-0 items-center justify-center rounded-lg ${
+              hasOpen ? "bg-destructive/10 text-destructive" : "bg-primary/5 text-primary"
+            }`}
+          >
+            <GitCompareArrows className="size-5" strokeWidth={1.7} />
+          </span>
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <h2 className="text-base font-semibold tracking-tight">Controllo duplicati</h2>
+              <Badge variant={hasOpen ? "destructive" : "secondary"}>{badgeText}</Badge>
+            </div>
+            <p className="mt-1 text-sm text-muted-foreground">{description}</p>
+          </div>
+        </div>
+
+        <div className="grid gap-2 sm:grid-cols-4 lg:min-w-[30rem]">
+          <DuplicateSummaryMetric
+            label="Da verificare"
+            value={isLoading ? "—" : String(openCount)}
+            tone={hasOpen ? "danger" : "default"}
+          />
+          <DuplicateSummaryMetric
+            label="Alta probabilità"
+            value={isLoading ? "—" : String(highConfidenceCount)}
+            tone={highConfidenceCount > 0 ? "danger" : "default"}
+          />
+          <DuplicateSummaryMetric
+            label="Rimandati"
+            value={isLoading ? "—" : String(summary?.snoozedCount ?? 0)}
+          />
+          <DuplicateSummaryMetric
+            label="Risolti"
+            value={isLoading ? "—" : String(summary?.resolvedCount ?? 0)}
+          />
+        </div>
+
+        <Button variant={hasOpen ? "default" : "outline"} asChild className="shrink-0">
+          <Link to="/controllo-duplicati">
+            <GitCompareArrows className="mr-1 size-4" />
+            Apri controllo
+          </Link>
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DuplicateSummaryMetric({
+  label,
+  value,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  tone?: "default" | "danger";
+}) {
+  return (
+    <div className="rounded-md border border-border/70 p-3">
+      <p className="text-[11px] leading-snug font-medium text-muted-foreground">{label}</p>
+      <p
+        className={`mt-1 text-lg leading-tight font-semibold tabular-nums ${
+          tone === "danger" ? "text-destructive" : "text-foreground"
+        }`}
+      >
+        {value}
+      </p>
+    </div>
   );
 }
 

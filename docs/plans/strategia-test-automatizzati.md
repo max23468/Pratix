@@ -250,9 +250,11 @@ Questo incremento porta la suite a 117 test distribuiti su 41 file, aggiungendo:
 - test sulla conferma di eliminazione account e deduplica dei path Storage;
 - test di contratto su RLS owner-scoped, RPC `apply_import_row` e policy Storage.
 
-Lo smoke autenticato è stato completato dopo conferma manuale dell'account
-test Supabase. L'account resta salvato nel Portachiavi locale come
-`pratix-codex-test-account` e va riusato solo con dati anonimi riconoscibili.
+Lo smoke autenticato usa l'account test Supabase solo tramite magic link
+generato server-side. Le password non fanno più parte del percorso operativo:
+il vecchio item Portachiavi `pratix-codex-test-account` è obsoleto e non va
+riusato. Per coprire le route autenticate, usare `npm run smoke:a11y:auth`, che
+recupera la service role dal Supabase CLI in memoria e non la salva nel repo.
 
 ## Incremento 2026-05-09 — smoke WebKit accessibilità/responsive
 
