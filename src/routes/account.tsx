@@ -34,6 +34,7 @@ import {
 import { AppearanceCard } from "@/components/appearance-card";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { PASSKEYS_ENABLED, passkeysUnavailableMessage } from "@/lib/passkeys";
 import {
   buildPersonalDataCsvArchive,
   buildPersonalDataJson,
@@ -463,7 +464,7 @@ function PasskeyAccessCard({ userId }: { userId: string }) {
     isLoading,
   } = useQuery({
     queryKey: ["account-passkeys", userId],
-    enabled: !!userId && passkeySupported,
+    enabled: PASSKEYS_ENABLED && !!userId && passkeySupported,
     queryFn: async () => {
       const { data, error } = await supabase.auth.passkey.list();
       if (error) throw error;
@@ -473,6 +474,7 @@ function PasskeyAccessCard({ userId }: { userId: string }) {
 
   const registerMutation = useMutation({
     mutationFn: async () => {
+      if (!PASSKEYS_ENABLED) throw new Error(passkeysUnavailableMessage());
       if (!passkeySupported)
         throw new Error("Le passkey non sono disponibili su questo dispositivo");
       const { error } = await supabase.auth.registerPasskey();
@@ -510,7 +512,9 @@ function PasskeyAccessCard({ userId }: { userId: string }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {passkeySupported ? (
+        {!PASSKEYS_ENABLED ? (
+          <p className="text-sm text-muted-foreground">{passkeysUnavailableMessage()}</p>
+        ) : passkeySupported ? (
           <div className="space-y-3">
             {isLoading ? (
               <p className="text-sm text-muted-foreground">Caricamento passkey…</p>
@@ -564,7 +568,7 @@ function PasskeyAccessCard({ userId }: { userId: string }) {
             onClick={() => {
               if (submitLock.acquire()) registerMutation.mutate();
             }}
-            disabled={!passkeySupported || registerMutation.isPending}
+            disabled={!PASSKEYS_ENABLED || !passkeySupported || registerMutation.isPending}
           >
             {registerMutation.isPending ? "Aggiunta…" : "Aggiungi passkey"}
           </Button>

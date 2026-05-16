@@ -149,7 +149,10 @@ Al 2026-05-16 il percorso free-tier scelto è:
 
 - registrazione aperta;
 - magic link via email come metodo principale;
-- passkey come accesso rapido sperimentale, con magic link come fallback;
+- passkey come accesso rapido sperimentale parcheggiato dietro
+  `VITE_ENABLE_PASSKEYS=true`: al 2026-05-16 il progetto hosted risponde
+  `Passkey configuration is not currently available` al tentativo di abilitare
+  `auth.passkey`/`auth.webauthn` via `supabase config push`;
 - `/recupera-password` e `/reimposta-password` restano come pagine informative
   no-password per vecchi link o bookmark;
 - MFA non implementata per scelta attuale;
