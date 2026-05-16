@@ -118,9 +118,24 @@ const { toast, supabase, query, single } = vi.hoisted(() => {
   };
 });
 
+let activeBlocker: { blockerFn: () => boolean | Promise<boolean> } | null = null;
+
 vi.mock("sonner", () => ({ toast }));
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase }));
+
+vi.mock("@tanstack/react-router", () => ({
+  useRouter: () => ({
+    history: {
+      block: (blocker: { blockerFn: () => boolean | Promise<boolean> }) => {
+        activeBlocker = blocker;
+        return () => {
+          activeBlocker = null;
+        };
+      },
+    },
+  }),
+}));
 
 vi.mock("@/lib/auth-context", () => ({
   useAuth: () => ({
@@ -169,6 +184,7 @@ function Wrapper({ children }: { children: ReactNode }) {
 describe("CaseForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    activeBlocker = null;
     single.mockReset();
     single.mockResolvedValue({ data: { id: "case-1" }, error: null });
   });
@@ -332,6 +348,39 @@ describe("CaseForm", () => {
       }),
     );
     expect(onSaved).toHaveBeenCalledWith("case-1");
+  });
+
+  it("non segnala modifiche non salvate mentre carica una pratica esistente", async () => {
+    render(
+      <CaseForm
+        initial={{
+          id: "case-1",
+          principal_id: "principal-1",
+          client_id: "client-1",
+          counterparty_id: "counterparty-1",
+          practice_number: 42,
+          case_number: "42",
+          title: "Pratica esistente",
+          matter: "civile",
+          status: "open",
+          opened_at: "2026-05-09",
+        }}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+      { wrapper: Wrapper },
+    );
+
+    await screen.findByText("Ada Rossi");
+    expect(activeBlocker).not.toBeNull();
+
+    const result = await Promise.race([
+      Promise.resolve(activeBlocker!.blockerFn()),
+      new Promise((resolve) => window.setTimeout(() => resolve("blocked"), 0)),
+    ]);
+
+    expect(result).toBe(false);
+    expect(screen.queryByText("Modifiche non salvate")).toBeNull();
   });
 
   it("blocca salvataggio senza selezioni obbligatorie o numero pratica valido", async () => {

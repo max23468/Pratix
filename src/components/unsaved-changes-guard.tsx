@@ -94,11 +94,13 @@ export function useUnsavedChangesGuard({
   }, [disabled, isDirty]);
 
   const markDirty = useCallback(() => {
+    isDirtyRef.current = true;
     setIsDirty(true);
   }, []);
 
   const leaveWithoutSaving = useCallback(() => {
     saveRequestedFromDialogRef.current = false;
+    isDirtyRef.current = false;
     setIsDirty(false);
     blocker.proceed?.();
   }, [blocker]);
@@ -114,6 +116,7 @@ export function useUnsavedChangesGuard({
   }, []);
 
   const finishSave = useCallback(() => {
+    isDirtyRef.current = false;
     setIsDirty(false);
     if (saveRequestedFromDialogRef.current && blocker.status === "blocked") {
       saveRequestedFromDialogRef.current = false;

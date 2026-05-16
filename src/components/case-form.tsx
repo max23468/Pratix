@@ -206,7 +206,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
     }));
   }, [form.practice_number, isEdit, nextPracticeNumber]);
 
-  const { data: clients = [] } = useQuery({
+  const { data: clients = [], isFetched: clientsFetched } = useQuery({
     queryKey: ["clients", "case-form"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -218,7 +218,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
     },
   });
 
-  const { data: principalClientIds = [] } = useQuery({
+  const { data: principalClientIds = [], isFetched: principalClientIdsFetched } = useQuery({
     queryKey: ["principal-clients", "case-form", form.principal_id],
     enabled: Boolean(form.principal_id),
     queryFn: async () => {
@@ -244,10 +244,17 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
   }, [allClients, form.client_id, form.principal_id, principalClientIds]);
 
   useEffect(() => {
+    if (!clientsFetched || !principalClientIdsFetched) return;
     if (!form.principal_id || !form.client_id) return;
     if (availableClients.some((client) => client.id === form.client_id)) return;
-    upd("client_id", null);
-  }, [availableClients, form.client_id, form.principal_id, upd]);
+    setForm((current) => ({ ...current, client_id: null }));
+  }, [
+    availableClients,
+    clientsFetched,
+    form.client_id,
+    form.principal_id,
+    principalClientIdsFetched,
+  ]);
 
   const createQuickPrincipalMutation = useMutation({
     mutationFn: async () => {

@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.2.1] — 2026-05-16
+
+### Correzioni
+
+- **Form**: il guard delle modifiche non salvate non compare più subito dopo aver premuto Salva o durante il caricamento iniziale di una Pratica.
+
 ## [1.2.0] — 2026-05-16
 
 ### Novità
@@ -637,6 +643,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.2.1]: #121--2026-05-16
 [1.2.0]: #120--2026-05-16
 [1.1.5]: #115--2026-05-16
 [1.1.4]: #114--2026-05-16
