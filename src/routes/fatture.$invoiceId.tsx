@@ -46,6 +46,7 @@ import { downloadBytes } from "@/lib/invoice-file-exports";
 import type { InvoiceLineKind } from "@/lib/invoice-calc";
 import { invoiceLineKindLabels } from "@/lib/invoice-calc";
 import type { InvoicePdfData } from "@/lib/invoice-pdf";
+import { getUnpaidInvoiceStatus } from "@/lib/invoice-status";
 import { invoiceStatusLabels, invoiceStatusVariant } from "@/lib/labels";
 import { publicCodeLookup } from "@/lib/public-route-code";
 import { PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
@@ -231,9 +232,10 @@ function InvoiceDetailPage() {
     mutationFn: async () => {
       const resolvedInvoiceId = data?.invoice.id;
       if (!resolvedInvoiceId) throw new Error("Fattura non caricata");
+      const unpaidStatus = getUnpaidInvoiceStatus(data?.invoice.due_date);
       const { data: updatedInvoice, error } = await supabase
         .from("invoices")
-        .update({ status: "issued", paid_at: null })
+        .update({ status: unpaidStatus, paid_at: null })
         .eq("id", resolvedInvoiceId)
         .eq("status", "paid")
         .select("id")
@@ -554,14 +556,19 @@ function InvoiceDetailPage() {
                 </Button>
               )}
               {canUnmarkIssued && (
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => unmarkIssuedMutation.mutate()}
-                  disabled={unmarkIssuedMutation.isPending}
-                >
-                  <RotateCcw className="mr-2 size-4" /> Riporta in bozza
-                </Button>
+                <div className="space-y-1">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => unmarkIssuedMutation.mutate()}
+                    disabled={unmarkIssuedMutation.isPending}
+                  >
+                    <RotateCcw className="mr-2 size-4" /> Riporta in bozza
+                  </Button>
+                  <p className="text-xs text-muted-foreground">
+                    Le Attività restano collegate a questa fattura e non tornano da fatturare.
+                  </p>
+                </div>
               )}
               {canMarkPaid && (
                 <Button
