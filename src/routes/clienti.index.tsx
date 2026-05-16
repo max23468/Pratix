@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
+import { SortableTableHead } from "@/components/sortable-table-head";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -16,22 +17,59 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TableEmptyState } from "@/components/table-empty-state";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { clientDisplayName, clientKindLabels } from "@/lib/labels";
 import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
 } from "@/lib/table-row-navigation";
+import {
+  parseTableSortDirection,
+  parseTableSortKey,
+  sortRows,
+  usePersistentTableSort,
+  type SortableColumn,
+  type TableSort,
+} from "@/lib/table-sorting";
+
+type ClientiSearch = {
+  sort?: ClientiSortKey;
+  dir?: "asc" | "desc";
+};
+
+type ClientListRow = {
+  id: string;
+  kind: string;
+  first_name: string | null;
+  last_name: string | null;
+  business_name: string | null;
+  tax_code: string | null;
+  vat_number: string | null;
+  email: string | null;
+  address_city: string | null;
+  created_at: string;
+};
+
+const clientiSortKeys = [
+  "name",
+  "kind",
+  "principals",
+  "tax",
+  "email",
+  "city",
+  "created_at",
+] as const;
+
+type ClientiSortKey = (typeof clientiSortKeys)[number];
+
+const clientiDefaultSort: TableSort<ClientiSortKey> = { key: "created_at", direction: "desc" };
 
 export const Route = createFileRoute("/clienti/")({
+  validateSearch: (search: Record<string, unknown>): ClientiSearch => ({
+    sort: parseTableSortKey(search.sort, clientiSortKeys),
+    dir: parseTableSortDirection(search.dir),
+  }),
   head: () => ({
     meta: [
       { title: "Clienti · Pratix" },
@@ -49,9 +87,12 @@ export const Route = createFileRoute("/clienti/")({
 
 function ClientiList() {
   const navigate = Route.useNavigate();
+  const search = Route.useSearch();
   const [q, setQ] = useState("");
   const [kind, setKind] = useState("all");
   const [principalId, setPrincipalId] = useState("all");
+  const urlSort =
+    search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
 
   const { data, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -61,7 +102,7 @@ function ClientiList() {
         .select("*")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      return (data ?? []) as ClientListRow[];
     },
   });
 
@@ -98,6 +139,46 @@ function ClientiList() {
     }, {});
   }, [principalLinks, principals]);
 
+  const clientiColumns = useMemo<readonly SortableColumn<ClientListRow, ClientiSortKey>[]>(
+    () => [
+      { key: "name", label: "Nome", getValue: (client) => clientDisplayName(client) },
+      {
+        key: "kind",
+        label: "Tipo",
+        getValue: (client) => clientKindLabels[client.kind] ?? client.kind,
+      },
+      {
+        key: "principals",
+        label: "Committenti",
+        getValue: (client) => principalNamesByClient[client.id]?.join(", ") || null,
+      },
+      {
+        key: "tax",
+        label: "CF / P.IVA",
+        getValue: (client) => client.vat_number || client.tax_code,
+      },
+      { key: "email", label: "Email", getValue: (client) => client.email },
+      { key: "city", label: "Città", getValue: (client) => client.address_city },
+      {
+        key: "created_at",
+        label: "Creazione",
+        valueType: "date",
+        defaultDirection: "desc",
+        getValue: (client) => client.created_at,
+      },
+    ],
+    [principalNamesByClient],
+  );
+
+  const { sort, setSort } = usePersistentTableSort({
+    section: "clienti",
+    columns: clientiColumns,
+    defaultSort: clientiDefaultSort,
+    urlSort,
+    onSortChange: (next) =>
+      navigate({ search: { sort: next.key, dir: next.direction }, replace: true }),
+  });
+
   const filtered = useMemo(() => {
     if (!data) return [];
     const term = q.trim().toLowerCase();
@@ -121,6 +202,11 @@ function ClientiList() {
       );
     });
   }, [data, kind, principalId, principalLinks, principalNamesByClient, q]);
+
+  const sorted = useMemo(
+    () => sortRows(filtered, clientiColumns, sort),
+    [clientiColumns, filtered, sort],
+  );
 
   const openClient = (clientId: string) =>
     navigate({ to: "/clienti/$clientId", params: { clientId } });
@@ -182,12 +268,17 @@ function ClientiList() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Nome</TableHead>
-              <TableHead>Tipo</TableHead>
-              <TableHead>Committenti</TableHead>
-              <TableHead>CF / P.IVA</TableHead>
-              <TableHead>Email</TableHead>
-              <TableHead>Città</TableHead>
+              <SortableTableHead columnKey="name" label="Nome" sort={sort} onSort={setSort} />
+              <SortableTableHead columnKey="kind" label="Tipo" sort={sort} onSort={setSort} />
+              <SortableTableHead
+                columnKey="principals"
+                label="Committenti"
+                sort={sort}
+                onSort={setSort}
+              />
+              <SortableTableHead columnKey="tax" label="CF / P.IVA" sort={sort} onSort={setSort} />
+              <SortableTableHead columnKey="email" label="Email" sort={sort} onSort={setSort} />
+              <SortableTableHead columnKey="city" label="Città" sort={sort} onSort={setSort} />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -197,7 +288,7 @@ function ClientiList() {
                   Caricamento…
                 </TableCell>
               </TableRow>
-            ) : filtered.length === 0 ? (
+            ) : sorted.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
                   <TableEmptyState
@@ -222,7 +313,7 @@ function ClientiList() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((c) => {
+              sorted.map((c) => {
                 const displayName = clientDisplayName(c);
                 return (
                   <TableRow

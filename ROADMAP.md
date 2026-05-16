@@ -68,6 +68,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Scheda economica della Pratica     | Compensi, rimborsi spese, maturato, da fatturare, fatturato, incassato e residuo operativo                                                                               |
 | ✅    | Controlli qualità dati             | Avvisi su soggetti mancanti, Attività senza allegati, importi da fatturare e Fatture in bozza                                                                            |
 | ✅    | Workflow recupero crediti          | Il cruscotto Pratica mostra stato operativo, priorità, prossima azione e motivo calcolati da Attività, Fatture, stato e qualità dati                                     |
+| 🟡    | Tabelle ordinabili e persistenti   | Intestazioni cliccabili per le liste operative; preferenza ordinamento sincronizzata per utente fra dispositivi tramite Supabase                                         |
 
 ## 4. Funzionalità di prodotto
 

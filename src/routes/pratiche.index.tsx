@@ -4,19 +4,13 @@ import { useQuery } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
+import { SortableTableHead } from "@/components/sortable-table-head";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { TableEmptyState } from "@/components/table-empty-state";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -36,8 +30,67 @@ import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
 } from "@/lib/table-row-navigation";
+import {
+  parseTableSortDirection,
+  parseTableSortKey,
+  sortRows,
+  usePersistentTableSort,
+  type SortableColumn,
+  type TableSort,
+} from "@/lib/table-sorting";
+
+type PraticheSearch = {
+  sort?: PraticheSortKey;
+  dir?: "asc" | "desc";
+};
+
+type PracticeListRow = {
+  id: string;
+  case_number: string;
+  practice_number: number;
+  title: string;
+  status: string;
+  opened_at: string;
+  updated_at: string;
+  client_id: string | null;
+  principal_id: string | null;
+  counterparty_id: string | null;
+  principals: { business_name: string } | null;
+  clients: {
+    kind: string;
+    first_name: string | null;
+    last_name: string | null;
+    business_name: string | null;
+  } | null;
+  counterparties: {
+    kind: string;
+    first_name: string | null;
+    last_name: string | null;
+    business_name: string | null;
+  } | null;
+};
+
+const praticheSortKeys = [
+  "practice_number",
+  "title",
+  "principal",
+  "client",
+  "counterparty",
+  "status",
+  "billing",
+  "opened_at",
+  "updated_at",
+] as const;
+
+type PraticheSortKey = (typeof praticheSortKeys)[number];
+
+const praticheDefaultSort: TableSort<PraticheSortKey> = { key: "updated_at", direction: "desc" };
 
 export const Route = createFileRoute("/pratiche/")({
+  validateSearch: (search: Record<string, unknown>): PraticheSearch => ({
+    sort: parseTableSortKey(search.sort, praticheSortKeys),
+    dir: parseTableSortDirection(search.dir),
+  }),
   head: () => ({
     meta: [
       { title: "Pratiche · Pratix" },
@@ -55,9 +108,11 @@ export const Route = createFileRoute("/pratiche/")({
 
 function PraticheList() {
   const navigate = Route.useNavigate();
+  const search = Route.useSearch();
   const [q, setQ] = useState("");
   const [view, setView] = useState<string>("open");
-  const [sort, setSort] = useState<string>("updated_desc");
+  const urlSort =
+    search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
 
   const { data, isLoading } = useQuery({
     queryKey: ["cases"],
@@ -69,7 +124,7 @@ function PraticheList() {
         )
         .order("updated_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as PracticeListRow[];
     },
   });
 
@@ -99,10 +154,75 @@ function PraticheList() {
     }, {});
   }, [activities]);
 
+  const praticheColumns = useMemo<readonly SortableColumn<PracticeListRow, PraticheSortKey>[]>(
+    () => [
+      {
+        key: "practice_number",
+        label: "Numero",
+        valueType: "number",
+        defaultDirection: "desc",
+        getValue: (practice) => practice.practice_number,
+      },
+      { key: "title", label: "Pratica", getValue: (practice) => practice.title },
+      {
+        key: "principal",
+        label: "Committente",
+        getValue: (practice) => practice.principals?.business_name,
+      },
+      {
+        key: "client",
+        label: "Cliente",
+        getValue: (practice) => (practice.clients ? clientDisplayName(practice.clients) : null),
+      },
+      {
+        key: "counterparty",
+        label: "Controparte",
+        getValue: (practice) =>
+          practice.counterparties ? counterpartyDisplayName(practice.counterparties) : null,
+      },
+      {
+        key: "status",
+        label: "Stato",
+        getValue: (practice) => caseStatusLabels[practice.status] ?? practice.status,
+      },
+      {
+        key: "billing",
+        label: "Fatturazione",
+        valueType: "number",
+        defaultDirection: "desc",
+        getValue: (practice) => activitySummaryByCase[practice.id]?.toInvoiceAmount ?? 0,
+      },
+      {
+        key: "opened_at",
+        label: "Aperta il",
+        valueType: "date",
+        defaultDirection: "desc",
+        getValue: (practice) => practice.opened_at,
+      },
+      {
+        key: "updated_at",
+        label: "Aggiornamento",
+        valueType: "date",
+        defaultDirection: "desc",
+        getValue: (practice) => practice.updated_at,
+      },
+    ],
+    [activitySummaryByCase],
+  );
+
+  const { sort, setSort } = usePersistentTableSort({
+    section: "pratiche",
+    columns: praticheColumns,
+    defaultSort: praticheDefaultSort,
+    urlSort,
+    onSortChange: (next) =>
+      navigate({ search: { sort: next.key, dir: next.direction }, replace: true }),
+  });
+
   const filtered = useMemo(() => {
     if (!data) return [];
     const term = q.trim().toLowerCase();
-    const result = data.filter((c) => {
+    return data.filter((c) => {
       const summary = activitySummaryByCase[c.id] ?? {
         toInvoice: 0,
         invoiced: 0,
@@ -128,16 +248,12 @@ function PraticheList() {
         counterpartyName.includes(term)
       );
     });
+  }, [activitySummaryByCase, data, q, view]);
 
-    return result.toSorted((a, b) => {
-      const aSummary = activitySummaryByCase[a.id]?.toInvoiceAmount ?? 0;
-      const bSummary = activitySummaryByCase[b.id]?.toInvoiceAmount ?? 0;
-      if (sort === "practice_asc") return a.practice_number - b.practice_number;
-      if (sort === "practice_desc") return b.practice_number - a.practice_number;
-      if (sort === "to_invoice_desc") return bSummary - aSummary;
-      return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
-    });
-  }, [activitySummaryByCase, data, q, sort, view]);
+  const sorted = useMemo(
+    () => sortRows(filtered, praticheColumns, sort),
+    [filtered, praticheColumns, sort],
+  );
 
   const openCase = (caseId: string) => navigate({ to: "/pratiche/$caseId", params: { caseId } });
 
@@ -179,31 +295,45 @@ function PraticheList() {
             <SelectItem value="archived">Archiviate</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={sort} onValueChange={setSort}>
-          <SelectTrigger aria-label="Ordina pratiche" className="lg:w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="updated_desc">Aggiornate di recente</SelectItem>
-            <SelectItem value="practice_desc">Numero pratica decrescente</SelectItem>
-            <SelectItem value="practice_asc">Numero pratica crescente</SelectItem>
-            <SelectItem value="to_invoice_desc">Da fatturare</SelectItem>
-          </SelectContent>
-        </Select>
       </div>
 
       <Card>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Numero</TableHead>
-              <TableHead>Pratica</TableHead>
-              <TableHead>Committente</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Controparte</TableHead>
-              <TableHead>Stato</TableHead>
-              <TableHead>Fatturazione</TableHead>
-              <TableHead>Aperta il</TableHead>
+              <SortableTableHead
+                columnKey="practice_number"
+                label="Numero"
+                sort={sort}
+                onSort={setSort}
+              />
+              <SortableTableHead columnKey="title" label="Pratica" sort={sort} onSort={setSort} />
+              <SortableTableHead
+                columnKey="principal"
+                label="Committente"
+                sort={sort}
+                onSort={setSort}
+              />
+              <SortableTableHead columnKey="client" label="Cliente" sort={sort} onSort={setSort} />
+              <SortableTableHead
+                columnKey="counterparty"
+                label="Controparte"
+                sort={sort}
+                onSort={setSort}
+              />
+              <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={setSort} />
+              <SortableTableHead
+                columnKey="billing"
+                label="Fatturazione"
+                sort={sort}
+                onSort={setSort}
+              />
+              <SortableTableHead
+                columnKey="opened_at"
+                label="Aperta il"
+                sort={sort}
+                onSort={setSort}
+              />
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -213,7 +343,7 @@ function PraticheList() {
                   Caricamento…
                 </TableCell>
               </TableRow>
-            ) : filtered.length === 0 ? (
+            ) : sorted.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
                   <TableEmptyState
@@ -236,7 +366,7 @@ function PraticheList() {
                 </TableCell>
               </TableRow>
             ) : (
-              filtered.map((c) => {
+              sorted.map((c) => {
                 const summary = activitySummaryByCase[c.id] ?? {
                   toInvoice: 0,
                   invoiced: 0,

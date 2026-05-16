@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.2.0] — 2026-05-16
+
+### Novità
+
+- **Liste ordinabili**: le colonne principali delle sezioni operative diventano ordinabili e ricordano l'ultimo ordinamento dell'utente fra dispositivi.
+
 ## [1.1.5] — 2026-05-16
 
 ### Correzioni
@@ -631,6 +637,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.2.0]: #120--2026-05-16
 [1.1.5]: #115--2026-05-16
 [1.1.4]: #114--2026-05-16
 [1.1.3]: #113--2026-05-16
