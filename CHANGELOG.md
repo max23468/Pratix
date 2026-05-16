@@ -21,6 +21,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 - **Supabase Auth**: tracciato il template Magic Link italiano e allineata la configurazione remota Auth senza reintrodurre password nella UI.
 - **Smoke autenticato**: `npm run smoke:a11y` usa un magic link Supabase generato server-side quando è presente la service role key locale, senza dipendere da password tradizionali.
 
+## [1.2.19] — 2026-05-16
+
+### Correzioni
+
+- **Rendiconti Excel**: riallineati i tracciati generati ai template onorari e rimborsi spese ricevuti, mantenendo la compatibilità dei file `.xlsx`.
+
 ## [1.2.18] — 2026-05-16
 
 ### Correzioni
@@ -766,6 +772,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 
 [Non rilasciato]: #non-rilasciato
 [1.3.0]: #130--2026-05-16
+[1.2.19]: #1219--2026-05-16
 [1.2.18]: #1218--2026-05-16
 [1.2.17]: #1217--2026-05-16
 [1.2.16]: #1216--2026-05-16
