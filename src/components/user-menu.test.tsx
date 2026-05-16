@@ -8,7 +8,15 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const { signOut } = vi.hoisted(() => ({ signOut: vi.fn() }));
 
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ to, children }: { to: string; children: ReactNode }) => <a href={to}>{children}</a>,
+  Link: ({
+    to,
+    search,
+    children,
+  }: {
+    to: string;
+    search?: { tab?: string };
+    children: ReactNode;
+  }) => <a href={search?.tab ? `${to}?tab=${search.tab}` : to}>{children}</a>,
 }));
 
 vi.mock("@/lib/auth-context", () => ({
@@ -41,6 +49,21 @@ describe("UserMenu", () => {
 
     expect(screen.getByText("A")).toBeTruthy();
     expect(screen.getByText("avvocato@example.test")).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Profilo/i }).getAttribute("href")).toBe(
+      "/account?tab=profilo",
+    );
+    expect(screen.getByRole("link", { name: /Accesso e sicurezza/i }).getAttribute("href")).toBe(
+      "/account?tab=sicurezza",
+    );
+    expect(screen.getByRole("link", { name: /Aspetto/i }).getAttribute("href")).toBe(
+      "/account?tab=aspetto",
+    );
+    expect(screen.getByRole("link", { name: /Notifiche/i }).getAttribute("href")).toBe(
+      "/account?tab=notifiche",
+    );
+    expect(screen.getByRole("link", { name: /Dati/i }).getAttribute("href")).toBe(
+      "/account?tab=dati",
+    );
 
     await userEvent.click(screen.getByText("Esci"));
 

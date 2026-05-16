@@ -1,4 +1,4 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useEffect, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -47,22 +47,37 @@ import { useSubmitLock } from "@/lib/submit-lock";
 import { deleteAccountFn } from "@/server/account.functions";
 
 export const Route = createFileRoute("/account")({
+  validateSearch: (search: Record<string, unknown>): AccountSearch => ({
+    tab: parseAccountTab(search.tab),
+  }),
   head: () => ({
     meta: [
       { title: "Account · Pratix" },
       {
         name: "description",
-        content: "Profilo, accesso, sicurezza e aspetto del tuo account Pratix.",
+        content: "Profilo, accesso, aspetto, notifiche e dati del tuo account Pratix.",
       },
       { property: "og:title", content: "Account · Pratix" },
       {
         property: "og:description",
-        content: "Profilo, accesso, sicurezza e aspetto del tuo account Pratix.",
+        content: "Profilo, accesso, aspetto, notifiche e dati del tuo account Pratix.",
       },
     ],
   }),
   component: AccountPage,
 });
+
+const accountTabs = ["profilo", "sicurezza", "aspetto", "notifiche", "dati"] as const;
+
+type AccountTab = (typeof accountTabs)[number];
+
+type AccountSearch = {
+  tab?: AccountTab;
+};
+
+function parseAccountTab(tab: unknown) {
+  return accountTabs.includes(tab as AccountTab) ? (tab as AccountTab) : undefined;
+}
 
 type ProfileForm = {
   full_name: string;
@@ -100,7 +115,9 @@ const readServerResult = async <T,>(result: T | { data: T } | Response) => {
 function AccountPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
-  const navigate = useNavigate();
+  const navigate = Route.useNavigate();
+  const search = Route.useSearch();
+  const activeTab = search.tab ?? "profilo";
   const [form, setForm] = useState<ProfileForm>({ full_name: "", email: "", phone: "" });
   const saveLock = useSubmitLock();
 
@@ -147,10 +164,19 @@ function AccountPage() {
     <AppLayout>
       <PageHeader
         title="Account"
-        description="Profilo, accesso, sicurezza e preferenze personali del professionista."
+        description="Profilo, accesso, aspetto, notifiche e dati personali del professionista."
       />
 
-      <Tabs defaultValue="profilo" className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={(nextTab) => {
+          navigate({
+            search: { tab: parseAccountTab(nextTab) },
+            replace: true,
+          });
+        }}
+        className="space-y-4"
+      >
         <TabsList className="flex flex-wrap">
           <TabsTrigger value="profilo">Profilo</TabsTrigger>
           <TabsTrigger value="sicurezza">Accesso e sicurezza</TabsTrigger>

@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.3.4] — 2026-05-16
+
+### Correzioni
+
+- **Menu account**: il pannellino in alto a destra ora espone solo le cinque sezioni di `/account`: Profilo, Accesso e sicurezza, Aspetto, Notifiche e Dati.
+
 ## [1.3.3] — 2026-05-16
 
 ### Correzioni
@@ -789,6 +795,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.3.4]: #134--2026-05-16
 [1.3.3]: #133--2026-05-16
 [1.3.2]: #132--2026-05-16
 [1.3.1]: #131--2026-05-16
