@@ -4,7 +4,6 @@ import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileSpreadsheet, Loader2 } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -624,17 +623,17 @@ export function InvoiceForm() {
               <SummaryRow label="Totale documento" value={totals.totalAmount} strong />
               <SummaryRow label="Netto a pagare" value={totals.netToPay} strong />
             </div>
-            <Badge variant="outline" className="max-w-full gap-1 whitespace-normal text-left">
-              <FileSpreadsheet className="size-3.5" />
-              Genera rendiconti compensi e rimborsi
-            </Badge>
+            <div className="flex items-start gap-2 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground">
+              <FileSpreadsheet className="mt-0.5 size-4 shrink-0" />
+              <span>La fattura genera anche i rendiconti Excel per compensi e rimborsi.</span>
+            </div>
             <Button
               type="submit"
               className="w-full"
               disabled={createInvoice.isPending || includedActivities.length === 0}
             >
               {createInvoice.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-              Genera fattura
+              Genera fattura e rendiconti
             </Button>
           </CardContent>
         </Card>

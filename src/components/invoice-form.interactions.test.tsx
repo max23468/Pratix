@@ -233,7 +233,7 @@ describe("InvoiceForm", () => {
       screen.getByPlaceholderText("Note interne o descrizione da riportare in fattura"),
       "Note fattura",
     );
-    await userEvent.click(screen.getByRole("button", { name: /Genera fattura/ }));
+    await userEvent.click(screen.getByRole("button", { name: /Genera fattura e rendiconti/ }));
 
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Fattura 12/2026 generata"));
     expect(createBillingInvoice).toHaveBeenCalledWith(

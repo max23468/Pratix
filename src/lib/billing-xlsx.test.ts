@@ -79,4 +79,19 @@ describe("buildBillingWorkbook", () => {
     expect(worksheetXml).toContain('<c r="F5"><v>1</v></c>');
     expect(worksheetXml).toContain('<c r="G5"><v>118.5</v></c>');
   });
+
+  it("mantiene compatto il nome file dei rendiconti con committenti lunghi", () => {
+    const { file } = readWorkbookParts({
+      kind: "expenses",
+      principalName: "Committente con denominazione molto lunga e area legale recupero crediti",
+      periodStart: "2026-04-01",
+      periodEnd: "2026-06-30",
+      rows: [],
+    });
+
+    expect(file.fileName).toBe(
+      "rimborsi-spese-Committente-con-denominazione-molto-lung-2026-04-01-2026-06-30.xlsx",
+    );
+    expect(file.fileName.length).toBeLessThanOrEqual(90);
+  });
 });

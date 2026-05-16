@@ -43,7 +43,7 @@ const safeFileSegment = (value: string) =>
     .trim()
     .replace(/[^A-Za-z0-9_-]+/g, "-")
     .replace(/^-+|-+$/g, "")
-    .slice(0, 80) || "committente";
+    .slice(0, 40) || "committente";
 
 const columnName = (index: number) => {
   let value = index + 1;
