@@ -4,10 +4,12 @@ import {
   assertIncludedActivitiesBillable,
   billedPartyForInvoiceXml,
   buildBillingExportRows,
+  buildBillingExportRowsFromInvoiceLines,
   buildBillingRunItemRows,
   buildBillingRunRow,
   buildInvoiceLineRows,
   buildInvoiceRow,
+  draftPostponedActivityUpdate,
   firstIncludedClientId,
   invoiceLinesForTotals,
   partitionBillingActivities,
@@ -212,6 +214,61 @@ describe("selezioni e attività fatturabili", () => {
       postponed_until: "2026-06-01",
       postponed_count: 3,
     });
+    expect(
+      draftPostponedActivityUpdate({
+        activity: activity({ postponed_count: "2" }),
+        periodEnd: "2026-05-31",
+        previousStatus: "postponed",
+      }),
+    ).toEqual({
+      id: "activity-fee",
+      postponed_until: "2026-06-01",
+      postponed_count: 2,
+    });
+  });
+
+  it("ricostruisce i rendiconti dagli snapshot delle righe fattura", () => {
+    expect(
+      buildBillingExportRowsFromInvoiceLines(
+        [
+          {
+            practice_number: 42,
+            client_name: "Cliente snapshot",
+            counterparty_name: "Controparte snapshot",
+            activity_date: "2026-05-10",
+            kind: "fee",
+            description: "Compenso snapshot",
+            quantity: "2",
+            unit_price: "125",
+            amount: "250",
+          },
+          {
+            practice_number: 43,
+            client_name: "Cliente spese",
+            counterparty_name: "Controparte spese",
+            activity_date: "2026-05-11",
+            kind: "expense_art15",
+            description: "Anticipazione",
+            quantity: 1,
+            unit_price: 18,
+            amount: 18,
+          },
+        ],
+        "fees",
+      ),
+    ).toEqual([
+      {
+        practiceNumber: 42,
+        clientName: "Cliente snapshot",
+        counterpartyName: "Controparte snapshot",
+        activityDate: "2026-05-10",
+        description: "Compenso snapshot",
+        quantity: 2,
+        unitPrice: 125,
+        amount: 250,
+        hearingDates: [],
+      },
+    ]);
   });
 
   it("costruisce righe billing run items con note normalizzate", () => {

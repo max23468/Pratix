@@ -136,8 +136,18 @@ const caseOptionCollator = new Intl.Collator("it", { numeric: true, sensitivity:
 
 const caseOptionTitle = (option: CaseOption) => option.title?.trim() || activityCaseLabel(option);
 
+const caseOptionDisplayLabel = (option: CaseOption) => {
+  const title = option.title?.trim();
+  return title ? `Pratica ${option.practice_number} · ${title}` : activityCaseLabel(option);
+};
+
 const caseOptionSearchValue = (option: CaseOption) =>
-  [caseOptionTitle(option), activityCaseLabel(option), option.principals?.business_name]
+  [
+    caseOptionDisplayLabel(option),
+    caseOptionTitle(option),
+    activityCaseLabel(option),
+    option.principals?.business_name,
+  ]
     .filter((value): value is string => Boolean(value))
     .join(" ");
 
@@ -395,7 +405,7 @@ function CasePicker({
               !selectedOption && "text-muted-foreground",
             )}
           >
-            {selectedOption ? caseOptionTitle(selectedOption) : "Seleziona pratica"}
+            {selectedOption ? caseOptionDisplayLabel(selectedOption) : "Seleziona pratica"}
           </span>
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
@@ -407,7 +417,7 @@ function CasePicker({
             <CommandEmpty>Nessuna pratica trovata.</CommandEmpty>
             {options.map((option) => {
               const label = activityCaseLabel(option);
-              const title = caseOptionTitle(option);
+              const title = caseOptionDisplayLabel(option);
               const isSelected = option.id === selectedCaseId;
 
               return (

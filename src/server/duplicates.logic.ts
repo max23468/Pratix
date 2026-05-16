@@ -35,6 +35,7 @@ export type ClientDuplicateRow = {
   first_name?: string | null;
   last_name?: string | null;
   business_name?: string | null;
+  email?: string | null;
   notes?: string | null;
   principalNames?: string[];
 };
@@ -270,7 +271,7 @@ function scorePrincipalPair(
 }
 
 function scoreClientPair(a: ClientDuplicateRow, b: ClientDuplicateRow, draft?: DuplicateRecord) {
-  const score =
+  const nameScore =
     a.kind === "company" || b.kind === "company"
       ? businessNameSimilarity(a.business_name, b.business_name)
       : personNameSimilarity(
@@ -278,11 +279,17 @@ function scoreClientPair(a: ClientDuplicateRow, b: ClientDuplicateRow, draft?: D
           { firstName: b.first_name, lastName: b.last_name },
         );
   const reasons: string[] = [];
-  if (score >= 0.92)
+  let score = nameScore;
+  if (nameScore >= 0.92)
     reasons.push(
       a.kind === "company" ? "Ragione sociale quasi identica" : "Nome e cognome molto simili",
     );
-  else if (score >= 0.74) reasons.push("Nome molto simile");
+  else if (nameScore >= 0.74) reasons.push("Nome molto simile");
+
+  if (sameFilled(a.email, b.email)) {
+    score = Math.max(score, 0.96);
+    reasons.push("Email coincidente");
+  }
 
   const sharedPrincipal = (a.principalNames ?? []).some((name) =>
     (b.principalNames ?? []).includes(name),
@@ -434,6 +441,7 @@ function clientRecord(row: ClientDuplicateRow): DuplicateRecord {
       Tipo: row.kind === "company" ? "Società" : "Privato",
       Nome: [row.first_name, row.last_name].filter(Boolean).join(" "),
       "Ragione sociale": row.business_name,
+      Email: row.email,
       Committenti: (row.principalNames ?? []).join(", "),
     },
   };

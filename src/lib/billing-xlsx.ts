@@ -597,7 +597,7 @@ const updateFeesFormulas = (
         return excelNumberLiteral(row.amount);
       });
 
-    return expressions.length > 0 ? `SUM(${expressions.join(",")})` : "0";
+    return expressions.length > 0 ? `SUM(${expressions.join("+")})` : "0";
   };
 
   return rows.map((rowXml) => {

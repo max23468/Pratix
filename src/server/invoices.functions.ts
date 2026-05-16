@@ -12,6 +12,7 @@ import {
   assertIncludedActivitiesEditable,
   billedPartyForInvoiceXml,
   buildBillingExportRows,
+  buildBillingExportRowsFromInvoiceLines,
   buildBillingRunItemRows,
   buildBillingRunRow,
   buildInvoiceLineRows,
@@ -20,6 +21,7 @@ import {
   firstIncludedClientId,
   invoiceLinesForTotals,
   partitionBillingActivities,
+  draftPostponedActivityUpdate,
   postponedActivityUpdate,
   selectedActivityIds,
   selectionMap,
@@ -321,7 +323,11 @@ export const updateDraftBillingInvoiceFn = createServerFn({ method: "POST" })
 
     const [{ data: profile, error: profileError }, { data: activities, error: activitiesError }] =
       await Promise.all([
-        supabase.from("profiles").select("tax_regime").eq("id", userId).single(),
+        supabase
+          .from("profiles")
+          .select("tax_regime, include_stamp_duty")
+          .eq("id", userId)
+          .single(),
         supabase
           .from("case_activities")
           .select(
@@ -353,7 +359,17 @@ export const updateDraftBillingInvoiceFn = createServerFn({ method: "POST" })
       taxRegime: profile?.tax_regime === "forfettario" ? "forfettario" : "ordinario",
       includeGeneralExpenses: data.includeGeneralExpenses,
       generalExpensesRate: Number(data.generalExpensesRate),
+      includeStampDuty: Boolean(profile?.include_stamp_duty),
     });
+
+    const { data: previousItems, error: previousItemsError } = await supabase
+      .from("billing_run_items")
+      .select("activity_id, status")
+      .eq("billing_run_id", invoice.billing_run_id);
+    if (previousItemsError) throw previousItemsError;
+    const previousStatusByActivityId = new Map<string, BillingItemStatus>(
+      (previousItems ?? []).map((item) => [item.activity_id, item.status as BillingItemStatus]),
+    );
 
     const { error: currentActivitiesError } = await supabase
       .from("case_activities")
@@ -436,7 +452,11 @@ export const updateDraftBillingInvoiceFn = createServerFn({ method: "POST" })
     }
 
     for (const activity of postponed) {
-      const update = postponedActivityUpdate(activity, data.periodEnd);
+      const update = draftPostponedActivityUpdate({
+        activity,
+        periodEnd: data.periodEnd,
+        previousStatus: previousStatusByActivityId.get(activity.id),
+      });
       const { error: postponedError } = await supabase
         .from("case_activities")
         .update({
@@ -510,23 +530,23 @@ export const generateBillingExportFn = createServerFn({ method: "POST" })
     if (runError) throw runError;
     if (principalError) throw principalError;
 
-    const activityKind = data.kind === "fees" ? "fee" : "expense_reimbursement";
-    const { data: activities, error: activitiesError } = await supabase
-      .from("case_activities")
+    const { data: lines, error: linesError } = await supabase
+      .from("invoice_lines")
       .select(
-        "id, case_id, principal_id, client_id, counterparty_id, activity_date, kind, status, invoice_id, description, quantity, unit_price, amount, postponed_count, cases(practice_number, title), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name), case_activity_hearings(hearing_date, position)",
+        "practice_number, client_name, counterparty_name, activity_date, kind, description, quantity, unit_price, amount",
       )
       .eq("user_id", userId)
       .eq("invoice_id", invoice.id)
-      .eq("kind", activityKind);
-    if (activitiesError) throw activitiesError;
+      .eq("kind", data.kind === "fees" ? "fee" : "expense_art15")
+      .order("position", { ascending: true });
+    if (linesError) throw linesError;
 
     const file = buildBillingWorkbook({
       kind: data.kind,
       principalName: principal?.business_name ?? "committente",
       periodStart: billingRun.period_start,
       periodEnd: billingRun.period_end,
-      rows: buildBillingExportRows(activities as BillingActivity[], activityKind),
+      rows: buildBillingExportRowsFromInvoiceLines(lines ?? [], data.kind),
     });
 
     return {

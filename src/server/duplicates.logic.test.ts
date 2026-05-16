@@ -77,4 +77,35 @@ describe("duplicates logic", () => {
     expect(result).toHaveLength(1);
     expect(result[0].reasons).toContain("Numero pratica uguale");
   });
+
+  it("promuove clienti con email identica anche quando i nomi sono diversi", () => {
+    const result = scanDuplicateCandidates({
+      principals: [],
+      clients: [
+        {
+          id: "a",
+          public_code: "CL-00001",
+          kind: "individual",
+          first_name: "Mario",
+          last_name: "Rossi",
+          email: "cliente@example.test",
+        },
+        {
+          id: "b",
+          public_code: "CL-00002",
+          kind: "individual",
+          first_name: "Giulia",
+          last_name: "Bianchi",
+          email: " CLIENTE@example.test ",
+        },
+      ],
+      counterparties: [],
+      cases: [],
+      reviews: [],
+    });
+
+    expect(result.openCandidates).toHaveLength(1);
+    expect(result.openCandidates[0].score).toBe(0.96);
+    expect(result.openCandidates[0].reasons).toContain("Email coincidente");
+  });
 });

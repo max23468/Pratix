@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Sparkles, Wrench, Settings2, ShieldCheck } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   releasedChangelog,
@@ -177,10 +177,11 @@ function ReleasePanel({ entry }: { entry: ChangelogEntry }) {
 function ReleaseHeader({ entry, compact = false }: { entry: ChangelogEntry; compact?: boolean }) {
   const isCurrent = entry.version === APP_VERSION;
   const dateLabel = formatDate(entry.date);
+  const Heading = compact ? "h3" : "h2";
 
   return (
     <div className="flex flex-wrap items-baseline gap-2">
-      <CardTitle
+      <Heading
         className={
           compact
             ? "font-display text-base font-semibold text-foreground"
@@ -188,7 +189,7 @@ function ReleaseHeader({ entry, compact = false }: { entry: ChangelogEntry; comp
         }
       >
         v{entry.version}
-      </CardTitle>
+      </Heading>
       {isCurrent && (
         <Badge variant="secondary" className="text-xs">
           In uso

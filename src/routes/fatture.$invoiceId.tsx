@@ -397,7 +397,7 @@ function InvoiceDetailPage() {
   }
 
   const billedName = data.principal?.business_name ?? data.client?.business_name ?? "—";
-  const isForfettario = data.profile?.tax_regime === "forfettario";
+  const hasVatAmount = Number(data.invoice.vat_amount) > 0;
   const canEditDraft = data.invoice.status === "draft";
   const canMarkIssued = data.invoice.status === "draft";
   const canUnmarkIssued = data.invoice.status === "issued" || data.invoice.status === "overdue";
@@ -496,7 +496,7 @@ function InvoiceDetailPage() {
                 />
               )}
               <SummaryRow label="Cassa" value={formatCurrency(Number(data.invoice.cassa_amount))} />
-              {!isForfettario && (
+              {hasVatAmount && (
                 <SummaryRow label="IVA" value={formatCurrency(Number(data.invoice.vat_amount))} />
               )}
               <SummaryRow

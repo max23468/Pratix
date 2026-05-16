@@ -54,7 +54,7 @@ function LoginPage() {
     if (!submitLock.acquire()) return;
     setSubmitting(true);
     try {
-      await supabase.auth.signInWithOtp({
+      const { error } = await supabase.auth.signInWithOtp({
         email: parsed.data.email,
         options: {
           emailRedirectTo: `${window.location.origin}/dashboard`,
@@ -62,7 +62,10 @@ function LoginPage() {
           ...(captchaToken ? { captchaToken } : {}),
         },
       });
+      if (error) throw error;
       setSent(true);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Invio del link non riuscito.");
     } finally {
       setSubmitting(false);
       submitLock.release();

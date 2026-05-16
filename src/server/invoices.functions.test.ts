@@ -341,7 +341,7 @@ describe("server functions fatture", () => {
       error: null,
     });
     supabase.queue("profiles:select:single", {
-      data: { tax_regime: "ordinario" },
+      data: { tax_regime: "forfettario", include_stamp_duty: true },
       error: null,
     });
     supabase.queue("case_activities:select:many", {
@@ -361,6 +361,13 @@ describe("server functions fatture", () => {
     });
     supabase.queue("billing_exports:select:many", {
       data: [{ storage_path: "user-1/billing-exports/run-1/old.xlsx" }],
+      error: null,
+    });
+    supabase.queue("billing_run_items:select:many", {
+      data: [
+        { activity_id: "activity-fee", status: "included" },
+        { activity_id: "activity-expense", status: "postponed" },
+      ],
       error: null,
     });
     supabase.queue(
@@ -403,6 +410,10 @@ describe("server functions fatture", () => {
       status: "issued",
       paid_at: null,
       principal_id: "principal-1",
+      stamp_amount: 2,
+    });
+    expect(supabase.callsFor("case_activities", "update").at(-1)?.payload).toMatchObject({
+      postponed_count: 1,
     });
     expect(supabase.uploads).toHaveLength(2);
   });
@@ -421,8 +432,20 @@ describe("server functions fatture", () => {
       data: { business_name: "Banca Test" },
       error: null,
     });
-    supabase.queue("case_activities:select:many", {
-      data: [billingActivity],
+    supabase.queue("invoice_lines:select:many", {
+      data: [
+        {
+          practice_number: 42,
+          client_name: "Cliente snapshot",
+          counterparty_name: "Controparte snapshot",
+          activity_date: "2026-05-10",
+          kind: "fee",
+          description: "Descrizione storicizzata",
+          quantity: 3,
+          unit_price: 120,
+          amount: 360,
+        },
+      ],
       error: null,
     });
 
@@ -450,18 +473,18 @@ describe("server functions fatture", () => {
       rows: [
         {
           practiceNumber: 42,
-          clientName: "Ada Rossi",
-          counterpartyName: "Beta S.p.A.",
+          clientName: "Cliente snapshot",
+          counterpartyName: "Controparte snapshot",
           activityDate: "2026-05-10",
-          description: "Redazione diffida",
-          quantity: 2,
-          unitPrice: 500,
-          amount: 1000,
-          hearingDates: ["2026-05-20"],
+          description: "Descrizione storicizzata",
+          quantity: 3,
+          unitPrice: 120,
+          amount: 360,
+          hearingDates: [],
         },
       ],
     });
-    expect(supabase.callsFor("case_activities", "select")[0].filters).toEqual(
+    expect(supabase.callsFor("invoice_lines", "select")[0].filters).toEqual(
       expect.arrayContaining([
         ["invoice_id", "invoice-1"],
         ["kind", "fee"],

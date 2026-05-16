@@ -1372,6 +1372,14 @@ REVOKE ALL ON FUNCTION public.apply_import_row(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.apply_import_row(uuid) TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.user_table_preferences TO authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.duplicate_reviews TO authenticated;
+REVOKE UPDATE (
+  client_public_code_next_number,
+  principal_public_code_next_number,
+  counterparty_public_code_next_number,
+  case_public_code_next_number,
+  price_book_public_code_next_number,
+  invoice_public_code_next_number
+) ON public.profiles FROM authenticated;
 
 
 -- ============================================================================

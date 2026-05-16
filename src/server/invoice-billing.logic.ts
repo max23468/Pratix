@@ -1,4 +1,4 @@
-import type { BillingExportRow } from "@/lib/billing-xlsx";
+import type { BillingExportKind, BillingExportRow } from "@/lib/billing-xlsx";
 import type { InvoiceLineInput } from "@/lib/invoice-calc";
 import type { InvoiceLineKind } from "@/lib/invoice-calc";
 import {
@@ -56,6 +56,18 @@ export type BillingActivity = {
   clients?: BillingPartyDisplay | null;
   counterparties?: BillingPartyDisplay | null;
   case_activity_hearings?: Array<{ hearing_date: string; position: number | string }> | null;
+};
+
+export type BillingInvoiceLine = {
+  practice_number: number | null;
+  client_name: string | null;
+  counterparty_name: string | null;
+  activity_date: string;
+  kind: InvoiceLineKind;
+  description: string;
+  quantity: number | string;
+  unit_price: number | string;
+  amount: number | string;
 };
 
 export type BillingTotals = {
@@ -360,6 +372,24 @@ export function postponedActivityUpdate(activity: BillingActivity, periodEnd: st
   };
 }
 
+export function draftPostponedActivityUpdate({
+  activity,
+  periodEnd,
+  previousStatus,
+}: {
+  activity: BillingActivity;
+  periodEnd: string;
+  previousStatus?: BillingItemStatus;
+}) {
+  const update = postponedActivityUpdate(activity, periodEnd);
+  return previousStatus === "postponed"
+    ? {
+        ...update,
+        postponed_count: Number(activity.postponed_count ?? 0),
+      }
+    : update;
+}
+
 export function buildBillingExportRows(
   included: BillingActivity[],
   kind: "fee" | "expense_reimbursement",
@@ -379,6 +409,26 @@ export function buildBillingExportRows(
         .slice()
         .sort((a, b) => Number(a.position) - Number(b.position))
         .map((hearing) => hearing.hearing_date),
+    }));
+}
+
+export function buildBillingExportRowsFromInvoiceLines(
+  lines: BillingInvoiceLine[],
+  kind: BillingExportKind,
+): BillingExportRow[] {
+  const lineKind: InvoiceLineKind = kind === "fees" ? "fee" : "expense_art15";
+  return lines
+    .filter((line) => line.kind === lineKind)
+    .map((line) => ({
+      practiceNumber: line.practice_number,
+      clientName: line.client_name ?? "",
+      counterpartyName: line.counterparty_name ?? "",
+      activityDate: line.activity_date,
+      description: line.description,
+      quantity: Number(line.quantity),
+      unitPrice: Number(line.unit_price),
+      amount: Number(line.amount),
+      hearingDates: [],
     }));
 }
 

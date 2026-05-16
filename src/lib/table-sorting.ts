@@ -172,10 +172,15 @@ export function usePersistentTableSort<Row, Key extends string>({
 
   return {
     sort,
-    setSort: (columnKey: Key) => {
-      const column = columns.find((item) => item.key === columnKey);
-      if (!column) return;
-      const next = nextTableSort(sort, column);
+    setSort: (value: Key | TableSort<Key>) => {
+      const next =
+        typeof value === "string"
+          ? (() => {
+              const column = columns.find((item) => item.key === value);
+              return column ? nextTableSort(sort, column) : null;
+            })()
+          : value;
+      if (!next || !keys.includes(next.key)) return;
       onSortChange(next);
       saveSort.mutate(next);
     },

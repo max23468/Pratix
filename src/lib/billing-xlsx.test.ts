@@ -165,6 +165,30 @@ describe("buildBillingWorkbook", () => {
     expect(worksheetXml).toContain("<f>SUM(D58:V58)</f>");
   });
 
+  it("mantiene le formule dei totali compensi sotto il limite argomenti Excel", () => {
+    const rows = Array.from({ length: 260 }, (_, index) => ({
+      practiceNumber: index + 1,
+      clientName: "Cliente",
+      counterpartyName: `Controparte ${index + 1}`,
+      activityDate: "2026-01-10",
+      description: "Precetto",
+      quantity: 1,
+      unitPrice: 25,
+      amount: 25,
+    }));
+    const { worksheetXml } = readWorkbookParts({
+      kind: "fees",
+      principalName: "Committente",
+      periodStart: "2026-01-01",
+      periodEnd: "2026-03-31",
+      rows,
+    });
+
+    const totalFormula = worksheetXml.match(/<c r="F\d+"[^>]*><f>(.*?)<\/f><\/c>/)?.[1] ?? "";
+    expect(totalFormula).toContain("+");
+    expect(totalFormula).not.toContain(",");
+  });
+
   it("mantiene compatto il nome file dei rendiconti con committenti lunghi", () => {
     const { file } = readWorkbookParts({
       kind: "expenses",

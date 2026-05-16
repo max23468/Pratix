@@ -380,7 +380,7 @@ describe("CaseActivityDialog", () => {
     await userEvent.click(screen.getByRole("option", { name: /Beta intimazione/ }));
 
     expect(screen.getByRole("combobox", { name: "Seleziona pratica" }).textContent).toContain(
-      "Beta intimazione",
+      "Pratica 20 · Beta intimazione",
     );
   });
 
