@@ -39,6 +39,7 @@ describe("componenti presentazionali globali", () => {
         </ComingSoon>
         <PageHeader
           title="Pratiche"
+          titleAccessory={<span>Aperta</span>}
           description="Elenco operativo"
           actions={<button>Nuova</button>}
         />
@@ -57,6 +58,7 @@ describe("componenti presentazionali globali", () => {
     expect(screen.getAllByText("Scuro").length).toBeGreaterThan(0);
     expect(screen.getByText("Sezione in arrivo")).toBeTruthy();
     expect(screen.getByText("Pratiche")).toBeTruthy();
+    expect(screen.getByText("Aperta")).toBeTruthy();
     expect(screen.getByText("Nessuna attività")).toBeTruthy();
     expect(screen.getByRole("img", { name: "Logo bar" })).toBeTruthy();
     expect(screen.getByRole("img", { name: "Logo seal" })).toBeTruthy();

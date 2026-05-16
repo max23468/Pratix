@@ -88,12 +88,14 @@ function CaseDetail() {
     <>
       <PageHeader
         title={caseRow.title}
+        titleAccessory={
+          <Badge variant={caseStatusVariant[caseRow.status] ?? "outline"}>
+            {caseStatusLabels[caseRow.status] ?? caseRow.status}
+          </Badge>
+        }
         description={`Pratica ${caseRow.practice_number} · ${principalName} · ${clientName} · ${counterpartyName}`}
         actions={
           <>
-            <Badge variant={caseStatusVariant[caseRow.status] ?? "outline"}>
-              {caseStatusLabels[caseRow.status] ?? caseRow.status}
-            </Badge>
             <Link to="/pratiche/nuova">
               <Button size="sm">
                 <Plus className="mr-1 size-4" /> Nuova pratica

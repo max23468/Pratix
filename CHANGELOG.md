@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.2.12] — 2026-05-16
+
+### Correzioni
+
+- **Pratiche**: nel dettaglio pratica lo stato appare accanto al titolo, separato dalle azioni di creazione e ritorno.
+
 ## [1.2.11] — 2026-05-16
 
 ### Correzioni
@@ -704,6 +710,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.2.12]: #1212--2026-05-16
 [1.2.11]: #1211--2026-05-16
 [1.2.10]: #1210--2026-05-16
 [1.2.9]: #129--2026-05-16
