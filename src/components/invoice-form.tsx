@@ -125,7 +125,7 @@ export function InvoiceForm() {
   const [issueDate, setIssueDate] = useState(() => today());
   const [dueDate, setDueDate] = useState("");
   const [invoiceStatus, setInvoiceStatus] = useState<"draft" | "issued">("draft");
-  const [includeGeneralExpenses, setIncludeGeneralExpenses] = useState(false);
+  const [includeGeneralExpenses, setIncludeGeneralExpenses] = useState(true);
   const [generalExpensesRate, setGeneralExpensesRate] = useState(10);
   const [cassaRate, setCassaRate] = useState(4);
   const [vatRate, setVatRate] = useState(22);

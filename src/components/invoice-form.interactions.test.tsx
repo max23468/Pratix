@@ -218,7 +218,6 @@ describe("InvoiceForm", () => {
     await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "issued");
     await userEvent.clear(screen.getByLabelText("Pagamento"));
     await userEvent.type(screen.getByLabelText("Pagamento"), "Carta");
-    await userEvent.click(screen.getAllByRole("checkbox")[0]);
     await userEvent.clear(screen.getByLabelText("Percentuale spese generali (%)"));
     await userEvent.type(screen.getByLabelText("Percentuale spese generali (%)"), "12");
     await userEvent.clear(screen.getByLabelText("IVA (%)"));
