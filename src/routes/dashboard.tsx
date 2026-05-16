@@ -246,16 +246,6 @@ function DashboardContent() {
         description="Pratiche, attività, fatture e rimborsi da tenere sotto controllo."
         actions={
           <>
-            <Link to="/fatture/nuova">
-              <Button size="sm" variant="outline">
-                <Receipt className="mr-1 size-4" /> Fattura
-              </Button>
-            </Link>
-            <Link to="/attivita">
-              <Button size="sm" variant="outline">
-                <ListChecks className="mr-1 size-4" /> Attività
-              </Button>
-            </Link>
             <CreateMenu />
           </>
         }
