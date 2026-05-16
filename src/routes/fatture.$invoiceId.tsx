@@ -11,6 +11,7 @@ import {
   FileText,
   Pencil,
   Plus,
+  RotateCcw,
   Send,
   Trash2,
 } from "lucide-react";
@@ -226,6 +227,28 @@ function InvoiceDetailPage() {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const unmarkPaidMutation = useMutation({
+    mutationFn: async () => {
+      const resolvedInvoiceId = data?.invoice.id;
+      if (!resolvedInvoiceId) throw new Error("Fattura non caricata");
+      const { data: updatedInvoice, error } = await supabase
+        .from("invoices")
+        .update({ status: "issued", paid_at: null })
+        .eq("id", resolvedInvoiceId)
+        .eq("status", "paid")
+        .select("id")
+        .maybeSingle();
+      if (error) throw error;
+      if (!updatedInvoice) throw new Error("Solo le fatture pagate possono tornare emesse");
+    },
+    onSuccess: () => {
+      toast.success("Pagamento annullato");
+      qc.invalidateQueries({ queryKey: ["invoice", invoiceId] });
+      qc.invalidateQueries({ queryKey: ["invoices"] });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const markIssuedMutation = useMutation({
     mutationFn: async () => {
       const resolvedInvoiceId = data?.invoice.id;
@@ -242,6 +265,28 @@ function InvoiceDetailPage() {
     },
     onSuccess: () => {
       toast.success("Fattura segnata come emessa");
+      qc.invalidateQueries({ queryKey: ["invoice", invoiceId] });
+      qc.invalidateQueries({ queryKey: ["invoices"] });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const unmarkIssuedMutation = useMutation({
+    mutationFn: async () => {
+      const resolvedInvoiceId = data?.invoice.id;
+      if (!resolvedInvoiceId) throw new Error("Fattura non caricata");
+      const { data: updatedInvoice, error } = await supabase
+        .from("invoices")
+        .update({ status: "draft", paid_at: null })
+        .eq("id", resolvedInvoiceId)
+        .in("status", ["issued", "overdue"])
+        .select("id")
+        .maybeSingle();
+      if (error) throw error;
+      if (!updatedInvoice) throw new Error("Solo le fatture emesse possono tornare in bozza");
+    },
+    onSuccess: () => {
+      toast.success("Fattura riportata in bozza");
       qc.invalidateQueries({ queryKey: ["invoice", invoiceId] });
       qc.invalidateQueries({ queryKey: ["invoices"] });
     },
@@ -367,7 +412,9 @@ function InvoiceDetailPage() {
   const isForfettario = data.profile?.tax_regime === "forfettario";
   const canEditDraft = data.invoice.status === "draft";
   const canMarkIssued = data.invoice.status === "draft";
+  const canUnmarkIssued = data.invoice.status === "issued" || data.invoice.status === "overdue";
   const canMarkPaid = data.invoice.status === "issued" || data.invoice.status === "overdue";
+  const canUnmarkPaid = data.invoice.status === "paid";
 
   return (
     <AppLayout>
@@ -506,6 +553,16 @@ function InvoiceDetailPage() {
                   <Send className="mr-2 size-4" /> Segna come emessa
                 </Button>
               )}
+              {canUnmarkIssued && (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => unmarkIssuedMutation.mutate()}
+                  disabled={unmarkIssuedMutation.isPending}
+                >
+                  <RotateCcw className="mr-2 size-4" /> Riporta in bozza
+                </Button>
+              )}
               {canMarkPaid && (
                 <Button
                   variant="outline"
@@ -514,6 +571,16 @@ function InvoiceDetailPage() {
                   disabled={markPaidMutation.isPending}
                 >
                   <CheckCircle2 className="mr-2 size-4" /> Segna come pagata
+                </Button>
+              )}
+              {canUnmarkPaid && (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => unmarkPaidMutation.mutate()}
+                  disabled={unmarkPaidMutation.isPending}
+                >
+                  <RotateCcw className="mr-2 size-4" /> Annulla pagamento
                 </Button>
               )}
               <AlertDialog>
