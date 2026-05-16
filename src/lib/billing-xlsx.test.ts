@@ -63,7 +63,10 @@ describe("buildBillingWorkbook", () => {
     expect(worksheetXml).toContain("PROCEDIMENTI");
     expect(worksheetXml).toContain("Data udienza");
     expect(worksheetXml).toContain("Ada Rossi");
-    expect(worksheetXml).toContain("42 - Beta S.p.A.");
+    expect(worksheetXml).toContain("Beta S.p.A.");
+    expect(worksheetXml).not.toContain("42 - Beta S.p.A.");
+    expect(worksheetXml).toContain('<c r="G9" s="23"/>');
+    expect(worksheetXml).toContain('<c r="H9" s="28"/>');
     expect(worksheetXml).toContain('<c r="P5" s="26"><v>2</v></c>');
     expect(worksheetXml).toContain('<c r="Q5" s="51"><v>');
     expect(worksheetXml).toContain("<f>SUM(P5*45)</f>");
