@@ -77,8 +77,7 @@ senza duplicare il modello dati.
     successivo senza motivazione obbligatoria.
 29. Un'attività rinviata ricompare automaticamente nel periodo successivo e può
     essere rinviata ancora.
-30. L'import deve supportare sia Excel strutturato sia inserimento guidato
-    voce per voce.
+30. L'import archivio è stato ristretto alla Creazione guidata manuale da ADR 0016.
 31. Il formato Excel ricevuto dal committente va replicato negli output, anche
     se la UI interna può essere diversa.
 32. La label principale per listini/tariffe in UI è **Prezzi**.
@@ -142,9 +141,9 @@ spostati in roadmap come residui post-evoluzione non bloccanti.
 
 1. Campi esatti del wizard di import guidato e ordine definitivo degli step:
    assorbiti in Fase 7.
-2. Validazioni dettagliate per import Excel e rendiconti Excel generati:
-   assorbite in Fase 6 e Fase 7; collaudo su archivio reale o semi-reale
-   tracciato in roadmap.
+2. Validazioni dettagliate per Creazione guidata e rendiconti Excel generati:
+   assorbite in Fase 6 e Fase 7; l'import Excel strutturato è stato dismesso
+   da ADR 0016.
 3. Template vuoti del committente, se in futuro saranno forniti oltre agli
    esempi già compilati.
 4. Regole fiscali di dettaglio sulla gestione di fatture emesse e poi annullate:
@@ -299,7 +298,7 @@ test.
 | `billing_run_items`          | Attività incluse, escluse o rinviate nella singola estrazione.                                            |
 | `billing_exports`            | Rendiconti Excel compilati nel formato del committente e allegati alla fattura.                           |
 | `invoices` / `invoice_lines` | Fatture e righe, aggiornate per fatturare al committente e congelare le attività selezionate.             |
-| `imports` / `import_rows`    | Import guidati da Excel o inserimento manuale, con staging e validazione prima della conferma.            |
+| `imports` / `import_rows`    | Creazione guidata manuale, con staging e validazione prima della conferma.                                |
 
 ### Relazioni principali
 
@@ -518,14 +517,11 @@ Se si mantiene la tassonomia attuale, aggiungere `activities` a
 `src/lib/storage-paths.ts` e aggiornare la migration Storage per eventuali MIME
 type mancanti.
 
-## Import archivio pregresso
+## Creazione guidata archivio pregresso
 
-L'import deve avere due modalità equivalenti:
-
-1. **Guidato manuale**: inserimento passo per passo di committente, cliente,
-   controparte, pratica e attività.
-2. **Excel strutturato**: caricamento file, mappatura colonne, validazione,
-   anteprima, conferma.
+L'import archivio resta una Creazione guidata manuale. La modalità Excel
+strutturato descritta nella prima stesura del piano è stata rimossa dal prodotto
+con ADR 0016.
 
 ### Import guidato manuale
 
@@ -538,18 +534,9 @@ Flusso consigliato:
 5. Aggiungi attività storiche da fatturare o già fatturate, se serve.
 6. Rivedi riepilogo e conferma.
 
-### Import Excel
+### Import Excel dismesso
 
-Flusso consigliato:
-
-1. Upload file.
-2. Lettura intestazioni.
-3. Mappatura colonne verso campi Pratix.
-4. Validazione righe: duplicati, numeri pratica, committente mancante, cliente
-   non collegato, controparte incompleta, voce prezzo non riconosciuta.
-5. Anteprima errori e avvisi.
-6. Import in staging.
-7. Conferma finale e scrittura nelle tabelle operative.
+Dismesso da ADR 0016. 6. Import in staging. 7. Conferma finale e scrittura nelle tabelle operative.
 
 Il sistema non deve scrivere direttamente dati importati nelle tabelle
 operative senza una fase di revisione.
@@ -715,8 +702,7 @@ Attività:
 8. Consentire duplicazione dei prezzi da anno precedente per lo stesso
    committente.
 9. Bloccare o avvisare sulle modifiche a voci già usate in attività.
-10. Preparare import Excel delle voci prezzo, anche se la V1 può partire con
-    inserimento manuale/seed controllato.
+10. Preparare inserimento manuale o seed controllato delle voci prezzo.
 11. Gestire la voce "Procedimenti ordinari, mediazione, esecutivi, concorsuali"
     come voce con quantità derivata dal numero di udienze.
 
@@ -842,10 +828,9 @@ Stato implementazione:
 - la migration `20260508120000_drop_legacy_expenses.sql` dismette la tabella
   legacy `expenses`.
 
-### Fase 7 — Import archivio
+### Fase 7 — Creazione guidata
 
-**Obiettivo**: permettere la trascrizione dell'archivio cartaceo e l'import da
-file strutturati.
+**Obiettivo**: permettere la trascrizione guidata dell'archivio cartaceo.
 
 Attività:
 
@@ -854,30 +839,25 @@ Attività:
 3. Consentire inserimento di attività storiche già fatturate o da fatturare.
 4. Consentire inserimento rimborsi spese e allegati durante il flusso.
 5. Aggiungere riepilogo finale prima della conferma.
-6. Costruire import Excel con upload, lettura intestazioni, mappatura colonne,
-   validazione, staging, anteprima e conferma.
-7. Gestire errori su duplicati numero pratica, committente mancante, cliente non
+6. Gestire errori su duplicati numero pratica, committente mancante, cliente non
    collegato, controparte incompleta e voce prezzo non riconosciuta.
-8. Evitare scrittura diretta nelle tabelle operative prima della conferma.
+7. Evitare scrittura diretta nelle tabelle operative prima della conferma.
 
 Uscita fase:
 
 - l'utente può trascrivere una pratica da quaderno cartaceo senza usare Excel;
-- l'import Excel non scrive dati operativi senza revisione;
 - errori e avvisi sono comprensibili e correggibili;
 - il flusso riusa selettori e validazioni già usati da pratica e anagrafiche.
 
 Stato implementazione:
 
-- avviata con route `/import-archivio`, accessibile dal menu Account e non
-  dalla sidebar principale;
+- esposta su route `/creazione-guidata` con accesso dalla dashboard;
 - la procedura manuale consente di selezionare o creare inline committente,
   cliente e controparte, compilare i dati pratica e aggiungere attività
   storiche da Prezzi configurati;
 - l'anteprima viene salvata nelle tabelle di staging `imports` e
   `import_rows`; le tabelle operative vengono scritte solo alla conferma;
-- l'import Excel legge file `.xlsx`, consente mappatura colonne, validazione
-  massiva, staging e conferma delle righe valide;
+- l'import Excel strutturato è stato dismesso da ADR 0016;
 - la conferma usa una RPC Postgres transazionale per creare pratica,
   collegamenti, attività e udienze in modo atomico per riga;
 - la procedura guidata consente di allegare documenti alle attività storiche
@@ -960,7 +940,7 @@ La prima evoluzione è completa quando:
 - la fattura può avere allegati Excel compilati nel formato del committente;
 - le attività fatturate risultano bloccate o comunque non duplicabili;
 - l'import guidato manuale è disponibile;
-- l'import Excel ha almeno staging, validazione e anteprima;
+- l'import Excel strutturato è dismesso e non rientra nei criteri correnti;
 - RLS, build e lint sono verificati sulle aree toccate.
 
 Stato di chiusura 2026-05-08:
@@ -968,7 +948,7 @@ Stato di chiusura 2026-05-08:
 - criteri funzionali completati tramite Fasi 1-8;
 - scadenzario rimosso dal prodotto attivo;
 - dominio recupero crediti operativo su committenti, clienti, controparti,
-  pratiche, attività, prezzi, fatturazione e import archivio;
+  pratiche, attività, prezzi, fatturazione e Creazione guidata;
 - rendiconti Excel e logica fiscale della fatturazione riallineati al modello
   committente + periodo;
 - dashboard, Account, Impostazioni, Novità, onboarding, landing, privacy,
@@ -1009,6 +989,6 @@ completezza operativa:
 - I prezzi annuali vanno congelati nelle attività per non alterare storico e
   fatture.
 - La generazione numero pratica deve essere atomica.
-- L'import Excel deve proteggere da duplicati e dati personali nei log.
+- La Creazione guidata deve proteggere da duplicati e dati personali nei log.
 - La rimozione dello scadenzario tocca routing, dashboard, schema e copy: va
   fatta in una fase isolata.

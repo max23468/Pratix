@@ -271,8 +271,8 @@ a `case_activities`.
 
 ### `imports`
 
-Sessioni di import archivio, sia manuali guidate sia da Excel strutturato.
-Tracciano stato, file sorgente quando presente, conteggi righe e note.
+Sessioni della Creazione guidata manuale. Tracciano stato, eventuale file
+sorgente storico, conteggi righe e note.
 
 ### `import_rows`
 

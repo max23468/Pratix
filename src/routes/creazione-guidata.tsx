@@ -6,7 +6,6 @@ import {
   ArrowRight,
   CheckCircle2,
   FileInput,
-  FileSpreadsheet,
   Paperclip,
   Plus,
   Trash2,
@@ -27,7 +26,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Table,
   TableBody,
@@ -44,12 +42,6 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import { routeRef } from "@/lib/public-route-code";
 import { useSubmitLock } from "@/lib/submit-lock";
 import {
-  applyImportPreviewPlan,
-  summarizeImportPreviewPlan,
-  type ExistingImportPractice,
-  type ImportPreviewPlan,
-} from "@/lib/import-preview-plan";
-import {
   caseActivityStatusLabels,
   caseStatusLabels,
   clientDisplayName,
@@ -59,20 +51,19 @@ import {
   priceItemKindLabels,
 } from "@/lib/labels";
 import { buildActivityAttachmentStoragePath, PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
-import { parseFirstXlsxSheet } from "@/lib/xlsx";
 
-export const Route = createFileRoute("/import-archivio")({
+export const Route = createFileRoute("/creazione-guidata")({
   head: () => ({
     meta: [
-      { title: "Import archivio · Pratix" },
+      { title: "Creazione guidata · Pratix" },
       {
         name: "description",
-        content: "Trascrivi pratiche dall'archivio cartaceo con anteprima e conferma.",
+        content: "Crea pratiche da archivio cartaceo con procedura manuale, anteprima e conferma.",
       },
-      { property: "og:title", content: "Import archivio · Pratix" },
+      { property: "og:title", content: "Creazione guidata · Pratix" },
       {
         property: "og:description",
-        content: "Trascrivi pratiche dall'archivio cartaceo con anteprima e conferma.",
+        content: "Crea pratiche da archivio cartaceo con procedura manuale, anteprima e conferma.",
       },
     ],
   }),
@@ -193,46 +184,6 @@ type StagedImport = {
   warnings: string[];
 };
 
-type ExcelColumnKey =
-  | "ignore"
-  | "principalName"
-  | "clientName"
-  | "counterpartyName"
-  | "practiceNumber"
-  | "title"
-  | "status"
-  | "openedAt"
-  | "closedAt"
-  | "authority"
-  | "rgNumber"
-  | "notes"
-  | "activityDate"
-  | "priceCode"
-  | "priceName"
-  | "quantity"
-  | "amount"
-  | "activityStatus"
-  | "activityNotes"
-  | "hearingDates";
-
-type ExcelPreviewRow = {
-  rowNumber: number;
-  rawData: Record<string, string>;
-  normalized: NormalizedImport | null;
-  errors: string[];
-  warnings: string[];
-  importPlan: ImportPreviewPlan;
-};
-
-type ExcelStagedRow = {
-  rowId: string;
-  rowNumber: number;
-  status: "valid" | "warning" | "error" | "imported";
-  normalized: NormalizedImport | null;
-  errors: string[];
-  warnings: string[];
-};
-
 type NormalizedImport = {
   principal: {
     mode: ExistingMode;
@@ -334,13 +285,12 @@ const initialDraft = (): ImportDraft => ({
 
 function ImportArchive() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState("manual");
 
   return (
     <>
       <PageHeader
-        title="Import archivio"
-        description="Trascrivi pratiche da quaderno cartaceo o prepara import strutturati con controllo prima della conferma."
+        title="Creazione guidata"
+        description="Trascrivi una pratica da archivio cartaceo con controllo finale prima della conferma."
         actions={
           <Link to="/pratiche">
             <Button size="sm" variant="outline">
@@ -350,22 +300,9 @@ function ImportArchive() {
         }
       />
 
-      <Tabs value={mode} onValueChange={setMode} className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="manual">Procedura guidata</TabsTrigger>
-          <TabsTrigger value="excel">Excel strutturato</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="manual">
-          <ManualImportWizard
-            onImported={(caseId) => navigate({ to: "/pratiche/$caseId", params: { caseId } })}
-          />
-        </TabsContent>
-
-        <TabsContent value="excel">
-          <ExcelImportPanel />
-        </TabsContent>
-      </Tabs>
+      <ManualImportWizard
+        onImported={(caseId) => navigate({ to: "/pratiche/$caseId", params: { caseId } })}
+      />
     </>
   );
 }
@@ -1436,704 +1373,6 @@ function ReviewStep({
   );
 }
 
-function ExcelImportPanel() {
-  const { user } = useAuth();
-  const qc = useQueryClient();
-  const [fileName, setFileName] = useState("");
-  const [headers, setHeaders] = useState<string[]>([]);
-  const [rows, setRows] = useState<string[][]>([]);
-  const [columnMap, setColumnMap] = useState<Record<number, ExcelColumnKey>>({});
-  const [previewRows, setPreviewRows] = useState<ExcelPreviewRow[]>([]);
-  const [stagedRows, setStagedRows] = useState<ExcelStagedRow[]>([]);
-  const stageLock = useSubmitLock();
-  const confirmLock = useSubmitLock();
-
-  const { data: principals = [] } = useQuery({
-    queryKey: ["principals", "import-archive", "excel"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("principals")
-        .select("id, business_name, fees_enabled, expense_reimbursements_enabled")
-        .is("archived_at", null)
-        .order("business_name", { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as PrincipalRow[];
-    },
-  });
-
-  const { data: clients = [] } = useQuery({
-    queryKey: ["clients", "import-archive", "excel"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("clients")
-        .select("id, kind, first_name, last_name, business_name")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as ClientRow[];
-    },
-  });
-
-  const { data: counterparties = [] } = useQuery({
-    queryKey: ["counterparties", "import-archive", "excel"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("counterparties")
-        .select("id, kind, first_name, last_name, business_name");
-      if (error) throw error;
-      return ((data ?? []) as CounterpartyRow[]).slice().sort(compareCounterparties);
-    },
-  });
-
-  const {
-    data: existingPractices = [],
-    isError: existingPracticesError,
-    isFetching: existingPracticesFetching,
-    isLoading: existingPracticesLoading,
-    refetch: refetchExistingPractices,
-  } = useQuery({
-    queryKey: ["cases", "import-archive", "excel-dedupe"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("cases")
-        .select("id, practice_number, title")
-        .order("practice_number", { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as ExistingImportPractice[];
-    },
-  });
-
-  const { data: priceBooks = [] } = useQuery({
-    queryKey: ["price-books", "import-archive", "excel"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("price_books")
-        .select("id, principal_id, year, status, fees_enabled, expense_reimbursements_enabled")
-        .in("status", ["active", "draft"])
-        .order("year", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as PriceBookRow[];
-    },
-  });
-
-  const priceBookIds = useMemo(() => priceBooks.map((book) => book.id), [priceBooks]);
-
-  const { data: priceItems = [] } = useQuery({
-    queryKey: ["price-items", "import-archive", "excel", priceBookIds],
-    enabled: priceBookIds.length > 0,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("price_items")
-        .select(
-          "id, price_book_id, kind, code, name, invoice_description, unit_price, requires_hearing_dates",
-        )
-        .in("price_book_id", priceBookIds)
-        .eq("is_enabled", true)
-        .order("sort_order", { ascending: true });
-      if (error) throw error;
-      return (data ?? []) as PriceItemRow[];
-    },
-  });
-
-  const priceOptions = useMemo(() => {
-    const booksById = new Map(priceBooks.map((book) => [book.id, book]));
-    return priceItems
-      .map((item) => {
-        const book = booksById.get(item.price_book_id);
-        if (!book) return null;
-        return {
-          ...item,
-          principal_id: book.principal_id,
-          price_book_year: book.year,
-          price_book_status: book.status,
-          book_fees_enabled: book.fees_enabled,
-          book_expense_reimbursements_enabled: book.expense_reimbursements_enabled,
-        };
-      })
-      .filter((item): item is PriceOption => Boolean(item))
-      .filter((item) =>
-        item.kind === "fee" ? item.book_fees_enabled : item.book_expense_reimbursements_enabled,
-      );
-  }, [priceBooks, priceItems]);
-
-  const stats = useMemo(() => {
-    const valid = previewRows.filter((row) => row.errors.length === 0).length;
-    const errors = previewRows.length - valid;
-    return { valid, errors, plan: summarizeImportPreviewPlan(previewRows) };
-  }, [previewRows]);
-  const hasImportedStagedRows = stagedRows.some((row) => row.status === "imported");
-  const hasFailedStagedRows = stagedRows.some((row) => row.status === "error");
-  const importableStagedRowsCount = stagedRows.filter(
-    (row) => row.status === "valid" || row.status === "warning",
-  ).length;
-  const isPartialImportComplete =
-    hasImportedStagedRows && hasFailedStagedRows && importableStagedRowsCount === 0;
-  const existingPracticesPending = existingPracticesLoading || existingPracticesFetching;
-  const canBuildPreview = rows.length > 0 && (!existingPracticesPending || existingPracticesError);
-
-  const handleFile = async (file: File | null) => {
-    if (!file) return;
-    try {
-      const sheet = await parseFirstXlsxSheet(file);
-      if (sheet.headers.length === 0) throw new Error("Il file non contiene intestazioni.");
-      setFileName(file.name);
-      setHeaders(sheet.headers);
-      setRows(sheet.rows);
-      setColumnMap(autoMapExcelColumns(sheet.headers));
-      setPreviewRows([]);
-      setStagedRows([]);
-      toast.success("File letto");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "File Excel non leggibile");
-    }
-  };
-
-  const buildPreview = async () => {
-    if (existingPracticesPending && !existingPracticesError) {
-      toast.error("Attendi il caricamento delle pratiche esistenti prima di validare il file.");
-      return;
-    }
-
-    let practicesForPlan = existingPractices;
-
-    if (existingPracticesError) {
-      const result = await refetchExistingPractices();
-      if (result.isError) {
-        toast.error("Non riesco a leggere le pratiche esistenti. Riprova tra poco.");
-        return;
-      }
-      practicesForPlan = result.data ?? [];
-    }
-
-    const preview = applyImportPreviewPlan(
-      rows.map((row, index) =>
-        normalizeExcelRow(
-          index + 2,
-          row,
-          headers,
-          columnMap,
-          principals,
-          clients,
-          counterparties,
-          priceOptions,
-        ),
-      ),
-      practicesForPlan,
-    );
-    setPreviewRows(preview);
-    setStagedRows([]);
-    toast.success("Validazione completata");
-  };
-
-  const stageMutation = useMutation({
-    mutationFn: async () => {
-      if (!user) throw new Error("Sessione non valida");
-      if (previewRows.length === 0) throw new Error("Valida prima il file Excel.");
-      if (stats.valid === 0) throw new Error("Non ci sono righe valide da preparare.");
-      if (hasImportedStagedRows) {
-        throw new Error("Questa anteprima è già stata importata. Valida di nuovo il file.");
-      }
-
-      const { data: importRow, error: importError } = await supabase
-        .from("imports")
-        .insert({
-          user_id: user.id,
-          mode: "excel",
-          status: stats.errors > 0 ? "draft" : "validated",
-          source_file_name: fileName || null,
-          total_rows: previewRows.length,
-          valid_rows: stats.valid,
-          error_rows: stats.errors,
-          notes: "Archivio preparato da Excel strutturato.",
-        })
-        .select("id")
-        .single();
-      if (importError) throw importError;
-
-      const rowsToInsert = previewRows.map((row) => ({
-        user_id: user.id,
-        import_id: importRow.id,
-        row_number: row.rowNumber,
-        status: row.errors.length > 0 ? "error" : row.warnings.length > 0 ? "warning" : "valid",
-        raw_data: row.rawData as unknown as Json,
-        normalized_data: (row.normalized ?? {}) as unknown as Json,
-        error_messages: row.errors,
-        warning_messages: row.warnings,
-      }));
-
-      const { data, error: rowsError } = await supabase
-        .from("import_rows")
-        .insert(rowsToInsert)
-        .select("id, row_number, status");
-      if (rowsError) throw rowsError;
-
-      const rowIds = new Map((data ?? []).map((row) => [row.row_number, row.id]));
-      return previewRows.map((row) => ({
-        rowId: rowIds.get(row.rowNumber) ?? "",
-        rowNumber: row.rowNumber,
-        status: row.errors.length > 0 ? "error" : row.warnings.length > 0 ? "warning" : "valid",
-        normalized: row.normalized,
-        errors: row.errors,
-        warnings: row.warnings,
-      })) satisfies ExcelStagedRow[];
-    },
-    onSuccess: (staged) => {
-      setStagedRows(staged);
-      toast.success("Staging pronto");
-    },
-    onError: (error: Error) => toast.error(error.message),
-    onSettled: stageLock.release,
-  });
-
-  const confirmMutation = useMutation({
-    mutationFn: async () => {
-      const importableRows = stagedRows.filter(
-        (row) =>
-          row.rowId && row.normalized && (row.status === "valid" || row.status === "warning"),
-      );
-      if (importableRows.length === 0) throw new Error("Non ci sono righe pronte da importare.");
-
-      const failures: string[] = [];
-      const importedCaseIds: string[] = [];
-      const importedRowIds: string[] = [];
-      const failedRowIds: string[] = [];
-      for (const row of importableRows) {
-        try {
-          importedCaseIds.push(await applyImportRow(row.rowId));
-          importedRowIds.push(row.rowId);
-        } catch (error) {
-          const message = error instanceof Error ? error.message : "Errore sconosciuto";
-          failures.push(`Riga ${row.rowNumber}: ${message}`);
-          failedRowIds.push(row.rowId);
-          await supabase
-            .from("import_rows")
-            .update({ status: "error", error_messages: [message] })
-            .eq("id", row.rowId);
-        }
-      }
-      return { importedCaseIds, importedRowIds, failedRowIds, failures };
-    },
-    onSuccess: async ({ importedCaseIds, importedRowIds, failedRowIds, failures }) => {
-      await Promise.all([
-        qc.invalidateQueries({ queryKey: ["imports"] }),
-        qc.invalidateQueries({ queryKey: ["cases"] }),
-        qc.invalidateQueries({ queryKey: ["activities"] }),
-        qc.invalidateQueries({ queryKey: ["principals"] }),
-        qc.invalidateQueries({ queryKey: ["clients"] }),
-        qc.invalidateQueries({ queryKey: ["counterparties"] }),
-        qc.invalidateQueries({ queryKey: ["dashboard"] }),
-      ]);
-      const imported = new Set(importedRowIds);
-      const failed = new Set(failedRowIds);
-      setStagedRows((current) =>
-        current.map((row) =>
-          imported.has(row.rowId)
-            ? { ...row, status: "imported" }
-            : failed.has(row.rowId)
-              ? { ...row, status: "error" }
-              : row,
-        ),
-      );
-      if (failures.length > 0) {
-        toast.error(`${importedCaseIds.length} righe importate, ${failures.length} con errore.`);
-      } else {
-        toast.success(`${importedCaseIds.length} righe importate.`);
-      }
-    },
-    onError: (error: Error) => toast.error(error.message),
-    onSettled: confirmLock.release,
-  });
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start gap-3">
-          <FileSpreadsheet className="mt-1 size-5 text-muted-foreground" />
-          <div>
-            <CardTitle className="text-base">Import Excel strutturato</CardTitle>
-            <CardDescription>
-              Carica un file .xlsx, mappa le colonne, valida le righe e conferma solo quelle pronte.
-            </CardDescription>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-5">
-        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
-          <div className="space-y-2">
-            <Label htmlFor="archive_excel">File Excel</Label>
-            <Input
-              id="archive_excel"
-              type="file"
-              accept=".xlsx"
-              onChange={(event) => void handleFile(event.target.files?.[0] ?? null)}
-            />
-          </div>
-          <Button type="button" disabled={!canBuildPreview} onClick={() => void buildPreview()}>
-            {existingPracticesPending && !existingPracticesError
-              ? "Caricamento pratiche…"
-              : existingPracticesError
-                ? "Riprova validazione"
-                : "Valida file"}
-          </Button>
-        </div>
-
-        {headers.length > 0 ? (
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div>
-                <p className="text-sm font-medium">{fileName}</p>
-                <p className="text-sm text-muted-foreground">
-                  {rows.length} righe lette. Controlla la mappatura prima dello staging.
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Badge variant="outline">{headers.length} colonne</Badge>
-                {previewRows.length > 0 ? (
-                  <>
-                    <Badge variant="outline">{stats.valid} valide</Badge>
-                    <Badge variant="outline">{stats.plan.create} da creare</Badge>
-                    <Badge variant={stats.plan.update > 0 ? "outline" : "outline"}>
-                      {stats.plan.update} da aggiornare
-                    </Badge>
-                    <Badge variant={stats.errors > 0 ? "destructive" : "outline"}>
-                      {stats.errors} errori
-                    </Badge>
-                  </>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="rounded-md border border-border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Colonna Excel</TableHead>
-                    <TableHead>Campo Pratix</TableHead>
-                    <TableHead>Esempio</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {headers.map((header, index) => (
-                    <TableRow key={`${header}-${index}`}>
-                      <TableCell className="font-medium">
-                        {header || `Colonna ${index + 1}`}
-                      </TableCell>
-                      <TableCell>
-                        <Select
-                          value={columnMap[index] ?? "ignore"}
-                          onValueChange={(value) => {
-                            setColumnMap((current) => ({
-                              ...current,
-                              [index]: value as ExcelColumnKey,
-                            }));
-                            setPreviewRows([]);
-                            setStagedRows([]);
-                          }}
-                        >
-                          <SelectTrigger
-                            aria-label={`Mappa colonna Excel ${header || `Colonna ${index + 1}`}`}
-                          >
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {excelColumnOptions.map((option) => (
-                              <SelectItem key={option.value} value={option.value}>
-                                {option.label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="max-w-[18rem] truncate text-muted-foreground">
-                        {rows.find((row) => row[index])?.[index] ?? "—"}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
-        ) : null}
-
-        {previewRows.length > 0 ? (
-          <div className="space-y-3">
-            <div className="rounded-md border border-border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Riga</TableHead>
-                    <TableHead>Pratica</TableHead>
-                    <TableHead>Committente</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Controparte</TableHead>
-                    <TableHead>Piano import</TableHead>
-                    <TableHead>Esito</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {previewRows.slice(0, 20).map((row) => (
-                    <TableRow key={row.rowNumber}>
-                      <TableCell>{row.rowNumber}</TableCell>
-                      <TableCell>{row.normalized?.practice.practiceNumber ?? "—"}</TableCell>
-                      <TableCell>{row.normalized?.principal.name ?? "—"}</TableCell>
-                      <TableCell>
-                        {row.normalized ? displayNormalizedClient(row.normalized.client) : "—"}
-                      </TableCell>
-                      <TableCell>
-                        {row.normalized
-                          ? displayNormalizedCounterparty(row.normalized.counterparty)
-                          : "—"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <Badge
-                            variant={row.importPlan.action === "ignore" ? "destructive" : "outline"}
-                          >
-                            {row.importPlan.label}
-                          </Badge>
-                          <p className="text-xs text-muted-foreground">{row.importPlan.detail}</p>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {row.errors.length > 0 ? (
-                          <Badge variant="destructive">{row.errors[0]}</Badge>
-                        ) : row.warnings.length > 0 ? (
-                          <Badge variant="outline">{row.warnings[0]}</Badge>
-                        ) : (
-                          <Badge variant="outline">Valida</Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-            {previewRows.length > 20 ? (
-              <p className="text-sm text-muted-foreground">
-                Anteprima limitata alle prime 20 righe. Lo staging considera tutte le righe.
-              </p>
-            ) : null}
-          </div>
-        ) : null}
-
-        <div className="flex flex-wrap justify-end gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={
-              stageMutation.isPending ||
-              previewRows.length === 0 ||
-              stats.valid === 0 ||
-              hasImportedStagedRows
-            }
-            onClick={() => {
-              if (stageLock.acquire()) stageMutation.mutate();
-            }}
-          >
-            {hasImportedStagedRows
-              ? "Staging importato"
-              : stageMutation.isPending
-                ? "Preparazione…"
-                : `Prepara ${stats.valid} righe`}
-          </Button>
-          <Button
-            type="button"
-            disabled={confirmMutation.isPending || importableStagedRowsCount === 0}
-            onClick={() => {
-              if (confirmLock.acquire()) confirmMutation.mutate();
-            }}
-          >
-            <CheckCircle2 className="mr-1 size-4" />
-            {isPartialImportComplete
-              ? "Import parziale"
-              : hasImportedStagedRows && importableStagedRowsCount === 0
-                ? "Import completato"
-                : confirmMutation.isPending
-                  ? "Importazione…"
-                  : "Importa righe valide"}
-          </Button>
-        </div>
-        {isPartialImportComplete ? (
-          <p className="text-right text-sm text-muted-foreground">
-            Alcune righe non sono state importate. Valida di nuovo il file dopo le correzioni.
-          </p>
-        ) : null}
-      </CardContent>
-    </Card>
-  );
-}
-
-const excelColumnOptions: Array<{ value: ExcelColumnKey; label: string }> = [
-  { value: "ignore", label: "Ignora" },
-  { value: "principalName", label: "Committente" },
-  { value: "clientName", label: "Cliente" },
-  { value: "counterpartyName", label: "Controparte" },
-  { value: "practiceNumber", label: "Numero pratica" },
-  { value: "title", label: "Titolo pratica" },
-  { value: "status", label: "Stato pratica" },
-  { value: "openedAt", label: "Data apertura" },
-  { value: "closedAt", label: "Data chiusura" },
-  { value: "authority", label: "Autorità" },
-  { value: "rgNumber", label: "N. R.G." },
-  { value: "notes", label: "Note pratica" },
-  { value: "activityDate", label: "Data attività" },
-  { value: "priceCode", label: "Codice prezzo" },
-  { value: "priceName", label: "Voce prezzo" },
-  { value: "quantity", label: "Quantità" },
-  { value: "amount", label: "Importo rimborso" },
-  { value: "activityStatus", label: "Stato attività" },
-  { value: "activityNotes", label: "Note attività" },
-  { value: "hearingDates", label: "Date udienza" },
-];
-
-function autoMapExcelColumns(headers: string[]) {
-  return headers.reduce<Record<number, ExcelColumnKey>>((map, header, index) => {
-    const normalized = normalizeText(header);
-    if (/committente|mandante/.test(normalized)) map[index] = "principalName";
-    else if (/cliente/.test(normalized)) map[index] = "clientName";
-    else if (/controparte|debitore/.test(normalized)) map[index] = "counterpartyName";
-    else if (/numero.*pratica|n.*pratica|pratica/.test(normalized)) map[index] = "practiceNumber";
-    else if (/titolo|oggetto/.test(normalized)) map[index] = "title";
-    else if (/stato.*pratica/.test(normalized)) map[index] = "status";
-    else if (/data.*apertura|apertura/.test(normalized)) map[index] = "openedAt";
-    else if (/data.*chiusura|chiusura/.test(normalized)) map[index] = "closedAt";
-    else if (/autorita|tribunale|giudice/.test(normalized)) map[index] = "authority";
-    else if (/r\.?g\.?|ruolo/.test(normalized)) map[index] = "rgNumber";
-    else if (/data.*attivita|data.*prestazione/.test(normalized)) map[index] = "activityDate";
-    else if (/codice.*prezzo|codice.*voce|codice/.test(normalized)) map[index] = "priceCode";
-    else if (/voce|prezzo|attivita|prestazione|compenso|onorario|rimborso/.test(normalized))
-      map[index] = "priceName";
-    else if (/quantita|qta|numero/.test(normalized)) map[index] = "quantity";
-    else if (/importo|spesa/.test(normalized)) map[index] = "amount";
-    else if (/stato.*attivita|fatturat/.test(normalized)) map[index] = "activityStatus";
-    else if (/udienz/.test(normalized)) map[index] = "hearingDates";
-    else if (/note.*attivita/.test(normalized)) map[index] = "activityNotes";
-    else if (/note/.test(normalized)) map[index] = "notes";
-    else map[index] = "ignore";
-    return map;
-  }, {});
-}
-
-function normalizeExcelRow(
-  rowNumber: number,
-  row: string[],
-  headers: string[],
-  columnMap: Record<number, ExcelColumnKey>,
-  principals: PrincipalRow[],
-  clients: ClientRow[],
-  counterparties: CounterpartyRow[],
-  priceOptions: PriceOption[],
-): ExcelPreviewRow {
-  const rawData = headers.reduce<Record<string, string>>((data, header, index) => {
-    data[header || `Colonna ${index + 1}`] = row[index] ?? "";
-    return data;
-  }, {});
-  const value = (key: ExcelColumnKey) => {
-    const index = Number(Object.entries(columnMap).find(([, mapped]) => mapped === key)?.[0]);
-    return Number.isInteger(index) ? (row[index] ?? "").trim() : "";
-  };
-
-  const principalName = value("principalName");
-  const clientName = value("clientName");
-  const counterpartyName = value("counterpartyName");
-  const selectedPrincipal = findByName(
-    principals,
-    principalName,
-    (principal) => principal.business_name,
-  );
-  const selectedClient = findByName(clients, clientName, clientDisplayName);
-  const selectedCounterparty = findCounterpartyByName(counterparties, counterpartyName);
-  const openedAt = parseExcelDate(value("openedAt")) || today();
-  const activityDate = parseExcelDate(value("activityDate"));
-  const practiceStatus = parseCaseStatus(value("status"));
-  const activityStatus = parseActivityStatus(value("activityStatus"));
-  const priceOptionsForPrincipal = selectedPrincipal
-    ? selectPriceOptionsForPrincipal(
-        priceOptions,
-        selectedPrincipal.id,
-        Number((activityDate || openedAt).slice(0, 4)),
-      )
-    : [];
-  const priceOption = findPriceOption(
-    priceOptionsForPrincipal,
-    value("priceCode"),
-    value("priceName"),
-  );
-  const quantity = parseExcelNumber(value("quantity")) || 1;
-  const amount = parseExcelNumber(value("amount"));
-
-  const draft: ImportDraft = {
-    ...initialDraft(),
-    principalMode: selectedPrincipal ? "existing" : "new",
-    principalId: selectedPrincipal?.id ?? "",
-    principalName,
-    clientMode: selectedClient ? "existing" : "new",
-    clientId: selectedClient?.id ?? "",
-    clientKind: "company",
-    clientBusinessName: clientName,
-    counterpartyMode: selectedCounterparty ? "existing" : "new",
-    counterpartyId: selectedCounterparty?.id ?? "",
-    counterpartyKind: "company",
-    counterpartyBusinessName: counterpartyName,
-    practiceNumber: value("practiceNumber"),
-    title: value("title"),
-    status: practiceStatus,
-    openedAt,
-    closedAt: parseExcelDate(value("closedAt")),
-    authority: value("authority"),
-    rgNumber: value("rgNumber"),
-    notes: value("notes"),
-    activities:
-      value("priceCode") || value("priceName")
-        ? [
-            {
-              localId: `${rowNumber}`,
-              activityId: crypto.randomUUID(),
-              activityDate: activityDate || openedAt,
-              priceItemId: priceOption?.id ?? "",
-              description:
-                priceOption?.invoice_description || priceOption?.name || value("priceName"),
-              quantity,
-              freeAmount: amount,
-              status: activityStatus,
-              notes: value("activityNotes"),
-              hearingDates: parseHearingDates(value("hearingDates")),
-              attachmentFile: null,
-              attachmentName: "",
-              attachmentType: "",
-              attachmentNotes: "",
-            },
-          ]
-        : [],
-  };
-
-  const prepared = buildNormalizedImport(
-    draft,
-    principals,
-    clients,
-    counterparties,
-    priceOptionsForPrincipal,
-  );
-
-  if ((value("priceCode") || value("priceName")) && !priceOption) {
-    prepared.errors.push(
-      `Riga ${rowNumber}: voce prezzo non trovata per il committente e l'anno attività.`,
-    );
-  }
-
-  return {
-    rowNumber,
-    rawData,
-    normalized: prepared.errors.length > 0 ? null : prepared.normalized,
-    errors: prepared.errors,
-    warnings: prepared.warnings,
-    importPlan: {
-      action: "ignore",
-      label: "Da valutare",
-      detail: "Valida la riga per calcolare il piano import.",
-    },
-  };
-}
-
 function ModeSelect({
   id,
   value,
@@ -2493,7 +1732,7 @@ function counterpartyImportNames(counterparty: CounterpartyRow) {
   ];
 }
 
-function parseExcelDate(value: string) {
+function parseDateInput(value: string) {
   const trimmed = value.trim();
   if (!trimmed) return "";
   if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
@@ -2510,29 +1749,10 @@ function parseExcelDate(value: string) {
   return `${fullYear}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
 }
 
-function parseExcelNumber(value: string) {
-  const normalized = value.replace(/\./g, "").replace(",", ".").trim();
-  const number = Number(normalized);
-  return Number.isFinite(number) ? number : 0;
-}
-
-function parseCaseStatus(value: string): CaseStatus {
-  const normalized = normalizeText(value);
-  if (/chius|definit/.test(normalized)) return "closed";
-  if (/archiv/.test(normalized)) return "archived";
-  if (/sosp/.test(normalized)) return "suspended";
-  if (/corso|lavor/.test(normalized)) return "in_progress";
-  return "open";
-}
-
-function parseActivityStatus(value: string): ActivityStatus {
-  return /fatturat|emess/.test(normalizeText(value)) ? "invoiced" : "to_invoice";
-}
-
 function parseHearingDates(value: string) {
   return value
     .split(/[;,|]/)
-    .map((date) => parseExcelDate(date))
+    .map((date) => parseDateInput(date))
     .filter(Boolean);
 }
 

@@ -19,7 +19,7 @@ const AUTH_ROUTES = [
   "/novita",
   "/account",
   "/impostazioni",
-  "/import-archivio",
+  "/creazione-guidata",
 ];
 const THEMES = ["light", "dark"];
 const VIEWPORTS = [

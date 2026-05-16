@@ -33,7 +33,7 @@ Postgres + Auth + Storage + Realtime.
 - `billing_runs` — selezioni fatturazione per committente e periodo
 - `billing_run_items` — righe incluse, rinviate o escluse da una fatturazione
 - `billing_exports` — rendiconti Excel generati
-- `imports` — sessioni import manuale o Excel
+- `imports` — sessioni della Creazione guidata manuale
 - `import_rows` — righe di staging import
 - `invoices` — fatture emesse, con righe e dati FatturaPA
 - `invoice_lines` — righe fattura

@@ -17,8 +17,8 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as NovitaRouteImport } from './routes/novita'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImpostazioniRouteImport } from './routes/impostazioni'
-import { Route as ImportArchivioRouteImport } from './routes/import-archivio'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CreazioneGuidataRouteImport } from './routes/creazione-guidata'
 import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PrezziIndexRouteImport } from './routes/prezzi.index'
@@ -82,14 +82,14 @@ const ImpostazioniRoute = ImpostazioniRouteImport.update({
   path: '/impostazioni',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ImportArchivioRoute = ImportArchivioRouteImport.update({
-  id: '/import-archivio',
-  path: '/import-archivio',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CreazioneGuidataRoute = CreazioneGuidataRouteImport.update({
+  id: '/creazione-guidata',
+  path: '/creazione-guidata',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountRoute = AccountRouteImport.update({
@@ -207,8 +207,8 @@ const ApiCronDailyRoute = ApiCronDailyRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/creazione-guidata': typeof CreazioneGuidataRoute
   '/dashboard': typeof DashboardRoute
-  '/import-archivio': typeof ImportArchivioRoute
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/novita': typeof NovitaRoute
@@ -241,8 +241,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/creazione-guidata': typeof CreazioneGuidataRoute
   '/dashboard': typeof DashboardRoute
-  '/import-archivio': typeof ImportArchivioRoute
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/novita': typeof NovitaRoute
@@ -276,8 +276,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/account': typeof AccountRoute
+  '/creazione-guidata': typeof CreazioneGuidataRoute
   '/dashboard': typeof DashboardRoute
-  '/import-archivio': typeof ImportArchivioRoute
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/novita': typeof NovitaRoute
@@ -312,8 +312,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/account'
+    | '/creazione-guidata'
     | '/dashboard'
-    | '/import-archivio'
     | '/impostazioni'
     | '/login'
     | '/novita'
@@ -346,8 +346,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/account'
+    | '/creazione-guidata'
     | '/dashboard'
-    | '/import-archivio'
     | '/impostazioni'
     | '/login'
     | '/novita'
@@ -380,8 +380,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/account'
+    | '/creazione-guidata'
     | '/dashboard'
-    | '/import-archivio'
     | '/impostazioni'
     | '/login'
     | '/novita'
@@ -415,8 +415,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AccountRoute: typeof AccountRoute
+  CreazioneGuidataRoute: typeof CreazioneGuidataRoute
   DashboardRoute: typeof DashboardRoute
-  ImportArchivioRoute: typeof ImportArchivioRoute
   ImpostazioniRoute: typeof ImpostazioniRoute
   LoginRoute: typeof LoginRoute
   NovitaRoute: typeof NovitaRoute
@@ -505,18 +505,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ImpostazioniRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/import-archivio': {
-      id: '/import-archivio'
-      path: '/import-archivio'
-      fullPath: '/import-archivio'
-      preLoaderRoute: typeof ImportArchivioRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/dashboard': {
       id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/creazione-guidata': {
+      id: '/creazione-guidata'
+      path: '/creazione-guidata'
+      fullPath: '/creazione-guidata'
+      preLoaderRoute: typeof CreazioneGuidataRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account': {
@@ -679,8 +679,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AccountRoute: AccountRoute,
+  CreazioneGuidataRoute: CreazioneGuidataRoute,
   DashboardRoute: DashboardRoute,
-  ImportArchivioRoute: ImportArchivioRoute,
   ImpostazioniRoute: ImpostazioniRoute,
   LoginRoute: LoginRoute,
   NovitaRoute: NovitaRoute,

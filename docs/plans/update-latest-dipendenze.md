@@ -213,12 +213,12 @@ npm install lucide-react@latest
 
 Superfici da controllare:
 
-| Pacchetto          | Superfici Pratix da verificare                                     |
-| ------------------ | ------------------------------------------------------------------ |
-| `zod`              | form, server functions, import archivio Excel, validazioni fatture |
-| `react-day-picker` | selettori data, filtri per periodo, fatturazione, attività         |
-| `recharts`         | dashboard e grafici                                                |
-| `lucide-react`     | sidebar, topbar, pulsanti, empty state                             |
+| Pacchetto          | Superfici Pratix da verificare                                 |
+| ------------------ | -------------------------------------------------------------- |
+| `zod`              | form, server functions, Creazione guidata, validazioni fatture |
+| `react-day-picker` | selettori data, filtri per periodo, fatturazione, attività     |
+| `recharts`         | dashboard e grafici                                            |
+| `lucide-react`     | sidebar, topbar, pulsanti, empty state                         |
 
 Per ogni pacchetto:
 
@@ -406,7 +406,7 @@ Smoke test manuali/browser:
 5. attività;
 6. committenti, clienti e controparti;
 7. fatture e generazione PDF/XML;
-8. import archivio manuale/Excel;
+8. Creazione guidata manuale;
 9. account/impostazioni;
 10. tema chiaro/scuro;
 11. mobile e desktop.
@@ -432,7 +432,7 @@ Esito Fase 6 (2026-05-09):
    - recupero password mostra lo stato `Controlla la tua casella.`;
 7. route protette non autenticate (`/dashboard`, `/pratiche`, `/attivita`,
    `/committenti`, `/clienti`, `/controparti`, `/fatture`, `/fatture/nuova`,
-   `/import-archivio`, `/account`, `/impostazioni`, `/novita`) reindirizzano
+   `/creazione-guidata`, `/account`, `/impostazioni`, `/novita`) reindirizzano
    correttamente a `/login`;
 8. console browser senza errori inattesi: i 404 locali su
    `/_vercel/insights/script.js` e `/_vercel/speed-insights/script.js` sono
@@ -440,7 +440,7 @@ Esito Fase 6 (2026-05-09):
    login con credenziali errate.
 
 Limite residuo: i flussi autenticati profondi (dashboard con dati reali,
-pratiche, attività, generazione PDF/XML fatture, import archivio e impostazioni
+pratiche, attività, generazione PDF/XML fatture, Creazione guidata e impostazioni
 account) non sono stati eseguiti end-to-end perché questa fase non dispone di
 una sessione utente test autenticata e fixture anonime dedicate. Restano da
 validare in Fase 7 o prima del merge/deploy con credenziali test controllate.

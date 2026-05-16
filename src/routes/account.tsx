@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import {
   Download,
   FileArchive,
-  FileUp,
   Fingerprint,
   MailCheck,
   Save,
@@ -256,23 +255,6 @@ function AccountPage() {
         </TabsContent>
 
         <TabsContent value="dati" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileUp className="size-4 text-muted-foreground" />
-                Import archivio
-              </CardTitle>
-              <CardDescription>
-                Trascrivi pratiche da archivio cartaceo o importa un Excel strutturato.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" asChild>
-                <Link to="/import-archivio">Apri import archivio</Link>
-              </Button>
-            </CardContent>
-          </Card>
-
           <DataExportCard />
 
           <DeleteAccountCard
