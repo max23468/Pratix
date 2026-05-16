@@ -1345,7 +1345,10 @@ export type Database = {
           bank_name: string | null
           bar_association: string | null
           business_name: string | null
+          case_public_code_next_number: number
           cassa_rate: number
+          client_public_code_next_number: number
+          counterparty_public_code_next_number: number
           created_at: string
           email: string | null
           full_name: string | null
@@ -1353,12 +1356,15 @@ export type Database = {
           id: string
           invoice_next_number: number
           invoice_number_prefix: string | null
+          invoice_public_code_next_number: number
           invoice_year: number
           last_seen_changelog_version: string | null
           logo_url: string | null
           onboarding_completed: boolean
           pec: string | null
           phone: string | null
+          price_book_public_code_next_number: number
+          principal_public_code_next_number: number
           rea: string | null
           tax_code: string | null
           tax_regime: Database["public"]["Enums"]["tax_regime"]
@@ -1377,7 +1383,10 @@ export type Database = {
           bank_name?: string | null
           bar_association?: string | null
           business_name?: string | null
+          case_public_code_next_number?: number
           cassa_rate?: number
+          client_public_code_next_number?: number
+          counterparty_public_code_next_number?: number
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -1385,12 +1394,15 @@ export type Database = {
           id: string
           invoice_next_number?: number
           invoice_number_prefix?: string | null
+          invoice_public_code_next_number?: number
           invoice_year?: number
           last_seen_changelog_version?: string | null
           logo_url?: string | null
           onboarding_completed?: boolean
           pec?: string | null
           phone?: string | null
+          price_book_public_code_next_number?: number
+          principal_public_code_next_number?: number
           rea?: string | null
           tax_code?: string | null
           tax_regime?: Database["public"]["Enums"]["tax_regime"]
@@ -1409,7 +1421,10 @@ export type Database = {
           bank_name?: string | null
           bar_association?: string | null
           business_name?: string | null
+          case_public_code_next_number?: number
           cassa_rate?: number
+          client_public_code_next_number?: number
+          counterparty_public_code_next_number?: number
           created_at?: string
           email?: string | null
           full_name?: string | null
@@ -1417,12 +1432,15 @@ export type Database = {
           id?: string
           invoice_next_number?: number
           invoice_number_prefix?: string | null
+          invoice_public_code_next_number?: number
           invoice_year?: number
           last_seen_changelog_version?: string | null
           logo_url?: string | null
           onboarding_completed?: boolean
           pec?: string | null
           phone?: string | null
+          price_book_public_code_next_number?: number
+          principal_public_code_next_number?: number
           rea?: string | null
           tax_code?: string | null
           tax_regime?: Database["public"]["Enums"]["tax_regime"]
