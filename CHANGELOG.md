@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.5.3] — 2026-05-16
+
+### Correzioni
+
+- **Rendiconti Excel**: nella colonna NDG-DENOMINAZIONE viene riportata solo la controparte e le celle G9/H9 del template compensi mantengono il colore coerente con le altre righe.
+
 ## [1.5.2] — 2026-05-16
 
 ### Correzioni

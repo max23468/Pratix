@@ -423,8 +423,7 @@ const clearDataRow = (rowXml: string, row: number, lastColumnIndex: number) => {
   return nextRow;
 };
 
-const practiceLabel = (row: BillingExportRow) =>
-  row.practiceNumber ? `${row.practiceNumber} - ${row.counterpartyName}` : row.counterpartyName;
+const counterpartyLabel = (row: BillingExportRow) => row.counterpartyName;
 
 const buildTemplateRows = (sheetXml: string, config: TemplateConfig, dataRowCount: number) => {
   const rows = parseRows(sheetXml);
@@ -522,7 +521,7 @@ const populateFeesRows = (
       stringCellFromTemplate(rowNumber, 1, billingRow.clientName, cell),
     );
     nextRow = setCell(nextRow, rowNumber, 2, (cell) =>
-      stringCellFromTemplate(rowNumber, 2, practiceLabel(billingRow), cell),
+      stringCellFromTemplate(rowNumber, 2, counterpartyLabel(billingRow), cell),
     );
     nextRow = setCell(nextRow, rowNumber, matchedColumn.columnIndex, (cell) =>
       numberCellFromTemplate(rowNumber, matchedColumn.columnIndex, billingRow.quantity, cell),
@@ -562,7 +561,7 @@ const populateExpenseRows = (
       stringCellFromTemplate(rowNumber, 2, billingRow.clientName, cell),
     );
     nextRow = setCell(nextRow, rowNumber, 3, (cell) =>
-      stringCellFromTemplate(rowNumber, 3, practiceLabel(billingRow), cell),
+      stringCellFromTemplate(rowNumber, 3, counterpartyLabel(billingRow), cell),
     );
     nextRow = setCell(nextRow, rowNumber, matchedColumn.columnIndex, (cell) =>
       numberCellFromTemplate(rowNumber, matchedColumn.columnIndex, billingRow.amount, cell),
