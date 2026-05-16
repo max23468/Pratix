@@ -59,6 +59,7 @@ export type BillingActivity = {
 };
 
 export type BillingInvoiceLine = {
+  case_activity_id?: string | null;
   practice_number: number | null;
   client_name: string | null;
   counterparty_name: string | null;
@@ -68,6 +69,7 @@ export type BillingInvoiceLine = {
   quantity: number | string;
   unit_price: number | string;
   amount: number | string;
+  case_activity_hearings?: Array<{ hearing_date: string; position: number | string }> | null;
 };
 
 export type BillingTotals = {
@@ -428,7 +430,10 @@ export function buildBillingExportRowsFromInvoiceLines(
       quantity: Number(line.quantity),
       unitPrice: Number(line.unit_price),
       amount: Number(line.amount),
-      hearingDates: [],
+      hearingDates: (line.case_activity_hearings ?? [])
+        .slice()
+        .sort((a, b) => Number(a.position) - Number(b.position))
+        .map((hearing) => hearing.hearing_date),
     }));
 }
 

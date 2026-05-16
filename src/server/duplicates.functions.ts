@@ -406,14 +406,7 @@ async function mergeCounterparties(
 ) {
   const db = asDb(client);
   await updateTable(db, "cases", { counterparty_id: keptId }, userId, "counterparty_id", mergedId);
-  await updateTable(
-    db,
-    "counterparty_subjects",
-    { counterparty_id: keptId },
-    userId,
-    "counterparty_id",
-    mergedId,
-  );
+  await moveCounterpartySubjects(db, userId, keptId, mergedId);
   await updateTable(
     db,
     "case_activities",
@@ -424,6 +417,42 @@ async function mergeCounterparties(
   );
   if (await canDeleteMinimalCounterparty(db, userId, mergedId)) {
     await db.from("counterparties").delete().eq("user_id", userId).eq("id", mergedId);
+  }
+}
+
+async function moveCounterpartySubjects(
+  db: UntypedSupabase,
+  userId: string,
+  keptCounterpartyId: string,
+  mergedCounterpartyId: string,
+) {
+  const [{ data: keptSubjects, error: keptError }, { data: mergedSubjects, error: mergedError }] =
+    await Promise.all([
+      db
+        .from<Array<{ position: number }>>("counterparty_subjects")
+        .select("position")
+        .eq("user_id", userId)
+        .eq("counterparty_id", keptCounterpartyId),
+      db
+        .from<Array<{ id: string; position: number }>>("counterparty_subjects")
+        .select("id, position")
+        .eq("user_id", userId)
+        .eq("counterparty_id", mergedCounterpartyId)
+        .order("position", { ascending: true }),
+    ]);
+  if (keptError) throw keptError;
+  if (mergedError) throw mergedError;
+
+  const nextPosition =
+    Math.max(-1, ...(keptSubjects ?? []).map((subject) => Number(subject.position))) + 1;
+
+  for (const [index, subject] of (mergedSubjects ?? []).entries()) {
+    const { error } = await db
+      .from("counterparty_subjects")
+      .update({ counterparty_id: keptCounterpartyId, position: nextPosition + index })
+      .eq("user_id", userId)
+      .eq("id", subject.id);
+    if (error) throw error;
   }
 }
 
