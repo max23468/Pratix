@@ -1,12 +1,13 @@
 // @vitest-environment jsdom
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { toast, navigate, createBillingInvoice, supabase } = vi.hoisted(() => {
+const { toast, navigate, createBillingInvoice, setProfileTaxRegime, supabase } = vi.hoisted(() => {
+  let profileTaxRegime: "ordinario" | "forfettario" = "ordinario";
   const dataFor = (table: string) => {
     if (table === "profiles") {
       return {
@@ -14,7 +15,7 @@ const { toast, navigate, createBillingInvoice, supabase } = vi.hoisted(() => {
           cassa_rate: 4,
           vat_rate: 22,
           withholding_rate: 20,
-          tax_regime: "ordinario",
+          tax_regime: profileTaxRegime,
         },
         error: null,
       };
@@ -116,6 +117,9 @@ const { toast, navigate, createBillingInvoice, supabase } = vi.hoisted(() => {
         exports: [],
       }),
     ),
+    setProfileTaxRegime: (regime: "ordinario" | "forfettario") => {
+      profileTaxRegime = regime;
+    },
     supabase: {
       from: vi.fn((table: string) => builderFor(table)),
       auth: {
@@ -201,6 +205,7 @@ function Wrapper({ children }: { children: ReactNode }) {
 describe("InvoiceForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setProfileTaxRegime("ordinario");
   });
 
   afterEach(() => {
@@ -267,5 +272,19 @@ describe("InvoiceForm", () => {
 
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Fattura 12/2026 generata"));
     expect(createBillingInvoice).toHaveBeenCalledTimes(1);
+  });
+
+  it("nasconde l'IVA dal riepilogo per il regime forfettario", async () => {
+    setProfileTaxRegime("forfettario");
+    render(<InvoiceForm />, { wrapper: Wrapper });
+
+    await screen.findByText("Banca Test");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[0], "principal-1");
+    await screen.findByText("Redazione diffida");
+
+    const summaryCard = screen.getByText("Riepilogo").parentElement?.parentElement;
+    expect(summaryCard).not.toBeNull();
+    expect(within(summaryCard as HTMLElement).queryByText("IVA")).toBeNull();
+    expect(within(summaryCard as HTMLElement).getByText("Cassa Forense")).toBeTruthy();
   });
 });

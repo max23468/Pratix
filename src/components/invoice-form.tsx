@@ -223,6 +223,7 @@ export function InvoiceForm() {
     () => activities.filter((activity) => selection[activity.id] === "included"),
     [activities, selection],
   );
+  const isForfettario = profile?.tax_regime === "forfettario";
 
   const totals = useMemo(() => {
     const lines: InvoiceLineInput[] = includedActivities.map((activity) => ({
@@ -235,7 +236,7 @@ export function InvoiceForm() {
       vatRate,
       withholdingRate,
       applyWithholding,
-      taxRegime: profile?.tax_regime === "forfettario" ? "forfettario" : "ordinario",
+      taxRegime: isForfettario ? "forfettario" : "ordinario",
       includeGeneralExpenses,
       generalExpensesRate,
     });
@@ -245,7 +246,7 @@ export function InvoiceForm() {
     generalExpensesRate,
     includeGeneralExpenses,
     includedActivities,
-    profile?.tax_regime,
+    isForfettario,
     vatRate,
     withholdingRate,
   ]);
@@ -615,7 +616,7 @@ export function InvoiceForm() {
               <SummaryRow label="Spese generali" value={totals.generalExpensesAmount} />
             )}
             <SummaryRow label="Cassa Forense" value={totals.cassaAmount} />
-            <SummaryRow label="IVA" value={totals.vatAmount} />
+            {!isForfettario && <SummaryRow label="IVA" value={totals.vatAmount} />}
             <SummaryRow label="Rimborsi Art. 15" value={totals.art15Expenses} />
             <SummaryRow label="Bollo" value={totals.stampAmount} />
             <div className="border-t border-border pt-3">
