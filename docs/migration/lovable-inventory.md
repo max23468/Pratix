@@ -99,14 +99,9 @@ Procedura:
 6. Cambiare la password temporanea dall'area Account appena l'app punta al nuovo
    Supabase. Completato in locale il 2026-05-02.
 
-Script locale:
-
-```bash
-node scripts/recreate-supabase-user.mjs
-```
-
-Lo script richiede env vars locali e non deve essere eseguito con valori
-committati.
+Lo script locale usato per questa operazione è stato rimosso dopo il cutover.
+Pratix usa link email passwordless e non conserva più helper per creare utenti
+con password temporanea.
 
 ## Variabili ambiente target
 

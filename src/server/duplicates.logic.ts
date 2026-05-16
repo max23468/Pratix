@@ -218,7 +218,7 @@ export function reviewInsertFromCandidate(userId: string, candidate: DuplicateCa
   };
 }
 
-export function sortDuplicateCandidates(a: DuplicateCandidate, b: DuplicateCandidate) {
+function sortDuplicateCandidates(a: DuplicateCandidate, b: DuplicateCandidate) {
   const statusOrder = { open: 0, snoozed: 1, dismissed: 2, merged: 3 };
   const statusDiff = statusOrder[a.status] - statusOrder[b.status];
   if (statusDiff !== 0) return statusDiff;
@@ -504,6 +504,6 @@ export function confidenceLabel(confidence: DuplicateConfidence) {
   return labels[confidence];
 }
 
-export function mergeSummaryLabel(entityType: DuplicateEntityType) {
+function mergeSummaryLabel(entityType: DuplicateEntityType) {
   return `Unione ${displayDuplicateEntity(entityType).toLowerCase()}`;
 }

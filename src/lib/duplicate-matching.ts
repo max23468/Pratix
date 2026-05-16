@@ -65,7 +65,7 @@ export function normalizeDuplicateText(value: string | null | undefined) {
     .trim();
 }
 
-export function normalizedTokens(value: string | null | undefined, options?: { legal?: boolean }) {
+function normalizedTokens(value: string | null | undefined, options?: { legal?: boolean }) {
   const tokens = normalizeDuplicateText(value).split(" ").filter(Boolean);
   return tokens.filter((token) => {
     if (WEAK_WORDS.has(token)) return false;
@@ -78,7 +78,7 @@ export function normalizeBusinessName(value: string | null | undefined) {
   return normalizedTokens(value, { legal: true }).join(" ");
 }
 
-export function personLabel(parts: NameParts) {
+function personLabel(parts: NameParts) {
   return [parts.firstName, parts.lastName].filter(Boolean).join(" ").trim();
 }
 
@@ -149,7 +149,7 @@ export function personNameSimilarity(a: NameParts, b: NameParts) {
   return Math.max(direct, inverted);
 }
 
-export function clampScore(score: number) {
+function clampScore(score: number) {
   return Math.max(0, Math.min(1, Number(score.toFixed(3))));
 }
 

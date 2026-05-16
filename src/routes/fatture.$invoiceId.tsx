@@ -49,6 +49,7 @@ import type { InvoicePdfData } from "@/lib/invoice-pdf";
 import { getUnpaidInvoiceStatus } from "@/lib/invoice-status";
 import { invoiceStatusLabels, invoiceStatusVariant } from "@/lib/labels";
 import { publicCodeLookup } from "@/lib/public-route-code";
+import { readServerResult } from "@/lib/server-functions";
 import { PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
 import { generateBillingExportFn, generateInvoiceXmlFn } from "@/server/invoices.functions";
 
@@ -70,21 +71,6 @@ const bytesFromBase64 = (value: string) => {
     bytes[index] = binary.charCodeAt(index);
   }
   return bytes;
-};
-
-const unwrapServerResult = <T,>(result: T | { data: T }) =>
-  "data" in Object(result) ? (result as { data: T }).data : (result as T);
-
-const readServerResult = async <T,>(result: T | { data: T } | Response) => {
-  if (result instanceof Response) {
-    if (!result.ok) throw new Error(await result.text());
-    const contentType = result.headers.get("content-type") ?? "";
-    if (contentType.includes("application/json")) {
-      return unwrapServerResult<T>(await result.json());
-    }
-    throw new Error("Risposta server non valida");
-  }
-  return unwrapServerResult<T>(result);
 };
 
 const XLSX_MIME_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";

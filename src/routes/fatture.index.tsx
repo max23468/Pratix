@@ -39,6 +39,7 @@ import {
 } from "@/lib/labels";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { routeRef } from "@/lib/public-route-code";
+import { readServerResult } from "@/lib/server-functions";
 import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
@@ -131,21 +132,6 @@ const fattureColumns: readonly SortableColumn<InvoiceListRow, FattureSortKey>[] 
     getValue: (invoice) => invoice.net_to_pay,
   },
 ];
-
-const unwrapServerResult = <T,>(result: T | { data: T }) =>
-  "data" in Object(result) ? (result as { data: T }).data : (result as T);
-
-const readServerResult = async <T,>(result: T | { data: T } | Response) => {
-  if (result instanceof Response) {
-    if (!result.ok) throw new Error(await result.text());
-    const contentType = result.headers.get("content-type") ?? "";
-    if (contentType.includes("application/json")) {
-      return unwrapServerResult<T>(await result.json());
-    }
-    throw new Error("Risposta server non valida");
-  }
-  return unwrapServerResult<T>(result);
-};
 
 export const Route = createFileRoute("/fatture/")({
   validateSearch: (search: Record<string, unknown>): InvoicesSearch => ({

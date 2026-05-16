@@ -32,6 +32,7 @@ import { computeInvoice, type InvoiceLineInput } from "@/lib/invoice-calc";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { counterpartyDisplayName, clientDisplayName } from "@/lib/labels";
 import { publicCodeLookup } from "@/lib/public-route-code";
+import { readServerResult } from "@/lib/server-functions";
 import { useSubmitLock } from "@/lib/submit-lock";
 import { createBillingInvoiceFn, updateDraftBillingInvoiceFn } from "@/server/invoices.functions";
 
@@ -70,21 +71,6 @@ type DraftInvoiceData = {
     period_end: string;
   };
   items: Array<{ activity_id: string; status: BillingItemStatus }>;
-};
-
-const unwrapServerResult = <T,>(result: T | { data: T }) =>
-  "data" in Object(result) ? (result as { data: T }).data : (result as T);
-
-const readServerResult = async <T,>(result: T | { data: T } | Response) => {
-  if (result instanceof Response) {
-    if (!result.ok) throw new Error(await result.text());
-    const contentType = result.headers.get("content-type") ?? "";
-    if (contentType.includes("application/json")) {
-      return unwrapServerResult<T>(await result.json());
-    }
-    throw new Error("Risposta server non valida");
-  }
-  return unwrapServerResult<T>(result);
 };
 
 type PrincipalRow = {

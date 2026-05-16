@@ -221,22 +221,10 @@ creato. Se la creazione con UUID esplicito non è supportata o fallisce, usare i
 nuovo UUID generato da Supabase e rimappare `profiles.id` più tutti i futuri
 `user_id` importati.
 
-Script locale storico preparato per la migrazione 2026-05-02:
-
-```bash
-SUPABASE_URL="https://<project-ref>.supabase.co" \
-SUPABASE_SERVICE_ROLE_KEY="<service-role-key>" \
-PRATIX_MIGRATION_USER_ID="<uuid-da-preservare>" \
-PRATIX_MIGRATION_USER_EMAIL="<email-utente>" \
-PRATIX_MIGRATION_TEMP_PASSWORD="<password-temporanea>" \
-PRATIX_MIGRATION_FULL_NAME="<nome-opzionale>" \
-node scripts/recreate-supabase-user.mjs
-```
-
-Il link di recovery stampato dallo script contiene un token: usarlo solo
-localmente e non incollarlo in chat, issue, log o documenti. Nel flusso
-corrente dell'app l'accesso utente passa da link sicuro via email, non da
-password tradizionale.
+Lo script locale storico usato per ricreare l'utente con password temporanea è
+stato rimosso dopo il cutover. Nel flusso corrente dell'app l'accesso utente
+passa da link sicuro via email, non da password tradizionale: non reintrodurre
+helper con password temporanee salvo nuova decisione esplicita.
 
 ## Fase 3 — Preparazione runtime fuori Lovable
 
