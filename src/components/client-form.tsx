@@ -1,7 +1,8 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { AlertCircle, Trash2 } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -81,6 +82,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
   const qc = useQueryClient();
   const [form, setForm] = useState<ClientRow>({ ...empty, ...(initial ?? {}) });
   const [selectedPrincipalIds, setSelectedPrincipalIds] = useState<string[]>([]);
+  const [principalLinkError, setPrincipalLinkError] = useState<string | null>(null);
   const saveLock = useSubmitLock();
 
   const isEdit = Boolean(initial?.id);
@@ -121,6 +123,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
   }, [linkedPrincipalIds]);
 
   const togglePrincipal = (principalId: string, checked: boolean) => {
+    if (checked) setPrincipalLinkError(null);
     markDirty();
     setSelectedPrincipalIds((current) =>
       checked ? [...current, principalId] : current.filter((id) => id !== principalId),
@@ -195,6 +198,15 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
     }
     if (form.kind === "company" && !form.business_name?.trim()) {
       toast.error("Inserisci la ragione sociale");
+      return;
+    }
+    if (selectedPrincipalIds.length === 0) {
+      const message =
+        principals.length === 0
+          ? "Aggiungi un committente prima di salvare il cliente"
+          : "Collega il cliente ad almeno un committente";
+      setPrincipalLinkError(message);
+      toast.error(message);
       return;
     }
     if (!saveLock.acquire()) return;
@@ -277,8 +289,18 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Committenti collegati</CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Seleziona almeno un committente: il collegamento è obbligatorio per salvare il cliente.
+          </p>
         </CardHeader>
         <CardContent className="space-y-3">
+          {principalLinkError && (
+            <Alert id="principal-link-error" variant="destructive">
+              <AlertCircle className="size-4" />
+              <AlertTitle>Committente obbligatorio</AlertTitle>
+              <AlertDescription>{principalLinkError}</AlertDescription>
+            </Alert>
+          )}
           {principals.length === 0 ? (
             <p className="text-sm text-muted-foreground">
               Aggiungi un committente per collegarlo a questo cliente.
@@ -297,6 +319,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
                 </span>
                 <Checkbox
                   checked={selectedPrincipalIds.includes(principal.id)}
+                  aria-describedby={principalLinkError ? "principal-link-error" : undefined}
                   onCheckedChange={(checked) => togglePrincipal(principal.id, checked === true)}
                 />
               </label>
