@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { UserCircle, LogOut, Settings, Fingerprint } from "lucide-react";
+import { Bell, Database, Fingerprint, LogOut, Palette, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,9 +11,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/lib/auth-context";
 
+const accountItems = [
+  { label: "Profilo", tab: "profilo", icon: UserCircle },
+  { label: "Accesso e sicurezza", tab: "sicurezza", icon: Fingerprint },
+  { label: "Aspetto", tab: "aspetto", icon: Palette },
+  { label: "Notifiche", tab: "notifiche", icon: Bell },
+  { label: "Dati", tab: "dati", icon: Database },
+] as const;
+
 /**
  * Menu utente discreto in topbar: avatar circolare con iniziale,
- * porta a /account (profilo, sicurezza, aspetto, notifiche).
+ * porta alle sezioni personali di /account.
  */
 export function UserMenu() {
   const { user, signOut } = useAuth();
@@ -40,24 +48,14 @@ export function UserMenu() {
           <p className="truncate text-sm font-medium text-foreground">{email}</p>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <Link to="/account">
-            <UserCircle className="mr-2 size-4" />
-            Account
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/account">
-            <Fingerprint className="mr-2 size-4" />
-            Accesso e sicurezza
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuItem asChild>
-          <Link to="/impostazioni">
-            <Settings className="mr-2 size-4" />
-            Impostazioni
-          </Link>
-        </DropdownMenuItem>
+        {accountItems.map(({ label, tab, icon: Icon }) => (
+          <DropdownMenuItem asChild key={tab}>
+            <Link to="/account" search={{ tab }}>
+              <Icon className="mr-2 size-4" />
+              {label}
+            </Link>
+          </DropdownMenuItem>
+        ))}
         <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={() => signOut()}
