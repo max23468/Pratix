@@ -10,6 +10,7 @@ import {
   FileSpreadsheet,
   FileText,
   Plus,
+  Send,
   Trash2,
 } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
@@ -224,6 +225,24 @@ function InvoiceDetailPage() {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const markIssuedMutation = useMutation({
+    mutationFn: async () => {
+      const resolvedInvoiceId = data?.invoice.id;
+      if (!resolvedInvoiceId) throw new Error("Fattura non caricata");
+      const { error } = await supabase
+        .from("invoices")
+        .update({ status: "issued", paid_at: null })
+        .eq("id", resolvedInvoiceId);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Fattura segnata come emessa");
+      qc.invalidateQueries({ queryKey: ["invoice", invoiceId] });
+      qc.invalidateQueries({ queryKey: ["invoices"] });
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   const downloadXmlMutation = useMutation({
     mutationFn: async () => {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -341,6 +360,8 @@ function InvoiceDetailPage() {
 
   const billedName = data.principal?.business_name ?? data.client?.business_name ?? "—";
   const isForfettario = data.profile?.tax_regime === "forfettario";
+  const canMarkIssued = data.invoice.status === "draft";
+  const canMarkPaid = data.invoice.status === "issued" || data.invoice.status === "overdue";
 
   return (
     <AppLayout>
@@ -359,7 +380,16 @@ function InvoiceDetailPage() {
                 <Plus className="mr-2 size-4" /> Nuova fattura
               </Link>
             </Button>
-            {data.invoice.status !== "paid" && (
+            {canMarkIssued && (
+              <Button
+                variant="outline"
+                onClick={() => markIssuedMutation.mutate()}
+                disabled={markIssuedMutation.isPending}
+              >
+                <Send className="mr-2 size-4" /> Segna emessa
+              </Button>
+            )}
+            {canMarkPaid && (
               <Button
                 variant="outline"
                 onClick={() => markPaidMutation.mutate()}

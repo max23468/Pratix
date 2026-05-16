@@ -124,7 +124,7 @@ export function InvoiceForm() {
   const [periodEnd, setPeriodEnd] = useState(quarter.end);
   const [issueDate, setIssueDate] = useState(() => today());
   const [dueDate, setDueDate] = useState("");
-  const [invoiceStatus, setInvoiceStatus] = useState<"draft" | "issued">("draft");
+  const [pendingInvoiceStatus, setPendingInvoiceStatus] = useState<"draft" | "issued" | null>(null);
   const [includeGeneralExpenses, setIncludeGeneralExpenses] = useState(true);
   const [generalExpensesRate, setGeneralExpensesRate] = useState(10);
   const [cassaRate, setCassaRate] = useState(4);
@@ -252,7 +252,7 @@ export function InvoiceForm() {
   ]);
 
   const createInvoice = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (status: "draft" | "issued") => {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       if (!token) throw new Error("Sessione non valida. Accedi di nuovo.");
@@ -263,7 +263,7 @@ export function InvoiceForm() {
           periodEnd,
           issueDate,
           dueDate: dueDate || null,
-          status: invoiceStatus,
+          status,
           includeGeneralExpenses,
           generalExpensesRate,
           cassaRate,
@@ -281,21 +281,31 @@ export function InvoiceForm() {
       });
       return readServerResult<CreateBillingInvoiceResult>(result);
     },
-    onSuccess: (invoice) => {
-      toast.success(`Fattura ${invoice.number}/${invoice.year} generata`);
+    onSuccess: (invoice, status) => {
+      toast.success(
+        status === "draft"
+          ? `Bozza ${invoice.number}/${invoice.year} salvata`
+          : `Fattura ${invoice.number}/${invoice.year} creata`,
+      );
       qc.invalidateQueries({ queryKey: ["invoices"] });
       qc.invalidateQueries({ queryKey: ["activities"] });
       if (finishSave()) return;
       navigate({ to: "/fatture/$invoiceId", params: { invoiceId: invoice.invoiceRef } });
     },
     onError: (error: Error) => toast.error(error.message),
-    onSettled: createInvoiceLock.release,
+    onSettled: () => {
+      setPendingInvoiceStatus(null);
+      createInvoiceLock.release();
+    },
   });
 
   const handleSubmit = (event: FormEvent) => {
     event.preventDefault();
+    const submitter = (event.nativeEvent as SubmitEvent).submitter as HTMLButtonElement | null;
+    const status = submitter?.value === "issued" ? "issued" : "draft";
     if (!createInvoiceLock.acquire()) return;
-    createInvoice.mutate();
+    setPendingInvoiceStatus(status);
+    createInvoice.mutate(status);
   };
 
   return (
@@ -371,25 +381,6 @@ export function InvoiceForm() {
                 setDueDate(value);
               }}
             />
-
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="invoice_status">Stato fattura</Label>
-              <Select
-                value={invoiceStatus}
-                onValueChange={(value) => {
-                  markDirty();
-                  setInvoiceStatus(value as typeof invoiceStatus);
-                }}
-              >
-                <SelectTrigger id="invoice_status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft">Bozza</SelectItem>
-                  <SelectItem value="issued">Emessa</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
 
             <div className="flex flex-col gap-2">
               <Label htmlFor="payment_method">Pagamento</Label>
@@ -627,14 +618,33 @@ export function InvoiceForm() {
               <FileSpreadsheet className="mt-0.5 size-4 shrink-0" />
               <span>La fattura genera anche i rendiconti Excel per compensi e rimborsi.</span>
             </div>
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={createInvoice.isPending || includedActivities.length === 0}
-            >
-              {createInvoice.isPending && <Loader2 className="mr-2 size-4 animate-spin" />}
-              Genera fattura e rendiconti
-            </Button>
+            <div className="grid gap-2 sm:grid-cols-2">
+              <Button
+                type="submit"
+                name="invoiceStatus"
+                value="draft"
+                variant="outline"
+                className="w-full"
+                disabled={createInvoice.isPending || includedActivities.length === 0}
+              >
+                {pendingInvoiceStatus === "draft" && (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                )}
+                Salva bozza
+              </Button>
+              <Button
+                type="submit"
+                name="invoiceStatus"
+                value="issued"
+                className="w-full"
+                disabled={createInvoice.isPending || includedActivities.length === 0}
+              >
+                {pendingInvoiceStatus === "issued" && (
+                  <Loader2 className="mr-2 size-4 animate-spin" />
+                )}
+                Crea fattura
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
