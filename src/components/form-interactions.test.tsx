@@ -288,6 +288,8 @@ describe("interazioni form anagrafiche", () => {
       />,
     );
 
+    await screen.findByText("Banca Test");
+    await userEvent.click(screen.getByRole("checkbox"));
     await userEvent.click(screen.getByRole("button", { name: "Salva" }));
 
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Cliente creato"));
@@ -304,6 +306,28 @@ describe("interazioni form anagrafiche", () => {
     expect(onSaved).toHaveBeenCalledWith("saved-id");
   });
 
+  it("blocca il salvataggio del cliente senza committente collegato", async () => {
+    renderWithClient(
+      <ClientForm
+        initial={{
+          first_name: "Ada",
+          last_name: "Rossi",
+        }}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    await screen.findByText("Banca Test");
+    await userEvent.click(screen.getByRole("button", { name: "Salva" }));
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith("Collega il cliente ad almeno un committente"),
+    );
+    expect(screen.getByText("Committente obbligatorio")).toBeTruthy();
+    expect(query.insert).not.toHaveBeenCalled();
+  });
+
   it("ignora submit cliente ripetuti mentre il salvataggio è in corso", async () => {
     renderWithClient(
       <ClientForm
@@ -316,12 +340,14 @@ describe("interazioni form anagrafiche", () => {
       />,
     );
 
+    await screen.findByText("Banca Test");
+    await userEvent.click(screen.getByRole("checkbox"));
     const form = screen.getByRole("button", { name: "Salva" }).closest("form")!;
     fireEvent.submit(form);
     fireEvent.submit(form);
 
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Cliente creato"));
-    expect(query.insert).toHaveBeenCalledTimes(1);
+    expect(query.insert).toHaveBeenCalledTimes(2);
   });
 
   it("crea cliente società collegandolo ai committenti selezionati", async () => {
