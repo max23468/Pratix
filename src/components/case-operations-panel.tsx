@@ -704,7 +704,7 @@ export function WorkflowPriorityBadge({
         <button
           type="button"
           className={cn(badgeVariants({ variant: workflow.priorityVariant }), "cursor-help")}
-          aria-label={`Mostra perché questa pratica è ${priorityLabel.toLowerCase()}`}
+          aria-label={`Mostra perché questa pratica ${priorityLabel.toLocaleLowerCase("it-IT")}`}
         >
           {priorityLabel}
         </button>
@@ -732,7 +732,10 @@ export function WorkflowPriorityBadge({
 }
 
 function formatPriorityLabel(priority: string) {
-  return `Priorità ${priority.toLocaleLowerCase("it-IT")}`;
+  if (priority === "Alta") return "Richiede intervento";
+  if (priority === "Media") return "Da monitorare";
+  if (priority === "Ordinaria") return "Regolare";
+  return priority;
 }
 
 function OperationMetric({ label, value }: { label: string; value: string }) {

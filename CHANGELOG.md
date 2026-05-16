@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.2.11] — 2026-05-16
+
+### Correzioni
+
+- **Cruscotto pratica**: le priorità sono rinominate in "Richiede intervento", "Da monitorare" e "Regolare"; il badge di intervento apre una spiegazione contestuale con il motivo specifico.
+
 ## [1.2.10] — 2026-05-16
 
 ### Correzioni
@@ -698,6 +704,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.2.11]: #1211--2026-05-16
 [1.2.10]: #1210--2026-05-16
 [1.2.9]: #129--2026-05-16
 [1.2.8]: #128--2026-05-16

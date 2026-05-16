@@ -147,7 +147,7 @@ describe("case operations timeline", () => {
       action: "Prepara la Fattura per le Attività maturate.",
       priorityInsight: {
         description:
-          "Pratix la considera priorità alta perché ci sono Attività maturate non ancora collegate a una Fattura.",
+          "Pratix richiede intervento perché ci sono Attività maturate non ancora collegate a una Fattura.",
         items: expect.arrayContaining(["1 Attività maturata non fatturata"]),
         nextStep: "Prepara la Fattura per le Attività maturate.",
       },
@@ -185,7 +185,7 @@ describe("case operations timeline", () => {
       priority: "Alta",
       priorityInsight: {
         description:
-          "Pratix la considera priorità alta perché la pratica è ancora in impostazione e non ha una base operativa completa.",
+          "Pratix richiede intervento perché la pratica è ancora in impostazione e non ha una base operativa completa.",
         items: ["Committente mancante", "Nessuna Attività"],
         nextStep: "Completa soggetti e prima Attività.",
       },
@@ -225,14 +225,14 @@ describe("case operations timeline", () => {
       priority: "Alta",
       priorityInsight: {
         description:
-          "Pratix la considera priorità alta perché ci sono Fatture scadute o già segnate come insolute.",
+          "Pratix richiede intervento perché ci sono Fatture scadute o già segnate come insolute.",
         items: expect.arrayContaining(["1 Fattura insoluta"]),
         nextStep: "Sollecita il pagamento delle Fatture insolute.",
       },
     });
   });
 
-  it("mostra il badge Priorità alta con overlay esplicativo", async () => {
+  it("mostra il badge Richiede intervento con overlay esplicativo", async () => {
     render(
       <WorkflowPriorityBadge
         workflow={{
@@ -242,9 +242,9 @@ describe("case operations timeline", () => {
           action: "Prepara la Fattura per le Attività maturate.",
           reason: "120,00 € sono da fatturare.",
           priorityInsight: {
-            title: "Perché è priorità alta",
+            title: "Perché richiede intervento",
             description:
-              "Pratix la considera priorità alta perché ci sono Attività maturate non ancora collegate a una Fattura.",
+              "Pratix richiede intervento perché ci sono Attività maturate non ancora collegate a una Fattura.",
             items: ["120,00 € da fatturare", "1 Attività maturata non fatturata"],
             nextStep: "Prepara la Fattura per le Attività maturate.",
           },
@@ -253,16 +253,46 @@ describe("case operations timeline", () => {
     );
 
     const trigger = screen.getByRole("button", {
-      name: "Mostra perché questa pratica è priorità alta",
+      name: "Mostra perché questa pratica richiede intervento",
     });
-    expect(screen.getByText("Priorità alta")).toBeTruthy();
+    expect(screen.getByText("Richiede intervento")).toBeTruthy();
 
     await userEvent.click(trigger);
 
-    expect(await screen.findByText("Perché è priorità alta")).toBeTruthy();
+    expect(await screen.findByText("Perché richiede intervento")).toBeTruthy();
     expect(screen.getByText("120,00 € da fatturare")).toBeTruthy();
     expect(screen.getByText("1 Attività maturata non fatturata")).toBeTruthy();
     expect(screen.getByText("Azione consigliata")).toBeTruthy();
+  });
+
+  it("mostra le etichette operative per le priorità non alte", () => {
+    const { rerender } = render(
+      <WorkflowPriorityBadge
+        workflow={{
+          stage: "Monitoraggio incasso",
+          priority: "Media",
+          priorityVariant: "outline",
+          action: "Controlla scadenze e incassi delle Fatture emesse.",
+          reason: "150,00 € risultano da incassare.",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Da monitorare")).toBeTruthy();
+
+    rerender(
+      <WorkflowPriorityBadge
+        workflow={{
+          stage: "Pratica sotto controllo",
+          priority: "Ordinaria",
+          priorityVariant: "secondary",
+          action: "Mantieni aggiornate Attività e Fatture.",
+          reason: "Non ci sono avvisi operativi immediati.",
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Regolare")).toBeTruthy();
   });
 
   it("non anticipa lo stato insoluto nel giorno di scadenza della Fattura", () => {
