@@ -56,6 +56,15 @@ identifica una sezione tabellare (`section`) e l'ultimo ordinamento scelto
 (`sort_key`, `sort_direction`). Le policy RLS limitano lettura e scrittura al
 proprietario della riga.
 
+### Codici pubblici stabili
+
+Le tabelle operative principali (`clients`, `principals`, `counterparties`,
+`cases`, `price_books`, `invoices`) espongono un `public_code` univoco per
+utente, pensato per URL leggibili e riferimenti non sensibili. I prefissi sono:
+`CL` per clienti, `CM` per committenti, `CP` per controparti, `PR` per pratiche,
+`PZ` per prezzi e `FT` per fatture. Il trigger `assign_public_code` preserva i
+codici già assegnati e genera il prossimo progressivo in modo atomico.
+
 ### `clients`
 
 Rubrica clienti dell'avvocato. Nel nuovo dominio recupero crediti il cliente è

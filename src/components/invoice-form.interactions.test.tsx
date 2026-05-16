@@ -111,6 +111,7 @@ const { toast, navigate, createBillingInvoice, setProfileTaxRegime, supabase } =
     createBillingInvoice: vi.fn(() =>
       Promise.resolve({
         invoiceId: "invoice-1",
+        invoiceRef: "FT-00001",
         billingRunId: "run-1",
         number: "12",
         year: 2026,
@@ -255,7 +256,7 @@ describe("InvoiceForm", () => {
     );
     expect(navigate).toHaveBeenCalledWith({
       to: "/fatture/$invoiceId",
-      params: { invoiceId: "invoice-1" },
+      params: { invoiceId: "FT-00001" },
     });
   });
 

@@ -26,6 +26,7 @@ import {
   counterpartyDisplayName,
 } from "@/lib/labels";
 import { formatDate } from "@/lib/format";
+import { routeRef } from "@/lib/public-route-code";
 import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
@@ -46,6 +47,7 @@ type PraticheSearch = {
 
 type PracticeListRow = {
   id: string;
+  public_code: string;
   case_number: string;
   practice_number: number;
   title: string;
@@ -120,7 +122,7 @@ function PraticheList() {
       const { data, error } = await supabase
         .from("cases")
         .select(
-          "id, case_number, practice_number, title, status, opened_at, updated_at, client_id, principal_id, counterparty_id, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
+          "id, public_code, case_number, practice_number, title, status, opened_at, updated_at, client_id, principal_id, counterparty_id, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
         )
         .order("updated_at", { ascending: false });
       if (error) throw error;
@@ -379,16 +381,18 @@ function PraticheList() {
                     role="link"
                     tabIndex={0}
                     aria-label={`Apri pratica ${c.practice_number}`}
-                    onClick={(event) => handleClickableTableRowClick(event, () => openCase(c.id))}
+                    onClick={(event) =>
+                      handleClickableTableRowClick(event, () => openCase(routeRef(c)))
+                    }
                     onKeyDown={(event) =>
-                      handleClickableTableRowKeyDown(event, () => openCase(c.id))
+                      handleClickableTableRowKeyDown(event, () => openCase(routeRef(c)))
                     }
                   >
                     <TableCell className="font-mono text-sm">{c.practice_number}</TableCell>
                     <TableCell>
                       <Link
                         to="/pratiche/$caseId"
-                        params={{ caseId: c.id }}
+                        params={{ caseId: routeRef(c) }}
                         className="font-medium hover:underline"
                       >
                         {c.title}

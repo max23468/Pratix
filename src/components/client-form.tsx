@@ -30,10 +30,12 @@ import {
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { routeRef } from "@/lib/public-route-code";
 import { useSubmitLock } from "@/lib/submit-lock";
 
 type ClientRow = {
   id?: string;
+  public_code?: string | null;
   kind: string;
   first_name: string | null;
   last_name: string | null;
@@ -148,17 +150,17 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
           ? await updateClient(initial.id, payload)
           : await createClient(payload);
 
-      await syncPrincipalLinks(clientId, user.id, selectedPrincipalIds);
+      await syncPrincipalLinks(clientId.id, user.id, selectedPrincipalIds);
 
       return clientId;
     },
-    onSuccess: (id) => {
+    onSuccess: (client) => {
       toast.success(isEdit ? "Cliente aggiornato" : "Cliente creato");
       qc.invalidateQueries({ queryKey: ["clients"] });
-      qc.invalidateQueries({ queryKey: ["client", id] });
-      qc.invalidateQueries({ queryKey: ["principal-clients", id] });
+      qc.invalidateQueries({ queryKey: ["client", client.id] });
+      qc.invalidateQueries({ queryKey: ["principal-clients", client.id] });
       if (finishSave()) return;
-      onSaved(id);
+      onSaved(routeRef(client));
     },
     onError: (e: Error) => toast.error(e.message),
     onSettled: saveLock.release,
@@ -435,9 +437,13 @@ async function createClient(payload: {
   address_province: string | null;
   notes: string | null;
 }) {
-  const { data, error } = await supabase.from("clients").insert(payload).select("id").single();
+  const { data, error } = await supabase
+    .from("clients")
+    .insert(payload)
+    .select("id, public_code")
+    .single();
   if (error) throw error;
-  return data.id;
+  return data as { id: string; public_code: string | null };
 }
 
 async function updateClient(
@@ -461,10 +467,10 @@ async function updateClient(
     .from("clients")
     .update(payload)
     .eq("id", id)
-    .select("id")
+    .select("id, public_code")
     .single();
   if (error) throw error;
-  return data.id;
+  return data as { id: string; public_code: string | null };
 }
 
 async function syncPrincipalLinks(clientId: string, userId: string, principalIds: string[]) {

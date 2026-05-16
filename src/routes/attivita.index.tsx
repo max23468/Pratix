@@ -29,6 +29,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { activityCaseLabel, type CaseActivityContext } from "@/lib/case-activities";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { routeRef } from "@/lib/public-route-code";
 import {
   caseActivityStatusLabels,
   caseActivityStatusVariant,
@@ -101,7 +102,9 @@ type ActivitiesSearch = {
 };
 
 type GlobalActivityRow = CaseActivityDialogActivity & {
-  cases: (CaseActivityContext & { practice_number: number; title: string }) | null;
+  cases:
+    | (CaseActivityContext & { public_code: string; practice_number: number; title: string })
+    | null;
 };
 
 function ActivitiesList() {
@@ -133,7 +136,7 @@ function ActivitiesList() {
       const { data, error } = await supabase
         .from("case_activities")
         .select(
-          "id, case_id, price_book_id, price_item_id, activity_date, kind, status, snapshot_price_year, snapshot_price_code, snapshot_price_name, description, quantity, unit_price, amount, invoice_id, notes, case_activity_hearings(*), activity_attachments(*), cases(id, practice_number, case_number, title, principal_id, client_id, counterparty_id, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name))",
+          "id, case_id, price_book_id, price_item_id, activity_date, kind, status, snapshot_price_year, snapshot_price_code, snapshot_price_name, description, quantity, unit_price, amount, invoice_id, notes, case_activity_hearings(*), activity_attachments(*), cases(id, public_code, practice_number, case_number, title, principal_id, client_id, counterparty_id, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name))",
         )
         .order("activity_date", { ascending: false });
       if (error) throw error;
@@ -353,27 +356,27 @@ function ActivitiesList() {
               </TableRow>
             ) : (
               sorted.map((activity) => {
-                const caseId = activity.cases?.id;
+                const caseRef = activity.cases ? routeRef(activity.cases) : null;
                 const editTitle = activity.invoice_id
                   ? "Le voci collegate a una Fattura non si modificano"
                   : "Modifica voce";
                 return (
                   <TableRow
                     key={activity.id}
-                    className={caseId ? "cursor-pointer" : undefined}
-                    role={caseId ? "link" : undefined}
-                    tabIndex={caseId ? 0 : undefined}
+                    className={caseRef ? "cursor-pointer" : undefined}
+                    role={caseRef ? "link" : undefined}
+                    tabIndex={caseRef ? 0 : undefined}
                     aria-label={
-                      caseId ? `Apri pratica ${activity.cases?.practice_number}` : undefined
+                      caseRef ? `Apri pratica ${activity.cases?.practice_number}` : undefined
                     }
                     onClick={
-                      caseId
-                        ? (event) => handleClickableTableRowClick(event, () => openCase(caseId))
+                      caseRef
+                        ? (event) => handleClickableTableRowClick(event, () => openCase(caseRef))
                         : undefined
                     }
                     onKeyDown={
-                      caseId
-                        ? (event) => handleClickableTableRowKeyDown(event, () => openCase(caseId))
+                      caseRef
+                        ? (event) => handleClickableTableRowKeyDown(event, () => openCase(caseRef))
                         : undefined
                     }
                   >
@@ -382,7 +385,7 @@ function ActivitiesList() {
                       {activity.cases ? (
                         <Link
                           to="/pratiche/$caseId"
-                          params={{ caseId: activity.cases.id }}
+                          params={{ caseId: routeRef(activity.cases) }}
                           className="hover:underline"
                         >
                           <div className="font-medium">

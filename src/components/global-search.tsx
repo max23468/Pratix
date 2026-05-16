@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { clientDisplayName, invoiceStatusLabels, type ClientDisplayData } from "@/lib/labels";
 import { formatCurrency } from "@/lib/format";
+import { routeRef } from "@/lib/public-route-code";
 
 type SearchResult =
   | {
@@ -23,21 +24,21 @@ type SearchResult =
       kind: "case";
       title: string;
       subtitle: string;
-      caseId: string;
+      caseRef: string;
     }
   | {
       id: string;
       kind: "client";
       title: string;
       subtitle: string;
-      clientId: string;
+      clientRef: string;
     }
   | {
       id: string;
       kind: "invoice";
       title: string;
       subtitle: string;
-      invoiceId: string;
+      invoiceRef: string;
     };
 
 type QuickAction = {
@@ -130,18 +131,18 @@ export function GlobalSearch() {
 
       const caseQuery = supabase
         .from("cases")
-        .select("id, case_number, practice_number, title, updated_at")
+        .select("id, public_code, case_number, practice_number, title, updated_at")
         .order("updated_at", { ascending: false })
         .limit(6);
       const clientQuery = supabase
         .from("clients")
-        .select("id, kind, first_name, last_name, business_name, email, created_at")
+        .select("id, public_code, kind, first_name, last_name, business_name, email, created_at")
         .order("created_at", { ascending: false })
         .limit(6);
       const invoiceQuery = supabase
         .from("invoices")
         .select(
-          "id, number, year, status, total_amount, issue_date, principal:principals(business_name), client:clients(kind, first_name, last_name, business_name)",
+          "id, public_code, number, year, status, total_amount, issue_date, principal:principals(business_name), client:clients(kind, first_name, last_name, business_name)",
         )
         .order("issue_date", { ascending: false })
         .limit(6);
@@ -169,7 +170,7 @@ export function GlobalSearch() {
         kind: "case",
         title: `Pratica ${item.practice_number}`,
         subtitle: item.title || item.case_number,
-        caseId: item.id,
+        caseRef: routeRef(item),
       }));
 
       const clients: SearchResult[] = (clientsRes.data ?? []).map((item) => ({
@@ -177,7 +178,7 @@ export function GlobalSearch() {
         kind: "client",
         title: clientDisplayName(item),
         subtitle: item.email ?? "Cliente",
-        clientId: item.id,
+        clientRef: routeRef(item),
       }));
 
       const invoices: SearchResult[] = (invoicesRes.data ?? []).map((item) => {
@@ -188,7 +189,7 @@ export function GlobalSearch() {
           kind: "invoice",
           title: `Fattura ${item.number}/${item.year}`,
           subtitle: `${billedName} · ${(invoiceStatusLabels as Record<string, string>)[item.status] ?? item.status} · ${formatCurrency(Number(item.total_amount))}`,
-          invoiceId: item.id,
+          invoiceRef: routeRef(item),
         };
       });
 
@@ -217,13 +218,13 @@ export function GlobalSearch() {
   const openResult = (result: SearchResult) => {
     setOpen(false);
     if (result.kind === "case") {
-      navigate({ to: "/pratiche/$caseId", params: { caseId: result.caseId } });
+      navigate({ to: "/pratiche/$caseId", params: { caseId: result.caseRef } });
     }
     if (result.kind === "client") {
-      navigate({ to: "/clienti/$clientId", params: { clientId: result.clientId } });
+      navigate({ to: "/clienti/$clientId", params: { clientId: result.clientRef } });
     }
     if (result.kind === "invoice") {
-      navigate({ to: "/fatture/$invoiceId", params: { invoiceId: result.invoiceId } });
+      navigate({ to: "/fatture/$invoiceId", params: { invoiceId: result.invoiceRef } });
     }
   };
 

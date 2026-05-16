@@ -42,6 +42,7 @@ import type { InvoiceLineKind } from "@/lib/invoice-calc";
 import { invoiceLineKindLabels } from "@/lib/invoice-calc";
 import type { InvoicePdfData } from "@/lib/invoice-pdf";
 import { invoiceStatusLabels, invoiceStatusVariant } from "@/lib/labels";
+import { publicCodeLookup } from "@/lib/public-route-code";
 import { PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
 import { generateInvoiceXmlFn } from "@/server/invoices.functions";
 
@@ -91,12 +92,14 @@ function InvoiceDetailPage() {
     queryKey: ["invoice", invoiceId],
     enabled: !!user,
     queryFn: async () => {
+      const lookup = publicCodeLookup(invoiceId);
       const { data: invoice, error } = await supabase
         .from("invoices")
         .select("*")
-        .eq("id", invoiceId)
+        .eq(lookup.column, lookup.value)
         .single();
       if (error) throw error;
+      const resolvedInvoiceId = invoice.id;
 
       const [
         { data: lines },
@@ -108,7 +111,7 @@ function InvoiceDetailPage() {
         supabase
           .from("invoice_lines")
           .select("*")
-          .eq("invoice_id", invoiceId)
+          .eq("invoice_id", resolvedInvoiceId)
           .order("position", { ascending: true }),
         invoice.principal_id
           ? supabase.from("principals").select("*").eq("id", invoice.principal_id).single()
@@ -136,17 +139,19 @@ function InvoiceDetailPage() {
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
+      const resolvedInvoiceId = data?.invoice.id;
+      if (!resolvedInvoiceId) throw new Error("Fattura non caricata");
       const { data: invoice, error: invoiceError } = await supabase
         .from("invoices")
         .select("id, billing_run_id")
-        .eq("id", invoiceId)
+        .eq("id", resolvedInvoiceId)
         .single();
       if (invoiceError) throw invoiceError;
 
       const { error: activityError } = await supabase
         .from("case_activities")
         .update({ status: "to_invoice", invoice_id: null })
-        .eq("invoice_id", invoiceId);
+        .eq("invoice_id", resolvedInvoiceId);
       if (activityError) throw activityError;
 
       if (invoice.billing_run_id) {
@@ -168,7 +173,7 @@ function InvoiceDetailPage() {
         if (runError) throw runError;
       }
 
-      const { error } = await supabase.from("invoices").delete().eq("id", invoiceId);
+      const { error } = await supabase.from("invoices").delete().eq("id", resolvedInvoiceId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -182,10 +187,12 @@ function InvoiceDetailPage() {
 
   const markPaidMutation = useMutation({
     mutationFn: async () => {
+      const resolvedInvoiceId = data?.invoice.id;
+      if (!resolvedInvoiceId) throw new Error("Fattura non caricata");
       const { error } = await supabase
         .from("invoices")
         .update({ status: "paid", paid_at: new Date().toISOString().slice(0, 10) })
-        .eq("id", invoiceId);
+        .eq("id", resolvedInvoiceId);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -201,8 +208,10 @@ function InvoiceDetailPage() {
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
       if (!token) throw new Error("Sessione non valida. Accedi di nuovo.");
+      const resolvedInvoiceId = data?.invoice.id;
+      if (!resolvedInvoiceId) throw new Error("Fattura non caricata");
       const result = await generateInvoiceXml({
-        data: { invoiceId },
+        data: { invoiceId: resolvedInvoiceId },
         headers: { Authorization: `Bearer ${token}` },
       });
       return readServerResult<GenerateInvoiceXmlResult>(result);

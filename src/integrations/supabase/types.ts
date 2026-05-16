@@ -548,6 +548,7 @@ export type Database = {
           opened_at: string
           practice_number: number
           principal_id: string | null
+          public_code: string
           retainer: number | null
           rg_number: string | null
           status: Database["public"]["Enums"]["case_status"]
@@ -572,6 +573,7 @@ export type Database = {
           opened_at?: string
           practice_number: number
           principal_id?: string | null
+          public_code: string
           retainer?: number | null
           rg_number?: string | null
           status?: Database["public"]["Enums"]["case_status"]
@@ -596,6 +598,7 @@ export type Database = {
           opened_at?: string
           practice_number?: number
           principal_id?: string | null
+          public_code?: string
           retainer?: number | null
           rg_number?: string | null
           status?: Database["public"]["Enums"]["case_status"]
@@ -642,13 +645,10 @@ export type Database = {
           kind: Database["public"]["Enums"]["client_kind"]
           last_name: string | null
           notes: string | null
-          pec: string | null
           phone: string | null
-          sdi_code: string | null
-          tax_code: string | null
+          public_code: string
           updated_at: string
           user_id: string
-          vat_number: string | null
         }
         Insert: {
           address_city?: string | null
@@ -664,13 +664,10 @@ export type Database = {
           kind?: Database["public"]["Enums"]["client_kind"]
           last_name?: string | null
           notes?: string | null
-          pec?: string | null
           phone?: string | null
-          sdi_code?: string | null
-          tax_code?: string | null
+          public_code: string
           updated_at?: string
           user_id: string
-          vat_number?: string | null
         }
         Update: {
           address_city?: string | null
@@ -686,13 +683,10 @@ export type Database = {
           kind?: Database["public"]["Enums"]["client_kind"]
           last_name?: string | null
           notes?: string | null
-          pec?: string | null
           phone?: string | null
-          sdi_code?: string | null
-          tax_code?: string | null
+          public_code?: string
           updated_at?: string
           user_id?: string
-          vat_number?: string | null
         }
         Relationships: []
       }
@@ -705,6 +699,7 @@ export type Database = {
           kind: Database["public"]["Enums"]["counterparty_kind"]
           last_name: string | null
           notes: string | null
+          public_code: string
           updated_at: string
           user_id: string
         }
@@ -716,6 +711,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["counterparty_kind"]
           last_name?: string | null
           notes?: string | null
+          public_code: string
           updated_at?: string
           user_id: string
         }
@@ -727,6 +723,7 @@ export type Database = {
           kind?: Database["public"]["Enums"]["counterparty_kind"]
           last_name?: string | null
           notes?: string | null
+          public_code?: string
           updated_at?: string
           user_id?: string
         }
@@ -979,6 +976,7 @@ export type Database = {
           paid_at: string | null
           payment_method: string | null
           principal_id: string | null
+          public_code: string
           stamp_amount: number
           status: Database["public"]["Enums"]["invoice_status"]
           taxable_expenses: number
@@ -1014,6 +1012,7 @@ export type Database = {
           paid_at?: string | null
           payment_method?: string | null
           principal_id?: string | null
+          public_code: string
           stamp_amount?: number
           status?: Database["public"]["Enums"]["invoice_status"]
           taxable_expenses?: number
@@ -1049,6 +1048,7 @@ export type Database = {
           paid_at?: string | null
           payment_method?: string | null
           principal_id?: string | null
+          public_code?: string
           stamp_amount?: number
           status?: Database["public"]["Enums"]["invoice_status"]
           taxable_expenses?: number
@@ -1101,6 +1101,7 @@ export type Database = {
           id: string
           notes: string | null
           principal_id: string
+          public_code: string
           status: Database["public"]["Enums"]["price_book_status"]
           updated_at: string
           user_id: string
@@ -1115,6 +1116,7 @@ export type Database = {
           id?: string
           notes?: string | null
           principal_id: string
+          public_code: string
           status?: Database["public"]["Enums"]["price_book_status"]
           updated_at?: string
           user_id: string
@@ -1129,6 +1131,7 @@ export type Database = {
           id?: string
           notes?: string | null
           principal_id?: string
+          public_code?: string
           status?: Database["public"]["Enums"]["price_book_status"]
           updated_at?: string
           user_id?: string
@@ -1272,6 +1275,7 @@ export type Database = {
           notes: string | null
           pec: string | null
           phone: string | null
+          public_code: string
           sdi_code: string | null
           tax_code: string | null
           updated_at: string
@@ -1296,6 +1300,7 @@ export type Database = {
           notes?: string | null
           pec?: string | null
           phone?: string | null
+          public_code: string
           sdi_code?: string | null
           tax_code?: string | null
           updated_at?: string
@@ -1320,6 +1325,7 @@ export type Database = {
           notes?: string | null
           pec?: string | null
           phone?: string | null
+          public_code?: string
           sdi_code?: string | null
           tax_code?: string | null
           updated_at?: string
@@ -1424,6 +1430,36 @@ export type Database = {
           vat_number?: string | null
           vat_rate?: number
           withholding_rate?: number
+        }
+        Relationships: []
+      }
+      user_table_preferences: {
+        Row: {
+          created_at: string
+          id: string
+          section: string
+          sort_direction: string
+          sort_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          section: string
+          sort_direction: string
+          sort_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          section?: string
+          sort_direction?: string
+          sort_key?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

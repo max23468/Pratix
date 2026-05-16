@@ -24,6 +24,7 @@ import {
   counterpartyDisplayName,
   counterpartyKindLabels,
 } from "@/lib/labels";
+import { routeRef } from "@/lib/public-route-code";
 import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
@@ -44,6 +45,7 @@ type ContropartiSearch = {
 
 type CounterpartyListRow = {
   id: string;
+  public_code: string;
   kind: string;
   first_name: string | null;
   last_name: string | null;
@@ -97,7 +99,7 @@ function ContropartiList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("counterparties")
-        .select("id, kind, first_name, last_name, business_name, notes, updated_at");
+        .select("id, public_code, kind, first_name, last_name, business_name, notes, updated_at");
       if (error) throw error;
       return (data ?? []) as CounterpartyListRow[];
     },
@@ -277,16 +279,20 @@ function ContropartiList() {
                     tabIndex={0}
                     aria-label={`Apri controparte ${displayName}`}
                     onClick={(event) =>
-                      handleClickableTableRowClick(event, () => openCounterparty(counterparty.id))
+                      handleClickableTableRowClick(event, () =>
+                        openCounterparty(routeRef(counterparty)),
+                      )
                     }
                     onKeyDown={(event) =>
-                      handleClickableTableRowKeyDown(event, () => openCounterparty(counterparty.id))
+                      handleClickableTableRowKeyDown(event, () =>
+                        openCounterparty(routeRef(counterparty)),
+                      )
                     }
                   >
                     <TableCell>
                       <Link
                         to="/controparti/$counterpartyId"
-                        params={{ counterpartyId: counterparty.id }}
+                        params={{ counterpartyId: routeRef(counterparty) }}
                         className="font-medium hover:underline"
                       >
                         {displayName}

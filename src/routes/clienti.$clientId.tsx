@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ClientForm } from "@/components/client-form";
 import { supabase } from "@/integrations/supabase/client";
 import { clientDisplayName } from "@/lib/labels";
+import { publicCodeLookup } from "@/lib/public-route-code";
 
 export const Route = createFileRoute("/clienti/$clientId")({
   head: () => ({
@@ -31,10 +32,11 @@ function ClientDetail() {
   const { data, isLoading } = useQuery({
     queryKey: ["client", clientId],
     queryFn: async () => {
+      const lookup = publicCodeLookup(clientId);
       const { data, error } = await supabase
         .from("clients")
         .select("*")
-        .eq("id", clientId)
+        .eq(lookup.column, lookup.value)
         .maybeSingle();
       if (error) throw error;
       return data;

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { priceBookStatusLabels, priceBookStatusVariant } from "@/lib/labels";
+import { routeRef } from "@/lib/public-route-code";
 import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
@@ -32,6 +33,7 @@ type PrezziSearch = {
 
 type PriceBookListRow = {
   id: string;
+  public_code: string;
   principal_id: string;
   year: number;
   status: string;
@@ -95,7 +97,7 @@ function PrezziList() {
       const { data, error } = await supabase
         .from("price_books")
         .select(
-          "id, principal_id, year, status, fees_enabled, expense_reimbursements_enabled, valid_from, valid_to, updated_at",
+          "id, public_code, principal_id, year, status, fees_enabled, expense_reimbursements_enabled, valid_from, valid_to, updated_at",
         )
         .order("year", { ascending: false })
         .order("updated_at", { ascending: false });
@@ -301,16 +303,16 @@ function PrezziList() {
                     tabIndex={0}
                     aria-label={`Apri prezzi ${principalName} ${book.year}`}
                     onClick={(event) =>
-                      handleClickableTableRowClick(event, () => openPriceBook(book.id))
+                      handleClickableTableRowClick(event, () => openPriceBook(routeRef(book)))
                     }
                     onKeyDown={(event) =>
-                      handleClickableTableRowKeyDown(event, () => openPriceBook(book.id))
+                      handleClickableTableRowKeyDown(event, () => openPriceBook(routeRef(book)))
                     }
                   >
                     <TableCell>
                       <Link
                         to="/prezzi/$priceBookId"
-                        params={{ priceBookId: book.id }}
+                        params={{ priceBookId: routeRef(book) }}
                         className="font-medium hover:underline"
                       >
                         {principalName}

@@ -137,7 +137,7 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
           totals,
         }),
       )
-      .select("id")
+      .select("id, public_code")
       .single();
     if (invoiceError) throw invoiceError;
 
@@ -239,6 +239,7 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
 
     return {
       invoiceId: invoice.id,
+      invoiceRef: invoice.public_code ?? invoice.id,
       billingRunId: billingRun.id,
       number,
       year,

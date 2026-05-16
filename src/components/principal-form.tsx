@@ -11,10 +11,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { routeRef } from "@/lib/public-route-code";
 import { useSubmitLock } from "@/lib/submit-lock";
 
 type PrincipalRow = {
   id?: string;
+  public_code?: string | null;
   business_name: string;
   tax_code: string | null;
   vat_number: string | null;
@@ -111,26 +113,26 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
           .from("principals")
           .update(payload)
           .eq("id", initial.id)
-          .select("id")
+          .select("id, public_code")
           .single();
         if (error) throw error;
-        return data.id;
+        return data as { id: string; public_code: string | null };
       }
 
       const { data, error } = await supabase
         .from("principals")
         .insert(payload)
-        .select("id")
+        .select("id, public_code")
         .single();
       if (error) throw error;
-      return data.id;
+      return data as { id: string; public_code: string | null };
     },
-    onSuccess: (id) => {
+    onSuccess: (principal) => {
       toast.success(isEdit ? "Committente aggiornato" : "Committente creato");
       qc.invalidateQueries({ queryKey: ["principals"] });
-      qc.invalidateQueries({ queryKey: ["principal", id] });
+      qc.invalidateQueries({ queryKey: ["principal", principal.id] });
       if (finishSave()) return;
-      onSaved(id);
+      onSaved(routeRef(principal));
     },
     onError: (error: Error) => toast.error(error.message),
     onSettled: saveLock.release,

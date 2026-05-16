@@ -29,6 +29,7 @@ import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { priceBookStatusLabels, priceItemKindLabels } from "@/lib/labels";
+import { routeRef } from "@/lib/public-route-code";
 import { useSubmitLock } from "@/lib/submit-lock";
 import {
   createTemplateItems,
@@ -40,6 +41,7 @@ import {
 
 type PriceBookRow = {
   id?: string;
+  public_code?: string | null;
   principal_id: string;
   year: number;
   status: PriceBookStatus;
@@ -268,7 +270,7 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
           : await createPriceBook(priceBookPayload);
 
       await syncPriceItems({
-        priceBookId,
+        priceBookId: priceBookId.id,
         userId: user.id,
         initialItems,
         items: normalizedItems,
@@ -276,12 +278,12 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
 
       return priceBookId;
     },
-    onSuccess: (id) => {
+    onSuccess: (priceBook) => {
       toast.success(isEdit ? "Prezzi aggiornati" : "Prezzi creati");
       qc.invalidateQueries({ queryKey: ["price-books"] });
-      qc.invalidateQueries({ queryKey: ["price-book", id] });
+      qc.invalidateQueries({ queryKey: ["price-book", priceBook.id] });
       if (finishSave()) return;
-      onSaved(id);
+      onSaved(routeRef(priceBook));
     },
     onError: (error: Error) => toast.error(error.message),
     onSettled: saveLock.release,
@@ -668,9 +670,13 @@ async function createPriceBook(payload: {
   valid_to: string | null;
   notes: string | null;
 }) {
-  const { data, error } = await supabase.from("price_books").insert(payload).select("id").single();
+  const { data, error } = await supabase
+    .from("price_books")
+    .insert(payload)
+    .select("id, public_code")
+    .single();
   if (error) throw error;
-  return data.id;
+  return data as { id: string; public_code: string | null };
 }
 
 async function updatePriceBook(
@@ -691,10 +697,10 @@ async function updatePriceBook(
     .from("price_books")
     .update(payload)
     .eq("id", id)
-    .select("id")
+    .select("id, public_code")
     .single();
   if (error) throw error;
-  return data.id;
+  return data as { id: string; public_code: string | null };
 }
 
 async function syncPriceItems({

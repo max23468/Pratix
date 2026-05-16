@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { PriceBookForm } from "@/components/price-book-form";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { publicCodeLookup } from "@/lib/public-route-code";
 
 export const Route = createFileRoute("/prezzi/$priceBookId")({
   head: () => ({
@@ -30,21 +31,28 @@ function PriceBookDetail() {
   const { data, isLoading } = useQuery({
     queryKey: ["price-book", priceBookId],
     queryFn: async () => {
-      const [
-        { data: priceBook, error: priceBookError },
-        { data: items, error: itemsError },
-        { data: usageRows, error: usageError },
-      ] = await Promise.all([
-        supabase.from("price_books").select("*").eq("id", priceBookId).maybeSingle(),
-        supabase
-          .from("price_items")
-          .select("*")
-          .eq("price_book_id", priceBookId)
-          .order("sort_order", { ascending: true }),
-        supabase.from("case_activities").select("price_item_id").eq("price_book_id", priceBookId),
-      ]);
-
+      const lookup = publicCodeLookup(priceBookId);
+      const { data: priceBook, error: priceBookError } = await supabase
+        .from("price_books")
+        .select("*")
+        .eq(lookup.column, lookup.value)
+        .maybeSingle();
       if (priceBookError) throw priceBookError;
+      if (!priceBook) return { priceBook, items: [] };
+
+      const [{ data: items, error: itemsError }, { data: usageRows, error: usageError }] =
+        await Promise.all([
+          supabase
+            .from("price_items")
+            .select("*")
+            .eq("price_book_id", priceBook.id)
+            .order("sort_order", { ascending: true }),
+          supabase
+            .from("case_activities")
+            .select("price_item_id")
+            .eq("price_book_id", priceBook.id),
+        ]);
+
       if (itemsError) throw itemsError;
       if (usageError) throw usageError;
 

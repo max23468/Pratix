@@ -41,6 +41,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/lib/auth-context";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { routeRef } from "@/lib/public-route-code";
 import { useSubmitLock } from "@/lib/submit-lock";
 import {
   applyImportPreviewPlan,
@@ -2387,7 +2388,13 @@ async function applyImportRow(rowId: string) {
   const { data, error } = await supabase.rpc("apply_import_row", { p_import_row_id: rowId });
   if (error) throw error;
   if (!data) throw new Error("Import non completato.");
-  return data;
+  const { data: caseRow, error: caseError } = await supabase
+    .from("cases")
+    .select("id, public_code")
+    .eq("id", data)
+    .single();
+  if (caseError) throw caseError;
+  return routeRef(caseRow);
 }
 
 function serializeImportDraft(draft: ImportDraft) {

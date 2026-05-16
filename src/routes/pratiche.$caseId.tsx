@@ -26,6 +26,7 @@ import {
   clientDisplayName,
   counterpartyDisplayName,
 } from "@/lib/labels";
+import { publicCodeLookup } from "@/lib/public-route-code";
 
 export const Route = createFileRoute("/pratiche/$caseId")({
   head: () => ({
@@ -50,12 +51,13 @@ function CaseDetail() {
   const { data: caseRow, isLoading } = useQuery({
     queryKey: ["case", caseId],
     queryFn: async () => {
+      const lookup = publicCodeLookup(caseId);
       const { data, error } = await supabase
         .from("cases")
         .select(
           "*, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
         )
-        .eq("id", caseId)
+        .eq(lookup.column, lookup.value)
         .maybeSingle();
       if (error) throw error;
       return data;
@@ -133,11 +135,11 @@ function CaseDetail() {
         </TabsContent>
 
         <TabsContent value="transfers" className="mt-4">
-          <CreditTransfersTab caseId={caseId} />
+          <CreditTransfersTab caseId={caseRow.id} />
         </TabsContent>
 
         <TabsContent value="history" className="mt-4">
-          <HistoryTab caseId={caseId} />
+          <HistoryTab caseId={caseRow.id} />
         </TabsContent>
       </Tabs>
     </>

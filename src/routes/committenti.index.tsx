@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
+import { routeRef } from "@/lib/public-route-code";
 import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
@@ -39,6 +40,7 @@ type CommittentiSearch = {
 
 type PrincipalListRow = {
   id: string;
+  public_code: string;
   business_name: string;
   tax_code: string | null;
   vat_number: string | null;
@@ -140,7 +142,7 @@ function CommittentiList() {
       const { data, error } = await supabase
         .from("principals")
         .select(
-          "id, business_name, tax_code, vat_number, email, address_city, fees_enabled, expense_reimbursements_enabled, archived_at, created_at",
+          "id, public_code, business_name, tax_code, vat_number, email, address_city, fees_enabled, expense_reimbursements_enabled, archived_at, created_at",
         )
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -305,16 +307,16 @@ function CommittentiList() {
                   tabIndex={0}
                   aria-label={`Apri committente ${principal.business_name}`}
                   onClick={(event) =>
-                    handleClickableTableRowClick(event, () => openPrincipal(principal.id))
+                    handleClickableTableRowClick(event, () => openPrincipal(routeRef(principal)))
                   }
                   onKeyDown={(event) =>
-                    handleClickableTableRowKeyDown(event, () => openPrincipal(principal.id))
+                    handleClickableTableRowKeyDown(event, () => openPrincipal(routeRef(principal)))
                   }
                 >
                   <TableCell>
                     <Link
                       to="/committenti/$principalId"
-                      params={{ principalId: principal.id }}
+                      params={{ principalId: routeRef(principal) }}
                       className="font-medium hover:underline"
                     >
                       {principal.business_name}
