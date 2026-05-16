@@ -1,4 +1,9 @@
-import { strToU8, zipSync } from "fflate";
+import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
+
+import {
+  BILLING_EXPENSES_TEMPLATE_BASE64,
+  BILLING_FEES_TEMPLATE_BASE64,
+} from "./billing-xlsx-template-data";
 
 export type BillingExportKind = "fees" | "expenses";
 
@@ -29,20 +34,6 @@ export type BillingWorkbookFile = {
 };
 
 const MIME_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
-const EURO_FORMAT = '_-* #,##0.00\\ "€"_-;\\-* #,##0.00\\ "€"_-;_-* "-"??\\ "€"_-;_-@_-';
-
-const styles = {
-  default: 0,
-  notice: 1,
-  groupHeader: 2,
-  detailHeader: 3,
-  text: 4,
-  date: 5,
-  integer: 6,
-  currency: 7,
-  totalLabel: 8,
-  totalCurrency: 9,
-};
 
 const escapeXml = (value: string | number | null | undefined) =>
   String(value ?? "")
@@ -78,46 +69,17 @@ const normalize = (value: string) =>
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 
+const excelNumberLiteral = (value: number) => {
+  if (!Number.isFinite(value)) return "0";
+  const rounded = Math.round(value * 1000000) / 1000000;
+  return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(6).replace(/0+$/, "");
+};
+
 const excelDateSerial = (isoDate: string) => {
   const date = new Date(`${isoDate}T00:00:00.000Z`);
   if (Number.isNaN(date.getTime())) return null;
   return Math.round(date.getTime() / 86400000 + 25569);
 };
-
-const textCell = (
-  rowIndex: number,
-  columnIndex: number,
-  value: string | number | null,
-  styleId = styles.text,
-) =>
-  `<c r="${cellRef(rowIndex, columnIndex)}" s="${styleId}" t="inlineStr"><is><t>${escapeXml(
-    value,
-  )}</t></is></c>`;
-
-const numberCell = (
-  rowIndex: number,
-  columnIndex: number,
-  value: number,
-  styleId = styles.integer,
-) =>
-  `<c r="${cellRef(rowIndex, columnIndex)}" s="${styleId}"><v>${Number.isFinite(value) ? value : 0}</v></c>`;
-
-const dateCell = (rowIndex: number, columnIndex: number, value: string) => {
-  const serial = excelDateSerial(value);
-  return serial === null
-    ? textCell(rowIndex, columnIndex, value, styles.date)
-    : numberCell(rowIndex, columnIndex, serial, styles.date);
-};
-
-const formulaCell = (
-  rowIndex: number,
-  columnIndex: number,
-  formula: string,
-  styleId = styles.currency,
-) => `<c r="${cellRef(rowIndex, columnIndex)}" s="${styleId}"><f>${escapeXml(formula)}</f></c>`;
-
-const rowXml = (rowIndex: number, cells: string[], height?: number) =>
-  `<row r="${rowIndex}"${height ? ` ht="${height}" customHeight="1"` : ""}>${cells.join("")}</row>`;
 
 type FeeColumn = {
   columnIndex: number;
@@ -259,7 +221,6 @@ const feeColumns: FeeColumn[] = [
 ];
 
 const feeColumnByIndex = new Map(feeColumns.map((column) => [column.columnIndex, column]));
-const feeQuantityColumns = feeColumns.map((column) => column.columnIndex);
 
 const matchFeeColumn = (row: BillingExportRow) => {
   const description = normalize(row.description);
@@ -307,352 +268,451 @@ const matchExpenseColumn = (row: BillingExportRow) => {
   );
 };
 
-const feesWorksheet = (input: BillingWorkbookInput) => {
-  const dataRows = Math.max(input.rows.length, 1);
-  const firstDataRow = 5;
-  const lastDataRow = firstDataRow + dataRows - 1;
-  const totalRow = lastDataRow + 2;
-  const grandTotalRow = totalRow + 2;
+type TemplateConfig = {
+  templateBase64: string;
+  sheetName: string;
+  kindName: string;
+  dataStartRow: number;
+  templateDataEndRow: number;
+  totalRow: number;
+  grandTotalRow: number;
+  dimensionStartCell: string;
+  dimensionColumn: string;
+  trailingDimensionRow?: number;
+  clonedMergeColumns?: Array<[string, string]>;
+};
 
-  const rows: string[] = [
-    rowXml(
-      1,
-      [
-        textCell(
-          1,
-          0,
-          "ATTENZIONE: IL FOGLIO CONTIENE FORMULE. INSERIRE SOLO IL NUMERO DI ATTIVITÀ NELLA CELLA CORRISPONDENTE.",
-          styles.notice,
-        ),
-      ],
-      54,
-    ),
-    rowXml(
-      2,
-      [
-        textCell(2, 3, feeColumnByIndex.get(3)!.group, styles.groupHeader),
-        textCell(2, 4, feeColumnByIndex.get(4)!.group, styles.groupHeader),
-        textCell(2, 5, feeColumnByIndex.get(5)!.group, styles.groupHeader),
-        textCell(2, 6, feeColumnByIndex.get(6)!.group, styles.groupHeader),
-        textCell(2, 8, feeColumnByIndex.get(8)!.group, styles.groupHeader),
-        textCell(2, 11, feeColumnByIndex.get(11)!.group, styles.groupHeader),
-        textCell(2, 14, feeColumnByIndex.get(14)!.group, styles.groupHeader),
-        textCell(2, 15, feeColumnByIndex.get(15)!.group, styles.groupHeader),
-        textCell(2, 18, feeColumnByIndex.get(18)!.group, styles.groupHeader),
-        textCell(2, 20, feeColumnByIndex.get(20)!.group, styles.groupHeader),
-      ],
-      92,
-    ),
-    rowXml(
-      3,
-      [
-        textCell(3, 0, "DATA ATTIVITÀ", styles.detailHeader),
-        textCell(3, 1, "CLIENTE", styles.detailHeader),
-        textCell(3, 2, "NDG-DENOMINAZIONE", styles.detailHeader),
-        ...feeColumns.map((column) =>
-          textCell(3, column.columnIndex, column.detail, styles.detailHeader),
-        ),
-        textCell(3, 16, "Data udienza", styles.detailHeader),
-        textCell(3, 17, "Data udienza", styles.detailHeader),
-      ],
-      92,
-    ),
-  ];
+const templateConfigs: Record<BillingExportKind, TemplateConfig> = {
+  fees: {
+    templateBase64: BILLING_FEES_TEMPLATE_BASE64,
+    sheetName: "Compensi",
+    kindName: "compensi",
+    dataStartRow: 5,
+    templateDataEndRow: 55,
+    totalRow: 56,
+    grandTotalRow: 58,
+    dimensionStartCell: "A1",
+    dimensionColumn: "LD",
+    clonedMergeColumns: [
+      ["Q", "R"],
+      ["U", "V"],
+    ],
+  },
+  expenses: {
+    templateBase64: BILLING_EXPENSES_TEMPLATE_BASE64,
+    sheetName: "Spese",
+    kindName: "rimborsi-spese",
+    dataStartRow: 2,
+    templateDataEndRow: 35,
+    totalRow: 36,
+    grandTotalRow: 38,
+    dimensionStartCell: "B1",
+    dimensionColumn: "K",
+    trailingDimensionRow: 86,
+  },
+};
 
-  input.rows.forEach((billingRow, index) => {
-    const rowIndex = firstDataRow + index;
+const base64ToBytes = (base64: string) =>
+  Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+
+const templateDataRows = (config: TemplateConfig) =>
+  config.templateDataEndRow - config.dataStartRow + 1;
+
+const cellRefParts = (ref: string) => {
+  const match = ref.match(/^([A-Z]+)(\d+)$/);
+  if (!match) throw new Error(`Invalid Excel cell ref: ${ref}`);
+  return { column: match[1], row: Number(match[2]) };
+};
+
+const shiftCellRef = (ref: string, afterRow: number, offset: number) => {
+  const { column, row } = cellRefParts(ref);
+  return row > afterRow ? `${column}${row + offset}` : ref;
+};
+
+const shiftRangeRef = (ref: string, afterRow: number, offset: number) =>
+  ref
+    .split(":")
+    .map((cell) => shiftCellRef(cell, afterRow, offset))
+    .join(":");
+
+const rowRegex = /<row\b[^>]*\br="(\d+)"[\s\S]*?<\/row>/g;
+
+const parseRows = (sheetXml: string) =>
+  [...sheetXml.matchAll(rowRegex)].map((match) => ({
+    row: Number(match[1]),
+    xml: match[0],
+  }));
+
+const shiftRowXml = (rowXml: string, fromRow: number, toRow: number) =>
+  rowXml
+    .replace(new RegExp(`\\br="${fromRow}"`), `r="${toRow}"`)
+    .replace(new RegExp(`\\br="([A-Z]+)${fromRow}"`, "g"), `r="$1${toRow}"`);
+
+const cellXmlPattern = (row: number, columnIndex: number) =>
+  new RegExp(
+    `<c\\b(?=[^>]*\\br="${cellRef(row, columnIndex)}")[^>]*\\/>|<c\\b(?=[^>]*\\br="${cellRef(
+      row,
+      columnIndex,
+    )}")[^>]*>[\\s\\S]*?<\\/c>`,
+  );
+
+const cellStyleAttribute = (cellXml?: string) => cellXml?.match(/\bs="([^"]+)"/)?.[0] ?? "";
+
+const emptyCell = (row: number, columnIndex: number, existingCell?: string) =>
+  `<c r="${cellRef(row, columnIndex)}"${cellStyleAttribute(existingCell) ? ` ${cellStyleAttribute(existingCell)}` : ""}/>`;
+
+const stringCellFromTemplate = (
+  row: number,
+  columnIndex: number,
+  value: string | number | null,
+  existingCell?: string,
+) =>
+  `<c r="${cellRef(row, columnIndex)}"${cellStyleAttribute(existingCell) ? ` ${cellStyleAttribute(existingCell)}` : ""} t="inlineStr"><is><t>${escapeXml(
+    value,
+  )}</t></is></c>`;
+
+const numberCellFromTemplate = (
+  row: number,
+  columnIndex: number,
+  value: number,
+  existingCell?: string,
+) =>
+  `<c r="${cellRef(row, columnIndex)}"${cellStyleAttribute(existingCell) ? ` ${cellStyleAttribute(existingCell)}` : ""}><v>${Number.isFinite(value) ? value : 0}</v></c>`;
+
+const formulaCellFromTemplate = (
+  row: number,
+  columnIndex: number,
+  formula: string,
+  existingCell?: string,
+) =>
+  `<c r="${cellRef(row, columnIndex)}"${cellStyleAttribute(existingCell) ? ` ${cellStyleAttribute(existingCell)}` : ""}><f>${escapeXml(formula)}</f></c>`;
+
+const dateCellFromTemplate = (
+  row: number,
+  columnIndex: number,
+  value: string,
+  existingCell?: string,
+) => {
+  const serial = excelDateSerial(value);
+  return serial === null
+    ? stringCellFromTemplate(row, columnIndex, value, existingCell)
+    : numberCellFromTemplate(row, columnIndex, serial, existingCell);
+};
+
+const setCell = (
+  rowXml: string,
+  row: number,
+  columnIndex: number,
+  build: (existingCell?: string) => string,
+) => {
+  const pattern = cellXmlPattern(row, columnIndex);
+  const existingCell = rowXml.match(pattern)?.[0];
+  const nextCell = build(existingCell);
+  return existingCell
+    ? rowXml.replace(pattern, nextCell)
+    : rowXml.replace("</row>", `${nextCell}</row>`);
+};
+
+const clearDataRow = (rowXml: string, row: number, lastColumnIndex: number) => {
+  let nextRow = rowXml;
+  for (let columnIndex = 0; columnIndex <= lastColumnIndex; columnIndex += 1) {
+    nextRow = setCell(nextRow, row, columnIndex, (existingCell) =>
+      emptyCell(row, columnIndex, existingCell),
+    );
+  }
+  return nextRow;
+};
+
+const practiceLabel = (row: BillingExportRow) =>
+  row.practiceNumber ? `${row.practiceNumber} - ${row.counterpartyName}` : row.counterpartyName;
+
+const buildTemplateRows = (sheetXml: string, config: TemplateConfig, dataRowCount: number) => {
+  const rows = parseRows(sheetXml);
+  const templateRowsByNumber = new Map(rows.map((row) => [row.row, row.xml]));
+  const addRows = Math.max(0, dataRowCount - templateDataRows(config));
+  const outputRows: string[] = [];
+
+  rows.filter((row) => row.row < config.dataStartRow).forEach((row) => outputRows.push(row.xml));
+
+  const lastTemplateDataRow = templateRowsByNumber.get(config.templateDataEndRow);
+  if (!lastTemplateDataRow) {
+    throw new Error(`Missing billing template row ${config.templateDataEndRow}`);
+  }
+
+  for (let index = 0; index < dataRowCount; index += 1) {
+    const rowNumber = config.dataStartRow + index;
+    const templateRow =
+      templateRowsByNumber.get(rowNumber) ??
+      shiftRowXml(lastTemplateDataRow, config.templateDataEndRow, rowNumber);
+    outputRows.push(templateRow);
+  }
+
+  rows
+    .filter((row) => row.row > config.templateDataEndRow)
+    .forEach((row) => outputRows.push(shiftRowXml(row.xml, row.row, row.row + addRows)));
+
+  return { addRows, rows: outputRows };
+};
+
+const updateDimension = (sheetXml: string, config: TemplateConfig, addRows: number) => {
+  const templateEnd = config.trailingDimensionRow ?? config.grandTotalRow;
+  const endRow = templateEnd + addRows;
+  return sheetXml.replace(
+    /<dimension ref="[^"]+"\/>/,
+    `<dimension ref="${config.dimensionStartCell}:${config.dimensionColumn}${endRow}"/>`,
+  );
+};
+
+const updateMergeCells = (
+  sheetXml: string,
+  config: TemplateConfig,
+  addRows: number,
+  dataEndRow: number,
+) => {
+  if (addRows === 0 || !sheetXml.includes("<mergeCells")) return sheetXml;
+
+  const clonedMerges =
+    config.clonedMergeColumns?.flatMap(([startColumn, endColumn]) =>
+      Array.from({ length: addRows }, (_, index) => {
+        const row = config.templateDataEndRow + index + 1;
+        return `<mergeCell ref="${startColumn}${row}:${endColumn}${row}"/>`;
+      }),
+    ) ?? [];
+
+  return sheetXml.replace(
+    /<mergeCells count="(\d+)">([\s\S]*?)<\/mergeCells>/,
+    (_match, count, body) => {
+      const shiftedBody = body.replace(/ref="([^"]+)"/g, (_refMatch: string, ref: string) => {
+        const shiftedRef = shiftRangeRef(ref, config.templateDataEndRow, addRows);
+        return `ref="${shiftedRef}"`;
+      });
+      const dataMerges = clonedMerges.filter((merge) => {
+        const row = Number(merge.match(/\d+/)?.[0] ?? 0);
+        return row <= dataEndRow;
+      });
+      return `<mergeCells count="${Number(count) + dataMerges.length}">${shiftedBody}${dataMerges.join(
+        "",
+      )}</mergeCells>`;
+    },
+  );
+};
+
+const updateCoreProperties = (
+  createdAt: string,
+) => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:creator>Pratix</dc:creator><cp:lastModifiedBy>Pratix</cp:lastModifiedBy><dcterms:created xsi:type="dcterms:W3CDTF">${createdAt}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${createdAt}</dcterms:modified></cp:coreProperties>`;
+
+const populateFeesRows = (
+  rows: string[],
+  inputRows: BillingExportRow[],
+  config: TemplateConfig,
+) => {
+  const dataEndRow = config.dataStartRow + rows.length - 1;
+  const populated = rows.map((rowXml, index) => {
+    const rowNumber = config.dataStartRow + index;
+    let nextRow = clearDataRow(rowXml, rowNumber, 21);
+    const billingRow = inputRows[index];
+    if (!billingRow) return nextRow;
+
     const matchedColumn = matchFeeColumn(billingRow);
-    const hearingDates = billingRow.hearingDates ?? [];
-    const cells = [
-      dateCell(rowIndex, 0, billingRow.activityDate),
-      textCell(rowIndex, 1, billingRow.clientName),
-      textCell(
-        rowIndex,
-        2,
-        billingRow.practiceNumber
-          ? `${billingRow.practiceNumber} - ${billingRow.counterpartyName}`
-          : billingRow.counterpartyName,
-      ),
-      numberCell(rowIndex, matchedColumn.columnIndex, billingRow.quantity),
-    ];
+    nextRow = setCell(nextRow, rowNumber, 0, (cell) =>
+      dateCellFromTemplate(rowNumber, 0, billingRow.activityDate, cell),
+    );
+    nextRow = setCell(nextRow, rowNumber, 1, (cell) =>
+      stringCellFromTemplate(rowNumber, 1, billingRow.clientName, cell),
+    );
+    nextRow = setCell(nextRow, rowNumber, 2, (cell) =>
+      stringCellFromTemplate(rowNumber, 2, practiceLabel(billingRow), cell),
+    );
+    nextRow = setCell(nextRow, rowNumber, matchedColumn.columnIndex, (cell) =>
+      numberCellFromTemplate(rowNumber, matchedColumn.columnIndex, billingRow.quantity, cell),
+    );
 
     if (matchedColumn.columnIndex === 15) {
-      cells.push(
-        ...hearingDates
-          .slice(0, 2)
-          .map((date, hearingIndex) => dateCell(rowIndex, 16 + hearingIndex, date)),
+      (billingRow.hearingDates ?? []).slice(0, 2).forEach((date, hearingIndex) => {
+        nextRow = setCell(nextRow, rowNumber, 16 + hearingIndex, (cell) =>
+          dateCellFromTemplate(rowNumber, 16 + hearingIndex, date, cell),
+        );
+      });
+    }
+
+    return nextRow;
+  });
+
+  return { dataEndRow, rows: populated };
+};
+
+const populateExpenseRows = (
+  rows: string[],
+  inputRows: BillingExportRow[],
+  config: TemplateConfig,
+) => {
+  const dataEndRow = config.dataStartRow + rows.length - 1;
+  const populated = rows.map((rowXml, index) => {
+    const rowNumber = config.dataStartRow + index;
+    let nextRow = clearDataRow(rowXml, rowNumber, 10);
+    const billingRow = inputRows[index];
+    if (!billingRow) return nextRow;
+
+    const matchedColumn = matchExpenseColumn(billingRow);
+    nextRow = setCell(nextRow, rowNumber, 1, (cell) =>
+      dateCellFromTemplate(rowNumber, 1, billingRow.activityDate, cell),
+    );
+    nextRow = setCell(nextRow, rowNumber, 2, (cell) =>
+      stringCellFromTemplate(rowNumber, 2, billingRow.clientName, cell),
+    );
+    nextRow = setCell(nextRow, rowNumber, 3, (cell) =>
+      stringCellFromTemplate(rowNumber, 3, practiceLabel(billingRow), cell),
+    );
+    nextRow = setCell(nextRow, rowNumber, matchedColumn.columnIndex, (cell) =>
+      numberCellFromTemplate(rowNumber, matchedColumn.columnIndex, billingRow.amount, cell),
+    );
+
+    return nextRow;
+  });
+
+  return { dataEndRow, rows: populated };
+};
+
+const updateFeesFormulas = (
+  rows: string[],
+  inputRows: BillingExportRow[],
+  config: TemplateConfig,
+  addRows: number,
+) => {
+  const totalRow = config.totalRow + addRows;
+  const grandTotalRow = config.grandTotalRow + addRows;
+  const rowAmounts = inputRows.map((row, index) => ({
+    row,
+    rowNumber: config.dataStartRow + index,
+    matchedColumn: matchFeeColumn(row).columnIndex,
+  }));
+  const formulaForColumn = (column: FeeColumn) => {
+    const expressions = rowAmounts
+      .filter((item) => item.matchedColumn === column.columnIndex)
+      .map(({ row, rowNumber }) => {
+        if (Number.isFinite(row.unitPrice)) {
+          return `${cellRef(rowNumber, column.columnIndex)}*${excelNumberLiteral(row.unitPrice)}`;
+        }
+
+        return excelNumberLiteral(row.amount);
+      });
+
+    return expressions.length > 0 ? `SUM(${expressions.join(",")})` : "0";
+  };
+
+  return rows.map((rowXml) => {
+    if (rowXml.includes(`r="${totalRow}"`)) {
+      return feeColumns.reduce(
+        (nextRow, column) =>
+          setCell(nextRow, totalRow, column.columnIndex, (cell) =>
+            formulaCellFromTemplate(totalRow, column.columnIndex, formulaForColumn(column), cell),
+          ),
+        rowXml,
       );
     }
 
-    rows.push(rowXml(rowIndex, cells, 23));
+    if (rowXml.includes(`r="${grandTotalRow}"`)) {
+      return setCell(rowXml, grandTotalRow, 3, (cell) =>
+        formulaCellFromTemplate(grandTotalRow, 3, `SUM(D${totalRow}:V${totalRow})`, cell),
+      );
+    }
+
+    return rowXml;
   });
-
-  if (input.rows.length === 0) {
-    rows.push(rowXml(firstDataRow, [textCell(firstDataRow, 1, input.principalName)], 23));
-  }
-
-  rows.push(
-    rowXml(
-      totalRow,
-      [
-        textCell(totalRow, 2, "Totale per voce", styles.totalLabel),
-        ...feeQuantityColumns.map((columnIndex) => {
-          const column = feeColumnByIndex.get(columnIndex)!;
-          return formulaCell(
-            totalRow,
-            columnIndex,
-            `SUM(${columnName(columnIndex)}${firstDataRow}:${columnName(columnIndex)}${lastDataRow})*${column.price}`,
-            styles.totalCurrency,
-          );
-        }),
-      ],
-      23,
-    ),
-    rowXml(
-      grandTotalRow,
-      [
-        textCell(grandTotalRow, 2, "TOTALE COMPENSI", styles.totalLabel),
-        formulaCell(
-          grandTotalRow,
-          3,
-          `SUM(D${totalRow}:P${totalRow},S${totalRow}:U${totalRow})`,
-          styles.totalCurrency,
-        ),
-      ],
-      23,
-    ),
-  );
-
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-  <dimension ref="A1:U${grandTotalRow}"/>
-  <sheetViews><sheetView workbookViewId="0"><pane xSplit="3" ySplit="4" topLeftCell="D5" activePane="bottomRight" state="frozen"/></sheetView></sheetViews>
-  <sheetFormatPr defaultRowHeight="18"/>
-  <cols>
-    <col min="1" max="1" width="11.83" customWidth="1"/>
-    <col min="2" max="2" width="13" customWidth="1"/>
-    <col min="3" max="3" width="34.33" customWidth="1"/>
-    <col min="4" max="4" width="25.66" customWidth="1"/>
-    <col min="5" max="5" width="21.83" customWidth="1"/>
-    <col min="6" max="6" width="17.16" customWidth="1"/>
-    <col min="7" max="7" width="29.16" customWidth="1"/>
-    <col min="8" max="8" width="13" customWidth="1"/>
-    <col min="9" max="9" width="23.16" customWidth="1"/>
-    <col min="10" max="10" width="21.66" customWidth="1"/>
-    <col min="11" max="11" width="19.5" customWidth="1"/>
-    <col min="12" max="12" width="26" customWidth="1"/>
-    <col min="13" max="13" width="22.66" customWidth="1"/>
-    <col min="14" max="14" width="14.83" customWidth="1"/>
-    <col min="15" max="15" width="21.66" customWidth="1"/>
-    <col min="16" max="16" width="12.83" customWidth="1"/>
-    <col min="17" max="18" width="13" customWidth="1"/>
-    <col min="19" max="19" width="22.5" customWidth="1"/>
-    <col min="20" max="20" width="35.83" customWidth="1"/>
-    <col min="21" max="21" width="12.16" customWidth="1"/>
-  </cols>
-  <sheetData>${rows.join("")}</sheetData>
-  <mergeCells count="7">
-    <mergeCell ref="A1:U1"/>
-    <mergeCell ref="G2:H2"/>
-    <mergeCell ref="I2:K2"/>
-    <mergeCell ref="L2:N2"/>
-    <mergeCell ref="P2:R2"/>
-    <mergeCell ref="S2:T2"/>
-    <mergeCell ref="D${grandTotalRow}:E${grandTotalRow}"/>
-  </mergeCells>
-</worksheet>`;
 };
 
-const expensesWorksheet = (input: BillingWorkbookInput) => {
-  const dataRows = Math.max(input.rows.length, 1);
-  const firstDataRow = 2;
-  const lastDataRow = firstDataRow + dataRows - 1;
-  const totalRow = lastDataRow + 2;
+const updateExpenseFormulas = (
+  rows: string[],
+  dataEndRow: number,
+  config: TemplateConfig,
+  addRows: number,
+) => {
+  const totalRow = config.totalRow + addRows;
+  const grandTotalRow = config.grandTotalRow + addRows;
 
-  const rows = [
-    rowXml(
-      1,
-      [
-        textCell(1, 1, "DATA SPESA", styles.detailHeader),
-        textCell(1, 2, "CLIENTE", styles.detailHeader),
-        textCell(1, 3, "NDG-DENOMINAZIONE", styles.detailHeader),
-        textCell(1, 4, "N° TENTATIVO NOTIFICA (es: prima, seconda etc.)", styles.detailHeader),
-        ...expenseColumns.map((column) =>
-          textCell(1, column.columnIndex, column.header, styles.detailHeader),
-        ),
-      ],
-      96,
-    ),
-  ];
+  return rows.map((rowXml) => {
+    if (rowXml.includes(`r="${totalRow}"`)) {
+      return expenseColumns.reduce(
+        (nextRow, column) =>
+          setCell(nextRow, totalRow, column.columnIndex, (cell) =>
+            formulaCellFromTemplate(
+              totalRow,
+              column.columnIndex,
+              `SUM(${columnName(column.columnIndex)}${config.dataStartRow}:${columnName(
+                column.columnIndex,
+              )}${dataEndRow})`,
+              cell,
+            ),
+          ),
+        rowXml,
+      );
+    }
 
-  input.rows.forEach((billingRow, index) => {
-    const rowIndex = firstDataRow + index;
-    const matchedColumn = matchExpenseColumn(billingRow);
-    rows.push(
-      rowXml(rowIndex, [
-        dateCell(rowIndex, 1, billingRow.activityDate),
-        textCell(rowIndex, 2, billingRow.clientName),
-        textCell(
-          rowIndex,
-          3,
-          billingRow.practiceNumber
-            ? `${billingRow.practiceNumber} - ${billingRow.counterpartyName}`
-            : billingRow.counterpartyName,
-        ),
-        textCell(rowIndex, 4, ""),
-        numberCell(rowIndex, matchedColumn.columnIndex, billingRow.amount, styles.currency),
-      ]),
-    );
+    if (rowXml.includes(`r="${grandTotalRow}"`)) {
+      return setCell(rowXml, grandTotalRow, 1, (cell) =>
+        formulaCellFromTemplate(grandTotalRow, 1, `SUM(F${totalRow}:K${totalRow})`, cell),
+      );
+    }
+
+    return rowXml;
+  });
+};
+
+const buildTemplateWorksheet = (
+  input: BillingWorkbookInput,
+  sheetXml: string,
+  config: TemplateConfig,
+) => {
+  const dataRowCount = Math.max(input.rows.length, templateDataRows(config));
+  const { addRows, rows } = buildTemplateRows(sheetXml, config, dataRowCount);
+  const dataRows = rows.filter((rowXml) => {
+    const row = Number(rowXml.match(/\br="(\d+)"/)?.[1] ?? 0);
+    return row >= config.dataStartRow && row < config.dataStartRow + dataRowCount;
+  });
+  const nonDataRows = rows.filter((rowXml) => {
+    const row = Number(rowXml.match(/\br="(\d+)"/)?.[1] ?? 0);
+    return row < config.dataStartRow || row >= config.dataStartRow + dataRowCount;
+  });
+  const populated =
+    input.kind === "fees"
+      ? populateFeesRows(dataRows, input.rows, config)
+      : populateExpenseRows(dataRows, input.rows, config);
+  const formulaRows =
+    input.kind === "fees"
+      ? updateFeesFormulas(nonDataRows, input.rows, config, addRows)
+      : updateExpenseFormulas(nonDataRows, populated.dataEndRow, config, addRows);
+  const nextRows = [...formulaRows, ...populated.rows].sort((left, right) => {
+    const leftRow = Number(left.match(/\br="(\d+)"/)?.[1] ?? 0);
+    const rightRow = Number(right.match(/\br="(\d+)"/)?.[1] ?? 0);
+    return leftRow - rightRow;
   });
 
-  if (input.rows.length === 0) {
-    rows.push(rowXml(firstDataRow, [textCell(firstDataRow, 2, input.principalName)]));
-  }
-
-  rows.push(
-    rowXml(totalRow, [
-      textCell(totalRow, 3, "TOTALE RIMBORSI SPESE", styles.totalLabel),
-      ...expenseColumns.map((column) =>
-        formulaCell(
-          totalRow,
-          column.columnIndex,
-          `SUM(${columnName(column.columnIndex)}${firstDataRow}:${columnName(column.columnIndex)}${lastDataRow})`,
-          styles.totalCurrency,
-        ),
+  return updateMergeCells(
+    updateDimension(
+      sheetXml.replace(
+        /<sheetData>[\s\S]*?<\/sheetData>/,
+        `<sheetData>${nextRows.join("")}</sheetData>`,
       ),
-    ]),
+      config,
+      addRows,
+    ),
+    config,
+    addRows,
+    populated.dataEndRow,
   );
-
-  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-  <dimension ref="B1:K${totalRow}"/>
-  <sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>
-  <sheetFormatPr defaultRowHeight="18"/>
-  <cols>
-    <col min="1" max="1" width="2.66" customWidth="1"/>
-    <col min="2" max="2" width="20.83" customWidth="1"/>
-    <col min="3" max="3" width="19.5" customWidth="1"/>
-    <col min="4" max="4" width="34.16" customWidth="1"/>
-    <col min="5" max="5" width="11.83" customWidth="1"/>
-    <col min="6" max="6" width="9.83" customWidth="1"/>
-    <col min="7" max="7" width="10.83" customWidth="1"/>
-    <col min="8" max="8" width="16.83" customWidth="1"/>
-    <col min="9" max="9" width="13.5" customWidth="1"/>
-    <col min="10" max="10" width="9.83" customWidth="1"/>
-    <col min="11" max="11" width="13.83" customWidth="1"/>
-  </cols>
-  <sheetData>${rows.join("")}</sheetData>
-</worksheet>`;
 };
-
-const worksheet = (input: BillingWorkbookInput) =>
-  input.kind === "fees" ? feesWorksheet(input) : expensesWorksheet(input);
-
-const workbookXml = (sheetName: string) => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
-  <bookViews><workbookView xWindow="0" yWindow="600" windowWidth="28800" windowHeight="16120"/></bookViews>
-  <sheets><sheet name="${escapeXml(sheetName)}" sheetId="1" r:id="rId1"/></sheets>
-  <calcPr calcId="191029" fullCalcOnLoad="1" forceFullCalc="1"/>
-</workbook>`;
-
-const stylesXml = () => `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
-  <numFmts count="2">
-    <numFmt numFmtId="164" formatCode="mm-dd-yy"/>
-    <numFmt numFmtId="165" formatCode="${escapeXml(EURO_FORMAT)}"/>
-  </numFmts>
-  <fonts count="4">
-    <font><sz val="11"/><name val="Calibri"/></font>
-    <font><b/><sz val="14"/><color rgb="FF9C0006"/><name val="Calibri"/></font>
-    <font><b/><sz val="10"/><name val="Calibri"/></font>
-    <font><b/><sz val="11"/><name val="Calibri"/></font>
-  </fonts>
-  <fills count="5">
-    <fill><patternFill patternType="none"/></fill>
-    <fill><patternFill patternType="gray125"/></fill>
-    <fill><patternFill patternType="solid"><fgColor rgb="FFFFE699"/><bgColor indexed="64"/></patternFill></fill>
-    <fill><patternFill patternType="solid"><fgColor rgb="FFD9EAD3"/><bgColor indexed="64"/></patternFill></fill>
-    <fill><patternFill patternType="solid"><fgColor rgb="FFE2F0D9"/><bgColor indexed="64"/></patternFill></fill>
-  </fills>
-  <borders count="2">
-    <border><left/><right/><top/><bottom/><diagonal/></border>
-    <border><left style="thin"/><right style="thin"/><top style="thin"/><bottom style="thin"/><diagonal/></border>
-  </borders>
-  <cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
-  <cellXfs count="10">
-    <xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
-    <xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
-    <xf numFmtId="0" fontId="2" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
-    <xf numFmtId="0" fontId="2" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
-    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1" applyAlignment="1"><alignment vertical="center" wrapText="1"/></xf>
-    <xf numFmtId="164" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
-    <xf numFmtId="1" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center"/></xf>
-    <xf numFmtId="165" fontId="0" fillId="0" borderId="1" xfId="0" applyNumberFormat="1" applyBorder="1" applyAlignment="1"><alignment horizontal="right" vertical="center"/></xf>
-    <xf numFmtId="0" fontId="3" fillId="4" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="center" vertical="center" wrapText="1"/></xf>
-    <xf numFmtId="165" fontId="3" fillId="4" borderId="1" xfId="0" applyNumberFormat="1" applyFont="1" applyFill="1" applyBorder="1" applyAlignment="1"><alignment horizontal="right" vertical="center"/></xf>
-  </cellXfs>
-  <cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
-</styleSheet>`;
 
 export function buildBillingWorkbook(input: BillingWorkbookInput): BillingWorkbookFile {
-  const sheetName = input.kind === "fees" ? "Compensi" : "Spese";
-  const kindName = input.kind === "fees" ? "compensi" : "rimborsi-spese";
-  const fileName = `${kindName}-${safeFileSegment(input.principalName)}-${input.periodStart}-${input.periodEnd}.xlsx`;
+  const config = templateConfigs[input.kind];
+  const fileName = `${config.kindName}-${safeFileSegment(input.principalName)}-${input.periodStart}-${input.periodEnd}.xlsx`;
   const createdAt = new Date().toISOString();
+  const files = unzipSync(base64ToBytes(config.templateBase64));
 
-  const files: Record<string, Uint8Array> = {
-    "[Content_Types].xml": strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
-  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
-  <Default Extension="xml" ContentType="application/xml"/>
-  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
-  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
-  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
-  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-</Types>`),
-    "_rels/.rels": strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
-  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
-  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
-</Relationships>`),
-    "docProps/app.xml": strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties" xmlns:vt="http://schemas.openxmlformats.org/officeDocument/2006/docPropsVTypes">
-  <Application>Pratix</Application>
-  <DocSecurity>0</DocSecurity>
-  <ScaleCrop>false</ScaleCrop>
-  <HeadingPairs>
-    <vt:vector size="2" baseType="variant">
-      <vt:variant><vt:lpstr>Fogli di lavoro</vt:lpstr></vt:variant>
-      <vt:variant><vt:i4>1</vt:i4></vt:variant>
-    </vt:vector>
-  </HeadingPairs>
-  <TitlesOfParts>
-    <vt:vector size="1" baseType="lpstr"><vt:lpstr>${sheetName}</vt:lpstr></vt:vector>
-  </TitlesOfParts>
-  <Company>Pratix</Company>
-  <LinksUpToDate>false</LinksUpToDate>
-  <SharedDoc>false</SharedDoc>
-  <HyperlinksChanged>false</HyperlinksChanged>
-  <AppVersion>16.0000</AppVersion>
-</Properties>`),
-    "docProps/core.xml": strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-  <dc:creator>Pratix</dc:creator>
-  <cp:lastModifiedBy>Pratix</cp:lastModifiedBy>
-  <dcterms:created xsi:type="dcterms:W3CDTF">${createdAt}</dcterms:created>
-  <dcterms:modified xsi:type="dcterms:W3CDTF">${createdAt}</dcterms:modified>
-</cp:coreProperties>`),
-    "xl/workbook.xml": strToU8(workbookXml(sheetName)),
-    "xl/_rels/workbook.xml.rels": strToU8(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
-  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
-</Relationships>`),
-    "xl/worksheets/sheet1.xml": strToU8(worksheet(input)),
-    "xl/styles.xml": strToU8(stylesXml()),
-  };
+  files["docProps/core.xml"] = strToU8(updateCoreProperties(createdAt));
+  files["xl/worksheets/sheet1.xml"] = strToU8(
+    buildTemplateWorksheet(input, strFromU8(files["xl/worksheets/sheet1.xml"]), config),
+  );
 
   return {
     bytes: zipSync(files),
