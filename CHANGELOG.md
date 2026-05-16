@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.6.1] — 2026-05-16
+
+### Correzioni
+
+- **Fatture**: il dettaglio chiarisce che riportare una fattura in bozza mantiene le Attività collegate alla stessa fattura.
+- **Fatture**: annullando il pagamento, una fattura già scaduta torna insoluta invece che semplicemente emessa.
+
 ## [1.6.0] — 2026-05-16
 
 ### Novità
@@ -861,6 +868,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.6.1]: #161--2026-05-16
 [1.6.0]: #160--2026-05-16
 [1.5.3]: #153--2026-05-16
 [1.5.2]: #152--2026-05-16
