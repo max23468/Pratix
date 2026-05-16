@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.6.0] — 2026-05-16
+
+### Novità
+
+- **Fatture**: dal dettaglio si può annullare il pagamento o riportare una fattura emessa in bozza; dalla lista `/fatture` gli export massivi sono separati in PDF e XML senza archivio ZIP.
+
 ## [1.5.3] — 2026-05-16
 
 ### Correzioni
@@ -855,6 +861,8 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.6.0]: #160--2026-05-16
+[1.5.3]: #153--2026-05-16
 [1.5.2]: #152--2026-05-16
 [1.5.1]: #151--2026-05-16
 [1.5.0]: #150--2026-05-16

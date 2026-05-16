@@ -1,11 +1,10 @@
-import { strFromU8, unzipSync } from "fflate";
+import { strFromU8 } from "fflate";
 import { describe, expect, it } from "vitest";
 
 import {
-  buildInvoiceArchive,
-  buildInvoiceArchiveFileName,
-  buildSingleInvoiceFiles,
+  invoicePdfBytes,
   invoicePdfFileName,
+  invoiceXmlBytes,
   safeArchiveSegment,
 } from "./invoice-file-exports";
 import type { InvoicePdfData } from "./invoice-pdf";
@@ -55,29 +54,13 @@ const invoiceData = (): InvoicePdfData => ({
 });
 
 describe("invoice file exports", () => {
-  it("normalizza segmenti e nomi file per archivio", () => {
+  it("normalizza segmenti e nomi file", () => {
     expect(safeArchiveSegment(" Fattura / 12\\A € ")).toBe("Fattura-12-A");
     expect(invoicePdfFileName(invoiceData().invoice)).toBe("Fattura_2026_12-A.pdf");
-    expect(
-      buildInvoiceArchiveFileName({ periodStart: "2026-05-01", periodEnd: "2026-05-31" }),
-    ).toBe("fatture-pratix-2026-05-01_2026-05-31.zip");
   });
 
-  it("genera un archivio con PDF e XML per fattura", () => {
-    const files = buildSingleInvoiceFiles({
-      invoice: invoiceData(),
-      xml: { filename: "IT123_00001.xml", xml: "<FatturaElettronica />" },
-    });
-
-    expect(files).toHaveLength(2);
-    expect(files[0].path).toBe("fattura-2026-12-A/Fattura_2026_12-A.pdf");
-    expect(files[0].bytes.length).toBeGreaterThan(1000);
-
-    const archive = unzipSync(buildInvoiceArchive(files).bytes);
-    expect(Object.keys(archive).sort()).toEqual([
-      "fattura-2026-12-A/Fattura_2026_12-A.pdf",
-      "fattura-2026-12-A/IT123_00001.xml",
-    ]);
-    expect(strFromU8(archive["fattura-2026-12-A/IT123_00001.xml"])).toBe("<FatturaElettronica />");
+  it("genera bytes separati per PDF e XML", () => {
+    expect(invoicePdfBytes(invoiceData()).length).toBeGreaterThan(1000);
+    expect(strFromU8(invoiceXmlBytes("<FatturaElettronica />"))).toBe("<FatturaElettronica />");
   });
 });

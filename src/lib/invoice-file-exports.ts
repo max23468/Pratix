@@ -1,17 +1,5 @@
-import { strToU8, zipSync } from "fflate";
+import { strToU8 } from "fflate";
 import { generateInvoicePdf, type InvoicePdfData } from "@/lib/invoice-pdf";
-
-export type InvoiceXmlFile = {
-  filename: string;
-  xml: string;
-};
-
-export type InvoiceArchiveFile = {
-  path: string;
-  bytes: Uint8Array;
-};
-
-const MIME_ZIP = "application/zip";
 
 export function safeArchiveSegment(value: string | number | null | undefined) {
   const cleaned = String(value ?? "")
@@ -39,34 +27,6 @@ export function invoiceXmlBytes(xml: string) {
   return strToU8(xml);
 }
 
-export function buildInvoiceArchiveFileName({
-  periodStart,
-  periodEnd,
-}: {
-  periodStart?: string;
-  periodEnd?: string;
-}) {
-  const suffix =
-    periodStart && periodEnd
-      ? `${safeArchiveSegment(periodStart)}_${safeArchiveSegment(periodEnd)}`
-      : new Date().toISOString().slice(0, 10);
-  return `fatture-pratix-${suffix}.zip`;
-}
-
-export function buildInvoiceArchive(files: InvoiceArchiveFile[]) {
-  const entries: Record<string, Uint8Array> = {};
-
-  for (const file of files) {
-    entries[file.path] = file.bytes;
-  }
-
-  return {
-    bytes: zipSync(entries),
-    fileName: buildInvoiceArchiveFileName({}),
-    mimeType: MIME_ZIP,
-  };
-}
-
 export function downloadBytes({
   bytes,
   fileName,
@@ -85,27 +45,4 @@ export function downloadBytes({
   link.click();
   document.body.removeChild(link);
   URL.revokeObjectURL(url);
-}
-
-export function buildSingleInvoiceFiles({
-  invoice,
-  xml,
-}: {
-  invoice: InvoicePdfData;
-  xml: InvoiceXmlFile;
-}) {
-  const base = `fattura-${safeArchiveSegment(invoice.invoice.year)}-${safeArchiveSegment(
-    invoice.invoice.number,
-  )}`;
-
-  return [
-    {
-      path: `${base}/${invoicePdfFileName(invoice.invoice)}`,
-      bytes: invoicePdfBytes(invoice),
-    },
-    {
-      path: `${base}/${xml.filename}`,
-      bytes: invoiceXmlBytes(xml.xml),
-    },
-  ] satisfies InvoiceArchiveFile[];
 }

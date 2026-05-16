@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { Archive, Plus, Search } from "lucide-react";
+import { FileDown, FileText, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { AppLayout } from "@/components/app-layout";
 import { MobileSortSelect } from "@/components/mobile-sort-select";
@@ -24,11 +24,10 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import {
-  buildInvoiceArchive,
-  buildInvoiceArchiveFileName,
-  buildSingleInvoiceFiles,
   downloadBytes,
-  type InvoiceXmlFile,
+  invoicePdfBytes,
+  invoicePdfFileName,
+  invoiceXmlBytes,
 } from "@/lib/invoice-file-exports";
 import type { InvoiceLineKind } from "@/lib/invoice-calc";
 import type { InvoicePdfData } from "@/lib/invoice-pdf";
@@ -72,6 +71,9 @@ type GenerateInvoiceXmlResult = {
   xml: string;
   filename: string;
 };
+
+const PDF_MIME_TYPE = "application/pdf";
+const XML_MIME_TYPE = "application/xml";
 
 const fattureSortKeys = [
   "number",
@@ -350,7 +352,26 @@ function InvoicesIndex() {
     };
   };
 
-  const exportZipMutation = useMutation({
+  const exportPdfMutation = useMutation({
+    mutationFn: async () => {
+      if (filtered.length === 0) throw new Error("Nessuna fattura da esportare");
+
+      for (const invoice of filtered) {
+        const pdfData = await loadInvoicePdfData(invoice.id);
+        downloadBytes({
+          bytes: invoicePdfBytes(pdfData),
+          fileName: invoicePdfFileName(pdfData.invoice),
+          mimeType: PDF_MIME_TYPE,
+        });
+      }
+
+      return filtered.length;
+    },
+    onSuccess: (count) => toast.success(`${count} PDF esportati`),
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const exportXmlMutation = useMutation({
     mutationFn: async () => {
       if (filtered.length === 0) throw new Error("Nessuna fattura da esportare");
 
@@ -358,33 +379,22 @@ function InvoicesIndex() {
       const token = sessionData.session?.access_token;
       if (!token) throw new Error("Sessione non valida. Accedi di nuovo.");
 
-      const files = [];
       for (const invoice of filtered) {
-        const [pdfData, xmlPayload] = await Promise.all([
-          loadInvoicePdfData(invoice.id),
-          generateInvoiceXml({
-            data: { invoiceId: invoice.id },
-            headers: { Authorization: `Bearer ${token}` },
-          }).then((result) => readServerResult<GenerateInvoiceXmlResult>(result)),
-        ]);
+        const xmlPayload = await generateInvoiceXml({
+          data: { invoiceId: invoice.id },
+          headers: { Authorization: `Bearer ${token}` },
+        }).then((result) => readServerResult<GenerateInvoiceXmlResult>(result));
 
-        files.push(
-          ...buildSingleInvoiceFiles({
-            invoice: pdfData,
-            xml: xmlPayload satisfies InvoiceXmlFile,
-          }),
-        );
+        downloadBytes({
+          bytes: invoiceXmlBytes(xmlPayload.xml),
+          fileName: xmlPayload.filename,
+          mimeType: XML_MIME_TYPE,
+        });
       }
 
-      const archive = buildInvoiceArchive(files);
-      downloadBytes({
-        bytes: archive.bytes,
-        fileName: buildInvoiceArchiveFileName({ periodStart, periodEnd }),
-        mimeType: archive.mimeType,
-      });
       return filtered.length;
     },
-    onSuccess: (count) => toast.success(`${count} fatture esportate`),
+    onSuccess: (count) => toast.success(`${count} XML esportati`),
     onError: (err: Error) => toast.error(err.message),
   });
 
@@ -528,16 +538,28 @@ function InvoicesIndex() {
                 />
               </div>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="w-full lg:w-auto"
-              onClick={() => exportZipMutation.mutate()}
-              disabled={exportZipMutation.isPending || filtered.length === 0}
-            >
-              <Archive className="mr-2 size-4" />
-              {exportZipMutation.isPending ? "Preparazione ZIP…" : "Esporta ZIP PDF + XML"}
-            </Button>
+            <div className="flex flex-col gap-2 sm:flex-row lg:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => exportPdfMutation.mutate()}
+                disabled={exportPdfMutation.isPending || filtered.length === 0}
+              >
+                <FileText className="mr-2 size-4" />
+                {exportPdfMutation.isPending ? "Preparazione PDF…" : "Esporta PDF"}
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full sm:w-auto"
+                onClick={() => exportXmlMutation.mutate()}
+                disabled={exportXmlMutation.isPending || filtered.length === 0}
+              >
+                <FileDown className="mr-2 size-4" />
+                {exportXmlMutation.isPending ? "Preparazione XML…" : "Esporta XML"}
+              </Button>
+            </div>
           </div>
 
           <div className="md:hidden">
