@@ -93,7 +93,90 @@ vi.mock("@/components/ui/select", () => ({
   ),
 }));
 
+vi.mock("@/components/ui/popover", async () => {
+  const React = await import("react");
+  const PopoverContext = React.createContext<{
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+  }>({ open: false, onOpenChange: () => {} });
+
+  return {
+    Popover: ({
+      children,
+      open,
+      onOpenChange,
+    }: {
+      children: ReactNode;
+      open: boolean;
+      onOpenChange: (open: boolean) => void;
+    }) => (
+      <PopoverContext.Provider value={{ open, onOpenChange }}>{children}</PopoverContext.Provider>
+    ),
+    PopoverTrigger: ({ children }: { children: ReactElement }) => {
+      const { open, onOpenChange } = React.useContext(PopoverContext);
+      return React.cloneElement(children, { onClick: () => onOpenChange(!open) });
+    },
+    PopoverContent: ({ children }: { children: ReactNode }) => {
+      const { open } = React.useContext(PopoverContext);
+      return open ? <div>{children}</div> : null;
+    },
+  };
+});
+
+vi.mock("@/components/ui/command", async () => {
+  const React = await import("react");
+  const CommandContext = React.createContext<{
+    search: string;
+    setSearch: (value: string) => void;
+  }>({ search: "", setSearch: () => {} });
+
+  return {
+    Command: ({ children }: { children: ReactNode }) => {
+      const [search, setSearch] = React.useState("");
+      return (
+        <CommandContext.Provider value={{ search, setSearch }}>
+          <div data-command-root="">{children}</div>
+        </CommandContext.Provider>
+      );
+    },
+    CommandInput: ({ placeholder }: { placeholder?: string }) => {
+      const { search, setSearch } = React.useContext(CommandContext);
+      return (
+        <input
+          aria-label={placeholder}
+          placeholder={placeholder}
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+      );
+    },
+    CommandList: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+    CommandEmpty: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+    CommandItem: ({
+      children,
+      value,
+      onSelect,
+    }: {
+      children: ReactNode;
+      value: string;
+      onSelect: () => void;
+    }) => {
+      const { search } = React.useContext(CommandContext);
+      const normalizedSearch = search.trim().toLowerCase();
+      if (normalizedSearch && !value.toLowerCase().includes(normalizedSearch)) return null;
+      return (
+        <button type="button" role="option" onClick={onSelect}>
+          {children}
+        </button>
+      );
+    },
+  };
+});
+
 import { CaseActivityDialog, type CaseActivityDialogActivity } from "./case-activities";
+
+const getPracticePickerOptions = () =>
+  screen.getAllByRole("option").filter((option) => option.textContent?.includes("Pratica "));
 
 const caseRow = {
   id: "case-1",
@@ -168,6 +251,56 @@ const renderDialog = (activity?: CaseActivityDialogActivity) => {
   );
 };
 
+const renderGlobalDialog = () => {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: false, staleTime: Infinity }, mutations: { retry: false } },
+  });
+  client.setQueryData(
+    ["cases", "activity-dialog"],
+    [
+      {
+        id: "case-zeta",
+        principal_id: "principal-1",
+        client_id: "client-1",
+        counterparty_id: "counterparty-1",
+        practice_number: 30,
+        title: "Zeta recupero",
+        principals: { business_name: "Studio Test" },
+        clients: { kind: "individual", first_name: "Zeno", last_name: "Rossi" },
+        counterparties: { kind: "company", business_name: "Zeta S.r.l." },
+      },
+      {
+        id: "case-beta",
+        principal_id: "principal-1",
+        client_id: "client-1",
+        counterparty_id: "counterparty-1",
+        practice_number: 20,
+        title: "Beta intimazione",
+        principals: { business_name: "Studio Test" },
+        clients: { kind: "individual", first_name: "Bruno", last_name: "Bianchi" },
+        counterparties: { kind: "company", business_name: "Beta S.r.l." },
+      },
+      {
+        id: "case-alfa",
+        principal_id: "principal-1",
+        client_id: "client-1",
+        counterparty_id: "counterparty-1",
+        practice_number: 10,
+        title: "Alfa diffida",
+        principals: { business_name: "Studio Test" },
+        clients: { kind: "individual", first_name: "Ada", last_name: "Verdi" },
+        counterparties: { kind: "company", business_name: "Alfa S.r.l." },
+      },
+    ],
+  );
+
+  return render(
+    <QueryClientProvider client={client}>
+      <CaseActivityDialog open trigger={null} onSaved={vi.fn()} />
+    </QueryClientProvider>,
+  );
+};
+
 const editableActivity: CaseActivityDialogActivity = {
   id: "activity-edit",
   case_id: "case-1",
@@ -224,6 +357,30 @@ describe("CaseActivityDialog", () => {
         quantity: 1,
         unit_price: 120,
       }),
+    );
+  });
+
+  it("mostra le pratiche in ordine alfabetico e permette di cercarle digitando", async () => {
+    renderGlobalDialog();
+
+    await userEvent.click(screen.getByRole("combobox", { name: "Seleziona pratica" }));
+
+    expect(getPracticePickerOptions().map((option) => option.textContent)).toEqual([
+      expect.stringContaining("Alfa diffida"),
+      expect.stringContaining("Beta intimazione"),
+      expect.stringContaining("Zeta recupero"),
+    ]);
+
+    await userEvent.type(screen.getByPlaceholderText("Cerca pratica…"), "beta");
+
+    expect(getPracticePickerOptions().map((option) => option.textContent)).toEqual([
+      expect.stringContaining("Beta intimazione"),
+    ]);
+
+    await userEvent.click(screen.getByRole("option", { name: /Beta intimazione/ }));
+
+    expect(screen.getByRole("combobox", { name: "Seleziona pratica" }).textContent).toContain(
+      "Beta intimazione",
     );
   });
 

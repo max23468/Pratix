@@ -101,12 +101,12 @@ export function buildInvoiceXml(data: InvoiceXmlData): XmlBuildResult {
 
   const cedenteName = data.profile.business_name || data.profile.full_name || "Avvocato";
 
-  // Cessionario
+  // Cessionario/committente: qui arriva solo il destinatario di fatturazione.
   const isCompany = data.client.kind === "company" && !!data.client.business_name;
   const cessionarioPiva = (data.client.vat_number || "").replace(/\D/g, "");
   const cessionarioCf = (data.client.tax_code || "").trim().toUpperCase();
   if (!cessionarioPiva && !cessionarioCf) {
-    throw new Error("Cliente senza P.IVA né Codice Fiscale: impossibile generare l'XML SdI.");
+    throw new Error("Committente senza P.IVA né Codice Fiscale: impossibile generare l'XML SdI.");
   }
   const sdiRaw = (data.client.sdi_code || "").trim().toUpperCase();
   // Se cliente estero usa XXXXXXX, altrimenti default 0000000

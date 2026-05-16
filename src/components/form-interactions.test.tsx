@@ -279,8 +279,6 @@ describe("interazioni form anagrafiche", () => {
         initial={{
           first_name: " Ada ",
           last_name: " Rossi ",
-          email: " ada@example.test ",
-          phone: " 3331234567 ",
         }}
         onSaved={onSaved}
         onCancel={vi.fn()}
@@ -296,8 +294,6 @@ describe("interazioni form anagrafiche", () => {
       expect.objectContaining({
         first_name: "Ada",
         last_name: "Rossi",
-        email: "ada@example.test",
-        phone: "3331234567",
       }),
     );
     expect(query.delete).toHaveBeenCalled();
@@ -355,7 +351,6 @@ describe("interazioni form anagrafiche", () => {
         initial={{
           kind: "company",
           business_name: " Alfa S.r.l. ",
-          email: " amministrazione@alfa.test ",
         }}
         onSaved={onSaved}
         onCancel={vi.fn()}
@@ -371,7 +366,6 @@ describe("interazioni form anagrafiche", () => {
       expect.objectContaining({
         kind: "company",
         business_name: "Alfa S.r.l.",
-        email: "amministrazione@alfa.test",
       }),
     );
     expect(query.insert).toHaveBeenCalledWith([

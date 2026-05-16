@@ -133,7 +133,7 @@ describe("buildInvoiceXml", () => {
     ).toThrow("Partita IVA mancante");
   });
 
-  it("blocca XML senza identificativo fiscale del cliente", () => {
+  it("blocca XML senza identificativo fiscale del committente", () => {
     expect(() =>
       buildInvoiceXml({
         ...baseInvoice,
@@ -143,6 +143,6 @@ describe("buildInvoiceXml", () => {
           tax_code: "",
         },
       }),
-    ).toThrow("Cliente senza P.IVA né Codice Fiscale");
+    ).toThrow("Committente senza P.IVA né Codice Fiscale");
   });
 });

@@ -47,12 +47,10 @@ type ClientListRow = {
   first_name: string | null;
   last_name: string | null;
   business_name: string | null;
-  email: string | null;
-  address_city: string | null;
   created_at: string;
 };
 
-const clientiSortKeys = ["name", "kind", "principals", "email", "city", "created_at"] as const;
+const clientiSortKeys = ["name", "kind", "principals", "created_at"] as const;
 
 type ClientiSortKey = (typeof clientiSortKeys)[number];
 
@@ -92,7 +90,7 @@ function ClientiList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
-        .select("*")
+        .select("id, public_code, kind, first_name, last_name, business_name, created_at")
         .order("created_at", { ascending: false });
       if (error) throw error;
       return (data ?? []) as ClientListRow[];
@@ -145,8 +143,6 @@ function ClientiList() {
         label: "Committenti",
         getValue: (client) => principalNamesByClient[client.id]?.join(", ") || null,
       },
-      { key: "email", label: "Email", getValue: (client) => client.email },
-      { key: "city", label: "Città", getValue: (client) => client.address_city },
       {
         key: "created_at",
         label: "Creazione",
@@ -181,11 +177,7 @@ function ClientiList() {
       const name = clientDisplayName(c).toLowerCase();
       const principalNames = principalNamesByClient[c.id]?.join(" ").toLowerCase() ?? "";
       if (!term) return true;
-      return (
-        name.includes(term) ||
-        principalNames.includes(term) ||
-        (c.email ?? "").toLowerCase().includes(term)
-      );
+      return name.includes(term) || principalNames.includes(term);
     });
   }, [data, kind, principalId, principalLinks, principalNamesByClient, q]);
 
@@ -215,7 +207,7 @@ function ClientiList() {
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Cerca per nome, committente o email…"
+            placeholder="Cerca per nome o committente…"
             value={q}
             onChange={(e) => setQ(e.target.value)}
             className="pl-9"
@@ -300,16 +292,6 @@ function ClientiList() {
                     {clientKindLabels[c.kind] ?? c.kind}
                   </Badge>
                 </div>
-                <dl className="mt-3 grid gap-2 text-xs text-muted-foreground">
-                  <div className="flex min-w-0 justify-between gap-3">
-                    <dt>Email</dt>
-                    <dd className="min-w-0 truncate text-right">{c.email ?? "—"}</dd>
-                  </div>
-                  <div className="flex min-w-0 justify-between gap-3">
-                    <dt>Città</dt>
-                    <dd className="min-w-0 truncate text-right">{c.address_city ?? "—"}</dd>
-                  </div>
-                </dl>
               </Link>
             );
           })
@@ -328,20 +310,18 @@ function ClientiList() {
                 sort={sort}
                 onSort={setSort}
               />
-              <SortableTableHead columnKey="email" label="Email" sort={sort} onSort={setSort} />
-              <SortableTableHead columnKey="city" label="Città" sort={sort} onSort={setSort} />
             </TableRow>
           </TableHeader>
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={3} className="py-10 text-center text-sm text-muted-foreground">
                   Caricamento…
                 </TableCell>
               </TableRow>
             ) : sorted.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={3} className="py-10 text-center text-sm text-muted-foreground">
                   <TableEmptyState
                     title={
                       q || kind !== "all" || principalId !== "all"
@@ -394,12 +374,6 @@ function ClientiList() {
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {principalNamesByClient[c.id]?.join(", ") || "—"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {c.email ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {c.address_city ?? "—"}
                     </TableCell>
                   </TableRow>
                 );

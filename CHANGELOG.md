@@ -6,11 +6,23 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
-## [1.7.1] — 2026-05-16
+## [1.7.3] — 2026-05-16
 
 ### Correzioni
 
 - **Dashboard**: la sintesi del Controllo duplicati è stata spostata dopo le Prossime azioni operative, usa una lettura senza effetti collaterali e non mostra più lo stato "Non disponibile" quando la sintesi non è pronta.
+
+## [1.7.2] — 2026-05-16
+
+### Correzioni
+
+- **Clienti**: rimossi Contatti e Indirizzo dal form, dalla lista, dalla ricerca, dal controllo duplicati, dal fallback fatture e dallo schema Supabase dei Clienti.
+
+## [1.7.1] — 2026-05-16
+
+### Correzioni
+
+- **Attività**: la selezione Pratica nell'inserimento rapido ora è ordinata alfabeticamente e permette di cercare digitando.
 
 ## [1.7.0] — 2026-05-16
 
@@ -886,6 +898,8 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.7.3]: #173--2026-05-16
+[1.7.2]: #172--2026-05-16
 [1.7.1]: #171--2026-05-16
 [1.7.0]: #170--2026-05-16
 [1.6.1]: #161--2026-05-16

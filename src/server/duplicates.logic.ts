@@ -35,9 +35,7 @@ export type ClientDuplicateRow = {
   first_name?: string | null;
   last_name?: string | null;
   business_name?: string | null;
-  email?: string | null;
-  phone?: string | null;
-  address_city?: string | null;
+  notes?: string | null;
   principalNames?: string[];
 };
 
@@ -291,7 +289,6 @@ function scoreClientPair(a: ClientDuplicateRow, b: ClientDuplicateRow, draft?: D
   );
   const finalScore = sharedPrincipal ? Math.max(score, score + 0.06) : score;
   if (sharedPrincipal) reasons.push("Stesso committente collegato");
-  if (sameFilled(a.email, b.email)) reasons.push("Email coincidente");
 
   if (finalScore < TOOL_THRESHOLD || reasons.length === 0) return null;
   return buildCandidate({
@@ -432,14 +429,11 @@ function clientRecord(row: ClientDuplicateRow): DuplicateRecord {
     id: row.id,
     publicCode: row.public_code,
     label: clientDisplayName(row),
-    subtitle: (row.principalNames ?? []).join(", ") || row.address_city,
+    subtitle: (row.principalNames ?? []).join(", ") || null,
     fields: {
       Tipo: row.kind === "company" ? "Società" : "Privato",
       Nome: [row.first_name, row.last_name].filter(Boolean).join(" "),
       "Ragione sociale": row.business_name,
-      Email: row.email,
-      Telefono: row.phone,
-      Città: row.address_city,
       Committenti: (row.principalNames ?? []).join(", "),
     },
   };

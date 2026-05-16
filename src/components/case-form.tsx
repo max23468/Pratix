@@ -383,7 +383,6 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
         first_name: isIndividual ? firstName || null : null,
         last_name: isIndividual ? lastName || null : null,
         business_name: isIndividual ? null : businessName,
-        address_country: "IT",
       };
 
       const { data, error } = await supabase.from("clients").insert(payload).select("id").single();

@@ -45,13 +45,6 @@ type ClientRow = {
   first_name: string | null;
   last_name: string | null;
   business_name: string | null;
-  email: string | null;
-  phone: string | null;
-  address_street: string | null;
-  address_city: string | null;
-  address_zip: string | null;
-  address_province: string | null;
-  address_country: string | null;
   notes: string | null;
 };
 
@@ -60,13 +53,6 @@ const empty: ClientRow = {
   first_name: "",
   last_name: "",
   business_name: "",
-  email: "",
-  phone: "",
-  address_street: "",
-  address_city: "",
-  address_zip: "",
-  address_province: "",
-  address_country: "IT",
   notes: "",
 };
 
@@ -144,12 +130,6 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
         first_name: form.first_name?.trim() || null,
         last_name: form.last_name?.trim() || null,
         business_name: form.business_name?.trim() || null,
-        email: form.email?.trim() || null,
-        phone: form.phone?.trim() || null,
-        address_street: form.address_street?.trim() || null,
-        address_city: form.address_city?.trim() || null,
-        address_zip: form.address_zip?.trim() || null,
-        address_province: form.address_province?.trim() || null,
         notes: form.notes?.trim() || null,
       };
 
@@ -217,8 +197,6 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
               first_name: form.first_name?.trim() || null,
               last_name: form.last_name?.trim() || null,
               business_name: form.business_name?.trim() || null,
-              email: form.email?.trim() || null,
-              phone: form.phone?.trim() || null,
             },
           },
           headers: await getAuthHeaders(),
@@ -343,76 +321,6 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-base">Contatti</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={form.email ?? ""}
-                onChange={(e) => upd("email", e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Telefono</Label>
-              <Input
-                id="phone"
-                value={form.phone ?? ""}
-                onChange={(e) => upd("phone", e.target.value)}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Indirizzo</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="addr">Indirizzo</Label>
-            <Input
-              id="addr"
-              value={form.address_street ?? ""}
-              onChange={(e) => upd("address_street", e.target.value)}
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-4">
-            <div className="space-y-2 sm:col-span-2">
-              <Label htmlFor="city">Città</Label>
-              <Input
-                id="city"
-                value={form.address_city ?? ""}
-                onChange={(e) => upd("address_city", e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="zip">CAP</Label>
-              <Input
-                id="zip"
-                value={form.address_zip ?? ""}
-                onChange={(e) => upd("address_zip", e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="prov">Prov.</Label>
-              <Input
-                id="prov"
-                value={form.address_province ?? ""}
-                maxLength={2}
-                onChange={(e) => upd("address_province", e.target.value.toUpperCase())}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
           <CardTitle className="text-base">Note</CardTitle>
         </CardHeader>
         <CardContent>
@@ -471,12 +379,6 @@ async function createClient(payload: {
   first_name: string | null;
   last_name: string | null;
   business_name: string | null;
-  email: string | null;
-  phone: string | null;
-  address_street: string | null;
-  address_city: string | null;
-  address_zip: string | null;
-  address_province: string | null;
   notes: string | null;
 }) {
   const { data, error } = await supabase
@@ -496,12 +398,6 @@ async function updateClient(
     first_name: string | null;
     last_name: string | null;
     business_name: string | null;
-    email: string | null;
-    phone: string | null;
-    address_street: string | null;
-    address_city: string | null;
-    address_zip: string | null;
-    address_province: string | null;
     notes: string | null;
   },
 ) {

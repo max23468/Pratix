@@ -382,25 +382,22 @@ export function buildBillingExportRows(
     }));
 }
 
-export function billedPartyForInvoiceXml(principal: InvoiceXmlPrincipal | null, client: unknown) {
-  const billedParty = principal
-    ? {
-        kind: "company",
-        first_name: null,
-        last_name: null,
-        business_name: principal.business_name,
-        tax_code: principal.tax_code,
-        vat_number: principal.vat_number,
-        sdi_code: principal.sdi_code,
-        pec: principal.pec,
-        address_street: principal.address_street,
-        address_zip: principal.address_zip,
-        address_city: principal.address_city,
-        address_province: principal.address_province,
-        address_country: principal.address_country,
-      }
-    : client;
+export function billedPartyForInvoiceXml(principal: InvoiceXmlPrincipal | null) {
+  if (!principal) throw new Error("Committente della fattura non trovato");
 
-  if (!billedParty) throw new Error("Committente della fattura non trovato");
-  return billedParty;
+  return {
+    kind: "company",
+    first_name: null,
+    last_name: null,
+    business_name: principal.business_name,
+    tax_code: principal.tax_code,
+    vat_number: principal.vat_number,
+    sdi_code: principal.sdi_code,
+    pec: principal.pec,
+    address_street: principal.address_street,
+    address_zip: principal.address_zip,
+    address_city: principal.address_city,
+    address_province: principal.address_province,
+    address_country: principal.address_country,
+  };
 }

@@ -196,9 +196,7 @@ async function loadDuplicateScanData(client: unknown, userId: string) {
       .eq("user_id", userId),
     db
       .from<ClientDuplicateRow[]>("clients")
-      .select(
-        "id, public_code, kind, first_name, last_name, business_name, email, phone, address_city",
-      )
+      .select("id, public_code, kind, first_name, last_name, business_name, notes")
       .eq("user_id", userId),
     db
       .from<
@@ -575,12 +573,12 @@ async function mergePriceBooks(
 async function canDeleteMinimalClient(db: UntypedSupabase, userId: string, clientId: string) {
   const { data: client, error } = await db
     .from<ClientDuplicateRow>("clients")
-    .select("email, phone, address_city")
+    .select("notes")
     .eq("user_id", userId)
     .eq("id", clientId)
     .maybeSingle();
   if (error) throw error;
-  return Boolean(client && !client.email && !client.phone && !client.address_city);
+  return Boolean(client && !client.notes);
 }
 
 async function canDeleteMinimalCounterparty(
