@@ -1,4 +1,4 @@
-import { strToU8 } from "fflate";
+import { strToU8, zipSync } from "fflate";
 import { generateInvoicePdf, type InvoicePdfData } from "@/lib/invoice-pdf";
 
 export function safeArchiveSegment(value: string | number | null | undefined) {
@@ -25,6 +25,12 @@ export function invoicePdfBytes(data: InvoicePdfData) {
 
 export function invoiceXmlBytes(xml: string) {
   return strToU8(xml);
+}
+
+export function archiveBytes(files: Array<{ fileName: string; bytes: Uint8Array }>) {
+  return zipSync(
+    Object.fromEntries(files.map((file) => [safeArchiveSegment(file.fileName), file.bytes])),
+  );
 }
 
 export function downloadBytes({

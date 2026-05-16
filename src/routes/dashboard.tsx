@@ -249,7 +249,8 @@ function DashboardContent() {
   const duplicateSummary = useQuery({
     enabled: !!userId,
     queryKey: ["dashboard-duplicate-summary", userId],
-    staleTime: 60_000,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
     queryFn: async (): Promise<DuplicateSummary> =>
       readServerResult<DuplicateSummary>(
         await getDuplicateSummary({

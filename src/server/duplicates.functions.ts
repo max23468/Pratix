@@ -408,6 +408,14 @@ async function mergeCounterparties(
   await updateTable(db, "cases", { counterparty_id: keptId }, userId, "counterparty_id", mergedId);
   await updateTable(
     db,
+    "counterparty_subjects",
+    { counterparty_id: keptId },
+    userId,
+    "counterparty_id",
+    mergedId,
+  );
+  await updateTable(
+    db,
     "case_activities",
     { counterparty_id: keptId },
     userId,
@@ -421,17 +429,48 @@ async function mergeCounterparties(
 
 async function mergeCases(client: unknown, userId: string, keptId: string, mergedId: string) {
   const db = asDb(client);
-  await updateTable(db, "case_activities", { case_id: keptId }, userId, "case_id", mergedId);
-  await updateTable(db, "invoices", { case_id: keptId }, userId, "case_id", mergedId);
-  await updateTable(db, "case_status_history", { case_id: keptId }, userId, "case_id", mergedId);
-  await updateTable(db, "case_credit_transfers", { case_id: keptId }, userId, "case_id", mergedId);
-
   const { data: keptCase } = await db
-    .from<{ public_code: string | null; practice_number: number }>("cases")
-    .select("public_code, practice_number")
+    .from<{
+      public_code: string | null;
+      practice_number: number;
+      principal_id: string | null;
+      client_id: string | null;
+      counterparty_id: string | null;
+    }>("cases")
+    .select("public_code, practice_number, principal_id, client_id, counterparty_id")
     .eq("user_id", userId)
     .eq("id", keptId)
     .maybeSingle();
+  if (!keptCase) throw new Error("Pratica da mantenere non trovata");
+
+  await updateTable(
+    db,
+    "case_activities",
+    {
+      case_id: keptId,
+      principal_id: keptCase.principal_id,
+      client_id: keptCase.client_id,
+      counterparty_id: keptCase.counterparty_id,
+    },
+    userId,
+    "case_id",
+    mergedId,
+  );
+  await updateTable(
+    db,
+    "invoices",
+    {
+      case_id: keptId,
+      principal_id: keptCase.principal_id,
+      client_id: keptCase.client_id,
+    },
+    userId,
+    "case_id",
+    mergedId,
+  );
+  await updateTable(db, "case_status_history", { case_id: keptId }, userId, "case_id", mergedId);
+  await updateTable(db, "case_credit_transfers", { case_id: keptId }, userId, "case_id", mergedId);
+
   const target = keptCase?.public_code || keptCase?.practice_number || keptId;
   await db
     .from("cases")

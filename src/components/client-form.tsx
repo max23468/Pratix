@@ -118,6 +118,17 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
     );
   };
 
+  const validatePrincipalLinks = () => {
+    if (selectedPrincipalIds.length > 0) return true;
+    const message =
+      principals.length === 0
+        ? "Aggiungi un committente prima di salvare il cliente"
+        : "Collega il cliente ad almeno un committente";
+    setPrincipalLinkError(message);
+    toast.error(message);
+    return false;
+  };
+
   const saveMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Sessione non valida");
@@ -178,15 +189,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
       toast.error("Inserisci la ragione sociale");
       return;
     }
-    if (selectedPrincipalIds.length === 0) {
-      const message =
-        principals.length === 0
-          ? "Aggiungi un committente prima di salvare il cliente"
-          : "Collega il cliente ad almeno un committente";
-      setPrincipalLinkError(message);
-      toast.error(message);
-      return;
-    }
+    if (!validatePrincipalLinks()) return;
     if (!isEdit && !duplicateOverride && canUseAuthHeaders()) {
       const candidates = await readServerResult<DuplicateCandidate[]>(
         await findDuplicates({
@@ -270,6 +273,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
         candidates={duplicateCandidates}
         onUseExisting={(record) => onSaved(record.publicCode || record.id)}
         onCreateAnyway={() => {
+          if (!validatePrincipalLinks()) return;
           setDuplicateOverride(true);
           setDuplicateCandidates([]);
           if (!saveLock.acquire()) return;

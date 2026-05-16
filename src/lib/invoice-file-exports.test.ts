@@ -1,10 +1,11 @@
-import { strFromU8 } from "fflate";
+import { strFromU8, unzipSync } from "fflate";
 import { describe, expect, it } from "vitest";
 
 import {
   invoicePdfBytes,
   invoicePdfFileName,
   invoiceXmlBytes,
+  archiveBytes,
   safeArchiveSegment,
 } from "./invoice-file-exports";
 import type { InvoicePdfData } from "./invoice-pdf";
@@ -62,5 +63,17 @@ describe("invoice file exports", () => {
   it("genera bytes separati per PDF e XML", () => {
     expect(invoicePdfBytes(invoiceData()).length).toBeGreaterThan(1000);
     expect(strFromU8(invoiceXmlBytes("<FatturaElettronica />"))).toBe("<FatturaElettronica />");
+  });
+
+  it("impacchetta export multipli in un archivio ZIP con nomi sicuri", () => {
+    const archive = unzipSync(
+      archiveBytes([
+        { fileName: "Fattura/12.xml", bytes: invoiceXmlBytes("<xml />") },
+        { fileName: "Fattura 13.pdf", bytes: new Uint8Array([1, 2, 3]) },
+      ]),
+    );
+
+    expect(strFromU8(archive["Fattura-12.xml"])).toBe("<xml />");
+    expect(Array.from(archive["Fattura-13.pdf"])).toEqual([1, 2, 3]);
   });
 });

@@ -24,6 +24,7 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import {
+  archiveBytes,
   downloadBytes,
   invoicePdfBytes,
   invoicePdfFileName,
@@ -73,8 +74,7 @@ type GenerateInvoiceXmlResult = {
   filename: string;
 };
 
-const PDF_MIME_TYPE = "application/pdf";
-const XML_MIME_TYPE = "application/xml";
+const ZIP_MIME_TYPE = "application/zip";
 
 const fattureSortKeys = [
   "number",
@@ -342,14 +342,21 @@ function InvoicesIndex() {
     mutationFn: async () => {
       if (filtered.length === 0) throw new Error("Nessuna fattura da esportare");
 
-      for (const invoice of filtered) {
-        const pdfData = await loadInvoicePdfData(invoice.id);
-        downloadBytes({
-          bytes: invoicePdfBytes(pdfData),
-          fileName: invoicePdfFileName(pdfData.invoice),
-          mimeType: PDF_MIME_TYPE,
-        });
-      }
+      const files = await Promise.all(
+        filtered.map(async (invoice) => {
+          const pdfData = await loadInvoicePdfData(invoice.id);
+          return {
+            bytes: invoicePdfBytes(pdfData),
+            fileName: invoicePdfFileName(pdfData.invoice),
+          };
+        }),
+      );
+
+      downloadBytes({
+        bytes: archiveBytes(files),
+        fileName: `fatture-pdf-${new Date().toISOString().slice(0, 10)}.zip`,
+        mimeType: ZIP_MIME_TYPE,
+      });
 
       return filtered.length;
     },
@@ -365,18 +372,24 @@ function InvoicesIndex() {
       const token = sessionData.session?.access_token;
       if (!token) throw new Error("Sessione non valida. Accedi di nuovo.");
 
-      for (const invoice of filtered) {
-        const xmlPayload = await generateInvoiceXml({
-          data: { invoiceId: invoice.id },
-          headers: { Authorization: `Bearer ${token}` },
-        }).then((result) => readServerResult<GenerateInvoiceXmlResult>(result));
+      const files = await Promise.all(
+        filtered.map(async (invoice) => {
+          const xmlPayload = await generateInvoiceXml({
+            data: { invoiceId: invoice.id },
+            headers: { Authorization: `Bearer ${token}` },
+          }).then((result) => readServerResult<GenerateInvoiceXmlResult>(result));
+          return {
+            bytes: invoiceXmlBytes(xmlPayload.xml),
+            fileName: xmlPayload.filename,
+          };
+        }),
+      );
 
-        downloadBytes({
-          bytes: invoiceXmlBytes(xmlPayload.xml),
-          fileName: xmlPayload.filename,
-          mimeType: XML_MIME_TYPE,
-        });
-      }
+      downloadBytes({
+        bytes: archiveBytes(files),
+        fileName: `fatture-xml-${new Date().toISOString().slice(0, 10)}.zip`,
+        mimeType: ZIP_MIME_TYPE,
+      });
 
       return filtered.length;
     },

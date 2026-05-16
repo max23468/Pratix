@@ -183,7 +183,12 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
   const selectedPrincipal = principals.find((principal) => principal.id === principalId) ?? null;
   const includeStampDuty = Boolean(profile?.include_stamp_duty);
 
-  const { data: draftData, isLoading: draftLoading } = useQuery({
+  const {
+    data: draftData,
+    error: draftError,
+    isError: draftIsError,
+    isLoading: draftLoading,
+  } = useQuery({
     queryKey: ["invoice-draft-edit", draftInvoiceRef, user?.id],
     enabled: Boolean(user && draftInvoiceRef),
     queryFn: async () => {
@@ -452,6 +457,21 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
 
   const isDraftFormHydrated =
     !isEditingDraft || Boolean(draftData && loadedDraftId === draftData.invoice.id);
+
+  if (isEditingDraft && draftIsError) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Modifica bozza</CardTitle>
+          <CardDescription>
+            {draftError instanceof Error
+              ? draftError.message
+              : "La fattura in bozza non è disponibile."}
+          </CardDescription>
+        </CardHeader>
+      </Card>
+    );
+  }
 
   if (isEditingDraft && (draftLoading || !isDraftFormHydrated)) {
     return (

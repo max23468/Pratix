@@ -361,13 +361,7 @@ function ClientiList() {
                     }
                   >
                     <TableCell>
-                      <Link
-                        to="/clienti/$clientId"
-                        params={{ clientId: routeRef(c) }}
-                        className="font-medium hover:underline"
-                      >
-                        {displayName}
-                      </Link>
+                      <span className="font-medium">{displayName}</span>
                     </TableCell>
                     <TableCell>
                       <Badge variant="outline">{clientKindLabels[c.kind] ?? c.kind}</Badge>

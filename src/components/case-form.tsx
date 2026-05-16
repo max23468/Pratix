@@ -430,6 +430,40 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
     onSettled: quickClientLock.release,
   });
 
+  const linkExistingClientToSelectedPrincipal = async (client: ClientOption) => {
+    if (!user) throw new Error("Sessione non valida");
+    if (!form.principal_id) throw new Error("Seleziona prima un committente");
+
+    const { error } = await supabase.from("principal_clients").upsert(
+      {
+        user_id: user.id,
+        principal_id: form.principal_id,
+        client_id: client.id,
+        active_from: form.opened_at || today(),
+      },
+      { onConflict: "user_id,principal_id,client_id" },
+    );
+    if (error) throw error;
+
+    setQuickCreatedClients((current) => [
+      client,
+      ...current.filter((item) => item.id !== client.id),
+    ]);
+    qc.setQueryData<ClientOption[]>(["clients", "case-form"], (current = []) => [
+      client,
+      ...current.filter((item) => item.id !== client.id),
+    ]);
+    qc.setQueryData<string[]>(
+      ["principal-clients", "case-form", form.principal_id],
+      (current = []) => Array.from(new Set([...current, client.id])),
+    );
+    qc.invalidateQueries({ queryKey: ["principal-clients"] });
+    upd("client_id", client.id);
+    setQuickClient(emptyQuickClient);
+    setQuickClientDuplicates([]);
+    setQuickClientOpen(false);
+  };
+
   const createQuickCounterpartyMutation = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Sessione non valida");
@@ -818,10 +852,19 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                   <DuplicateWarningPanel
                     candidates={quickClientDuplicates}
                     onUseExisting={(record) => {
-                      upd("client_id", record.id);
-                      setQuickClient(emptyQuickClient);
-                      setQuickClientDuplicates([]);
-                      setQuickClientOpen(false);
+                      const kind: ClientKind =
+                        quickClient.kind === "company" ? "company" : "individual";
+                      const client = {
+                        id: record.id,
+                        kind,
+                        first_name: kind === "individual" ? quickClient.first_name || null : null,
+                        last_name: kind === "individual" ? quickClient.last_name || null : null,
+                        business_name:
+                          kind === "company" ? quickClient.business_name || record.label : null,
+                      } satisfies ClientOption;
+                      linkExistingClientToSelectedPrincipal(client).catch((error: Error) =>
+                        toast.error(error.message),
+                      );
                     }}
                     onCreateAnyway={() => {
                       quickClientOverrideRef.current = true;

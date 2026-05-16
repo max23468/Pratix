@@ -9,6 +9,15 @@ ALTER TABLE public.profiles
   ADD COLUMN price_book_public_code_next_number integer NOT NULL DEFAULT 1,
   ADD COLUMN invoice_public_code_next_number integer NOT NULL DEFAULT 1;
 
+REVOKE UPDATE (
+  client_public_code_next_number,
+  principal_public_code_next_number,
+  counterparty_public_code_next_number,
+  case_public_code_next_number,
+  price_book_public_code_next_number,
+  invoice_public_code_next_number
+) ON public.profiles FROM authenticated;
+
 UPDATE public.profiles p
 SET client_public_code_next_number = COALESCE((
       SELECT MAX(substring(public_code from '^CL-([0-9]{5})$')::integer) + 1

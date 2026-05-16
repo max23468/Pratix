@@ -24,6 +24,12 @@ function resolveProjectRef() {
   }
 }
 
+function resolveSupabaseUrl(projectRef) {
+  return (
+    envValue("SUPABASE_URL") || envValue("VITE_SUPABASE_URL") || `https://${projectRef}.supabase.co`
+  );
+}
+
 function readServiceRoleKey(projectRef) {
   const result = spawnSync(
     "npx",
@@ -52,7 +58,7 @@ function readServiceRoleKey(projectRef) {
   return serviceRole.api_key;
 }
 
-async function runSmoke(serviceRoleKey) {
+async function runSmoke(serviceRoleKey, supabaseUrl) {
   const child = spawn(
     process.execPath,
     ["scripts/smoke-a11y.mjs", "--start-server", "--auth-required"],
@@ -60,6 +66,8 @@ async function runSmoke(serviceRoleKey) {
       cwd: process.cwd(),
       env: {
         ...process.env,
+        SUPABASE_URL: supabaseUrl,
+        VITE_SUPABASE_URL: supabaseUrl,
         SUPABASE_SERVICE_ROLE_KEY: serviceRoleKey,
       },
       stdio: "inherit",
@@ -77,7 +85,7 @@ if (!projectRef) {
 }
 
 try {
-  await runSmoke(readServiceRoleKey(projectRef));
+  await runSmoke(readServiceRoleKey(projectRef), resolveSupabaseUrl(projectRef));
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
