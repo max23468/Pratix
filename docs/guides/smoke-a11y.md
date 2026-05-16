@@ -29,17 +29,24 @@ locale e controlla le route pubbliche:
 
 ## Esecuzione autenticata
 
-Per includere le route autenticate, esporta credenziali di test anonime nella
-shell. Non salvarle nel repo.
+Per includere le route autenticate, rendi disponibile la service role key
+Supabase nella shell. Lo script usa l'account test Pratix predefinito, genera un
+magic link server-side e lo usa solo dentro WebKit: non richiede password, non
+legge la casella email e non stampa il link in output. Non salvare la service
+role key nel repo.
 
 ```bash
-PRATIX_SMOKE_EMAIL="codex.pratix.test.20260509@gmail.com" \
-PRATIX_SMOKE_PASSWORD="$(security find-generic-password -s pratix-codex-test-account -a codex.pratix.test.20260509@gmail.com -w)" \
+SUPABASE_SERVICE_ROLE_KEY="<service-role-key-da-provider-sicuro>" \
 npm run smoke:a11y
 ```
 
 Il comando aggiunge dashboard, anagrafiche, pratiche, attività, fatture,
 novità, account, impostazioni e import archivio.
+
+Lo smoke autenticato parte solo se sono disponibili `SUPABASE_SERVICE_ROLE_KEY`
+e `SUPABASE_URL` oppure `VITE_SUPABASE_URL`. Per usare una casella diversa da
+quella test predefinita, esporta anche `PRATIX_SMOKE_EMAIL`. Se una variabile
+obbligatoria manca, il comando resta automaticamente sul perimetro pubblico.
 
 ## Esecuzione su produzione pubblica
 

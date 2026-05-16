@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { Logo } from "@/components/brand/logo";
 import { toast } from "sonner";
 import { TurnstileChallenge } from "@/components/security/turnstile-challenge";
@@ -27,15 +27,21 @@ function LoginPage() {
   const navigate = useNavigate();
   const captchaEnabled = isTurnstileEnabled();
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [captchaResetSignal, setCaptchaResetSignal] = useState(0);
   const [submitting, setSubmitting] = useState(false);
+  const [passkeySubmitting, setPasskeySubmitting] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [passkeySupported, setPasskeySupported] = useState(false);
   const submitLock = useSubmitLock();
+
+  useEffect(() => {
+    setPasskeySupported("PublicKeyCredential" in window);
+  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    const parsed = loginSchema.safeParse({ email, password });
+    const parsed = loginSchema.safeParse({ email });
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Dati non validi");
       return;
@@ -46,16 +52,39 @@ function LoginPage() {
     }
     if (!submitLock.acquire()) return;
     setSubmitting(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email: parsed.data.email,
-      password: parsed.data.password,
-      ...(captchaToken ? { options: { captchaToken } } : {}),
-    });
-    setSubmitting(false);
-    submitLock.release();
-    setCaptchaResetSignal((current) => current + 1);
+    try {
+      await supabase.auth.signInWithOtp({
+        email: parsed.data.email,
+        options: {
+          emailRedirectTo: `${window.location.origin}/dashboard`,
+          shouldCreateUser: false,
+          ...(captchaToken ? { captchaToken } : {}),
+        },
+      });
+      setSent(true);
+    } finally {
+      setSubmitting(false);
+      submitLock.release();
+      setCaptchaResetSignal((current) => current + 1);
+    }
+  };
+
+  const handlePasskeySignIn = async () => {
+    if (!passkeySupported) {
+      toast.error("Le passkey non sono disponibili su questo dispositivo.");
+      return;
+    }
+    if (captchaEnabled && !captchaToken) {
+      toast.error("Completa la verifica di sicurezza.");
+      return;
+    }
+    setPasskeySubmitting(true);
+    const { error } = await supabase.auth.signInWithPasskey(
+      captchaToken ? { options: { captchaToken } } : undefined,
+    );
+    setPasskeySubmitting(false);
     if (error) {
-      toast.error("Credenziali non valide");
+      toast.error("Accesso con passkey non riuscito. Usa il link via email.");
       return;
     }
     navigate({ to: "/dashboard" });
@@ -71,48 +100,57 @@ function LoginPage() {
         <div className="rounded-xl border border-border bg-card p-6 shadow-elevated">
           <h1 className="font-display text-2xl font-semibold text-foreground">Accedi</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Inserisci le tue credenziali per continuare.
+            Inserisci la tua email: ti invieremo un link sicuro per entrare.
           </p>
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
+          {sent ? (
+            <div
+              className="mt-6 rounded-md border border-border bg-muted/40 p-4 text-sm text-foreground"
+              role="status"
+              aria-live="polite"
+            >
+              <p className="font-medium">Controlla la tua casella.</p>
+              <p className="mt-1 text-muted-foreground">
+                Se l'indirizzo è registrato, riceverai a breve il link per accedere a Pratix.
+                Controlla anche lo spam.
+              </p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+          ) : (
+            <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  autoComplete="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+              <TurnstileChallenge
+                action="login"
+                onTokenChange={setCaptchaToken}
+                resetSignal={captchaResetSignal}
               />
-            </div>
-            <TurnstileChallenge
-              action="login"
-              onTokenChange={setCaptchaToken}
-              resetSignal={captchaResetSignal}
-            />
-            <Button type="submit" className="w-full" disabled={submitting}>
-              {submitting ? "Accesso in corso…" : "Accedi"}
-            </Button>
-            <div className="text-center">
-              <Link
-                to="/recupera-password"
-                className="text-xs text-muted-foreground hover:text-foreground hover:underline"
+              <Button type="submit" className="w-full" disabled={submitting}>
+                {submitting ? "Invio in corso…" : "Invia link di accesso"}
+              </Button>
+            </form>
+          )}
+
+          {passkeySupported ? (
+            <div className="mt-4">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={handlePasskeySignIn}
+                disabled={passkeySubmitting}
               >
-                Password dimenticata?
-              </Link>
+                {passkeySubmitting ? "Verifica passkey…" : "Accedi con passkey"}
+              </Button>
             </div>
-          </form>
+          ) : null}
         </div>
 
         <p className="mt-4 text-center text-sm text-muted-foreground">

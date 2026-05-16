@@ -7,7 +7,7 @@ import {
   Download,
   FileArchive,
   FileUp,
-  KeyRound,
+  Fingerprint,
   MailCheck,
   Save,
   ShieldCheck,
@@ -73,6 +73,13 @@ type ProfileForm = {
 type DeleteAccountResult = {
   deleted: boolean;
   removedStorageObjects: number;
+};
+
+type PasskeyListItem = {
+  id: string;
+  friendly_name?: string;
+  created_at: string;
+  last_used_at?: string;
 };
 
 const unwrapServerResult = <T,>(result: T | { data: T }) =>
@@ -222,7 +229,7 @@ function AccountPage() {
 
         <TabsContent value="sicurezza" className="space-y-4">
           <EmailAccessCard email={user?.email ?? ""} />
-          <ChangePasswordCard email={user?.email ?? ""} />
+          <PasskeyAccessCard userId={user?.id ?? ""} />
         </TabsContent>
 
         <TabsContent value="aspetto" className="space-y-4">
@@ -377,7 +384,6 @@ function DataExportCard() {
 
 function EmailAccessCard({ email }: { email: string }) {
   const [nextEmail, setNextEmail] = useState(email);
-  const [currentPassword, setCurrentPassword] = useState("");
   const submitLock = useSubmitLock();
 
   useEffect(() => setNextEmail(email), [email]);
@@ -390,20 +396,12 @@ function EmailAccessCard({ email }: { email: string }) {
         throw new Error("Inserisci una email valida");
       if (cleanedEmail === email.toLowerCase())
         throw new Error("La nuova email coincide con quella attuale");
-      if (!currentPassword) throw new Error("Inserisci la password attuale");
-
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password: currentPassword,
-      });
-      if (signInError) throw new Error("Password attuale non corretta");
 
       const { error } = await supabase.auth.updateUser({ email: cleanedEmail });
       if (error) throw error;
     },
     onSuccess: () => {
       toast.success("Controlla la nuova email per confermare la modifica");
-      setCurrentPassword("");
     },
     onError: (err: Error) => toast.error(err.message),
     onSettled: submitLock.release,
@@ -417,11 +415,11 @@ function EmailAccessCard({ email }: { email: string }) {
           Email di accesso
         </CardTitle>
         <CardDescription>
-          Cambia l'indirizzo usato per entrare in Pratix. Supabase invia una conferma alla nuova
-          email.
+          Cambia l'indirizzo usato per ricevere i link di accesso. Supabase invia una conferma alla
+          nuova email.
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4 sm:grid-cols-2">
+      <CardContent className="grid gap-4">
         <div className="space-y-2">
           <Label htmlFor="account-next-email">Nuova email</Label>
           <Input
@@ -432,24 +430,14 @@ function EmailAccessCard({ email }: { email: string }) {
             autoComplete="email"
           />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="account-email-current-password">Password attuale</Label>
-          <Input
-            id="account-email-current-password"
-            type="password"
-            value={currentPassword}
-            onChange={(event) => setCurrentPassword(event.target.value)}
-            autoComplete="current-password"
-          />
-        </div>
-        <div className="flex justify-end sm:col-span-2">
+        <div className="flex justify-end">
           <Button
             type="button"
             variant="outline"
             onClick={() => {
               if (submitLock.acquire()) mutation.mutate();
             }}
-            disabled={mutation.isPending || !nextEmail || !currentPassword}
+            disabled={mutation.isPending || !nextEmail}
           >
             <MailCheck className="mr-2 size-4" />
             {mutation.isPending ? "Invio conferma…" : "Cambia email"}
@@ -460,91 +448,125 @@ function EmailAccessCard({ email }: { email: string }) {
   );
 }
 
-function ChangePasswordCard({ email }: { email: string }) {
-  const [current, setCurrent] = useState("");
-  const [next, setNext] = useState("");
-  const [confirm, setConfirm] = useState("");
+function PasskeyAccessCard({ userId }: { userId: string }) {
+  const qc = useQueryClient();
   const submitLock = useSubmitLock();
+  const [passkeySupported, setPasskeySupported] = useState(false);
 
-  const mutation = useMutation({
+  useEffect(() => {
+    setPasskeySupported("PublicKeyCredential" in window);
+  }, []);
+
+  const {
+    data: passkeys = [],
+    isError: passkeyListFailed,
+    isLoading,
+  } = useQuery({
+    queryKey: ["account-passkeys", userId],
+    enabled: !!userId && passkeySupported,
+    queryFn: async () => {
+      const { data, error } = await supabase.auth.passkey.list();
+      if (error) throw error;
+      return data as PasskeyListItem[];
+    },
+  });
+
+  const registerMutation = useMutation({
     mutationFn: async () => {
-      if (next.length < 8) throw new Error("La nuova password deve avere almeno 8 caratteri");
-      if (next !== confirm) throw new Error("Le due password non coincidono");
-      if (!email) throw new Error("Email mancante");
-
-      // Riautenticazione di sicurezza
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password: current,
-      });
-      if (signInError) throw new Error("Password attuale non corretta");
-
-      const { error } = await supabase.auth.updateUser({ password: next });
+      if (!passkeySupported)
+        throw new Error("Le passkey non sono disponibili su questo dispositivo");
+      const { error } = await supabase.auth.registerPasskey();
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Password aggiornata");
-      setCurrent("");
-      setNext("");
-      setConfirm("");
+      toast.success("Passkey aggiunta");
+      qc.invalidateQueries({ queryKey: ["account-passkeys", userId] });
     },
     onError: (err: Error) => toast.error(err.message),
     onSettled: submitLock.release,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (passkeyId: string) => {
+      const { error } = await supabase.auth.passkey.delete({ passkeyId });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Passkey rimossa");
+      qc.invalidateQueries({ queryKey: ["account-passkeys", userId] });
+    },
+    onError: (err: Error) => toast.error(err.message),
   });
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <KeyRound className="size-4 text-muted-foreground" />
-          Cambia password
+          <Fingerprint className="size-4 text-muted-foreground" />
+          Passkey
         </CardTitle>
         <CardDescription>
-          Per confermare il cambio inserisci anche la password attuale.
+          Aggiungi una passkey per accedere più velocemente dal dispositivo che stai usando.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-2 sm:col-span-2">
-            <Label htmlFor="account-password-current">Password attuale</Label>
-            <Input
-              id="account-password-current"
-              type="password"
-              autoComplete="current-password"
-              value={current}
-              onChange={(e) => setCurrent(e.target.value)}
-            />
+        {passkeySupported ? (
+          <div className="space-y-3">
+            {isLoading ? (
+              <p className="text-sm text-muted-foreground">Caricamento passkey…</p>
+            ) : passkeyListFailed ? (
+              <p className="text-sm text-muted-foreground">
+                Passkey non disponibili per questo progetto Supabase. Puoi continuare a usare il
+                link via email.
+              </p>
+            ) : passkeys.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                Nessuna passkey collegata a questo account.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {passkeys.map((passkey) => (
+                  <div
+                    key={passkey.id}
+                    className="flex items-center justify-between gap-3 rounded-md border border-border p-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {passkey.friendly_name || "Passkey"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        Aggiunta il {new Date(passkey.created_at).toLocaleDateString("it-IT")}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => deleteMutation.mutate(passkey.id)}
+                      disabled={deleteMutation.isPending}
+                    >
+                      Rimuovi
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="account-password-next">Nuova password</Label>
-            <Input
-              id="account-password-next"
-              type="password"
-              autoComplete="new-password"
-              value={next}
-              onChange={(e) => setNext(e.target.value)}
-            />
-            <p className="text-xs text-muted-foreground">Almeno 8 caratteri.</p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="account-password-confirm">Conferma nuova password</Label>
-            <Input
-              id="account-password-confirm"
-              type="password"
-              autoComplete="new-password"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-            />
-          </div>
-        </div>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Le passkey non sono disponibili su questo dispositivo o browser.
+          </p>
+        )}
         <div className="flex justify-end">
           <Button
+            type="button"
+            variant="outline"
             onClick={() => {
-              if (submitLock.acquire()) mutation.mutate();
+              if (submitLock.acquire()) registerMutation.mutate();
             }}
-            disabled={mutation.isPending || !current || !next || !confirm}
+            disabled={!passkeySupported || registerMutation.isPending}
           >
-            {mutation.isPending ? "Aggiornamento…" : "Aggiorna password"}
+            {registerMutation.isPending ? "Aggiunta…" : "Aggiungi passkey"}
           </Button>
         </div>
       </CardContent>
@@ -560,20 +582,12 @@ function DeleteAccountCard({
   onDeleted: () => Promise<void>;
 }) {
   const deleteAccount = useServerFn(deleteAccountFn);
-  const [currentPassword, setCurrentPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
   const submitLock = useSubmitLock();
 
   const mutation = useMutation({
     mutationFn: async () => {
       if (!email) throw new Error("Email mancante");
-      if (!currentPassword) throw new Error("Inserisci la password attuale");
-
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password: currentPassword,
-      });
-      if (signInError) throw new Error("Password attuale non corretta");
 
       const { data: sessionData } = await supabase.auth.getSession();
       const token = sessionData.session?.access_token;
@@ -606,17 +620,7 @@ function DeleteAccountCard({
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="delete-account-current-password">Password attuale</Label>
-          <Input
-            id="delete-account-current-password"
-            type="password"
-            value={currentPassword}
-            onChange={(event) => setCurrentPassword(event.target.value)}
-            autoComplete="current-password"
-          />
-        </div>
-        <div className="space-y-2">
+        <div className="space-y-2 sm:col-span-2">
           <Label htmlFor="delete-account-confirmation">Conferma scrivendo ELIMINA</Label>
           <Input
             id="delete-account-confirmation"
@@ -631,7 +635,7 @@ function DeleteAccountCard({
               <Button
                 type="button"
                 variant="destructive"
-                disabled={mutation.isPending || !currentPassword || confirmation !== "ELIMINA"}
+                disabled={mutation.isPending || confirmation !== "ELIMINA"}
               >
                 <Trash2 className="mr-2 size-4" />
                 {mutation.isPending ? "Eliminazione…" : "Elimina account"}

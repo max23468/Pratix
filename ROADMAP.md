@@ -102,22 +102,23 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## 5. Account, sicurezza, dati
 
-| Stato | Voce                                         | Note                                                                                                                            |
-| ----- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| ✅    | Registrazione + login                        | Email/password                                                                                                                  |
-| ✅    | Recupero password                            | Pagine `/recupera-password` + `/reimposta-password`, email Supabase di default                                                  |
-| ✅    | Messaggi auth generici (no user enumeration) | Login e registrazione                                                                                                           |
-| ✅    | Area Account separata da Impostazioni        | `/account` con tab Profilo / Accesso e sicurezza / Aspetto / Notifiche, accesso da menu utente in topbar                        |
-| ✅    | Cambio password in-app                       | Riautenticazione con password attuale + `auth.updateUser`                                                                       |
-| ✅    | CAPTCHA Auth predisposto ma non attivo       | Supporto Turnstile nel codice se `VITE_TURNSTILE_SITE_KEY` è configurata; integrazione Cloudflare non attiva per scelta attuale |
-| ✅    | Registrazione con conferma email             | Registrazione aperta; se Supabase richiede conferma, la UI mostra lo stato email invece di forzare la dashboard                 |
-| ✅    | Template email auth in italiano              | Template Supabase attivi per conferma account e recupero password; Custom SMTP/dominio dedicato non necessari ora               |
-| ✅    | Supabase Storage privato                     | Bucket `pratix-documents` con policy owner-scoped per documenti, fatture, allegati, asset profilo ed export                     |
-| 💤    | Leaked Password Protection Supabase          | Richiede piano Pro o superiore; non prevista nel percorso gratuito attuale                                                      |
-| ✅    | Cambio email                                 | Riautenticazione con password attuale + `auth.updateUser({ email })`, con conferma Supabase sul nuovo indirizzo                 |
-| ✅    | Eliminazione account                         | Conferma esplicita, rimozione oggetti Storage noti/sotto prefix utente e cancellazione Auth server-side                         |
-| ✅    | Esportazione dati personali                  | JSON completo e archivio CSV per tabelle personali/applicative                                                                  |
-| ✅    | Audit RLS su tutte le tabelle                | Contratto automatico su `supabase/schema.sql`: RLS + policy owner-scoped e RPC import filtrata per utente                       |
+| Stato | Voce                                         | Note                                                                                                                                                                       |
+| ----- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅    | Registrazione + login                        | Link sicuro via email con Supabase Auth passwordless                                                                                                                       |
+| ✅    | Recupero password                            | Non necessario: `/recupera-password` e `/reimposta-password` indirizzano al login via email                                                                                |
+| ✅    | Messaggi auth generici (no user enumeration) | Login e registrazione                                                                                                                                                      |
+| ✅    | Area Account separata da Impostazioni        | `/account` con tab Profilo / Accesso e sicurezza / Aspetto / Notifiche, accesso da menu utente in topbar                                                                   |
+| ✅    | Passkey                                      | Opzione sperimentale Supabase per aggiungere/rimuovere passkey e accedere rapidamente dal login                                                                            |
+| ✅    | CAPTCHA Auth predisposto ma non attivo       | Supporto Turnstile nel codice se `VITE_TURNSTILE_SITE_KEY` è configurata; integrazione Cloudflare non attiva per scelta attuale                                            |
+| ✅    | Registrazione con conferma email             | Registrazione aperta; se Supabase richiede conferma, la UI mostra lo stato email invece di forzare la dashboard                                                            |
+| ✅    | Template email auth in italiano              | Magic Link aggiornato in Supabase e tracciato in `supabase/templates`; conferma account e cambio email da mantenere allineati                                              |
+| ✅    | Supabase Storage privato                     | Bucket `pratix-documents` con policy owner-scoped per documenti, fatture, allegati, asset profilo ed export                                                                |
+| 🟡    | Bonifica password residue Supabase           | 4 utenti hanno ancora hash password legacy; nessun toggle separato per disattivare password mantenendo magic link, serve decisione esplicita prima di toccare `auth.users` |
+| 💤    | Leaked Password Protection Supabase          | Richiede piano Pro o superiore; rischio ridotto perché la UI usa magic link/passkey, ma l'advisor può restare sul Free                                                     |
+| ✅    | Cambio email                                 | `auth.updateUser({ email })`, con sessione attiva e conferma Supabase sul nuovo indirizzo                                                                                  |
+| ✅    | Eliminazione account                         | Conferma esplicita, rimozione oggetti Storage noti/sotto prefix utente e cancellazione Auth server-side                                                                    |
+| ✅    | Esportazione dati personali                  | JSON completo e archivio CSV per tabelle personali/applicative                                                                                                             |
+| ✅    | Audit RLS su tutte le tabelle                | Contratto automatico su `supabase/schema.sql`: RLS + policy owner-scoped e RPC import filtrata per utente                                                                  |
 
 ## 6. SEO, pubblicazione, dominio
 

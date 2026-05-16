@@ -79,7 +79,7 @@ function PrivacyPage() {
               <li>Generazione di fatture elettroniche conformi a FatturaPA.</li>
               <li>Sicurezza dell'account e prevenzione abusi.</li>
               <li>Adempimenti contabili e fiscali a carico del gestore.</li>
-              <li>Comunicazioni di servizio (es. recupero password, notifiche di sistema).</li>
+              <li>Comunicazioni di servizio (es. link di accesso, notifiche di sistema).</li>
             </ul>
           </section>
 

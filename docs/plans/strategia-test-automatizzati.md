@@ -81,10 +81,11 @@ Copre i flussi che il professionista usa davvero:
 Si eseguono con account/fixture di test riconoscibili e dati anonimi.
 
 Lo smoke ripetibile WebKit copre route pubbliche e, quando sono presenti
-`PRATIX_SMOKE_EMAIL` e `PRATIX_SMOKE_PASSWORD`, le route autenticate principali.
-Per ogni route controlla tema chiaro/scuro, desktop/tablet/mobile, violazioni
-WCAG A/AA, overflow orizzontale e controlli interattivi con testo tagliato. Le
-istruzioni operative sono in `docs/guides/smoke-a11y.md`.
+`SUPABASE_SERVICE_ROLE_KEY` e la URL Supabase, usa l'account test Pratix e genera
+un magic link server-side per coprire le route autenticate principali senza usare
+password. Per ogni route controlla tema chiaro/scuro, desktop/tablet/mobile,
+violazioni WCAG A/AA, overflow orizzontale e controlli interattivi con testo
+tagliato. Le istruzioni operative sono in `docs/guides/smoke-a11y.md`.
 
 Smoke completato il 2026-05-09:
 
@@ -265,8 +266,9 @@ Questo incremento introduce `npm run smoke:a11y`, basato su Playwright WebKit e
 - violazioni WCAG A/AA, overflow orizzontale e controlli interattivi con testo
   tagliato.
 
-Il comando usa l'account test Supabase solo se le credenziali vengono fornite
-tramite variabili d'ambiente locali. Le credenziali restano fuori dal repo.
+Il comando usa l'account test Supabase quando la service role key viene fornita
+tramite variabile d'ambiente locale. La chiave resta fuori dal repo e serve solo
+a generare un magic link temporaneo per la sessione WebKit.
 
 ## Prossimi incrementi
 

@@ -6,6 +6,21 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.3.0] — 2026-05-16
+
+### Novità
+
+- **Accesso senza password**: login e registrazione usano link sicuri via email; l'area Account può aggiungere e rimuovere passkey come accesso rapido.
+
+### Correzioni
+
+- **Area Account**: rimosse le azioni di cambio e recupero password dalla UI; cambio email ed eliminazione account restano protetti da sessione attiva e conferma esplicita.
+
+### Sotto il cofano
+
+- **Supabase Auth**: tracciato il template Magic Link italiano e allineata la configurazione remota Auth senza reintrodurre password nella UI.
+- **Smoke autenticato**: `npm run smoke:a11y` usa un magic link Supabase generato server-side quando è presente la service role key locale, senza dipendere da password tradizionali.
+
 ## [1.2.19] — 2026-05-16
 
 ### Correzioni
@@ -756,6 +771,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.3.0]: #130--2026-05-16
 [1.2.19]: #1219--2026-05-16
 [1.2.18]: #1218--2026-05-16
 [1.2.17]: #1217--2026-05-16
