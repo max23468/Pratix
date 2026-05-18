@@ -42,6 +42,7 @@ import {
 } from "@/lib/table-sorting";
 
 type PraticheSearch = {
+  view?: PraticheView;
   sort?: PraticheSortKey;
   dir?: "asc" | "desc";
 };
@@ -89,8 +90,23 @@ type PraticheSortKey = (typeof praticheSortKeys)[number];
 
 const praticheDefaultSort: TableSort<PraticheSortKey> = { key: "updated_at", direction: "desc" };
 
+const praticheViewKeys = [
+  "all",
+  "open",
+  "without_activities",
+  "to_complete",
+  "to_invoice",
+  "invoiced",
+  "suspended",
+  "closed",
+  "archived",
+] as const;
+
+type PraticheView = (typeof praticheViewKeys)[number];
+
 export const Route = createFileRoute("/pratiche/")({
   validateSearch: (search: Record<string, unknown>): PraticheSearch => ({
+    view: parsePracticeView(search.view),
     sort: parseTableSortKey(search.sort, praticheSortKeys),
     dir: parseTableSortDirection(search.dir),
   }),
@@ -113,7 +129,7 @@ function PraticheList() {
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
   const [q, setQ] = useState("");
-  const [view, setView] = useState<string>("open");
+  const view = search.view ?? "open";
   const urlSort =
     search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
 
@@ -219,8 +235,27 @@ function PraticheList() {
     defaultSort: praticheDefaultSort,
     urlSort,
     onSortChange: (next) =>
-      navigate({ search: { sort: next.key, dir: next.direction }, replace: true }),
+      navigate({
+        search: {
+          view: view === "open" ? undefined : view,
+          sort: next.key,
+          dir: next.direction,
+        },
+        replace: true,
+      }),
   });
+
+  const updateView = (nextView: string) => {
+    const parsedView = parsePracticeView(nextView) ?? "open";
+    navigate({
+      search: {
+        view: parsedView === "open" ? undefined : parsedView,
+        sort: search.sort,
+        dir: search.dir,
+      },
+      replace: true,
+    });
+  };
 
   const filtered = useMemo(() => {
     if (!data) return [];
@@ -231,7 +266,16 @@ function PraticheList() {
         invoiced: 0,
         toInvoiceAmount: 0,
       };
+      const isOperational = c.status !== "closed" && c.status !== "archived";
+      const hasActivities = c.id in activitySummaryByCase;
       if (view === "open" && c.status !== "open" && c.status !== "in_progress") return false;
+      if (view === "without_activities" && (!isOperational || hasActivities)) return false;
+      if (
+        view === "to_complete" &&
+        (!isOperational || !hasActivities || (c.principal_id && c.client_id && c.counterparty_id))
+      ) {
+        return false;
+      }
       if (view === "to_invoice" && summary.toInvoice === 0) return false;
       if (view === "invoiced" && summary.invoiced === 0) return false;
       if (view === "suspended" && c.status !== "suspended") return false;
@@ -284,13 +328,15 @@ function PraticheList() {
             className="pl-9"
           />
         </div>
-        <Select value={view} onValueChange={setView}>
+        <Select value={view} onValueChange={updateView}>
           <SelectTrigger aria-label="Filtra pratiche per vista" className="lg:w-52">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tutte le pratiche</SelectItem>
             <SelectItem value="open">Aperte e in corso</SelectItem>
+            <SelectItem value="without_activities">Senza attività</SelectItem>
+            <SelectItem value="to_complete">Da completare</SelectItem>
             <SelectItem value="to_invoice">Con attività da fatturare</SelectItem>
             <SelectItem value="invoiced">Con attività fatturate</SelectItem>
             <SelectItem value="suspended">Sospese</SelectItem>
@@ -522,4 +568,9 @@ function PraticheList() {
       </Card>
     </>
   );
+}
+
+function parsePracticeView(value: unknown): PraticheView | undefined {
+  if (typeof value !== "string") return undefined;
+  return praticheViewKeys.includes(value as PraticheView) ? (value as PraticheView) : undefined;
 }

@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.8.2] — 2026-05-18
+
+### Correzioni
+
+- **Dashboard**: rese cliccabili le otto card operative, con collegamenti diretti alle viste di Pratiche, Attività e Fatture coerenti con il dato mostrato.
+
 ## [1.8.1] — 2026-05-18
 
 ### Correzioni
@@ -949,6 +955,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.8.2]: #182--2026-05-18
 [1.8.1]: #181--2026-05-18
 [1.8.0]: #180--2026-05-18
 [1.7.6]: #176--2026-05-17

@@ -143,10 +143,18 @@ const fattureColumns: readonly SortableColumn<InvoiceListRow, FattureSortKey>[] 
   },
 ];
 
+const invoiceStatusFilterLabels = {
+  ...invoiceStatusLabels,
+  to_collect: "Da incassare",
+  expired: "Scadute",
+};
+
+type InvoiceStatusFilter = keyof typeof invoiceStatusFilterLabels | "all";
+
 export const Route = createFileRoute("/fatture/")({
   validateSearch: (search: Record<string, unknown>): InvoicesSearch => ({
     q: parseTextSearch(search.q),
-    status: parseFilterValue(search.status, invoiceStatusLabels),
+    status: parseFilterValue(search.status, invoiceStatusFilterLabels),
     year: parseYearSearch(search.year),
     from: parseDateSearch(search.from),
     to: parseDateSearch(search.to),
@@ -166,7 +174,7 @@ export const Route = createFileRoute("/fatture/")({
 
 type InvoicesSearch = {
   q?: string;
-  status?: string;
+  status?: InvoiceStatusFilter;
   year?: string;
   from?: string;
   to?: string;
@@ -234,7 +242,20 @@ function InvoicesIndex() {
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return (data || []).filter((i) => {
-      if (status !== "all" && i.status !== status) return false;
+      const isExpired =
+        i.status === "overdue" || (i.status === "issued" && i.due_date && i.due_date < today);
+      if (status === "to_collect" && i.status !== "issued" && i.status !== "overdue") {
+        return false;
+      }
+      if (status === "expired" && !isExpired) return false;
+      if (
+        status !== "all" &&
+        status !== "to_collect" &&
+        status !== "expired" &&
+        i.status !== status
+      ) {
+        return false;
+      }
       if (year !== "all" && String(i.year) !== year) return false;
       if (periodStart && i.issue_date < periodStart) return false;
       if (periodEnd && i.issue_date > periodEnd) return false;
@@ -244,7 +265,7 @@ function InvoicesIndex() {
       ).toLowerCase();
       return i.number.toLowerCase().includes(q) || name.includes(q);
     });
-  }, [data, periodEnd, periodStart, search, status, year]);
+  }, [data, periodEnd, periodStart, search, status, today, year]);
 
   const { sort, setSort } = usePersistentTableSort({
     section: "fatture",
@@ -465,7 +486,13 @@ function InvoicesIndex() {
             <Select
               value={status}
               onValueChange={(value) =>
-                updateSearch({ q: search, status: value, year, from: periodStart, to: periodEnd })
+                updateSearch({
+                  q: search,
+                  status: value as InvoiceStatusFilter,
+                  year,
+                  from: periodStart,
+                  to: periodEnd,
+                })
               }
             >
               <SelectTrigger aria-label="Filtra fatture per stato" className="sm:w-44">
@@ -473,6 +500,8 @@ function InvoicesIndex() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tutti gli stati</SelectItem>
+                <SelectItem value="to_collect">Da incassare</SelectItem>
+                <SelectItem value="expired">Scadute</SelectItem>
                 {Object.entries(invoiceStatusLabels).map(([k, l]) => (
                   <SelectItem key={k} value={k}>
                     {l}
@@ -814,9 +843,9 @@ function parseTextSearch(value: unknown) {
   return normalized || undefined;
 }
 
-function parseFilterValue(value: unknown, labels: Record<string, string>) {
+function parseFilterValue<T extends Record<string, string>>(value: unknown, labels: T) {
   if (typeof value !== "string") return undefined;
-  return value in labels ? value : undefined;
+  return value in labels ? (value as keyof T) : undefined;
 }
 
 function parseYearSearch(value: unknown) {
