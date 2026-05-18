@@ -38,12 +38,12 @@ jobs:
         shell: bash
         run: |
           base_ref="${GITHUB_BASE_REF:-main}"
-          git fetch origin "$base_ref" --depth=1
+          git fetch origin "$base_ref"
 
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             npm run format:check
           else
-            PRATIX_FORMAT_BASE="origin/${base_ref}" npm run format:changed:check
+            PRATIX_FORMAT_BASE="${{ github.event.pull_request.base.sha }}" npm run format:changed:check
           fi
 
       - name: Build
@@ -56,9 +56,13 @@ jobs:
         shell: bash
         run: |
           base_ref="${GITHUB_BASE_REF:-main}"
-          git fetch origin "$base_ref" --depth=1
+          git fetch origin "$base_ref"
+          diff_base="origin/${base_ref}"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            diff_base="${{ github.event.pull_request.base.sha }}"
+          fi
 
-          changed_source_files="$(git diff --name-only --diff-filter=ACMR "origin/${base_ref}...HEAD" \
+          changed_source_files="$(git diff --name-only --diff-filter=ACMR "${diff_base}...HEAD" \
             | grep -E '^((src|scripts|supabase)/.*\.(ts|tsx|js|jsx|mjs|cjs)|vite\.config\.ts|vitest\.config\.ts|vitest\.coverage-global\.config\.ts|eslint\.config\.js)$' \
             || true)"
 
@@ -74,11 +78,15 @@ jobs:
         shell: bash
         run: |
           base_ref="${GITHUB_BASE_REF:-main}"
-          git fetch origin "$base_ref" --depth=1
+          git fetch origin "$base_ref"
+          diff_base="origin/${base_ref}"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            diff_base="${{ github.event.pull_request.base.sha }}"
+          fi
 
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             echo "run_audit=true" >> "$GITHUB_OUTPUT"
-          elif git diff --name-only "origin/${base_ref}...HEAD" \
+          elif git diff --name-only "${diff_base}...HEAD" \
             | grep -Eq '^(package\.json|package-lock\.json)$'; then
             echo "run_audit=true" >> "$GITHUB_OUTPUT"
           else

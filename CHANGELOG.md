@@ -6,6 +6,10 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Non versionato
+
+- **CI**: il workflow Quality usa la base stabile della PR e fetch non shallow per evitare falsi fallimenti `no merge base` quando una PR viene mergeata mentre partono i controlli.
+
 ## [1.9.3] — 2026-05-19
 
 ### Correzioni
