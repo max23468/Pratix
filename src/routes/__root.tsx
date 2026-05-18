@@ -1,10 +1,17 @@
-import { Outlet, Link, createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
+import {
+  Outlet,
+  Link,
+  createRootRoute,
+  HeadContent,
+  Scripts,
+  useRouterState,
+} from "@tanstack/react-router";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { lazy, Suspense, type ReactNode } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/lib/auth-context";
 import { queryClient } from "@/lib/query-client";
 import { ThemeProvider, NO_FLASH_SCRIPT } from "@/lib/theme-context";
 import { APP_VERSION } from "@/lib/version";
@@ -48,6 +55,32 @@ const STRUCTURED_DATA = {
     },
   ],
 };
+const PUBLIC_ROUTE_PATHS = new Set([
+  "/",
+  "/login",
+  "/register",
+  "/recupera-password",
+  "/reimposta-password",
+  "/privacy",
+  "/termini",
+]);
+
+const LazyAuthProvider = lazy(async () => {
+  const { AuthProvider } = await import("@/lib/auth-context");
+  return { default: AuthProvider };
+});
+
+function normalizeRoutePath(pathname: string) {
+  if (pathname !== "/" && pathname.endsWith("/")) {
+    return pathname.slice(0, -1);
+  }
+
+  return pathname;
+}
+
+function isPublicRoutePath(pathname: string) {
+  return PUBLIC_ROUTE_PATHS.has(normalizeRoutePath(pathname));
+}
 
 function NotFoundComponent() {
   return (
@@ -141,7 +174,7 @@ export const Route = createRootRoute({
   notFoundComponent: NotFoundComponent,
 });
 
-function RootShell({ children }: { children: React.ReactNode }) {
+function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="it" suppressHydrationWarning>
       <head>
@@ -160,18 +193,40 @@ function RootShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function RootLoading() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <div className="text-sm text-muted-foreground">Caricamento…</div>
+    </div>
+  );
+}
+
+function RouteAuthBoundary({ children }: { children: ReactNode }) {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+
+  if (isPublicRoutePath(pathname)) {
+    return <>{children}</>;
+  }
+
+  return (
+    <Suspense fallback={<RootLoading />}>
+      <LazyAuthProvider>{children}</LazyAuthProvider>
+    </Suspense>
+  );
+}
+
 function RootComponent() {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <AuthProvider>
+        <RouteAuthBoundary>
           <TooltipProvider delayDuration={200}>
             <Outlet />
             <Toaster richColors position="top-right" />
             <Analytics />
             <SpeedInsights />
           </TooltipProvider>
-        </AuthProvider>
+        </RouteAuthBoundary>
       </QueryClientProvider>
     </ThemeProvider>
   );
