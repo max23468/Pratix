@@ -155,7 +155,7 @@ Vincoli di terminologia (vedi [`docs/glossario.md`](./docs/glossario.md)):
 - Non introdurre nuove dipendenze UI o librerie di stato senza motivazione esplicita e impatto chiaro.
 - **Solo token semantici per i colori** (`bg-primary`, `text-foreground`, `border-border`…). Mai hex inline o classi tipo `bg-white`. La palette vive in `src/styles.css` (oklch). Vedi [`BRAND.md`](./BRAND.md).
 - **Logo**: solo `<Logo>` da `src/components/brand/logo.tsx`. Mai SVG inline.
-- Per modifiche UI sostanziali, verifica quando praticabile la resa desktop/mobile e chiaro/scuro. Se non puoi farlo, dichiaralo con il rischio residuo.
+- Per modifiche UI sostanziali, verifica quando praticabile la resa desktop/mobile e chiaro/scuro. Usa `npm run smoke:a11y` o `npm run smoke:a11y:auth` come gate di chiusura solo quando il diff tocca superfici UI ampie, routing, componenti condivisi, flussi autenticati critici o pubblicazione/release. Per microcopy, docs, fix locali o assenza di modifiche scegli verifiche mirate e dichiarale. Se non puoi verificare una superficie rilevante, dichiaralo con il rischio residuo.
 
 ## Sicurezza e dati
 
@@ -178,6 +178,12 @@ Vincoli di terminologia (vedi [`docs/glossario.md`](./docs/glossario.md)):
 - Prima del push usa `npm run prepush:guard` oppure lascia lavorare `.githooks/pre-push`: esegue solo i controlli necessari al diff e li mette in cache per la stessa fingerprint, evitando di ripetere format/build/lint/audit già validati dallo stesso guard.
 - Se hai appena eseguito controlli equivalenti manualmente sullo stesso diff, puoi usare `PRATIX_SKIP_PREPUSH=1 git push`, ma solo dichiarando il motivo nel riepilogo operativo.
 - Per modifiche solo documentali, non serve inventare test applicativi: rileggi il documento e verifica la coerenza delle istruzioni.
+- Scegli verifiche proporzionate al rischio:
+  - nessuna modifica o sola analisi: niente test applicativi, riporta solo cosa è stato verificato;
+  - docs interne, roadmap, ADR, regole agenti o memoria: rilettura/coerenza e, se utile, `npm run format:changed:check`;
+  - fix piccolo non UI: test mirato, `npm run format:changed:check`, lint/build solo se il diff tocca TypeScript, routing, configurazione o contratti condivisi;
+  - microcopy o piccola UI locale: verifica mirata della pagina/componente interessato, eventualmente browser leggero;
+  - UI sostanziale, componenti condivisi, routing, flussi autenticati, release o publish: build/lint/test pertinenti e smoke WebKit/a11y completo quando praticabile.
 - Non inventare risultati di test o comandi non eseguiti. Se un controllo non può essere eseguito, dichiaralo esplicitamente con motivo e rischio residuo.
 - Nelle risposte finali evita footer rituali sui test. Riporta verifiche solo quando sono utili: comando eseguito, fallimento, controllo non eseguibile, limite noto o rischio residuo.
 - Ogni volta che termini un'attività, includi sempre nelle conclusioni i prossimi passi consigliati. Devono essere concreti, ordinati e proporzionati al lavoro appena concluso; se non c'è un seguito operativo reale, dichiaralo esplicitamente.

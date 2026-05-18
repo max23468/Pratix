@@ -11,6 +11,25 @@ Il controllo segnala:
 - overflow orizzontale della pagina;
 - controlli interattivi con testo tagliato in modo non intenzionale.
 
+## Quando usarlo
+
+Lo smoke WebKit/a11y è un gate di chiusura per modifiche UI sostanziali, flussi
+autenticati critici, routing, componenti condivisi, release o publish. Non è un
+automatismo per ogni diff.
+
+Usa una verifica più leggera quando il rischio è limitato:
+
+- nessuna modifica o sola analisi: nessun test applicativo;
+- docs interne, roadmap, ADR, regole agenti o memoria: rilettura/coerenza ed
+  eventualmente `npm run format:changed:check`;
+- fix piccolo non UI: test mirato, con lint/build solo se il diff tocca codice
+  TypeScript, routing, configurazione o contratti condivisi;
+- microcopy o piccola UI locale: controllo mirato della pagina o del componente
+  interessato, anche via browser leggero se serve.
+
+Se una modifica sostanziale non può essere coperta dallo smoke completo,
+dichiara esplicitamente cosa è stato verificato e quale rischio resta.
+
 ## Esecuzione pubblica locale
 
 ```bash
