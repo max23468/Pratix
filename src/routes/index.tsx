@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { createFileRoute, Link, redirect, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import {
   ArrowRight,
   Building2,
@@ -13,18 +13,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth-context";
 
 export const Route = createFileRoute("/")({
-  beforeLoad: async () => {
-    if (typeof window === "undefined") return;
-
-    const { data } = await supabase.auth.getSession();
-    if (data.session) {
-      throw redirect({ to: "/dashboard" });
-    }
-  },
   head: () => ({
     meta: [
       { title: "Pratix · Tutto torna." },
@@ -45,22 +35,30 @@ export const Route = createFileRoute("/")({
 });
 
 function Landing() {
-  const { session, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!loading && session) {
-      navigate({ to: "/dashboard", replace: true });
-    }
-  }, [loading, navigate, session]);
+    let active = true;
 
-  if (loading || session) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-sm text-muted-foreground">Caricamento…</div>
-      </div>
-    );
-  }
+    async function redirectAuthenticatedUser() {
+      try {
+        const { supabase } = await import("@/integrations/supabase/client");
+        const { data } = await supabase.auth.getSession();
+
+        if (active && data.session) {
+          navigate({ to: "/dashboard", replace: true });
+        }
+      } catch (error) {
+        console.error("Impossibile verificare la sessione corrente.", error);
+      }
+    }
+
+    void redirectAuthenticatedUser();
+
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-background">

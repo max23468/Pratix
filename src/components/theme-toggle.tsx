@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,7 +28,14 @@ const labels: Record<ThemeMode, string> = {
 
 export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
   const { mode, resolved, setMode } = useTheme();
-  const Icon = resolved === "dark" ? Moon : Sun;
+  const [mounted, setMounted] = useState(false);
+  const displayMode = mounted ? mode : "system";
+  const displayResolved = mounted ? resolved : "light";
+  const Icon = displayResolved === "dark" ? Moon : Sun;
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <DropdownMenu>
@@ -40,7 +48,7 @@ export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
           className={cn(variant === "icon" ? "size-9" : "h-9 gap-2 px-2", className)}
         >
           <Icon className="size-4" />
-          {variant === "full" && <span className="text-sm font-medium">{labels[mode]}</span>}
+          {variant === "full" && <span className="text-sm font-medium">{labels[displayMode]}</span>}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">

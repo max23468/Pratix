@@ -6,6 +6,16 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.9.3] — 2026-05-19
+
+### Correzioni
+
+- **Tema**: il selettore del tema resta stabile durante l'idratazione della home pubblica anche quando il browser parte in modalità scura.
+
+### Sotto il cofano
+
+- **Landing pubblica**: la home renderizza subito il contenuto pubblico e sposta il controllo sessione dopo il primo render, riducendo il lavoro iniziale senza cambiare la tipografia scelta.
+
 ## [1.9.2] — 2026-05-19
 
 ### Correzioni
@@ -985,6 +995,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.9.3]: #193--2026-05-19
 [1.9.2]: #192--2026-05-19
 [1.9.1]: #191--2026-05-19
 [1.9.0]: #190--2026-05-18

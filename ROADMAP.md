@@ -39,15 +39,16 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 
 ## 2. Landing pubblica
 
-| Stato | Voce                                           | Note                                                                                  |
-| ----- | ---------------------------------------------- | ------------------------------------------------------------------------------------- |
-| ✅    | Hero con tagline + CTA                         | "Tutto torna." come ancora visiva                                                     |
-| ✅    | Sezione "Perché Pratix" orientata al freelance | Promesse concrete su recupero crediti, soggetti, attività, fatture e rendiconti       |
-| ✅    | Mockup/screenshot di prodotto                  | Mockup prodotto in landing con pratica, soggetti, attività e maturato da fatturare    |
-| ✅    | Pricing                                        | Fase iniziale gratuita; piano a pagamento da definire prima dell'apertura commerciale |
-| ✅    | FAQ                                            | Domande essenziali su contabilità, recupero crediti, export dati e carta di pagamento |
-| ✅    | Footer con Privacy e Termini                   | Pagine `/privacy` e `/termini` linkate                                                |
-| ✅    | Meta + og:image dedicati alla landing          | og + twitter cards in root, immagine `/og-image.jpg`                                  |
+| Stato | Voce                                           | Note                                                                                                                                    |
+| ----- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| ✅    | Hero con tagline + CTA                         | "Tutto torna." come ancora visiva                                                                                                       |
+| ✅    | Sezione "Perché Pratix" orientata al freelance | Promesse concrete su recupero crediti, soggetti, attività, fatture e rendiconti                                                         |
+| ✅    | Mockup/screenshot di prodotto                  | Mockup prodotto in landing con pratica, soggetti, attività e maturato da fatturare                                                      |
+| ✅    | Pricing                                        | Fase iniziale gratuita; piano a pagamento da definire prima dell'apertura commerciale                                                   |
+| ✅    | FAQ                                            | Domande essenziali su contabilità, recupero crediti, export dati e carta di pagamento                                                   |
+| ✅    | Footer con Privacy e Termini                   | Pagine `/privacy` e `/termini` linkate                                                                                                  |
+| ✅    | Meta + og:image dedicati alla landing          | og + twitter cards in root, immagine `/og-image.jpg`                                                                                    |
+| ✅    | Rendering SSR-first della home                 | Contenuto pubblico servito subito; controllo sessione e auth caricati senza bloccare la prima visualizzazione, mantenendo i font scelti |
 
 ## 3. Esperienza prodotto (UI autenticata)
 
