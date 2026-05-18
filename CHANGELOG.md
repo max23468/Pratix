@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.9.2] — 2026-05-19
+
+### Correzioni
+
+- **UI autenticata**: ripulite Dashboard, sidebar, dettaglio Pratica e liste operative per ridurre duplicazioni, uniformare riepiloghi/filtri e allineare le label a `Attività` e `Periodo`.
+
 ## [1.9.1] — 2026-05-19
 
 ### Correzioni
@@ -979,6 +985,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.9.2]: #192--2026-05-19
 [1.9.1]: #191--2026-05-19
 [1.9.0]: #190--2026-05-18
 [1.8.2]: #182--2026-05-18

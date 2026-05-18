@@ -3,6 +3,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
+  ChevronDown,
   CheckCircle2,
   Download,
   Flag,
@@ -17,6 +18,7 @@ import {
 import { Badge, badgeVariants } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SummaryTile } from "@/components/summary-tile";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
 import { CaseActivityDialog, type CaseActivityDialogActivity } from "@/components/case-activities";
@@ -270,10 +272,14 @@ export function CaseOperationsPanel({
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-3 md:grid-cols-4">
-            <OperationMetric label="Da fatturare" value={formatCurrency(totals.toInvoice)} />
-            <OperationMetric label="Fatture collegate" value={String(invoices.length)} />
-            <OperationMetric label="Allegati attività" value={String(totals.attachments)} />
-            <OperationMetric label="Totale fatture" value={formatCurrency(totals.invoiceTotal)} />
+            <SummaryTile
+              label="Da fatturare"
+              value={formatCurrency(totals.toInvoice)}
+              tone="gold"
+            />
+            <SummaryTile label="Fatture collegate" value={String(invoices.length)} />
+            <SummaryTile label="Allegati attività" value={String(totals.attachments)} />
+            <SummaryTile label="Totale fatture" value={formatCurrency(totals.invoiceTotal)} />
           </div>
 
           <Separator />
@@ -304,7 +310,7 @@ export function CaseOperationsPanel({
         </CardContent>
       </Card>
 
-      {detailsSlot}
+      {detailsSlot ? <CaseDetailsSection>{detailsSlot}</CaseDetailsSection> : null}
 
       <CaseTimeline
         timeline={timeline}
@@ -340,13 +346,17 @@ export function CaseOperationsPanel({
             </div>
           </CardHeader>
           <CardContent className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <EconomicLine label="Compensi" value={formatCurrency(totals.fees)} />
-            <EconomicLine label="Rimborsi spese" value={formatCurrency(totals.reimbursements)} />
-            <EconomicLine label="Maturato" value={formatCurrency(totals.matured)} />
-            <EconomicLine label="Da fatturare" value={formatCurrency(totals.toInvoice)} />
-            <EconomicLine label="Fatturato" value={formatCurrency(totals.invoiceTotal)} />
-            <EconomicLine label="Incassato" value={formatCurrency(totals.paidTotal)} />
-            <EconomicLine label="Residuo" value={formatCurrency(totals.residual)} />
+            <SummaryTile label="Compensi" value={formatCurrency(totals.fees)} />
+            <SummaryTile label="Rimborsi spese" value={formatCurrency(totals.reimbursements)} />
+            <SummaryTile label="Maturato" value={formatCurrency(totals.matured)} />
+            <SummaryTile
+              label="Da fatturare"
+              value={formatCurrency(totals.toInvoice)}
+              tone="gold"
+            />
+            <SummaryTile label="Fatturato" value={formatCurrency(totals.invoiceTotal)} />
+            <SummaryTile label="Incassato" value={formatCurrency(totals.paidTotal)} />
+            <SummaryTile label="Residuo" value={formatCurrency(totals.residual)} />
           </CardContent>
         </Card>
 
@@ -425,6 +435,25 @@ export function CaseTimeline({
         )}
       </CardContent>
     </Card>
+  );
+}
+
+function CaseDetailsSection({ children }: { children: ReactNode }) {
+  return (
+    <details className="group">
+      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 rounded-md border border-border p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+        <span className="min-w-0">
+          <span className="block text-sm font-medium text-foreground">
+            Dati e riferimenti pratica
+          </span>
+          <span className="mt-1 block text-sm text-muted-foreground">
+            Apri quando devi modificare soggetti, stato, autorità, R.G. o note.
+          </span>
+        </span>
+        <ChevronDown className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
+      </summary>
+      <div className="mt-4">{children}</div>
+    </details>
   );
 }
 
@@ -648,29 +677,11 @@ export function WorkflowPriorityBadge({
   );
 }
 
-function OperationMetric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-border p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-lg font-semibold">{value}</p>
-    </div>
-  );
-}
-
 function SubjectTile({ label, value }: { label: string; value: string }) {
   return (
     <div>
       <p className="text-xs text-muted-foreground">{label}</p>
       <p className="truncate text-sm font-medium">{value}</p>
-    </div>
-  );
-}
-
-function EconomicLine({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-md border border-border p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-base font-semibold">{value}</p>
     </div>
   );
 }

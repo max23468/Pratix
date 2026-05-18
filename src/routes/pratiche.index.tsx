@@ -3,6 +3,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
+import { ListToolbar } from "@/components/list-toolbar";
 import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { PageHeader } from "@/components/page-header";
 import { SortableTableHead } from "@/components/sortable-table-head";
@@ -393,7 +394,7 @@ function PraticheList() {
         }
       />
 
-      <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
+      <ListToolbar>
         <div className="relative max-w-sm flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -419,7 +420,7 @@ function PraticheList() {
             <SelectItem value="archived">Archiviate</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </ListToolbar>
 
       <div className="mb-4 md:hidden">
         <MobileSortSelect columns={praticheColumns} sort={sort} onSort={setSort} />

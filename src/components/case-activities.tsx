@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SummaryTile } from "@/components/summary-tile";
 import {
   Command,
   CommandEmpty,
@@ -213,7 +214,7 @@ export function CaseActivitiesTab({ caseRow }: { caseRow: CaseActivityContext })
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
-            <CardTitle className="text-base">Voci fatturabili</CardTitle>
+            <CardTitle className="text-base">Attività</CardTitle>
             <CardDescription>Compensi e rimborsi spese collegati alla pratica.</CardDescription>
           </div>
           <CaseActivityDialog caseRow={caseRow} />
@@ -221,9 +222,9 @@ export function CaseActivitiesTab({ caseRow }: { caseRow: CaseActivityContext })
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
         <div className="grid gap-3 md:grid-cols-3">
-          <SummaryTile label="Compensi" value={totals.fees} />
-          <SummaryTile label="Rimborsi spese" value={totals.reimbursements} />
-          <SummaryTile label="Da fatturare" value={totals.toInvoice} />
+          <SummaryTile label="Compensi" value={formatCurrency(totals.fees)} />
+          <SummaryTile label="Rimborsi spese" value={formatCurrency(totals.reimbursements)} />
+          <SummaryTile label="Da fatturare" value={formatCurrency(totals.toInvoice)} tone="gold" />
         </div>
 
         {isLoading ? (
@@ -326,15 +327,6 @@ export function CaseActivitiesTab({ caseRow }: { caseRow: CaseActivityContext })
         )}
       </CardContent>
     </Card>
-  );
-}
-
-function SummaryTile({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-md border border-border p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-lg font-semibold">{formatCurrency(value)}</p>
-    </div>
   );
 }
 

@@ -3,10 +3,12 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Pencil, Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
+import { ListToolbar } from "@/components/list-toolbar";
 import { PageHeader } from "@/components/page-header";
 import { CaseActivityDialog, type CaseActivityDialogActivity } from "@/components/case-activities";
 import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { SortableTableHead } from "@/components/sortable-table-head";
+import { SummaryTile } from "@/components/summary-tile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -252,12 +254,12 @@ function ActivitiesList() {
       />
 
       <div className="mb-4 grid gap-3 md:grid-cols-3">
-        <SummaryTile label="Compensi" value={totals.fees} />
-        <SummaryTile label="Rimborsi spese" value={totals.reimbursements} />
-        <SummaryTile label="Da fatturare" value={totals.toInvoice} />
+        <SummaryTile label="Compensi" value={formatCurrency(totals.fees)} />
+        <SummaryTile label="Rimborsi spese" value={formatCurrency(totals.reimbursements)} />
+        <SummaryTile label="Da fatturare" value={formatCurrency(totals.toInvoice)} tone="gold" />
       </div>
 
-      <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
+      <ListToolbar>
         <div className="relative max-w-md flex-1">
           <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
@@ -313,7 +315,7 @@ function ActivitiesList() {
             <SelectItem value="missing">Senza allegato</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </ListToolbar>
 
       <div className="mb-4 md:hidden">
         <MobileSortSelect columns={attivitaColumns} sort={sort} onSort={setSort} />
@@ -600,15 +602,6 @@ function ActivitiesList() {
         </Table>
       </Card>
     </>
-  );
-}
-
-function SummaryTile({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-md border border-border p-3">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="text-lg font-semibold">{formatCurrency(value)}</p>
-    </div>
   );
 }
 

@@ -5,9 +5,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { FileDown, FileText, Plus, Search } from "lucide-react";
 import { toast } from "sonner";
 import { AppLayout } from "@/components/app-layout";
+import { ListToolbar } from "@/components/list-toolbar";
 import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { PageHeader } from "@/components/page-header";
 import { SortableTableHead } from "@/components/sortable-table-head";
+import { SummaryTile } from "@/components/summary-tile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -104,7 +106,7 @@ const fattureColumns: readonly SortableColumn<InvoiceListRow, FattureSortKey>[] 
   },
   {
     key: "period",
-    label: "Trimestre",
+    label: "Periodo",
     valueType: "date",
     defaultDirection: "desc",
     getValue: (invoice) => invoice.billing_run?.period_start ?? "",
@@ -442,30 +444,15 @@ function InvoicesIndex() {
         }
       />
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-xs text-muted-foreground">Totale documenti</div>
-            <div className="text-2xl font-semibold">{formatCurrency(totals.total)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-xs text-muted-foreground">Netto a pagare</div>
-            <div className="text-2xl font-semibold">{formatCurrency(totals.net)}</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="text-xs text-muted-foreground">Incassato (pagate)</div>
-            <div className="text-2xl font-semibold">{formatCurrency(totals.paid)}</div>
-          </CardContent>
-        </Card>
+      <div className="mb-6 grid gap-3 sm:grid-cols-3">
+        <SummaryTile label="Totale documenti" value={formatCurrency(totals.total)} />
+        <SummaryTile label="Netto a pagare" value={formatCurrency(totals.net)} tone="gold" />
+        <SummaryTile label="Incassato (pagate)" value={formatCurrency(totals.paid)} />
       </div>
 
       <Card>
         <CardContent className="space-y-4 pt-6">
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <ListToolbar className="mb-0 gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
@@ -527,7 +514,7 @@ function InvoicesIndex() {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </ListToolbar>
 
           <div className="flex flex-col gap-3 border-t pt-4 lg:flex-row lg:items-end lg:justify-between">
             <div className="grid gap-3 sm:grid-cols-2">
@@ -659,7 +646,7 @@ function InvoicesIndex() {
                         <dd className="text-right">{formatDate(i.issue_date)}</dd>
                       </div>
                       <div className="flex min-w-0 justify-between gap-3">
-                        <dt>Trimestre</dt>
+                        <dt>Periodo</dt>
                         <dd className="text-right">{invoicePeriodLabel(i.billing_run)}</dd>
                       </div>
                       <div className="flex min-w-0 justify-between gap-3">
@@ -707,7 +694,7 @@ function InvoicesIndex() {
                   />
                   <SortableTableHead
                     columnKey="period"
-                    label="Trimestre"
+                    label="Periodo"
                     sort={sort}
                     onSort={setSort}
                   />
