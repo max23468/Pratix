@@ -320,6 +320,7 @@ describe("InvoiceForm", () => {
   });
 
   it("crea una fattura emessa con attività incluse, rinviate e regole fiscali aggiornate", async () => {
+    const invoiceYear = new Date().getFullYear();
     render(<InvoiceForm />, { wrapper: Wrapper });
 
     await screen.findByText("Banca Test");
@@ -333,7 +334,8 @@ describe("InvoiceForm", () => {
     await userEvent.type(screen.getByLabelText("Percentuale spese generali (%)"), "12");
     await userEvent.clear(screen.getByLabelText("IVA (%)"));
     await userEvent.type(screen.getByLabelText("IVA (%)"), "10");
-    await userEvent.selectOptions(screen.getAllByRole("combobox")[2], "postponed");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[2], `${invoiceYear}-Q1`);
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[4], "postponed");
     await userEvent.type(
       screen.getByPlaceholderText("Note interne o descrizione da riportare in fattura"),
       "Note fattura",
@@ -345,6 +347,8 @@ describe("InvoiceForm", () => {
       expect.objectContaining({
         data: expect.objectContaining({
           principalId: "principal-1",
+          periodStart: `${invoiceYear}-01-01`,
+          periodEnd: `${invoiceYear}-03-31`,
           status: "issued",
           includeGeneralExpenses: true,
           generalExpensesRate: 12,
