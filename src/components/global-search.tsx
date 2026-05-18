@@ -1,6 +1,18 @@
 import { useDeferredValue, useEffect, useMemo, useState, type ComponentType } from "react";
 import { useNavigate } from "@tanstack/react-router";
-import { Briefcase, FileText, ListChecks, Plus, Receipt, Search, User } from "lucide-react";
+import {
+  AlertTriangle,
+  Briefcase,
+  Building2,
+  FileText,
+  FileWarning,
+  GitCompareArrows,
+  ListChecks,
+  Receipt,
+  Search,
+  User,
+  UserRoundSearch,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +26,14 @@ import {
 } from "@/components/ui/command";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { clientDisplayName, invoiceStatusLabels, type ClientDisplayData } from "@/lib/labels";
+import {
+  clientDisplayName,
+  counterpartyDisplayName,
+  invoiceStatusLabels,
+  priceItemKindLabels,
+  type ClientDisplayData,
+  type CounterpartyDisplayData,
+} from "@/lib/labels";
 import { formatCurrency } from "@/lib/format";
 import { routeRef } from "@/lib/public-route-code";
 
@@ -35,6 +54,27 @@ type SearchResult =
     }
   | {
       id: string;
+      kind: "principal";
+      title: string;
+      subtitle: string;
+      principalRef: string;
+    }
+  | {
+      id: string;
+      kind: "counterparty";
+      title: string;
+      subtitle: string;
+      counterpartyRef: string;
+    }
+  | {
+      id: string;
+      kind: "activity";
+      title: string;
+      subtitle: string;
+      query: string;
+    }
+  | {
+      id: string;
       kind: "invoice";
       title: string;
       subtitle: string;
@@ -45,7 +85,16 @@ type QuickAction = {
   id: string;
   title: string;
   subtitle: string;
-  action: "new-case" | "new-client" | "new-invoice" | "activities";
+  action:
+    | "new-case"
+    | "new-principal"
+    | "new-client"
+    | "new-counterparty"
+    | "new-invoice"
+    | "activities"
+    | "overdue-invoices"
+    | "missing-attachments"
+    | "duplicate-control";
   icon: ComponentType<{ className?: string; strokeWidth?: number }>;
 };
 
@@ -58,11 +107,25 @@ const QUICK_ACTIONS: QuickAction[] = [
     icon: Briefcase,
   },
   {
+    id: "new-principal",
+    title: "Nuovo committente",
+    subtitle: "Aggiungi chi affida l'incarico",
+    action: "new-principal",
+    icon: Building2,
+  },
+  {
     id: "new-client",
     title: "Nuovo cliente",
     subtitle: "Aggiungi anagrafica cliente",
     action: "new-client",
     icon: User,
+  },
+  {
+    id: "new-counterparty",
+    title: "Nuova controparte",
+    subtitle: "Crea persona, società o gruppo",
+    action: "new-counterparty",
+    icon: UserRoundSearch,
   },
   {
     id: "new-invoice",
@@ -77,6 +140,27 @@ const QUICK_ACTIONS: QuickAction[] = [
     subtitle: "Controlla compensi e rimborsi",
     action: "activities",
     icon: ListChecks,
+  },
+  {
+    id: "overdue-invoices",
+    title: "Fatture scadute",
+    subtitle: "Apri le fatture da sollecitare",
+    action: "overdue-invoices",
+    icon: AlertTriangle,
+  },
+  {
+    id: "missing-attachments",
+    title: "Rimborsi senza allegato",
+    subtitle: "Controlla le attività da completare",
+    action: "missing-attachments",
+    icon: FileWarning,
+  },
+  {
+    id: "duplicate-control",
+    title: "Controllo duplicati",
+    subtitle: "Rivedi dati operativi simili",
+    action: "duplicate-control",
+    icon: GitCompareArrows,
   },
 ];
 
@@ -139,6 +223,23 @@ export function GlobalSearch() {
         .select("id, public_code, kind, first_name, last_name, business_name, created_at")
         .order("created_at", { ascending: false })
         .limit(6);
+      const principalQuery = supabase
+        .from("principals")
+        .select("id, public_code, business_name, email, pec, vat_number, created_at")
+        .order("created_at", { ascending: false })
+        .limit(6);
+      const counterpartyQuery = supabase
+        .from("counterparties")
+        .select("id, public_code, kind, first_name, last_name, business_name, notes, updated_at")
+        .order("updated_at", { ascending: false })
+        .limit(6);
+      const activityQuery = supabase
+        .from("case_activities")
+        .select(
+          "id, activity_date, kind, status, description, snapshot_price_name, amount, cases(id, public_code, practice_number, title)",
+        )
+        .order("activity_date", { ascending: false })
+        .limit(6);
       const invoiceQuery = supabase
         .from("invoices")
         .select(
@@ -152,17 +253,31 @@ export function GlobalSearch() {
         clientQuery.or(
           `first_name.ilike.${likeTerm},last_name.ilike.${likeTerm},business_name.ilike.${likeTerm}`,
         );
+        principalQuery.or(
+          `business_name.ilike.${likeTerm},email.ilike.${likeTerm},pec.ilike.${likeTerm},vat_number.ilike.${likeTerm}`,
+        );
+        counterpartyQuery.or(
+          `first_name.ilike.${likeTerm},last_name.ilike.${likeTerm},business_name.ilike.${likeTerm},notes.ilike.${likeTerm}`,
+        );
+        activityQuery.or(`description.ilike.${likeTerm},snapshot_price_name.ilike.${likeTerm}`);
         invoiceQuery.ilike("number", likeTerm);
       }
 
-      const [casesRes, clientsRes, invoicesRes] = await Promise.all([
-        caseQuery,
-        clientQuery,
-        invoiceQuery,
-      ]);
+      const [casesRes, clientsRes, principalsRes, counterpartiesRes, activitiesRes, invoicesRes] =
+        await Promise.all([
+          caseQuery,
+          clientQuery,
+          principalQuery,
+          counterpartyQuery,
+          activityQuery,
+          invoiceQuery,
+        ]);
 
       if (casesRes.error) throw casesRes.error;
       if (clientsRes.error) throw clientsRes.error;
+      if (principalsRes.error) throw principalsRes.error;
+      if (counterpartiesRes.error) throw counterpartiesRes.error;
+      if (activitiesRes.error) throw activitiesRes.error;
       if (invoicesRes.error) throw invoicesRes.error;
 
       const cases: SearchResult[] = (casesRes.data ?? []).map((item) => ({
@@ -181,6 +296,32 @@ export function GlobalSearch() {
         clientRef: routeRef(item),
       }));
 
+      const principals: SearchResult[] = (principalsRes.data ?? []).map((item) => ({
+        id: `principal-${item.id}`,
+        kind: "principal",
+        title: item.business_name,
+        subtitle: "Committente",
+        principalRef: routeRef(item),
+      }));
+
+      const counterparties: SearchResult[] = (counterpartiesRes.data ?? []).map((item) => ({
+        id: `counterparty-${item.id}`,
+        kind: "counterparty",
+        title: counterpartyDisplayName(item as CounterpartyDisplayData),
+        subtitle: "Controparte",
+        counterpartyRef: routeRef(item),
+      }));
+
+      const activities: SearchResult[] = (activitiesRes.data ?? []).map((item) => ({
+        id: `activity-${item.id}`,
+        kind: "activity",
+        title: item.description,
+        subtitle: `${priceItemKindLabels[item.kind] ?? item.kind} · ${
+          item.cases ? `Pratica ${item.cases.practice_number}` : "Pratica non disponibile"
+        } · ${formatCurrency(Number(item.amount))}`,
+        query: item.description,
+      }));
+
       const invoices: SearchResult[] = (invoicesRes.data ?? []).map((item) => {
         const billedName =
           item.principal?.business_name || clientDisplayName(item.client as ClientDisplayData);
@@ -193,7 +334,7 @@ export function GlobalSearch() {
         };
       });
 
-      return [...cases, ...clients, ...invoices];
+      return [...cases, ...principals, ...clients, ...counterparties, ...activities, ...invoices];
     },
     staleTime: 20_000,
   });
@@ -201,7 +342,10 @@ export function GlobalSearch() {
   const groupedResults = useMemo(
     () => ({
       cases: results.filter((result) => result.kind === "case"),
+      principals: results.filter((result) => result.kind === "principal"),
       clients: results.filter((result) => result.kind === "client"),
+      counterparties: results.filter((result) => result.kind === "counterparty"),
+      activities: results.filter((result) => result.kind === "activity"),
       invoices: results.filter((result) => result.kind === "invoice"),
     }),
     [results],
@@ -210,9 +354,23 @@ export function GlobalSearch() {
   const runQuickAction = (action: QuickAction["action"]) => {
     setOpen(false);
     if (action === "new-case") navigate({ to: "/pratiche/nuova" });
+    if (action === "new-principal") navigate({ to: "/committenti/nuovo" });
     if (action === "new-client") navigate({ to: "/clienti/nuovo" });
+    if (action === "new-counterparty") navigate({ to: "/controparti/nuova" });
     if (action === "new-invoice") navigate({ to: "/fatture/nuova" });
     if (action === "activities") navigate({ to: "/attivita" });
+    if (action === "overdue-invoices") navigate({ to: "/fatture", search: { status: "expired" } });
+    if (action === "missing-attachments") {
+      navigate({
+        to: "/attivita",
+        search: {
+          status: "to_invoice",
+          kind: "expense_reimbursement",
+          attachments: "missing",
+        },
+      });
+    }
+    if (action === "duplicate-control") navigate({ to: "/controllo-duplicati" });
   };
 
   const openResult = (result: SearchResult) => {
@@ -222,6 +380,18 @@ export function GlobalSearch() {
     }
     if (result.kind === "client") {
       navigate({ to: "/clienti/$clientId", params: { clientId: result.clientRef } });
+    }
+    if (result.kind === "principal") {
+      navigate({ to: "/committenti/$principalId", params: { principalId: result.principalRef } });
+    }
+    if (result.kind === "counterparty") {
+      navigate({
+        to: "/controparti/$counterpartyId",
+        params: { counterpartyId: result.counterpartyRef },
+      });
+    }
+    if (result.kind === "activity") {
+      navigate({ to: "/attivita", search: { q: result.query } });
     }
     if (result.kind === "invoice") {
       navigate({ to: "/fatture/$invoiceId", params: { invoiceId: result.invoiceRef } });
@@ -253,7 +423,7 @@ export function GlobalSearch() {
 
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput
-          placeholder="Cerca pratiche, clienti o fatture"
+          placeholder="Cerca pratiche, committenti, clienti, controparti, attività o fatture"
           value={search}
           onValueChange={setSearch}
         />
@@ -279,7 +449,10 @@ export function GlobalSearch() {
           </CommandGroup>
 
           {(groupedResults.cases.length > 0 ||
+            groupedResults.principals.length > 0 ||
             groupedResults.clients.length > 0 ||
+            groupedResults.counterparties.length > 0 ||
+            groupedResults.activities.length > 0 ||
             groupedResults.invoices.length > 0) && <CommandSeparator />}
 
           <ResultGroup
@@ -289,9 +462,27 @@ export function GlobalSearch() {
             onSelect={openResult}
           />
           <ResultGroup
+            heading="Committenti"
+            icon={Building2}
+            results={groupedResults.principals}
+            onSelect={openResult}
+          />
+          <ResultGroup
             heading="Clienti"
             icon={User}
             results={groupedResults.clients}
+            onSelect={openResult}
+          />
+          <ResultGroup
+            heading="Controparti"
+            icon={UserRoundSearch}
+            results={groupedResults.counterparties}
+            onSelect={openResult}
+          />
+          <ResultGroup
+            heading="Attività"
+            icon={ListChecks}
+            results={groupedResults.activities}
             onSelect={openResult}
           />
           <ResultGroup

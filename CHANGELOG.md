@@ -6,15 +6,29 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
-### Non versionato
+## [1.9.0] — 2026-05-18
 
-- **Istruzioni agenti**: rafforzata la pulizia post-pubblicazione includendo controllo e rimozione dei worktree temporanei, oltre ai branch locali e remoti.
+### Novità
+
+- **Dashboard**: aggiunta una coda di lavoro prescrittiva che ordina le pratiche per priorità operativa, motivo e prossima azione consigliata.
+- **Pratiche**: la lista mostra per ogni riga stato operativo, priorità e prossima azione calcolati dal workflow recupero crediti.
+- **Ricerca globale**: estesa la command palette a Committenti, Controparti e Attività, con azioni rapide verso fatture scadute, rimborsi senza allegato e Controllo duplicati.
+
+### Sotto il cofano
+
+- **Creazione guidata**: rimossa la route legacy `/import-archivio`, lasciando `/creazione-guidata` come unico percorso del flusso manuale.
 
 ## [1.8.2] — 2026-05-18
 
 ### Correzioni
 
 - **Dashboard**: rese cliccabili le otto card operative, con collegamenti diretti alle viste di Pratiche, Attività e Fatture coerenti con il dato mostrato.
+
+## [Non versionato] — 2026-05-18
+
+### Non versionato
+
+- **Istruzioni agenti**: rafforzata la pulizia post-pubblicazione includendo controllo e rimozione dei worktree temporanei, oltre ai branch locali e remoti.
 
 ## [1.8.1] — 2026-05-18
 
@@ -959,6 +973,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.9.0]: #190--2026-05-18
 [1.8.2]: #182--2026-05-18
 [1.8.1]: #181--2026-05-18
 [1.8.0]: #180--2026-05-18

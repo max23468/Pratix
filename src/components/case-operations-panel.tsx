@@ -32,7 +32,12 @@ import {
   type CaseTimelineParty,
   type CaseTimelineTransfer as TransferRow,
 } from "@/lib/case-timeline";
-import { buildDebtCollectionWorkflow, summarizeCaseOperations } from "@/lib/case-workflow";
+import {
+  buildCaseWorkflowQualityChecks,
+  buildDebtCollectionWorkflow,
+  formatCaseWorkflowPriorityLabel,
+  summarizeCaseOperations,
+} from "@/lib/case-workflow";
 import { formatCurrency, formatDate } from "@/lib/format";
 import {
   caseActivityStatusLabels,
@@ -110,7 +115,7 @@ export function CaseOperationsPanel({
     [activities, invoices],
   );
   const qualityChecks = useMemo(
-    () => buildQualityChecks({ caseRow, activities, invoices, totals }),
+    () => buildCaseWorkflowQualityChecks({ caseRow, activities, invoices, totals }),
     [activities, caseRow, invoices, totals],
   );
   const timeline = useMemo(
@@ -599,100 +604,12 @@ function buildDossierInput({
   };
 }
 
-function buildQualityChecks({
-  caseRow,
-  activities,
-  invoices,
-  totals,
-}: {
-  caseRow: CaseOperationsCase;
-  activities: ActivityRow[];
-  invoices: InvoiceRow[];
-  totals: ReturnType<typeof summarizeCaseOperations>;
-}) {
-  const checks: Array<{
-    id: string;
-    severity: "warning" | "ok";
-    title: string;
-    description: string;
-  }> = [];
-
-  if (!caseRow.principal_id) {
-    checks.push({
-      id: "missing-principal",
-      severity: "warning",
-      title: "Committente mancante",
-      description: "Completa il soggetto fatturato prima di preparare nuove Fatture.",
-    });
-  }
-  if (!caseRow.client_id) {
-    checks.push({
-      id: "missing-client",
-      severity: "warning",
-      title: "Cliente mancante",
-      description: "Completa il Cliente per mantenere coerente la pratica.",
-    });
-  }
-  if (!caseRow.counterparty_id) {
-    checks.push({
-      id: "missing-counterparty",
-      severity: "warning",
-      title: "Controparte mancante",
-      description: "Aggiungi la Controparte per rendere completo il dossier.",
-    });
-  }
-  if (activities.length === 0) {
-    checks.push({
-      id: "missing-activities",
-      severity: "warning",
-      title: "Nessuna Attività",
-      description: "Registra almeno un Compenso o Rimborso spese se la pratica ha lavoro storico.",
-    });
-  }
-  if (totals.toInvoice > 0) {
-    checks.push({
-      id: "to-invoice",
-      severity: "warning",
-      title: "Attività da fatturare",
-      description: `${formatCurrency(totals.toInvoice)} non ancora collegati a una Fattura.`,
-    });
-  }
-  if (totals.activitiesWithoutAttachments > 0) {
-    checks.push({
-      id: "missing-attachments",
-      severity: "warning",
-      title: "Attività senza allegati",
-      description: `${totals.activitiesWithoutAttachments} Attività non hanno allegati collegati.`,
-    });
-  }
-  const draftInvoices = invoices.filter((invoice) => invoice.status === "draft").length;
-  if (draftInvoices > 0) {
-    checks.push({
-      id: "draft-invoices",
-      severity: "warning",
-      title: "Fatture in bozza",
-      description: `${draftInvoices} Fatture sono ancora da completare o emettere.`,
-    });
-  }
-
-  if (checks.length === 0) {
-    checks.push({
-      id: "ok",
-      severity: "ok",
-      title: "Dati principali completi",
-      description: "La pratica non presenta avvisi operativi immediati.",
-    });
-  }
-
-  return checks;
-}
-
 export function WorkflowPriorityBadge({
   workflow,
 }: {
   workflow: ReturnType<typeof buildDebtCollectionWorkflow>;
 }) {
-  const priorityLabel = formatPriorityLabel(workflow.priority);
+  const priorityLabel = formatCaseWorkflowPriorityLabel(workflow.priority);
 
   if (!workflow.priorityInsight) {
     return <Badge variant={workflow.priorityVariant}>{priorityLabel}</Badge>;
@@ -729,13 +646,6 @@ export function WorkflowPriorityBadge({
       </PopoverContent>
     </Popover>
   );
-}
-
-function formatPriorityLabel(priority: string) {
-  if (priority === "Alta") return "Richiede intervento";
-  if (priority === "Media") return "Da monitorare";
-  if (priority === "Ordinaria") return "Regolare";
-  return priority;
 }
 
 function OperationMetric({ label, value }: { label: string; value: string }) {

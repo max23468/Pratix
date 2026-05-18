@@ -17,7 +17,6 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as NovitaRouteImport } from './routes/novita'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ImpostazioniRouteImport } from './routes/impostazioni'
-import { Route as ImportArchivioRouteImport } from './routes/import-archivio'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CreazioneGuidataRouteImport } from './routes/creazione-guidata'
 import { Route as ControlloDuplicatiRouteImport } from './routes/controllo-duplicati'
@@ -82,11 +81,6 @@ const LoginRoute = LoginRouteImport.update({
 const ImpostazioniRoute = ImpostazioniRouteImport.update({
   id: '/impostazioni',
   path: '/impostazioni',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ImportArchivioRoute = ImportArchivioRouteImport.update({
-  id: '/import-archivio',
-  path: '/import-archivio',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRoute = DashboardRouteImport.update({
@@ -222,7 +216,6 @@ export interface FileRoutesByFullPath {
   '/controllo-duplicati': typeof ControlloDuplicatiRoute
   '/creazione-guidata': typeof CreazioneGuidataRoute
   '/dashboard': typeof DashboardRoute
-  '/import-archivio': typeof ImportArchivioRoute
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/novita': typeof NovitaRoute
@@ -258,7 +251,6 @@ export interface FileRoutesByTo {
   '/controllo-duplicati': typeof ControlloDuplicatiRoute
   '/creazione-guidata': typeof CreazioneGuidataRoute
   '/dashboard': typeof DashboardRoute
-  '/import-archivio': typeof ImportArchivioRoute
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/novita': typeof NovitaRoute
@@ -295,7 +287,6 @@ export interface FileRoutesById {
   '/controllo-duplicati': typeof ControlloDuplicatiRoute
   '/creazione-guidata': typeof CreazioneGuidataRoute
   '/dashboard': typeof DashboardRoute
-  '/import-archivio': typeof ImportArchivioRoute
   '/impostazioni': typeof ImpostazioniRoute
   '/login': typeof LoginRoute
   '/novita': typeof NovitaRoute
@@ -333,7 +324,6 @@ export interface FileRouteTypes {
     | '/controllo-duplicati'
     | '/creazione-guidata'
     | '/dashboard'
-    | '/import-archivio'
     | '/impostazioni'
     | '/login'
     | '/novita'
@@ -369,7 +359,6 @@ export interface FileRouteTypes {
     | '/controllo-duplicati'
     | '/creazione-guidata'
     | '/dashboard'
-    | '/import-archivio'
     | '/impostazioni'
     | '/login'
     | '/novita'
@@ -405,7 +394,6 @@ export interface FileRouteTypes {
     | '/controllo-duplicati'
     | '/creazione-guidata'
     | '/dashboard'
-    | '/import-archivio'
     | '/impostazioni'
     | '/login'
     | '/novita'
@@ -442,7 +430,6 @@ export interface RootRouteChildren {
   ControlloDuplicatiRoute: typeof ControlloDuplicatiRoute
   CreazioneGuidataRoute: typeof CreazioneGuidataRoute
   DashboardRoute: typeof DashboardRoute
-  ImportArchivioRoute: typeof ImportArchivioRoute
   ImpostazioniRoute: typeof ImpostazioniRoute
   LoginRoute: typeof LoginRoute
   NovitaRoute: typeof NovitaRoute
@@ -529,13 +516,6 @@ declare module '@tanstack/react-router' {
       path: '/impostazioni'
       fullPath: '/impostazioni'
       preLoaderRoute: typeof ImpostazioniRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/import-archivio': {
-      id: '/import-archivio'
-      path: '/import-archivio'
-      fullPath: '/import-archivio'
-      preLoaderRoute: typeof ImportArchivioRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -722,7 +702,6 @@ const rootRouteChildren: RootRouteChildren = {
   ControlloDuplicatiRoute: ControlloDuplicatiRoute,
   CreazioneGuidataRoute: CreazioneGuidataRoute,
   DashboardRoute: DashboardRoute,
-  ImportArchivioRoute: ImportArchivioRoute,
   ImpostazioniRoute: ImpostazioniRoute,
   LoginRoute: LoginRoute,
   NovitaRoute: NovitaRoute,
