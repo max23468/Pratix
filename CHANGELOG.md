@@ -9,6 +9,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 ### Non versionato
 
 - **Verifiche agenti**: chiarita la scelta proporzionata dei controlli, con smoke WebKit/a11y completo solo per UI sostanziale, routing, flussi critici, release o publish.
+- **Pubblicazione**: aggiunto `npm run publish:prepare` per preparare il giro di pubblicazione con stato Git, dipendenze del worktree, changelog e verifiche proporzionate al diff.
 
 ## [1.7.6] — 2026-05-17
 
