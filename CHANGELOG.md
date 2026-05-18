@@ -10,6 +10,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 - **Verifiche agenti**: chiarita la scelta proporzionata dei controlli, con smoke WebKit/a11y completo solo per UI sostanziale, routing, flussi critici, release o publish.
 
+## [1.8.0] — 2026-05-18
+
+### Novità
+
+- **Fatture**: il periodo della fattura può essere impostato per trimestre oppure con date personalizzate.
+- **Fatture**: la lista mostra il trimestre o il periodo personalizzato associato a ogni fattura.
+
 ## [1.7.6] — 2026-05-17
 
 ### Correzioni
@@ -929,6 +936,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.8.0]: #180--2026-05-18
 [1.7.6]: #176--2026-05-17
 [1.7.5]: #175--2026-05-17
 [1.7.4]: #174--2026-05-17

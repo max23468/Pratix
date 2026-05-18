@@ -30,6 +30,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { computeInvoice, type InvoiceLineInput } from "@/lib/invoice-calc";
 import { formatCurrency, formatDate } from "@/lib/format";
+import {
+  buildQuarterOptions,
+  currentQuarterOption,
+  quarterKeyForPeriod,
+  quarterOption,
+  todayDateInput,
+} from "@/lib/invoice-period";
 import { counterpartyDisplayName, clientDisplayName } from "@/lib/labels";
 import { publicCodeLookup } from "@/lib/public-route-code";
 import { readServerResult } from "@/lib/server-functions";
@@ -37,6 +44,7 @@ import { useSubmitLock } from "@/lib/submit-lock";
 import { createBillingInvoiceFn, updateDraftBillingInvoiceFn } from "@/server/invoices.functions";
 
 type BillingItemStatus = "included" | "postponed" | "excluded";
+type PeriodMode = "quarter" | "custom";
 
 const EMPTY_ACTIVITIES: ActivityRow[] = [];
 
@@ -106,19 +114,6 @@ type ActivityRow = {
   } | null;
 };
 
-const today = () => new Date().toISOString().slice(0, 10);
-
-const currentQuarter = () => {
-  const now = new Date();
-  const quarterStartMonth = Math.floor(now.getMonth() / 3) * 3;
-  const start = new Date(now.getFullYear(), quarterStartMonth, 1);
-  const end = new Date(now.getFullYear(), quarterStartMonth + 3, 0);
-  return {
-    start: start.toISOString().slice(0, 10),
-    end: end.toISOString().slice(0, 10),
-  };
-};
-
 const billingStatusLabels: Record<BillingItemStatus, string> = {
   included: "Includi",
   postponed: "Rinvia",
@@ -131,12 +126,15 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
   const createBillingInvoice = useServerFn(createBillingInvoiceFn);
   const updateDraftBillingInvoice = useServerFn(updateDraftBillingInvoiceFn);
   const qc = useQueryClient();
-  const quarter = useMemo(() => currentQuarter(), []);
+  const initialQuarter = useMemo(() => currentQuarterOption(), []);
+  const quarterOptions = useMemo(() => buildQuarterOptions(), []);
   const isEditingDraft = Boolean(draftInvoiceRef);
   const [principalId, setPrincipalId] = useState("");
-  const [periodStart, setPeriodStart] = useState(quarter.start);
-  const [periodEnd, setPeriodEnd] = useState(quarter.end);
-  const [issueDate, setIssueDate] = useState(() => today());
+  const [periodMode, setPeriodMode] = useState<PeriodMode>("quarter");
+  const [selectedQuarter, setSelectedQuarter] = useState(initialQuarter.key);
+  const [periodStart, setPeriodStart] = useState(initialQuarter.start);
+  const [periodEnd, setPeriodEnd] = useState(initialQuarter.end);
+  const [issueDate, setIssueDate] = useState(() => todayDateInput());
   const [dueDate, setDueDate] = useState("");
   const [pendingInvoiceStatus, setPendingInvoiceStatus] = useState<"draft" | "issued" | null>(null);
   const [includeGeneralExpenses, setIncludeGeneralExpenses] = useState(true);
@@ -182,6 +180,24 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
 
   const selectedPrincipal = principals.find((principal) => principal.id === principalId) ?? null;
   const includeStampDuty = Boolean(profile?.include_stamp_duty);
+  const displayedQuarterOptions = useMemo(() => {
+    if (quarterOptions.some((option) => option.key === selectedQuarter)) return quarterOptions;
+    const [yearPart, quarterPart] = selectedQuarter.split("-Q");
+    const year = Number(yearPart);
+    const quarterNumber = Number(quarterPart);
+    if (!year || !quarterNumber) return quarterOptions;
+    return [quarterOption(year, quarterNumber), ...quarterOptions];
+  }, [quarterOptions, selectedQuarter]);
+
+  const applyQuarter = (quarterKey: string) => {
+    const option =
+      displayedQuarterOptions.find((item) => item.key === quarterKey) ??
+      quarterOptions.find((item) => item.key === quarterKey);
+    if (!option) return;
+    setSelectedQuarter(option.key);
+    setPeriodStart(option.start);
+    setPeriodEnd(option.end);
+  };
 
   const {
     data: draftData,
@@ -259,6 +275,12 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
     setPrincipalId(draftData.invoice.principal_id ?? "");
     setPeriodStart(draftData.billingRun.period_start);
     setPeriodEnd(draftData.billingRun.period_end);
+    const draftQuarterKey = quarterKeyForPeriod(
+      draftData.billingRun.period_start,
+      draftData.billingRun.period_end,
+    );
+    setPeriodMode(draftQuarterKey ? "quarter" : "custom");
+    if (draftQuarterKey) setSelectedQuarter(draftQuarterKey);
     setIssueDate(draftData.invoice.issue_date);
     setDueDate(draftData.invoice.due_date ?? "");
     setIncludeGeneralExpenses(draftData.invoice.include_general_expenses);
@@ -527,24 +549,73 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
               </Select>
             </div>
 
-            <DateField
-              id="period_start"
-              label="Da"
-              value={periodStart}
-              onChange={(value) => {
-                markDirty();
-                setPeriodStart(value);
-              }}
-            />
-            <DateField
-              id="period_end"
-              label="A"
-              value={periodEnd}
-              onChange={(value) => {
-                markDirty();
-                setPeriodEnd(value);
-              }}
-            />
+            <div className="flex flex-col gap-2">
+              <Label htmlFor="period_mode">Periodo fattura</Label>
+              <Select
+                value={periodMode}
+                onValueChange={(value) => {
+                  markDirty();
+                  const nextMode = value as PeriodMode;
+                  setPeriodMode(nextMode);
+                  if (nextMode === "quarter") {
+                    applyQuarter(quarterKeyForPeriod(periodStart, periodEnd) ?? selectedQuarter);
+                  }
+                }}
+              >
+                <SelectTrigger id="period_mode">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="quarter">Trimestre</SelectItem>
+                  <SelectItem value="custom">Date personalizzate</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {periodMode === "quarter" ? (
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="period_quarter">Trimestre</Label>
+                <Select
+                  value={selectedQuarter}
+                  onValueChange={(value) => {
+                    markDirty();
+                    applyQuarter(value);
+                  }}
+                >
+                  <SelectTrigger id="period_quarter">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {displayedQuarterOptions.map((option) => (
+                      <SelectItem key={option.key} value={option.key}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <>
+                <DateField
+                  id="period_start"
+                  label="Da"
+                  value={periodStart}
+                  onChange={(value) => {
+                    markDirty();
+                    setPeriodStart(value);
+                  }}
+                />
+                <DateField
+                  id="period_end"
+                  label="A"
+                  value={periodEnd}
+                  onChange={(value) => {
+                    markDirty();
+                    setPeriodEnd(value);
+                  }}
+                />
+              </>
+            )}
             <DateField
               id="issue_date"
               label="Data fattura"

@@ -39,6 +39,7 @@ import {
   type ClientDisplayData,
 } from "@/lib/labels";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { invoicePeriodLabel } from "@/lib/invoice-period";
 import { routeRef } from "@/lib/public-route-code";
 import { readServerResult } from "@/lib/server-functions";
 import {
@@ -65,6 +66,7 @@ type InvoiceListRow = {
   status: string;
   total_amount: number;
   net_to_pay: number;
+  billing_run: { period_start: string; period_end: string } | null;
   client: ClientDisplayData | null;
   principal: { id: string; business_name: string } | null;
 };
@@ -79,6 +81,7 @@ const ZIP_MIME_TYPE = "application/zip";
 const fattureSortKeys = [
   "number",
   "issue_date",
+  "period",
   "principal",
   "due_date",
   "status",
@@ -98,6 +101,13 @@ const fattureColumns: readonly SortableColumn<InvoiceListRow, FattureSortKey>[] 
     valueType: "date",
     defaultDirection: "desc",
     getValue: (invoice) => invoice.issue_date,
+  },
+  {
+    key: "period",
+    label: "Trimestre",
+    valueType: "date",
+    defaultDirection: "desc",
+    getValue: (invoice) => invoice.billing_run?.period_start ?? "",
   },
   {
     key: "principal",
@@ -207,7 +217,7 @@ function InvoicesIndex() {
       const { data, error } = await supabase
         .from("invoices")
         .select(
-          "id, public_code, number, year, issue_date, due_date, status, total_amount, net_to_pay, client:clients(id, kind, first_name, last_name, business_name), principal:principals(id, business_name)",
+          "id, public_code, number, year, issue_date, due_date, status, total_amount, net_to_pay, billing_run:billing_runs(period_start, period_end), client:clients(id, kind, first_name, last_name, business_name), principal:principals(id, business_name)",
         )
         .order("issue_date", { ascending: false });
       if (error) throw error;
@@ -620,6 +630,10 @@ function InvoicesIndex() {
                         <dd className="text-right">{formatDate(i.issue_date)}</dd>
                       </div>
                       <div className="flex min-w-0 justify-between gap-3">
+                        <dt>Trimestre</dt>
+                        <dd className="text-right">{invoicePeriodLabel(i.billing_run)}</dd>
+                      </div>
+                      <div className="flex min-w-0 justify-between gap-3">
                         <dt>Scadenza</dt>
                         <dd
                           className={
@@ -663,6 +677,12 @@ function InvoicesIndex() {
                     onSort={setSort}
                   />
                   <SortableTableHead
+                    columnKey="period"
+                    label="Trimestre"
+                    sort={sort}
+                    onSort={setSort}
+                  />
+                  <SortableTableHead
                     columnKey="principal"
                     label="Committente"
                     sort={sort}
@@ -701,14 +721,14 @@ function InvoicesIndex() {
               <TableBody>
                 {isLoading && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="text-center text-muted-foreground">
                       Caricamento…
                     </TableCell>
                   </TableRow>
                 )}
                 {!isLoading && sorted.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="py-10 text-center text-muted-foreground">
+                    <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
                       <TableEmptyState
                         title={hasInvoiceFilters ? "Nessuna fattura trovata" : "Nessuna fattura"}
                         description={
@@ -753,6 +773,7 @@ function InvoicesIndex() {
                         </Link>
                       </TableCell>
                       <TableCell>{formatDate(i.issue_date)}</TableCell>
+                      <TableCell>{invoicePeriodLabel(i.billing_run)}</TableCell>
                       <TableCell>
                         {i.principal?.business_name ||
                           clientDisplayName(i.client as ClientDisplayData)}
