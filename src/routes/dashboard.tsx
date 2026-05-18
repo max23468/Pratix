@@ -106,6 +106,32 @@ const CREATE_ACTIONS: Array<{
 
 type DuplicateSummary = DuplicateSummaryResult;
 
+type DashboardStatCardProps = {
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  label: string;
+  value: string;
+  tone?: "default" | "danger" | "gold";
+} & (
+  | {
+      to: "/pratiche";
+      search?: { view?: "without_activities" | "to_complete" };
+    }
+  | {
+      to: "/attivita";
+      search?: {
+        status?: "to_invoice";
+        kind?: "expense_reimbursement";
+        attachments?: "missing";
+        sort?: "amount";
+        dir?: "desc";
+      };
+    }
+  | {
+      to: "/fatture";
+      search?: { status?: "draft" | "to_collect" | "expired" };
+    }
+);
+
 export const Route = createFileRoute("/dashboard")({
   head: () => ({
     meta: [
@@ -281,46 +307,62 @@ function DashboardContent() {
           icon={Briefcase}
           label="Pratiche senza attività"
           value={isLoading ? "—" : String(data?.casesWithoutActivities ?? 0)}
+          to="/pratiche"
+          search={{ view: "without_activities" }}
         />
         <StatCard
           icon={AlertTriangle}
           label="Pratiche da completare"
           value={isLoading ? "—" : String(data?.casesToComplete ?? 0)}
           tone={data && data.casesToComplete > 0 ? "danger" : "default"}
+          to="/pratiche"
+          search={{ view: "to_complete" }}
         />
         <StatCard
           icon={ListChecks}
           label="Attività da fatturare"
           value={isLoading ? "—" : String(data?.toInvoiceCount ?? 0)}
+          to="/attivita"
+          search={{ status: "to_invoice" }}
         />
         <StatCard
           icon={Receipt}
           label="Maturato da fatturare"
           value={isLoading ? "—" : formatCurrency(data?.toInvoiceAmount ?? 0)}
           tone="gold"
+          to="/attivita"
+          search={{ status: "to_invoice", sort: "amount", dir: "desc" }}
         />
         <StatCard
           icon={Receipt}
           label="Fatture in bozza"
           value={isLoading ? "—" : String(data?.draftInvoiceCount ?? 0)}
+          to="/fatture"
+          search={{ status: "draft" }}
         />
         <StatCard
           icon={Receipt}
           label="Fatture da incassare"
           value={isLoading ? "—" : formatCurrency(data?.invoicesToCollectAmount ?? 0)}
           tone="gold"
+          to="/fatture"
+          search={{ status: "to_collect" }}
         />
         <StatCard
           icon={AlertTriangle}
           label="Fatture scadute"
           value={isLoading ? "—" : String(data?.overdueInvoiceCount ?? 0)}
           tone={data && data.overdueInvoiceCount > 0 ? "danger" : "default"}
+          to="/fatture"
+          search={{ status: "expired" }}
         />
         <StatCard
           icon={FileWarning}
           label="Rimborsi senza allegato"
           value={isLoading ? "—" : String(data?.expenseWithoutAttachmentCount ?? 0)}
           tone={data && data.expenseWithoutAttachmentCount > 0 ? "danger" : "default"}
+          to="/attivita"
+          search={{ status: "to_invoice", kind: "expense_reimbursement", attachments: "missing" }}
         />
       </div>
 
@@ -608,12 +650,9 @@ function StatCard({
   label,
   value,
   tone = "default",
-}: {
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
-  label: string;
-  value: string;
-  tone?: "default" | "danger" | "gold";
-}) {
+  to,
+  search,
+}: DashboardStatCardProps) {
   const iconCls =
     tone === "danger"
       ? "bg-destructive/10 text-destructive"
@@ -621,8 +660,9 @@ function StatCard({
         ? "bg-brand-gold/10 text-brand-gold"
         : "bg-primary/5 text-primary";
   const valueCls = tone === "danger" ? "text-destructive" : "text-foreground";
-  return (
-    <Card className="border-border/70 shadow-soft">
+
+  const content = (
+    <Card className="h-full border-border/70 shadow-soft transition-colors group-hover:bg-accent/40">
       <CardContent className="flex min-h-[7rem] flex-col items-start gap-2 p-3 sm:min-h-0 sm:flex-row sm:items-center sm:gap-3 sm:p-4">
         <div
           className={`flex size-9 shrink-0 items-center justify-center rounded-lg sm:size-10 ${iconCls}`}
@@ -641,6 +681,32 @@ function StatCard({
         </div>
       </CardContent>
     </Card>
+  );
+
+  const className =
+    "group block h-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
+  const ariaLabel = `Apri ${label.toLowerCase()}`;
+
+  if (to === "/pratiche") {
+    return (
+      <Link to="/pratiche" search={search} aria-label={ariaLabel} className={className}>
+        {content}
+      </Link>
+    );
+  }
+
+  if (to === "/attivita") {
+    return (
+      <Link to="/attivita" search={search} aria-label={ariaLabel} className={className}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <Link to="/fatture" search={search} aria-label={ariaLabel} className={className}>
+      {content}
+    </Link>
   );
 }
 

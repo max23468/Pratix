@@ -70,6 +70,7 @@ export const Route = createFileRoute("/attivita/")({
     q: parseTextSearch(search.q),
     status: parseFilterValue(search.status, caseActivityStatusLabels),
     kind: parseFilterValue(search.kind, priceItemKindLabels),
+    attachments: parseAttachmentsSearch(search.attachments),
     sort: parseTableSortKey(search.sort, attivitaSortKeys),
     dir: parseTableSortDirection(search.dir),
   }),
@@ -98,6 +99,7 @@ type ActivitiesSearch = {
   q?: string;
   status?: string;
   kind?: string;
+  attachments?: "missing" | "all";
   sort?: AttivitaSortKey;
   dir?: "asc" | "desc";
 };
@@ -114,6 +116,7 @@ function ActivitiesList() {
   const q = search.q ?? "";
   const status = search.status ?? "all";
   const kind = search.kind ?? "all";
+  const attachments = search.attachments ?? "all";
   const urlSort =
     search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
 
@@ -123,6 +126,7 @@ function ActivitiesList() {
         q: next.q?.trim() ? next.q : undefined,
         status: next.status && next.status !== "all" ? next.status : undefined,
         kind: next.kind && next.kind !== "all" ? next.kind : undefined,
+        attachments: next.attachments && next.attachments !== "all" ? next.attachments : undefined,
         sort: next.sort ?? search.sort,
         dir: next.dir ?? search.dir,
       },
@@ -188,7 +192,8 @@ function ActivitiesList() {
     columns: attivitaColumns,
     defaultSort: attivitaDefaultSort,
     urlSort,
-    onSortChange: (next) => updateSearch({ q, status, kind, sort: next.key, dir: next.direction }),
+    onSortChange: (next) =>
+      updateSearch({ q, status, kind, attachments, sort: next.key, dir: next.direction }),
   });
 
   const filtered = useMemo(() => {
@@ -196,6 +201,13 @@ function ActivitiesList() {
     return data.filter((activity) => {
       if (status !== "all" && activity.status !== status) return false;
       if (kind !== "all" && activity.kind !== kind) return false;
+      if (
+        attachments === "missing" &&
+        (activity.kind !== "expense_reimbursement" ||
+          (activity.activity_attachments ?? []).length > 0)
+      ) {
+        return false;
+      }
       if (!term) return true;
 
       const caseLabel = activity.cases ? activityCaseLabel(activity.cases).toLowerCase() : "";
@@ -205,7 +217,7 @@ function ActivitiesList() {
         caseLabel.includes(term)
       );
     });
-  }, [data, kind, q, status]);
+  }, [attachments, data, kind, q, status]);
 
   const sorted = useMemo(
     () => sortRows(filtered, attivitaColumns, sort),
@@ -251,11 +263,14 @@ function ActivitiesList() {
           <Input
             placeholder="Cerca per pratica, voce, committente, cliente…"
             value={q}
-            onChange={(event) => updateSearch({ q: event.target.value, status, kind })}
+            onChange={(event) => updateSearch({ q: event.target.value, status, kind, attachments })}
             className="pl-9"
           />
         </div>
-        <Select value={status} onValueChange={(value) => updateSearch({ q, status: value, kind })}>
+        <Select
+          value={status}
+          onValueChange={(value) => updateSearch({ q, status: value, kind, attachments })}
+        >
           <SelectTrigger aria-label="Filtra attività per stato" className="lg:w-44">
             <SelectValue />
           </SelectTrigger>
@@ -268,7 +283,10 @@ function ActivitiesList() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={kind} onValueChange={(value) => updateSearch({ q, status, kind: value })}>
+        <Select
+          value={kind}
+          onValueChange={(value) => updateSearch({ q, status, kind: value, attachments })}
+        >
           <SelectTrigger aria-label="Filtra attività per tipo" className="lg:w-48">
             <SelectValue />
           </SelectTrigger>
@@ -279,6 +297,20 @@ function ActivitiesList() {
                 {label}
               </SelectItem>
             ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={attachments}
+          onValueChange={(value) =>
+            updateSearch({ q, status, kind, attachments: value as "all" | "missing" })
+          }
+        >
+          <SelectTrigger aria-label="Filtra attività per allegati" className="lg:w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutti gli allegati</SelectItem>
+            <SelectItem value="missing">Senza allegato</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -294,17 +326,17 @@ function ActivitiesList() {
           <Card className="p-4">
             <TableEmptyState
               title={
-                q || status !== "all" || kind !== "all"
+                q || status !== "all" || kind !== "all" || attachments !== "all"
                   ? "Nessuna attività trovata"
                   : "Nessuna attività"
               }
               description={
-                q || status !== "all" || kind !== "all"
+                q || status !== "all" || kind !== "all" || attachments !== "all"
                   ? "Modifica ricerca o filtri per ampliare i risultati."
                   : "Registra compensi o rimborsi spese dalla pratica o da inserimento rapido."
               }
               action={
-                !q && status === "all" && kind === "all" ? (
+                !q && status === "all" && kind === "all" && attachments === "all" ? (
                   <CaseActivityDialog
                     trigger={
                       <Button size="sm">
@@ -441,17 +473,17 @@ function ActivitiesList() {
                 <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
                   <TableEmptyState
                     title={
-                      q || status !== "all" || kind !== "all"
+                      q || status !== "all" || kind !== "all" || attachments !== "all"
                         ? "Nessuna attività trovata"
                         : "Nessuna attività"
                     }
                     description={
-                      q || status !== "all" || kind !== "all"
+                      q || status !== "all" || kind !== "all" || attachments !== "all"
                         ? "Modifica ricerca o filtri per ampliare i risultati."
                         : "Registra compensi o rimborsi spese dalla pratica o da inserimento rapido."
                     }
                     action={
-                      !q && status === "all" && kind === "all" ? (
+                      !q && status === "all" && kind === "all" && attachments === "all" ? (
                         <CaseActivityDialog
                           trigger={
                             <Button size="sm">
@@ -589,4 +621,9 @@ function parseTextSearch(value: unknown) {
 function parseFilterValue(value: unknown, labels: Record<string, string>) {
   if (typeof value !== "string") return undefined;
   return value in labels ? value : undefined;
+}
+
+function parseAttachmentsSearch(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  return value === "missing" ? value : undefined;
 }
