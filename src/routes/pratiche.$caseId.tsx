@@ -125,7 +125,7 @@ function CaseDetail() {
 
       <Tabs defaultValue="activities" className="mt-6">
         <TabsList>
-          <TabsTrigger value="activities">Voci fatturabili</TabsTrigger>
+          <TabsTrigger value="activities">Attività</TabsTrigger>
           <TabsTrigger value="transfers">Cessioni credito</TabsTrigger>
           <TabsTrigger value="history">Storico stati</TabsTrigger>
         </TabsList>

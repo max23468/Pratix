@@ -346,16 +346,7 @@ function DashboardContent() {
       <PageHeader
         title="Dashboard"
         description="Pratiche, attività, fatture e rimborsi da tenere sotto controllo."
-        actions={
-          <>
-            <Link to="/creazione-guidata">
-              <Button size="sm" variant="outline">
-                <FileInput className="mr-1 size-4" /> Creazione guidata
-              </Button>
-            </Link>
-            <CreateMenu />
-          </>
-        }
+        actions={<CreateMenu />}
       />
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -423,32 +414,6 @@ function DashboardContent() {
       </div>
 
       <WorkQueueCard items={data?.workQueue ?? []} isLoading={isLoading} />
-
-      <Card className="mt-4 border-border/70 shadow-soft">
-        <CardHeader>
-          <CardTitle className="text-base">Azioni rapide</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-3 md:grid-cols-3">
-          <ActionLink
-            to="/attivita"
-            icon={ListChecks}
-            title="Controlla attività"
-            description={`${data?.toInvoiceCount ?? 0} ${data?.toInvoiceCount === 1 ? "attività" : "attività"} da fatturare`}
-          />
-          <ActionLink
-            to="/fatture/nuova"
-            icon={Receipt}
-            title="Prepara fattura"
-            description={`${formatCurrency(data?.toInvoiceAmount ?? 0)} maturati`}
-          />
-          <ActionLink
-            to="/creazione-guidata"
-            icon={FileInput}
-            title="Creazione guidata"
-            description="Trascrivi una pratica con controllo finale"
-          />
-        </CardContent>
-      </Card>
 
       <DuplicateSummaryBox summary={duplicateSummary.data} isLoading={duplicateSummary.isLoading} />
 
@@ -745,34 +710,6 @@ function CreateMenu() {
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
-  );
-}
-
-function ActionLink({
-  to,
-  icon: Icon,
-  title,
-  description,
-}: {
-  to: "/attivita" | "/fatture/nuova" | "/creazione-guidata";
-  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
-  title: string;
-  description: string;
-}) {
-  return (
-    <Button variant="outline" asChild className="h-auto justify-start p-3 text-left">
-      <Link to={to} className="flex items-start gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/5 text-primary">
-          <Icon className="size-4" strokeWidth={1.7} />
-        </span>
-        <span className="min-w-0">
-          <span className="block text-sm font-medium text-foreground">{title}</span>
-          <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
-            {description}
-          </span>
-        </span>
-      </Link>
-    </Button>
   );
 }
 

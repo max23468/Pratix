@@ -29,13 +29,13 @@ import { useAuth } from "@/lib/auth-context";
 
 const items = [
   { title: "Dashboard", url: "/dashboard" as const, icon: LayoutDashboard },
-  { title: "Committenti", url: "/committenti" as const, icon: Building2 },
-  { title: "Prezzi", url: "/prezzi" as const, icon: Tags },
-  { title: "Clienti", url: "/clienti" as const, icon: Users },
-  { title: "Controparti", url: "/controparti" as const, icon: UserRoundSearch },
   { title: "Pratiche", url: "/pratiche" as const, icon: Briefcase },
   { title: "Attività", url: "/attivita" as const, icon: ListChecks },
   { title: "Fatture", url: "/fatture" as const, icon: Receipt },
+  { title: "Committenti", url: "/committenti" as const, icon: Building2 },
+  { title: "Clienti", url: "/clienti" as const, icon: Users },
+  { title: "Controparti", url: "/controparti" as const, icon: UserRoundSearch },
+  { title: "Prezzi", url: "/prezzi" as const, icon: Tags },
   { title: "Controllo duplicati", url: "/controllo-duplicati" as const, icon: GitCompareArrows },
   { title: "Impostazioni", url: "/impostazioni" as const, icon: Settings },
 ];
