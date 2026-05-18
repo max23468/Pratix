@@ -11,7 +11,14 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { TableEmptyState } from "@/components/table-empty-state";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -27,6 +34,13 @@ import {
   counterpartyDisplayName,
 } from "@/lib/labels";
 import { formatCurrency, formatDate } from "@/lib/format";
+import {
+  buildCaseWorkflowQualityChecks,
+  buildDebtCollectionWorkflow,
+  formatCaseWorkflowPriorityLabel,
+  summarizeCaseOperations,
+  type CaseDebtCollectionWorkflow,
+} from "@/lib/case-workflow";
 import { routeRef } from "@/lib/public-route-code";
 import {
   handleClickableTableRowClick,
@@ -72,6 +86,29 @@ type PracticeListRow = {
     last_name: string | null;
     business_name: string | null;
   } | null;
+};
+
+type PracticeActivityRow = {
+  case_id: string;
+  status: "to_invoice" | "invoiced";
+  kind: "fee" | "expense_reimbursement";
+  amount: number | null;
+  activity_attachments?: { id: string }[] | null;
+};
+
+type PracticeInvoiceRow = {
+  case_id: string | null;
+  status: "draft" | "issued" | "paid" | "overdue";
+  due_date: string | null;
+  total_amount: number;
+};
+
+type PracticeWorkflowRow = {
+  stage: string;
+  action: string;
+  reason: string;
+  priorityLabel: string;
+  priorityVariant: CaseDebtCollectionWorkflow["priorityVariant"];
 };
 
 const praticheSortKeys = [
@@ -152,11 +189,45 @@ function PraticheList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("case_activities")
-        .select("case_id, status, amount");
+        .select("case_id, status, kind, amount, activity_attachments(id)");
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []) as PracticeActivityRow[];
     },
   });
+
+  const { data: invoices = [] } = useQuery({
+    queryKey: ["case-invoice-statuses", "case-list"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("invoices")
+        .select("case_id, status, due_date, total_amount");
+      if (error) throw error;
+      return (data ?? []) as PracticeInvoiceRow[];
+    },
+  });
+
+  const activitiesByCase = useMemo(
+    () =>
+      activities.reduce<Record<string, PracticeActivityRow[]>>((acc, activity) => {
+        const current = acc[activity.case_id] ?? [];
+        current.push(activity);
+        acc[activity.case_id] = current;
+        return acc;
+      }, {}),
+    [activities],
+  );
+
+  const invoicesByCase = useMemo(
+    () =>
+      invoices.reduce<Record<string, PracticeInvoiceRow[]>>((acc, invoice) => {
+        if (!invoice.case_id) return acc;
+        const current = acc[invoice.case_id] ?? [];
+        current.push(invoice);
+        acc[invoice.case_id] = current;
+        return acc;
+      }, {}),
+    [invoices],
+  );
 
   const activitySummaryByCase = useMemo(() => {
     return activities.reduce<
@@ -172,6 +243,17 @@ function PraticheList() {
       return acc;
     }, {});
   }, [activities]);
+
+  const workflowByCase = useMemo(() => {
+    return (data ?? []).reduce<Record<string, PracticeWorkflowRow>>((acc, practice) => {
+      acc[practice.id] = buildPracticeWorkflow(
+        practice,
+        activitiesByCase[practice.id] ?? [],
+        invoicesByCase[practice.id] ?? [],
+      );
+      return acc;
+    }, {});
+  }, [activitiesByCase, data, invoicesByCase]);
 
   const praticheColumns = useMemo<readonly SortableColumn<PracticeListRow, PraticheSortKey>[]>(
     () => [
@@ -378,6 +460,7 @@ function PraticheList() {
               invoiced: 0,
               toInvoiceAmount: 0,
             };
+            const workflow = workflowByCase[c.id];
             return (
               <Link
                 key={c.id}
@@ -396,6 +479,16 @@ function PraticheList() {
                     {caseStatusLabels[c.status] ?? c.status}
                   </Badge>
                 </div>
+                {workflow ? (
+                  <div className="mt-3 rounded-md border border-border/70 p-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant={workflow.priorityVariant}>{workflow.priorityLabel}</Badge>
+                      <span className="text-xs text-muted-foreground">{workflow.stage}</span>
+                    </div>
+                    <p className="mt-2 text-sm font-medium text-foreground">{workflow.action}</p>
+                    <p className="mt-1 text-xs text-muted-foreground">{workflow.reason}</p>
+                  </div>
+                ) : null}
                 <dl className="mt-3 grid gap-2 text-xs text-muted-foreground">
                   <div className="flex min-w-0 justify-between gap-3">
                     <dt>Committente</dt>
@@ -461,6 +554,9 @@ function PraticheList() {
                 onSort={setSort}
               />
               <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={setSort} />
+              <TableHead className="text-xs font-medium text-muted-foreground">
+                Prossima azione
+              </TableHead>
               <SortableTableHead
                 columnKey="billing"
                 label="Fatturazione"
@@ -478,13 +574,13 @@ function PraticheList() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">
                   Caricamento…
                 </TableCell>
               </TableRow>
             ) : sorted.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">
                   <TableEmptyState
                     title={
                       q || view !== "open" ? "Nessuna pratica trovata" : "Nessuna pratica aperta"
@@ -511,6 +607,7 @@ function PraticheList() {
                   invoiced: 0,
                   toInvoiceAmount: 0,
                 };
+                const workflow = workflowByCase[c.id];
                 return (
                   <TableRow
                     key={c.id}
@@ -549,6 +646,26 @@ function PraticheList() {
                         {caseStatusLabels[c.status] ?? c.status}
                       </Badge>
                     </TableCell>
+                    <TableCell className="min-w-[14rem] text-sm">
+                      {workflow ? (
+                        <div className="flex min-w-0 flex-col gap-1">
+                          <span className="flex flex-wrap items-center gap-2">
+                            <Badge variant={workflow.priorityVariant}>
+                              {workflow.priorityLabel}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">{workflow.stage}</span>
+                          </span>
+                          <span className="block max-w-72 truncate text-foreground">
+                            {workflow.action}
+                          </span>
+                          <span className="block max-w-72 truncate text-xs text-muted-foreground">
+                            {workflow.reason}
+                          </span>
+                        </div>
+                      ) : (
+                        "—"
+                      )}
+                    </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {summary.toInvoice > 0
                         ? `${summary.toInvoice} da fatturare`
@@ -568,6 +685,35 @@ function PraticheList() {
       </Card>
     </>
   );
+}
+
+function buildPracticeWorkflow(
+  practice: PracticeListRow,
+  activities: PracticeActivityRow[],
+  invoices: PracticeInvoiceRow[],
+) {
+  const totals = summarizeCaseOperations(activities, invoices);
+  const qualityChecks = buildCaseWorkflowQualityChecks({
+    caseRow: practice,
+    activities,
+    invoices,
+    totals,
+  });
+  const workflow = buildDebtCollectionWorkflow({
+    caseRow: practice,
+    activities,
+    invoices,
+    totals,
+    qualityChecks,
+  });
+
+  return {
+    stage: workflow.stage,
+    action: workflow.action,
+    reason: workflow.reason,
+    priorityLabel: formatCaseWorkflowPriorityLabel(workflow.priority),
+    priorityVariant: workflow.priorityVariant,
+  } satisfies PracticeWorkflowRow;
 }
 
 function parsePracticeView(value: unknown): PraticheView | undefined {

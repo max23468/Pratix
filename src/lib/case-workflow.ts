@@ -3,7 +3,16 @@ import type { CaseTimelineActivity, CaseTimelineInvoice } from "@/lib/case-timel
 
 export type CaseWorkflowCase = {
   status: string;
+  principal_id?: string | null;
+  client_id?: string | null;
+  counterparty_id?: string | null;
 };
+
+export type CaseWorkflowActivity = Pick<CaseTimelineActivity, "status" | "kind" | "amount"> & {
+  activity_attachments?: unknown[];
+};
+
+export type CaseWorkflowInvoice = Pick<CaseTimelineInvoice, "status" | "due_date" | "total_amount">;
 
 export type CaseWorkflowQualityCheck = {
   severity: "warning" | "ok";
@@ -29,8 +38,8 @@ export type CaseDebtCollectionWorkflow = {
 };
 
 export function summarizeCaseOperations(
-  activities: CaseTimelineActivity[],
-  invoices: CaseTimelineInvoice[],
+  activities: CaseWorkflowActivity[],
+  invoices: CaseWorkflowInvoice[],
 ) {
   const activityTotals = activities.reduce(
     (acc, activity) => {
@@ -86,8 +95,8 @@ export function buildDebtCollectionWorkflow({
   qualityChecks,
 }: {
   caseRow: CaseWorkflowCase;
-  activities: CaseTimelineActivity[];
-  invoices: CaseTimelineInvoice[];
+  activities: CaseWorkflowActivity[];
+  invoices: CaseWorkflowInvoice[];
   totals: ReturnType<typeof summarizeCaseOperations>;
   qualityChecks: CaseWorkflowQualityCheck[];
 }): CaseDebtCollectionWorkflow {
@@ -218,11 +227,102 @@ export function buildDebtCollectionWorkflow({
   };
 }
 
-function amountOf(invoice: CaseTimelineInvoice) {
+export function buildCaseWorkflowQualityChecks({
+  caseRow,
+  activities,
+  invoices,
+  totals,
+}: {
+  caseRow: CaseWorkflowCase;
+  activities: CaseWorkflowActivity[];
+  invoices: CaseWorkflowInvoice[];
+  totals: ReturnType<typeof summarizeCaseOperations>;
+}) {
+  const checks: CaseWorkflowQualityCheck[] = [];
+
+  if (!caseRow.principal_id) {
+    checks.push({
+      id: "missing-principal",
+      severity: "warning",
+      title: "Committente mancante",
+      description: "Completa il soggetto fatturato prima di preparare nuove Fatture.",
+    });
+  }
+  if (!caseRow.client_id) {
+    checks.push({
+      id: "missing-client",
+      severity: "warning",
+      title: "Cliente mancante",
+      description: "Completa il Cliente per mantenere coerente la pratica.",
+    });
+  }
+  if (!caseRow.counterparty_id) {
+    checks.push({
+      id: "missing-counterparty",
+      severity: "warning",
+      title: "Controparte mancante",
+      description: "Aggiungi la Controparte per rendere completo il dossier.",
+    });
+  }
+  if (activities.length === 0) {
+    checks.push({
+      id: "missing-activities",
+      severity: "warning",
+      title: "Nessuna Attività",
+      description: "Registra almeno un Compenso o Rimborso spese se la pratica ha lavoro storico.",
+    });
+  }
+  if (totals.toInvoice > 0) {
+    checks.push({
+      id: "to-invoice",
+      severity: "warning",
+      title: "Attività da fatturare",
+      description: `${formatCurrency(totals.toInvoice)} non ancora collegati a una Fattura.`,
+    });
+  }
+  if (totals.activitiesWithoutAttachments > 0) {
+    checks.push({
+      id: "missing-attachments",
+      severity: "warning",
+      title: "Attività senza allegati",
+      description: `${totals.activitiesWithoutAttachments} Attività non hanno allegati collegati.`,
+    });
+  }
+
+  const draftInvoices = invoices.filter((invoice) => invoice.status === "draft").length;
+  if (draftInvoices > 0) {
+    checks.push({
+      id: "draft-invoices",
+      severity: "warning",
+      title: "Fatture in bozza",
+      description: `${draftInvoices} Fatture sono ancora da completare o emettere.`,
+    });
+  }
+
+  if (checks.length === 0) {
+    checks.push({
+      id: "ok",
+      severity: "ok",
+      title: "Dati principali completi",
+      description: "La pratica non presenta avvisi operativi immediati.",
+    });
+  }
+
+  return checks;
+}
+
+export function formatCaseWorkflowPriorityLabel(priority: string) {
+  if (priority === "Alta") return "Richiede intervento";
+  if (priority === "Media") return "Da monitorare";
+  if (priority === "Ordinaria") return "Regolare";
+  return priority;
+}
+
+function amountOf(invoice: CaseWorkflowInvoice) {
   return Number(invoice.total_amount) || 0;
 }
 
-function isInvoiceOverdue(invoice: CaseTimelineInvoice) {
+function isInvoiceOverdue(invoice: CaseWorkflowInvoice) {
   if (invoice.status === "overdue") return true;
   if (invoice.status !== "issued" || !invoice.due_date) return false;
   return dateOnlyKey(invoice.due_date) < todayDateKey();

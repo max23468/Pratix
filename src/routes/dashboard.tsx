@@ -6,6 +6,7 @@ import {
   Briefcase,
   Building2,
   ChevronDown,
+  Flag,
   FileInput,
   FileWarning,
   GitCompareArrows,
@@ -43,6 +44,13 @@ import {
 } from "@/lib/labels";
 import { routeRef } from "@/lib/public-route-code";
 import { getAuthHeaders, readServerResult } from "@/lib/server-functions";
+import {
+  buildCaseWorkflowQualityChecks,
+  buildDebtCollectionWorkflow,
+  formatCaseWorkflowPriorityLabel,
+  summarizeCaseOperations,
+  type CaseDebtCollectionWorkflow,
+} from "@/lib/case-workflow";
 import { getDuplicateSummaryFn, type DuplicateSummaryResult } from "@/server/duplicates.functions";
 
 type CreateActionPath =
@@ -106,6 +114,55 @@ const CREATE_ACTIONS: Array<{
 
 type DuplicateSummary = DuplicateSummaryResult;
 
+type DashboardCaseRow = {
+  id: string;
+  public_code: string | null;
+  practice_number: number;
+  case_number: string | null;
+  title: string;
+  status: string;
+  updated_at: string;
+  principal_id: string | null;
+  client_id: string | null;
+  counterparty_id: string | null;
+};
+
+type DashboardActivityRow = {
+  id: string;
+  case_id: string;
+  kind: "fee" | "expense_reimbursement";
+  amount: number | null;
+  principal_id: string;
+  status: "to_invoice" | "invoiced";
+  activity_attachments?: { id: string }[] | null;
+};
+
+type DashboardInvoiceRow = {
+  id: string;
+  case_id: string | null;
+  number: string;
+  year: number;
+  issue_date: string;
+  due_date: string | null;
+  paid_at: string | null;
+  status: "draft" | "issued" | "paid" | "overdue";
+  total_amount: number;
+  net_to_pay: number;
+  notes: string | null;
+};
+
+type WorkQueueItem = {
+  caseRef: string;
+  practiceNumber: number;
+  title: string;
+  updatedAt: string;
+  stage: string;
+  action: string;
+  reason: string;
+  priorityLabel: string;
+  priorityVariant: CaseDebtCollectionWorkflow["priorityVariant"];
+};
+
 type DashboardStatCardProps = {
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
   label: string;
@@ -165,11 +222,19 @@ function DashboardContent() {
     queryFn: async () => {
       const [casesRes, activitiesRes, invoicesRes, recentCasesRes, principalsRes] =
         await Promise.all([
-          supabase.from("cases").select("id, status, principal_id, client_id, counterparty_id"),
+          supabase
+            .from("cases")
+            .select(
+              "id, public_code, practice_number, case_number, title, status, updated_at, principal_id, client_id, counterparty_id",
+            ),
           supabase
             .from("case_activities")
-            .select("id, case_id, kind, amount, principal_id, status"),
-          supabase.from("invoices").select("id, status, due_date, net_to_pay"),
+            .select("id, case_id, kind, amount, principal_id, status, activity_attachments(id)"),
+          supabase
+            .from("invoices")
+            .select(
+              "id, case_id, number, year, issue_date, due_date, paid_at, status, total_amount, net_to_pay, notes",
+            ),
           supabase
             .from("cases")
             .select(
@@ -190,21 +255,6 @@ function DashboardContent() {
       const activities = activitiesRes.data ?? [];
       const invoices = invoicesRes.data ?? [];
       const toInvoiceActivities = activities.filter((activity) => activity.status === "to_invoice");
-      const expenseActivityIds = toInvoiceActivities
-        .filter((activity) => activity.kind === "expense_reimbursement")
-        .map((activity) => activity.id);
-      const attachmentsRes =
-        expenseActivityIds.length > 0
-          ? await supabase
-              .from("activity_attachments")
-              .select("activity_id")
-              .in("activity_id", expenseActivityIds)
-          : { data: [], error: null };
-      if (attachmentsRes.error) throw attachmentsRes.error;
-
-      const attachedActivityIds = new Set(
-        (attachmentsRes.data ?? []).map((item) => item.activity_id),
-      );
       const activeCases = cases.filter((c) => c.status !== "closed" && c.status !== "archived");
       const caseIdsWithActivities = new Set(activities.map((activity) => activity.case_id));
       const casesWithoutActivities = activeCases.filter((c) => !caseIdsWithActivities.has(c.id));
@@ -219,7 +269,8 @@ function DashboardContent() {
       );
       const expenseWithoutAttachment = toInvoiceActivities.filter(
         (activity) =>
-          activity.kind === "expense_reimbursement" && !attachedActivityIds.has(activity.id),
+          activity.kind === "expense_reimbursement" &&
+          (activity.activity_attachments ?? []).length === 0,
       );
       const draftInvoices = invoices.filter((invoice) => invoice.status === "draft");
       const invoicesToCollect = invoices.filter(
@@ -268,6 +319,11 @@ function DashboardContent() {
         expenseWithoutAttachmentCount: expenseWithoutAttachment.length,
         principalSummaries,
         recentCases: recentCasesRes.data ?? [],
+        workQueue: buildDashboardWorkQueue({
+          cases: cases as DashboardCaseRow[],
+          activities: activities as DashboardActivityRow[],
+          invoices: invoices as DashboardInvoiceRow[],
+        }),
       };
     },
   });
@@ -366,9 +422,11 @@ function DashboardContent() {
         />
       </div>
 
+      <WorkQueueCard items={data?.workQueue ?? []} isLoading={isLoading} />
+
       <Card className="mt-4 border-border/70 shadow-soft">
         <CardHeader>
-          <CardTitle className="text-base">Prossime azioni operative</CardTitle>
+          <CardTitle className="text-base">Azioni rapide</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-3 md:grid-cols-3">
           <ActionLink
@@ -487,6 +545,79 @@ function DashboardContent() {
         </Card>
       </div>
     </>
+  );
+}
+
+function WorkQueueCard({ items, isLoading }: { items: WorkQueueItem[]; isLoading: boolean }) {
+  const [firstItem, ...otherItems] = items;
+
+  return (
+    <Card className="mt-4 border-border/70 shadow-soft">
+      <CardHeader>
+        <CardTitle className="text-base">Coda di lavoro</CardTitle>
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <p className="text-sm text-muted-foreground">Calcolo delle priorità operative…</p>
+        ) : firstItem ? (
+          <div className="grid gap-3 lg:grid-cols-[minmax(0,1.1fr)_minmax(280px,0.9fr)]">
+            <Link
+              to="/pratiche/$caseId"
+              params={{ caseId: firstItem.caseRef }}
+              className="rounded-md border border-border p-4 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant={firstItem.priorityVariant}>{firstItem.priorityLabel}</Badge>
+                <span className="text-xs font-medium text-muted-foreground">
+                  Pratica {firstItem.practiceNumber} · {firstItem.stage}
+                </span>
+              </div>
+              <h2 className="mt-3 text-base font-semibold text-foreground">{firstItem.action}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{firstItem.reason}</p>
+              <p className="mt-3 truncate text-sm font-medium text-foreground">{firstItem.title}</p>
+            </Link>
+
+            <div className="space-y-2">
+              {otherItems.length > 0 ? (
+                otherItems.slice(0, 3).map((item) => (
+                  <Link
+                    key={item.caseRef}
+                    to="/pratiche/$caseId"
+                    params={{ caseId: item.caseRef }}
+                    className="flex min-w-0 gap-3 rounded-md border border-border p-3 transition-colors hover:bg-accent/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <Flag className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                    <span className="min-w-0">
+                      <span className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-medium text-foreground">
+                          Pratica {item.practiceNumber}
+                        </span>
+                        <Badge variant={item.priorityVariant}>{item.priorityLabel}</Badge>
+                      </span>
+                      <span className="mt-1 block truncate text-xs text-muted-foreground">
+                        {item.action}
+                      </span>
+                    </span>
+                  </Link>
+                ))
+              ) : (
+                <div className="rounded-md border border-border p-3 text-sm text-muted-foreground">
+                  Questa è l'unica priorità operativa rilevata ora.
+                </div>
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="rounded-md border border-border p-4">
+            <p className="text-sm font-medium">Nessuna pratica richiede intervento immediato.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Puoi continuare da Attività, Fatture o dalla Creazione guidata quando devi registrare
+              nuovo lavoro.
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -708,6 +839,79 @@ function StatCard({
       {content}
     </Link>
   );
+}
+
+function buildDashboardWorkQueue({
+  cases,
+  activities,
+  invoices,
+}: {
+  cases: DashboardCaseRow[];
+  activities: DashboardActivityRow[];
+  invoices: DashboardInvoiceRow[];
+}) {
+  const activitiesByCase = activities.reduce<Record<string, DashboardActivityRow[]>>(
+    (acc, activity) => {
+      const current = acc[activity.case_id] ?? [];
+      current.push(activity);
+      acc[activity.case_id] = current;
+      return acc;
+    },
+    {},
+  );
+  const invoicesByCase = invoices.reduce<Record<string, DashboardInvoiceRow[]>>((acc, invoice) => {
+    if (!invoice.case_id) return acc;
+    const current = acc[invoice.case_id] ?? [];
+    current.push(invoice);
+    acc[invoice.case_id] = current;
+    return acc;
+  }, {});
+
+  return cases
+    .filter((caseRow) => caseRow.status !== "closed" && caseRow.status !== "archived")
+    .map((caseRow) => {
+      const caseActivities = activitiesByCase[caseRow.id] ?? [];
+      const caseInvoices = invoicesByCase[caseRow.id] ?? [];
+      const totals = summarizeCaseOperations(caseActivities, caseInvoices);
+      const qualityChecks = buildCaseWorkflowQualityChecks({
+        caseRow,
+        activities: caseActivities,
+        invoices: caseInvoices,
+        totals,
+      });
+      const workflow = buildDebtCollectionWorkflow({
+        caseRow,
+        activities: caseActivities,
+        invoices: caseInvoices,
+        totals,
+        qualityChecks,
+      });
+
+      return {
+        caseRef: routeRef(caseRow),
+        practiceNumber: caseRow.practice_number,
+        title: caseRow.title,
+        updatedAt: caseRow.updated_at,
+        stage: workflow.stage,
+        action: workflow.action,
+        reason: workflow.reason,
+        priorityLabel: formatCaseWorkflowPriorityLabel(workflow.priority),
+        priorityVariant: workflow.priorityVariant,
+      } satisfies WorkQueueItem;
+    })
+    .filter((item) => item.stage !== "Pratica sotto controllo")
+    .sort((a, b) => {
+      const priorityDiff = priorityRank(a.priorityVariant) - priorityRank(b.priorityVariant);
+      if (priorityDiff !== 0) return priorityDiff;
+      return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+    })
+    .slice(0, 5);
+}
+
+function priorityRank(variant: CaseDebtCollectionWorkflow["priorityVariant"]) {
+  if (variant === "destructive") return 0;
+  if (variant === "outline") return 1;
+  return 2;
 }
 
 function localDateKey(date: Date) {
