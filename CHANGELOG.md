@@ -6,6 +6,18 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.8.1] — 2026-05-18
+
+### Correzioni
+
+- **Fatture**: la lista torna a caricarsi usando la relazione non ambigua tra fattura e rendiconto di fatturazione.
+
+### Sotto il cofano
+
+- **Pubblicazione**: `npm run publish:prepare` usa `main`/`origin/main` come base del diff sui branch di lavoro, anche quando il branch traccia il proprio remoto.
+
+## [Non versionato] — 2026-05-18
+
 ### Non versionato
 
 - **Verifiche agenti**: chiarita la scelta proporzionata dei controlli, con smoke WebKit/a11y completo solo per UI sostanziale, routing, flussi critici, release o publish.
@@ -937,6 +949,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.8.1]: #181--2026-05-18
 [1.8.0]: #180--2026-05-18
 [1.7.6]: #176--2026-05-17
 [1.7.5]: #175--2026-05-17

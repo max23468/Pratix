@@ -217,7 +217,7 @@ function InvoicesIndex() {
       const { data, error } = await supabase
         .from("invoices")
         .select(
-          "id, public_code, number, year, issue_date, due_date, status, total_amount, net_to_pay, billing_run:billing_runs(period_start, period_end), client:clients(id, kind, first_name, last_name, business_name), principal:principals(id, business_name)",
+          "id, public_code, number, year, issue_date, due_date, status, total_amount, net_to_pay, billing_run:billing_runs!invoices_billing_run_owner_fkey(period_start, period_end), client:clients(id, kind, first_name, last_name, business_name), principal:principals(id, business_name)",
         )
         .order("issue_date", { ascending: false });
       if (error) throw error;
