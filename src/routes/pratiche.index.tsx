@@ -11,14 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { TableEmptyState } from "@/components/table-empty-state";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -554,9 +547,6 @@ function PraticheList() {
                 onSort={setSort}
               />
               <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={setSort} />
-              <TableHead className="text-xs font-medium text-muted-foreground">
-                Prossima azione
-              </TableHead>
               <SortableTableHead
                 columnKey="billing"
                 label="Fatturazione"
@@ -574,13 +564,13 @@ function PraticheList() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
                   Caricamento…
                 </TableCell>
               </TableRow>
             ) : sorted.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={9} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
                   <TableEmptyState
                     title={
                       q || view !== "open" ? "Nessuna pratica trovata" : "Nessuna pratica aperta"
@@ -607,7 +597,6 @@ function PraticheList() {
                   invoiced: 0,
                   toInvoiceAmount: 0,
                 };
-                const workflow = workflowByCase[c.id];
                 return (
                   <TableRow
                     key={c.id}
@@ -645,26 +634,6 @@ function PraticheList() {
                       <Badge variant={caseStatusVariant[c.status] ?? "outline"}>
                         {caseStatusLabels[c.status] ?? c.status}
                       </Badge>
-                    </TableCell>
-                    <TableCell className="min-w-[14rem] text-sm">
-                      {workflow ? (
-                        <div className="flex min-w-0 flex-col gap-1">
-                          <span className="flex flex-wrap items-center gap-2">
-                            <Badge variant={workflow.priorityVariant}>
-                              {workflow.priorityLabel}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">{workflow.stage}</span>
-                          </span>
-                          <span className="block max-w-72 truncate text-foreground">
-                            {workflow.action}
-                          </span>
-                          <span className="block max-w-72 truncate text-xs text-muted-foreground">
-                            {workflow.reason}
-                          </span>
-                        </div>
-                      ) : (
-                        "—"
-                      )}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {summary.toInvoice > 0

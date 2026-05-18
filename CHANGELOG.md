@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.9.1] — 2026-05-19
+
+### Correzioni
+
+- **Pratiche**: rimossa la colonna “Prossima azione” dalla lista per ridurre il rumore visivo della tabella.
+
 ## [1.9.0] — 2026-05-18
 
 ### Novità
@@ -973,6 +979,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.9.1]: #191--2026-05-19
 [1.9.0]: #190--2026-05-18
 [1.8.2]: #182--2026-05-18
 [1.8.1]: #181--2026-05-18
