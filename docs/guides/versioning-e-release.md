@@ -283,18 +283,24 @@ Usa `--version` solo quando serve una versione specifica.
 
 1. **Controlla il contenuto**: `## [Non rilasciato]` deve contenere solo voci
    da rilasciare ora.
-2. **Simula se vuoi controllare il bump**:
+2. **Prepara il giro**:
+   ```sh
+   npm run publish:prepare
+   ```
+   Il comando non modifica file: segnala se il worktree non ha `node_modules`,
+   legge il blocco `[Non rilasciato]` e propone i check proporzionati al diff.
+3. **Simula se vuoi controllare il bump**:
    ```sh
    npm run release:dry-run
    ```
-3. **Genera la release**:
+4. **Genera la release**:
    ```sh
    npm run release
    ```
-4. **Controlla il diff**: devono cambiare solo `CHANGELOG.md` e
+5. **Controlla il diff**: devono cambiare solo `CHANGELOG.md` e
    `src/lib/version.ts`, salvo lavori collegati già presenti nel branch.
-5. **Promuovi il deployment di produzione** su Vercel.
-6. **Verifica**:
+6. **Promuovi il deployment di produzione** su Vercel.
+7. **Verifica**:
    - Apri `/impostazioni`: il footer deve mostrare `Pratix v0.3.0 · build 2026-05-15`.
    - Apri `/novita`: deve apparire la nuova versione in cima.
    - La campanella in topbar mostra il pallino fino a quando non visiti `/novita`.

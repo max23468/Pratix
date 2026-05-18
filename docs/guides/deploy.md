@@ -12,12 +12,13 @@ Pratix viene pubblicato su **Vercel** dal repository GitHub.
 ## Deploy
 
 1. Lavora su branch dedicato.
-2. Esegui le verifiche pertinenti in locale.
-3. Push su GitHub.
-4. Apri una PR verso `main`: GitHub esegue il workflow `Quality`.
-5. Vercel crea un deployment di preview dal branch.
-6. Quando Quality e preview sono verificati, fai merge su `main`.
-7. Vercel pubblica la produzione dal branch `main`.
+2. Prepara il giro con `npm run publish:prepare`.
+3. Esegui le verifiche pertinenti in locale.
+4. Push su GitHub.
+5. Apri una PR verso `main`: GitHub esegue il workflow `Quality`.
+6. Vercel crea un deployment di preview dal branch.
+7. Quando Quality e preview sono verificati, fai merge su `main`.
+8. Vercel pubblica la produzione dal branch `main`.
 
 Il workflow GitHub è volutamente leggero: `npm ci`, `npm run build`, lint solo
 sui file sorgente modificati e `npm audit --audit-level=moderate` solo quando
@@ -27,6 +28,28 @@ anche l'audit.
 Il repo resta privato e nel percorso gratuito: non basare il processo su branch
 protection a pagamento. La protezione reale è la disciplina di PR + Quality +
 preview Vercel.
+
+### Preparazione rapida
+
+Usa `npm run publish:prepare` prima del push o quando devi capire quanto lavoro
+resta prima della pubblicazione. Il comando non modifica file: legge lo stato Git,
+controlla se nel worktree mancano le dipendenze, classifica il diff, guarda il
+blocco `CHANGELOG.md` `[Non rilasciato]` e propone la sequenza rapida.
+
+Se lavori in un worktree pulito appena creato, `node_modules` può mancare: in
+quel caso esegui `npm ci` una volta nella cartella del worktree. La cache npm
+resta condivisa a livello macchina, quindi i run successivi sono normalmente più
+rapidi.
+
+Quando vuoi far partire anche il gate locale proporzionato al diff:
+
+```sh
+npm run publish:prepare -- --run-checks
+```
+
+`--run-checks` esegue `npm run prepush:guard`. Per modifiche UI sostanziali resta
+necessario aggiungere `npm run smoke:a11y`; per schema, RLS, Storage o auth
+aggiungi i check Supabase indicati nella checklist di sicurezza.
 
 ### Stato integrazione
 
