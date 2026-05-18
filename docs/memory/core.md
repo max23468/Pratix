@@ -72,7 +72,7 @@ Quando un lavoro su PR/branch dedicato viene mergeato, pubblicato o chiuso, puli
 
 Pratix resta un gestionale leggero per avvocati freelance, ora focalizzato prevalentemente sul recupero crediti. Nuove funzionalità devono rafforzare committenti, clienti, controparti, pratiche, attività fatturabili, compensi/onorari, prezzi per committente, rimborsi spese Art. 15, rendiconti Excel, fatture, sicurezza dati, qualità operativa o affidabilità del SaaS. Evita espansioni verso studi associati, CRM generalista, suite contabile completa, piattaforme enterprise, bot Telegram o VPS-first senza decisione esplicita e ADR.
 
-Per modifiche UI sostanziali verifica quando praticabile desktop/mobile e chiaro/scuro. Nelle risposte finali cita verifiche solo quando aggiungono valore: fallimenti, limiti, rischi residui o comandi rilevanti.
+Per modifiche UI sostanziali verifica quando praticabile desktop/mobile e chiaro/scuro. `npm run smoke:a11y` o `npm run smoke:a11y:auth` sono gate di chiusura proporzionati per UI ampia, routing, componenti condivisi, flussi autenticati critici, release o publish; non sono obbligatori per analisi, docs interne, microcopy o fix locali a basso rischio. Per questi casi scegli controlli mirati, rilettura/coerenza o `format:changed:check` quando utile. Nelle risposte finali cita verifiche solo quando aggiungono valore: fallimenti, limiti, rischi residui o comandi rilevanti.
 
 Ogni volta che termini un'attività, suggerisci sempre i prossimi passi consigliati: devono essere concreti, ordinati e proporzionati al lavoro appena concluso. Se non c'è un seguito operativo reale, dichiaralo esplicitamente.
 

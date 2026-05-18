@@ -6,6 +6,10 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Non versionato
+
+- **Verifiche agenti**: chiarita la scelta proporzionata dei controlli, con smoke WebKit/a11y completo solo per UI sostanziale, routing, flussi critici, release o publish.
+
 ## [1.7.6] — 2026-05-17
 
 ### Correzioni
