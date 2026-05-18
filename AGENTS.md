@@ -116,6 +116,7 @@ GitHub è la fonte primaria del codice. Vercel builda e pubblica dal repository.
 - Non assumere che lo stato locale sia autoritativo: chi lavora in locale dovrebbe `git pull` prima di iniziare e prima di pushare.
 - Una push sul branch collegato genera preview/production deployment su Vercel secondo la configurazione del progetto.
 - Dopo merge, pubblicazione o chiusura di una PR, elimina anche il branch dedicato nel checkout locale se non serve più. Prima prova `git branch -d <branch>`; se Git rifiuta perché il branch non è antenato diretto ma la patch è già assorbita, verifica che `git log --cherry-pick --right-only --oneline main...<branch>` non mostri commit unici e solo allora usa `git branch -D <branch>`. Se il branch remoto o locale resta aperto per un motivo, dichiaralo nel riepilogo operativo.
+- Quando un lavoro ha usato worktree dedicati, la pulizia non è completa finché `git worktree list` mostra solo i worktree che devono restare. Prima di dichiarare "pubblicato" o "pulito", controlla ogni worktree temporaneo con `git -C <path> status -sb` e rimuovilo con `git worktree remove <path>` se non contiene modifiche da preservare. Se `git worktree remove` fallisce perché la directory contiene solo artefatti ignorati o generati (`node_modules`, `.output`, `.env` locali), ispeziona rapidamente il contenuto e poi rimuovi la directory residua; non lasciare cartelle di worktree salvate senza dichiararne il motivo.
 - Stato runtime (dati DB, secret, file Storage) **non** vive su GitHub: solo codice, schema e migrations. Vedi [`docs/guides/database.md`](./docs/guides/database.md).
 
 ## Prima di intervenire
@@ -242,7 +243,7 @@ Pratix usa **SemVer convenzionale** adattato a SaaS hostato (vedi [`docs/decisio
 
 - Quando crei commit, mantienili atomici e usa **Conventional Commit** coerenti con l'impatto reale (`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`, `style:`).
 - Prima di aprire una PR o dichiarare pronta la pubblicazione, controlla la issue GitHub `Codex feedback inbox`: se contiene thread actionable, pianifica e completa la loro risoluzione (o dichiara esplicitamente perché restano fuori scope) prima di procedere. Lo storico dei commenti Codex va controllato dalla stessa issue, non da file di stato committati nel repo.
-- Prima di dichiarare chiuso un lavoro pubblicato o mergeato, controlla `git branch -vv` e pulisci i branch locali con upstream `gone` o già assorbiti nel branch base. Non lasciare branch `codex/*` stale se il loro lavoro è stato mergeato, salvo motivo esplicito.
+- Prima di dichiarare chiuso un lavoro pubblicato o mergeato, controlla `git branch -vv` e `git worktree list`: pulisci i branch locali con upstream `gone` o già assorbiti nel branch base e rimuovi i worktree temporanei non più necessari. Non lasciare branch `codex/*` stale o directory worktree residue se il loro lavoro è stato mergeato, salvo motivo esplicito.
 - Non aggiungere workflow GitHub Actions, policy di deploy o flussi di release non presenti senza richiesta esplicita. Il rilascio operativo avviene tramite Vercel.
 - Nelle PR usa il template in `.github/PULL_REQUEST_TEMPLATE.md`. Riporta in modo concreto cosa è cambiato, dove, eventuali rischi residui e verifiche rilevanti. Evita footer rituali se non aggiungono valore.
 
@@ -266,5 +267,5 @@ Una modifica è pronta se:
 - rispetta RLS e principi di sicurezza se ha toccato il DB;
 - include verifiche eseguite o limiti noti quando rilevanti;
 - aggiorna `ROADMAP.md`, `CHANGELOG.md`, ADR, `docs/` e memoria solo quando serve davvero;
-- se il lavoro è stato mergeato/pubblicato, non lascia branch dedicati locali o remoti inutilizzati; se restano, il motivo è esplicitato;
+- se il lavoro è stato mergeato/pubblicato, non lascia branch dedicati locali o remoti inutilizzati né worktree temporanei/directory residue; se restano, il motivo è esplicitato;
 - non lascia file temporanei, dati sensibili o modifiche non correlate.

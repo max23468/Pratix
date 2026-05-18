@@ -6,6 +6,10 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Non versionato
+
+- **Istruzioni agenti**: rafforzata la pulizia post-pubblicazione includendo controllo e rimozione dei worktree temporanei, oltre ai branch locali e remoti.
+
 ## [1.8.2] — 2026-05-18
 
 ### Correzioni
