@@ -15,7 +15,7 @@ if (args.help) {
 
 const branch = execGit(["branch", "--show-current"], root) || "(detached HEAD)";
 const upstream = tryGit(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"], root);
-const baseRef = upstream || resolveDefaultBase();
+const baseRef = resolvePublicationBase({ branch, upstream });
 const changedFiles = getChangedFiles(baseRef);
 const statusLines = lines(execGit(["status", "--short"], root));
 const unreleased = readUnreleasedBlock();
@@ -408,6 +408,12 @@ function resolveDefaultBase() {
   }
 
   return "";
+}
+
+function resolvePublicationBase({ branch, upstream }) {
+  const defaultBase = resolveDefaultBase();
+  if (branch === "main" && upstream) return upstream;
+  return defaultBase || upstream;
 }
 
 function normalize(value) {
