@@ -911,6 +911,7 @@ CREATE TABLE public.case_activities (
   activity_date         date NOT NULL DEFAULT CURRENT_DATE,
   kind                  public.price_item_kind NOT NULL,
   status                public.case_activity_status NOT NULL DEFAULT 'to_invoice',
+  needs_review          boolean NOT NULL DEFAULT false,
   snapshot_price_year   integer NOT NULL,
   snapshot_price_code   text NOT NULL,
   snapshot_price_name   text NOT NULL,
@@ -938,6 +939,7 @@ CREATE INDEX idx_case_activities_counterparty ON public.case_activities (counter
 CREATE INDEX idx_case_activities_price_item ON public.case_activities (price_item_id);
 CREATE INDEX idx_case_activities_invoice ON public.case_activities (invoice_id);
 CREATE INDEX idx_case_activities_status_date ON public.case_activities (status, activity_date);
+CREATE INDEX idx_case_activities_needs_review ON public.case_activities (user_id, needs_review, activity_date) WHERE needs_review;
 
 CREATE TABLE public.case_activity_hearings (
   id            uuid PRIMARY KEY DEFAULT gen_random_uuid(),

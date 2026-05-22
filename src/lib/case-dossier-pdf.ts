@@ -113,7 +113,9 @@ export function generateCaseDossierPdf(input: CaseDossierInput) {
         ]
           .filter(Boolean)
           .join(" - "),
-        `${activity.kind} · ${activity.status}`,
+        [activity.kind, activity.status, activity.needsReview ? "Da verificare" : ""]
+          .filter(Boolean)
+          .join(" · "),
         activity.amount,
       );
     });

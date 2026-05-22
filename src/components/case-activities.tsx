@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { SummaryTile } from "@/components/summary-tile";
 import {
   Command,
@@ -111,6 +112,7 @@ type ActivityRow = {
   activity_date: string;
   kind: "fee" | "expense_reimbursement";
   status: "to_invoice" | "invoiced";
+  needs_review: boolean;
   snapshot_price_year: number;
   snapshot_price_code: string;
   snapshot_price_name: string;
@@ -161,7 +163,13 @@ const currentYearFromDate = (value: string) => {
   return Number.isNaN(date.getTime()) ? new Date().getFullYear() : date.getFullYear();
 };
 
-const formatDecimalInputValue = (value: number) => (Number.isFinite(value) ? String(value) : "");
+const formatDecimalInputValue = (value: number) =>
+  Number.isFinite(value)
+    ? value.toLocaleString("it-IT", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    : "";
 
 const parseDecimalInputValue = (value: string) => {
   const normalized = value.trim().replace(/\s/g, "").replace(",", ".");
@@ -214,9 +222,10 @@ export function CaseActivitiesTab({ caseRow }: { caseRow: CaseActivityContext })
       if (activity.kind === "fee") acc.fees += Number(activity.amount) || 0;
       else acc.reimbursements += Number(activity.amount) || 0;
       if (activity.status === "to_invoice") acc.toInvoice += Number(activity.amount) || 0;
+      if (activity.needs_review) acc.needsReview += 1;
       return acc;
     },
-    { fees: 0, reimbursements: 0, toInvoice: 0 },
+    { fees: 0, reimbursements: 0, toInvoice: 0, needsReview: 0 },
   );
 
   return (
@@ -231,10 +240,11 @@ export function CaseActivitiesTab({ caseRow }: { caseRow: CaseActivityContext })
         </div>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <div className="grid gap-3 md:grid-cols-3">
+        <div className="grid gap-3 md:grid-cols-4">
           <SummaryTile label="Compensi" value={formatCurrency(totals.fees)} />
           <SummaryTile label="Rimborsi spese" value={formatCurrency(totals.reimbursements)} />
           <SummaryTile label="Da fatturare" value={formatCurrency(totals.toInvoice)} tone="gold" />
+          <SummaryTile label="Da verificare" value={String(totals.needsReview)} />
         </div>
 
         {isLoading ? (
@@ -262,6 +272,7 @@ export function CaseActivitiesTab({ caseRow }: { caseRow: CaseActivityContext })
                   <TableCell>
                     <div className="flex flex-col gap-1">
                       <span className="font-medium">{activity.description}</span>
+                      <ActivityReviewBadge needsReview={activity.needs_review} />
                       <span className="text-xs text-muted-foreground">
                         {priceItemKindLabels[activity.kind]} · {activity.snapshot_price_name}
                       </span>
@@ -340,6 +351,15 @@ export function CaseActivitiesTab({ caseRow }: { caseRow: CaseActivityContext })
   );
 }
 
+export function ActivityReviewBadge({ needsReview }: { needsReview?: boolean | null }) {
+  if (!needsReview) return null;
+  return (
+    <Badge variant="secondary" className="w-fit">
+      Da verificare
+    </Badge>
+  );
+}
+
 function AttachmentList({ attachments }: { attachments: ActivityAttachment[] }) {
   if (attachments.length === 0) {
     return <span className="text-sm text-muted-foreground">Nessun allegato</span>;
@@ -412,10 +432,13 @@ function CasePicker({
           <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="z-[60] w-[--radix-popover-trigger-width] p-0">
+      <PopoverContent
+        align="start"
+        className="z-[60] max-h-[min(24rem,var(--radix-popover-content-available-height))] w-[var(--radix-popover-trigger-width)] overflow-hidden p-0"
+      >
         <Command>
           <CommandInput placeholder="Cerca pratica…" />
-          <CommandList>
+          <CommandList className="max-h-[min(20rem,var(--radix-popover-content-available-height))]">
             <CommandEmpty>Nessuna pratica trovata.</CommandEmpty>
             {options.map((option) => {
               const label = activityCaseLabel(option);
@@ -487,6 +510,7 @@ export function CaseActivityDialog({
   const [quantity, setQuantity] = useState(1);
   const [freeAmountInput, setFreeAmountInput] = useState("0");
   const [status, setStatus] = useState<"to_invoice" | "invoiced">("to_invoice");
+  const [needsReview, setNeedsReview] = useState(false);
   const [notes, setNotes] = useState("");
   const [hearingDates, setHearingDates] = useState<string[]>([]);
   const [file, setFile] = useState<File | null>(null);
@@ -598,6 +622,7 @@ export function CaseActivityDialog({
       ),
     );
     setStatus(activity.status);
+    setNeedsReview(activity.needs_review);
     setNotes(activity.notes ?? "");
     setHearingDates(
       [...(activity.case_activity_hearings ?? [])]
@@ -658,6 +683,7 @@ export function CaseActivityDialog({
             {
               activity_date: activityDate,
               status,
+              needs_review: needsReview,
               description: description.trim(),
               quantity: calculatedQuantity,
               unit_price: unitPriceForSave,
@@ -737,6 +763,7 @@ export function CaseActivityDialog({
           activity_date: activityDate,
           kind: currentItem.kind,
           status,
+          needs_review: needsReview,
           snapshot_price_year: currentPriceBook.year,
           snapshot_price_code: currentItem.code,
           snapshot_price_name: currentItem.name,
@@ -808,6 +835,7 @@ export function CaseActivityDialog({
     setQuantity(1);
     setFreeAmountInput("0");
     setStatus("to_invoice");
+    setNeedsReview(false);
     setNotes("");
     setHearingDates([]);
     setFile(null);
@@ -835,6 +863,12 @@ export function CaseActivityDialog({
     event.preventDefault();
     if (!saveLock.acquire()) return;
     save.mutate();
+  };
+
+  const formatFreeAmountInput = () => {
+    const parsed = parseDecimalInputValue(freeAmountInput);
+    if (parsed === null) return;
+    setFreeAmountInput(formatDecimalInputValue(parsed));
   };
 
   return (
@@ -974,6 +1008,7 @@ export function CaseActivityDialog({
                 placeholder="0,00"
                 disabled={!isEditing && (!selectedItem || selectedItem.kind === "fee")}
                 onChange={(event) => setFreeAmountInput(event.target.value)}
+                onBlur={formatFreeAmountInput}
               />
             </div>
             {!isExpenseReimbursement ? (
@@ -1008,6 +1043,20 @@ export function CaseActivityDialog({
             </div>
           ) : null}
 
+          <div className="flex items-start gap-3 rounded-md border border-border p-3">
+            <Checkbox
+              id="activity_needs_review"
+              checked={needsReview}
+              onCheckedChange={(checked) => setNeedsReview(checked === true)}
+            />
+            <div className="space-y-1">
+              <Label htmlFor="activity_needs_review">Importo da verificare</Label>
+              <p className="text-sm text-muted-foreground">
+                Usa le note per indicare il motivo del dubbio sull'importo.
+              </p>
+            </div>
+          </div>
+
           <div className="flex flex-col gap-2">
             <Label htmlFor="notes">Note</Label>
             <Textarea
@@ -1015,6 +1064,9 @@ export function CaseActivityDialog({
               rows={3}
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
+              placeholder={
+                needsReview ? "Motivo della verifica, ad esempio tariffa da confermare" : undefined
+              }
             />
           </div>
 
@@ -1038,6 +1090,7 @@ export function CaseActivityDialog({
                   id="attachment_name"
                   value={attachmentName}
                   onChange={(event) => setAttachmentName(event.target.value)}
+                  placeholder="Es. Ricevuta contributo unificato"
                   disabled={!file}
                 />
               </div>
@@ -1047,7 +1100,7 @@ export function CaseActivityDialog({
                   id="attachment_type"
                   value={attachmentType}
                   onChange={(event) => setAttachmentType(event.target.value)}
-                  placeholder="Es. giustificativo"
+                  placeholder="Es. giustificativo spesa"
                   disabled={!file}
                 />
               </div>
@@ -1058,6 +1111,7 @@ export function CaseActivityDialog({
                   rows={2}
                   value={attachmentNotes}
                   onChange={(event) => setAttachmentNotes(event.target.value)}
+                  placeholder="Es. importo anticipato per iscrizione a ruolo"
                   disabled={!file}
                 />
               </div>

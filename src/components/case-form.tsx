@@ -34,6 +34,7 @@ import {
   caseStatusLabels,
   clientDisplayName,
   clientKindLabels,
+  compareClients,
   counterpartyKindLabels,
 } from "@/lib/labels";
 import type { DuplicateCandidate } from "@/lib/duplicate-matching";
@@ -164,6 +165,9 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
   const [quickCounterparty, setQuickCounterparty] =
     useState<QuickCounterpartyDraft>(emptyQuickCounterparty);
   const [quickCreatedClients, setQuickCreatedClients] = useState<ClientOption[]>([]);
+  const [quickCreatedCounterparties, setQuickCreatedCounterparties] = useState<
+    CounterpartyOption[]
+  >([]);
   const [duplicateCandidates, setDuplicateCandidates] = useState<DuplicateCandidate[]>([]);
   const [quickPrincipalDuplicates, setQuickPrincipalDuplicates] = useState<DuplicateCandidate[]>(
     [],
@@ -259,13 +263,15 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
   const allClients = useMemo(() => {
     const byId = new Map<string, ClientOption>();
     [...quickCreatedClients, ...clients].forEach((client) => byId.set(client.id, client));
-    return Array.from(byId.values());
+    return Array.from(byId.values()).sort(compareClients);
   }, [clients, quickCreatedClients]);
 
   const availableClients = useMemo(() => {
     if (!form.principal_id) return allClients;
     const allowed = new Set(principalClientIds);
-    return allClients.filter((client) => allowed.has(client.id) || client.id === form.client_id);
+    return allClients
+      .filter((client) => allowed.has(client.id) || client.id === form.client_id)
+      .sort(compareClients);
   }, [allClients, form.client_id, form.principal_id, principalClientIds]);
 
   useEffect(() => {
@@ -523,6 +529,10 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       } satisfies CounterpartyOption;
     },
     onSuccess: (counterparty) => {
+      setQuickCreatedCounterparties((current) => [
+        counterparty,
+        ...current.filter((item) => item.id !== counterparty.id),
+      ]);
       qc.setQueryData<CounterpartyOption[]>(["counterparties", "selector"], (current = []) => [
         counterparty,
         ...current,
@@ -719,6 +729,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                       onChange={(event) =>
                         updateQuickPrincipal("business_name", event.target.value)
                       }
+                      placeholder="Es. Banca Alfa S.p.A."
                     />
                   </div>
                   <DuplicateWarningPanel
@@ -822,19 +833,21 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                   {quickClient.kind === "individual" ? (
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="flex flex-col gap-2">
-                        <Label htmlFor="quick_client_first_name">Nome</Label>
-                        <Input
-                          id="quick_client_first_name"
-                          value={quickClient.first_name}
-                          onChange={(event) => updateQuickClient("first_name", event.target.value)}
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
                         <Label htmlFor="quick_client_last_name">Cognome</Label>
                         <Input
                           id="quick_client_last_name"
                           value={quickClient.last_name}
                           onChange={(event) => updateQuickClient("last_name", event.target.value)}
+                          placeholder="Es. Rossi"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="quick_client_first_name">Nome</Label>
+                        <Input
+                          id="quick_client_first_name"
+                          value={quickClient.first_name}
+                          onChange={(event) => updateQuickClient("first_name", event.target.value)}
+                          placeholder="Es. Anna"
                         />
                       </div>
                     </div>
@@ -846,6 +859,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                         id="quick_client_business_name"
                         value={quickClient.business_name}
                         onChange={(event) => updateQuickClient("business_name", event.target.value)}
+                        placeholder="Es. Alfa S.r.l."
                       />
                     </div>
                   ) : null}
@@ -904,6 +918,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                     id="counterparty_id"
                     value={form.counterparty_id}
                     onValueChange={(value) => upd("counterparty_id", value)}
+                    additionalOptions={quickCreatedCounterparties}
                   />
                 </div>
                 <Button
@@ -939,16 +954,6 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                   {quickCounterparty.kind === "individual" ? (
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="flex flex-col gap-2">
-                        <Label htmlFor="quick_counterparty_first_name">Nome</Label>
-                        <Input
-                          id="quick_counterparty_first_name"
-                          value={quickCounterparty.first_name}
-                          onChange={(event) =>
-                            updateQuickCounterparty("first_name", event.target.value)
-                          }
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
                         <Label htmlFor="quick_counterparty_last_name">Cognome</Label>
                         <Input
                           id="quick_counterparty_last_name"
@@ -956,6 +961,18 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                           onChange={(event) =>
                             updateQuickCounterparty("last_name", event.target.value)
                           }
+                          placeholder="Es. Rossi"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor="quick_counterparty_first_name">Nome</Label>
+                        <Input
+                          id="quick_counterparty_first_name"
+                          value={quickCounterparty.first_name}
+                          onChange={(event) =>
+                            updateQuickCounterparty("first_name", event.target.value)
+                          }
+                          placeholder="Es. Anna"
                         />
                       </div>
                     </div>
@@ -972,6 +989,11 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                         value={quickCounterparty.business_name}
                         onChange={(event) =>
                           updateQuickCounterparty("business_name", event.target.value)
+                        }
+                        placeholder={
+                          quickCounterparty.kind === "group"
+                            ? "Es. Debitori collegati"
+                            : "Es. Debitore S.r.l."
                         }
                       />
                     </div>
@@ -1033,7 +1055,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                     upd("practice_number", numericValue);
                     upd("case_number", numericValue ? String(numericValue) : "");
                   }}
-                  placeholder="157"
+                  placeholder="Es. 157"
                 />
                 {!isEdit && (
                   <Button type="button" variant="outline" onClick={useNextPracticeNumber}>
@@ -1048,7 +1070,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                 id="title"
                 value={form.title}
                 onChange={(event) => upd("title", event.target.value)}
-                placeholder="Es. Recupero credito Gruppo 3C"
+                placeholder="Es. Recupero credito fattura insoluta"
               />
             </div>
           </div>
@@ -1123,6 +1145,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                 id="rg_number"
                 value={form.rg_number ?? ""}
                 onChange={(event) => upd("rg_number", event.target.value)}
+                placeholder="Es. 1234/2026"
               />
             </div>
           </div>
@@ -1133,6 +1156,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
               rows={4}
               value={form.notes ?? ""}
               onChange={(event) => upd("notes", event.target.value)}
+              placeholder="Es. stato trattativa, prossima attività o dettaglio del credito"
             />
           </div>
         </CardContent>

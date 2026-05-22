@@ -240,19 +240,21 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
           {form.kind === "individual" ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="fn">Nome</Label>
-                <Input
-                  id="fn"
-                  value={form.first_name ?? ""}
-                  onChange={(e) => upd("first_name", e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
                 <Label htmlFor="ln">Cognome</Label>
                 <Input
                   id="ln"
                   value={form.last_name ?? ""}
                   onChange={(e) => upd("last_name", e.target.value)}
+                  placeholder="Es. Rossi"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="fn">Nome</Label>
+                <Input
+                  id="fn"
+                  value={form.first_name ?? ""}
+                  onChange={(e) => upd("first_name", e.target.value)}
+                  placeholder="Es. Anna"
                 />
               </div>
             </div>
@@ -263,6 +265,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
                 id="bn"
                 value={form.business_name ?? ""}
                 onChange={(e) => upd("business_name", e.target.value)}
+                placeholder="Es. Alfa S.r.l."
               />
             </div>
           )}
@@ -332,6 +335,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
             rows={3}
             value={form.notes ?? ""}
             onChange={(e) => upd("notes", e.target.value)}
+            placeholder="Es. collegamento al committente o note operative"
           />
         </CardContent>
       </Card>

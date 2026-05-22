@@ -77,9 +77,11 @@ export type CaseOperationsCase = {
 
 export function CaseOperationsPanel({
   caseRow,
+  afterDashboardSlot,
   detailsSlot,
 }: {
   caseRow: CaseOperationsCase;
+  afterDashboardSlot?: ReactNode;
   detailsSlot?: ReactNode;
 }) {
   const [editingActivity, setEditingActivity] = useState<OperationsActivityRow | null>(null);
@@ -309,6 +311,8 @@ export function CaseOperationsPanel({
           </div>
         </CardContent>
       </Card>
+
+      {afterDashboardSlot}
 
       {detailsSlot ? <CaseDetailsSection>{detailsSlot}</CaseDetailsSection> : null}
 
@@ -593,6 +597,7 @@ function buildDossierInput({
       activityDate: activity.activity_date,
       kind: priceItemKindLabels[activity.kind] ?? activity.kind,
       status: caseActivityStatusLabels[activity.status] ?? activity.status,
+      needsReview: activity.needs_review,
       description: activity.description,
       quantity: Number(activity.quantity) || 0,
       unitPrice: Number(activity.unit_price) || 0,

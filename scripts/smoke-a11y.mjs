@@ -29,13 +29,17 @@ const VIEWPORTS = [
   { name: "mobile", width: 390, height: 844 },
 ];
 const DEFAULT_SMOKE_EMAIL = "codex.pratix.test.20260509@gmail.com";
+const DEFAULT_AUDIT_TIMEOUT_MS = 20_000;
 
 const args = new Set(process.argv.slice(2));
 const startServer = args.has("--start-server");
 const publicOnly = args.has("--public-only");
 const authRequired = args.has("--auth-required");
 const port = Number(process.env.PRATIX_SMOKE_PORT || 3300);
-const auditTimeoutMs = Number(process.env.PRATIX_SMOKE_AUDIT_TIMEOUT_MS || 20_000);
+const auditTimeoutMs = parsePositiveIntegerEnv(
+  "PRATIX_SMOKE_AUDIT_TIMEOUT_MS",
+  DEFAULT_AUDIT_TIMEOUT_MS,
+);
 const localEnv = loadEnv(
   process.env.MODE || process.env.NODE_ENV || "development",
   process.cwd(),
@@ -50,6 +54,21 @@ const supabaseUrl = envValue("SUPABASE_URL") || envValue("VITE_SUPABASE_URL");
 const supabaseServiceRoleKey = envValue("SUPABASE_SERVICE_ROLE_KEY");
 
 let server;
+
+function parsePositiveIntegerEnv(name, defaultValue) {
+  const rawValue = process.env[name];
+  if (!rawValue || !rawValue.trim()) return defaultValue;
+
+  const value = Number(rawValue);
+  if (!Number.isInteger(value) || value <= 0) {
+    throw new Error(
+      `${name} deve essere un numero intero positivo in millisecondi. ` +
+        `Valore ricevuto: "${rawValue}". Esempio valido: ${name}=30000.`,
+    );
+  }
+
+  return value;
+}
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));

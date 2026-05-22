@@ -45,6 +45,7 @@ import {
   caseActivityStatusLabels,
   caseStatusLabels,
   clientDisplayName,
+  compareClients,
   compareCounterparties,
   counterpartyDisplayName,
   counterpartyKindLabels,
@@ -337,7 +338,7 @@ function ManualImportWizard({ onImported }: { onImported: (caseId: string) => vo
         .select("id, kind, first_name, last_name, business_name")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return (data ?? []) as ClientRow[];
+      return ((data ?? []) as ClientRow[]).slice().sort(compareClients);
     },
   });
 
@@ -692,7 +693,7 @@ function SubjectsStep({
                 id="principal_name"
                 value={draft.principalName}
                 onChange={(event) => updateDraft("principalName", event.target.value)}
-                placeholder="Es. iLaw"
+                placeholder="Es. Banca Alfa S.p.A."
               />
             </div>
           )}
@@ -738,6 +739,7 @@ function SubjectsStep({
               lastName={draft.clientLastName}
               businessName={draft.clientBusinessName}
               kindLabel="Tipo cliente"
+              companyPlaceholder="Es. Alfa S.r.l."
               onKindChange={(value) => updateDraft("clientKind", value as ClientKind)}
               onFirstNameChange={(value) => updateDraft("clientFirstName", value)}
               onLastNameChange={(value) => updateDraft("clientLastName", value)}
@@ -790,6 +792,8 @@ function SubjectsStep({
                 businessName={draft.counterpartyBusinessName}
                 kindLabel="Tipo controparte"
                 includeGroup
+                companyPlaceholder="Es. Debitore S.r.l."
+                groupPlaceholder="Es. Debitori collegati"
                 onKindChange={(value) => updateDraft("counterpartyKind", value as CounterpartyKind)}
                 onFirstNameChange={(value) => updateDraft("counterpartyFirstName", value)}
                 onLastNameChange={(value) => updateDraft("counterpartyLastName", value)}
@@ -802,6 +806,7 @@ function SubjectsStep({
                   value={draft.counterpartyNotes}
                   onChange={(event) => updateDraft("counterpartyNotes", event.target.value)}
                   rows={3}
+                  placeholder="Es. recapiti, ruolo nel credito o note di recupero"
                 />
               </div>
             </>
@@ -838,7 +843,7 @@ function PracticeStep({
               step="1"
               value={draft.practiceNumber}
               onChange={(event) => updateDraft("practiceNumber", event.target.value)}
-              placeholder="157"
+              placeholder="Es. 157"
             />
           </div>
           <div className="space-y-2">
@@ -847,7 +852,7 @@ function PracticeStep({
               id="practice_title"
               value={draft.title}
               onChange={(event) => updateDraft("title", event.target.value)}
-              placeholder="Es. Recupero credito Gruppo 3C"
+              placeholder="Es. Recupero credito fattura insoluta"
             />
           </div>
         </div>
@@ -905,6 +910,7 @@ function PracticeStep({
               id="rg_number"
               value={draft.rgNumber}
               onChange={(event) => updateDraft("rgNumber", event.target.value)}
+              placeholder="Es. 1234/2026"
             />
           </div>
         </div>
@@ -915,6 +921,7 @@ function PracticeStep({
             rows={4}
             value={draft.notes}
             onChange={(event) => updateDraft("notes", event.target.value)}
+            placeholder="Es. stato trattativa, prossima attività o dettaglio del credito"
           />
         </div>
       </CardContent>
@@ -1168,6 +1175,7 @@ function ActivityEditor({
                 onChange={(event) =>
                   updateActivity(activity.localId, "attachmentName", event.target.value)
                 }
+                placeholder="Es. Ricevuta contributo unificato"
               />
             </div>
             <div className="space-y-2">
@@ -1175,7 +1183,7 @@ function ActivityEditor({
               <Input
                 value={activity.attachmentType}
                 disabled={!activity.attachmentFile}
-                placeholder="Es. giustificativo"
+                placeholder="Es. giustificativo spesa"
                 onChange={(event) =>
                   updateActivity(activity.localId, "attachmentType", event.target.value)
                 }
@@ -1191,6 +1199,7 @@ function ActivityEditor({
               onChange={(event) =>
                 updateActivity(activity.localId, "attachmentNotes", event.target.value)
               }
+              placeholder="Es. importo anticipato per iscrizione a ruolo"
             />
           </div>
         </div>
@@ -1409,6 +1418,8 @@ function PersonOrCompanyFields({
   businessName,
   kindLabel,
   includeGroup,
+  companyPlaceholder = "Es. Alfa S.r.l.",
+  groupPlaceholder = "Es. Debitori collegati",
   onKindChange,
   onFirstNameChange,
   onLastNameChange,
@@ -1420,6 +1431,8 @@ function PersonOrCompanyFields({
   businessName: string;
   kindLabel: string;
   includeGroup?: boolean;
+  companyPlaceholder?: string;
+  groupPlaceholder?: string;
   onKindChange: (value: string) => void;
   onFirstNameChange: (value: string) => void;
   onLastNameChange: (value: string) => void;
@@ -1443,12 +1456,20 @@ function PersonOrCompanyFields({
       {kind === "individual" ? (
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="space-y-2">
-            <Label>Nome</Label>
-            <Input value={firstName} onChange={(event) => onFirstNameChange(event.target.value)} />
+            <Label>Cognome</Label>
+            <Input
+              value={lastName}
+              onChange={(event) => onLastNameChange(event.target.value)}
+              placeholder="Es. Rossi"
+            />
           </div>
           <div className="space-y-2">
-            <Label>Cognome</Label>
-            <Input value={lastName} onChange={(event) => onLastNameChange(event.target.value)} />
+            <Label>Nome</Label>
+            <Input
+              value={firstName}
+              onChange={(event) => onFirstNameChange(event.target.value)}
+              placeholder="Es. Anna"
+            />
           </div>
         </div>
       ) : (
@@ -1457,6 +1478,7 @@ function PersonOrCompanyFields({
           <Input
             value={businessName}
             onChange={(event) => onBusinessNameChange(event.target.value)}
+            placeholder={kind === "group" ? groupPlaceholder : companyPlaceholder}
           />
         </div>
       )}

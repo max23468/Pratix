@@ -320,6 +320,7 @@ const editableActivity: CaseActivityDialogActivity = {
   activity_date: `${new Date().getFullYear()}-05-10`,
   kind: "fee",
   status: "to_invoice",
+  needs_review: false,
   snapshot_price_year: new Date().getFullYear(),
   snapshot_price_code: "DIFF",
   snapshot_price_name: "Diffida",
@@ -385,7 +386,26 @@ describe("CaseActivityDialog", () => {
     );
   });
 
-  it("registra un rimborso spese come importo forfettario con virgola decimale", async () => {
+  it("registra una voce con importo da verificare e motivo nelle note", async () => {
+    renderDialog();
+
+    await userEvent.click(screen.getByRole("button", { name: /Attività/ }));
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "item-1");
+    await screen.findByDisplayValue("Redazione diffida");
+    await userEvent.click(screen.getByRole("checkbox", { name: "Importo da verificare" }));
+    await userEvent.type(screen.getByLabelText("Note"), "Tariffa da confermare");
+    await userEvent.click(screen.getByRole("button", { name: "Salva" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Voce fatturabile registrata"));
+    expect(query.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        needs_review: true,
+        notes: "Tariffa da confermare",
+      }),
+    );
+  });
+
+  it("registra un rimborso spese come importo libero con virgola decimale", async () => {
     renderDialog();
 
     await userEvent.click(screen.getByRole("button", { name: /Attività/ }));
@@ -412,6 +432,24 @@ describe("CaseActivityDialog", () => {
         unit_price: 12.5,
       }),
     );
+  });
+
+  it("formatta l'importo libero con due decimali quando il campo perde il focus", async () => {
+    renderDialog();
+
+    await userEvent.click(screen.getByRole("button", { name: /Attività/ }));
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "item-expense");
+    await screen.findByDisplayValue("Rimborso spese");
+
+    const amountInput = screen.getByLabelText("Importo") as HTMLInputElement;
+    await userEvent.clear(amountInput);
+    await userEvent.type(amountInput, "16");
+
+    expect(amountInput.value).toBe("16");
+
+    fireEvent.blur(amountInput);
+
+    expect(amountInput.value).toBe("16,00");
   });
 
   it("mostra le pratiche in ordine alfabetico e permette di cercarle digitando", async () => {
@@ -516,6 +554,7 @@ describe("CaseActivityDialog", () => {
       expect.objectContaining({
         activity_date: editableActivity.activity_date,
         status: "to_invoice",
+        needs_review: false,
         description: "Diffida aggiornata",
         quantity: 2,
         unit_price: 120,
@@ -527,7 +566,7 @@ describe("CaseActivityDialog", () => {
     expect(query.is).toHaveBeenCalledWith("invoice_id", null);
   });
 
-  it("modifica un rimborso spese mantenendolo come importo forfettario", async () => {
+  it("modifica un rimborso spese mantenendolo come importo libero", async () => {
     renderDialog(editableExpenseActivity);
 
     await screen.findByRole("heading", { name: "Modifica voce fatturabile" });
@@ -535,7 +574,7 @@ describe("CaseActivityDialog", () => {
     expect(screen.queryByLabelText("Quantità")).toBeNull();
 
     const amountInput = screen.getByLabelText("Importo") as HTMLInputElement;
-    expect(amountInput.value).toBe("100");
+    expect(amountInput.value).toBe("100,00");
     await userEvent.clear(amountInput);
     await userEvent.type(amountInput, "118,50");
     await userEvent.click(screen.getByRole("button", { name: "Salva modifiche" }));

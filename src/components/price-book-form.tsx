@@ -553,7 +553,7 @@ function PriceItemsEditor({
                           onChange={(event) =>
                             onUpdate(index, "invoice_description", event.target.value)
                           }
-                          placeholder="Descrizione in fattura"
+                          placeholder="Es. Redazione diffida stragiudiziale"
                         />
                       </div>
                     </TableCell>

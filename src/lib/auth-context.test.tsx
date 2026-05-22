@@ -48,7 +48,7 @@ describe("AuthProvider", () => {
     cleanup();
   });
 
-  it("espone la sessione corrente e permette il logout", async () => {
+  it("espone la sessione corrente e permette il logout solo locale", async () => {
     supabase.auth.getSession.mockResolvedValue({
       data: {
         session: {
@@ -68,7 +68,7 @@ describe("AuthProvider", () => {
     await screen.findByText("avvocato@example.test");
 
     await userEvent.click(screen.getByRole("button", { name: "esci" }));
-    expect(supabase.auth.signOut).toHaveBeenCalledWith();
+    expect(supabase.auth.signOut).toHaveBeenCalledWith({ scope: "local" });
   });
 
   it("pulisce la sessione locale quando il refresh token non è più valido", async () => {

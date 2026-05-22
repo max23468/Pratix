@@ -25,6 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
+import { ActivityReviewBadge } from "@/components/case-activities";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -93,6 +94,7 @@ type ActivityRow = {
   activity_date: string;
   kind: "fee" | "expense_reimbursement";
   status: "to_invoice" | "invoiced";
+  needs_review: boolean;
   invoice_id: string | null;
   description: string;
   quantity: number;
@@ -311,7 +313,7 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
     ),
     queryFn: async () => {
       const activitySelect =
-        "id, activity_date, kind, status, invoice_id, description, quantity, unit_price, amount, postponed_until, cases(practice_number, title), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)";
+        "id, activity_date, kind, status, needs_review, invoice_id, description, quantity, unit_price, amount, postponed_until, cases(practice_number, title), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)";
       const availableQuery = supabase
         .from("case_activities")
         .select(activitySelect)
@@ -747,6 +749,7 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
                         <div className="flex flex-col gap-1">
                           <span className="text-muted-foreground sm:hidden">Voce</span>
                           <span className="break-words">{activity.description}</span>
+                          <ActivityReviewBadge needsReview={activity.needs_review} />
                           <span className="text-xs text-muted-foreground">
                             {activity.kind === "fee" ? "Compenso" : "Rimborso spese"} · Q.tà{" "}
                             {activity.quantity}
@@ -780,7 +783,7 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
                 markDirty();
                 setNotes(event.target.value);
               }}
-              placeholder="Note interne o descrizione da riportare in fattura"
+              placeholder="Es. Attività da fatturare per il periodo indicato"
             />
           </CardContent>
         </Card>

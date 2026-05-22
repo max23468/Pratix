@@ -31,6 +31,7 @@ export type CaseTimelineActivity = {
   activity_date: string;
   kind: "fee" | "expense_reimbursement";
   status: "to_invoice" | "invoiced";
+  needs_review?: boolean | null;
   description: string;
   quantity: number;
   unit_price: number;
@@ -123,7 +124,12 @@ export function buildCaseTimelineItems({
       ]
         .filter(Boolean)
         .join(" · "),
-      meta: caseActivityStatusLabels[activity.status] ?? activity.status,
+      meta: [
+        caseActivityStatusLabels[activity.status] ?? activity.status,
+        activity.needs_review ? "Da verificare" : "",
+      ]
+        .filter(Boolean)
+        .join(" · "),
       amount: Number(activity.amount) || 0,
       activityId: activity.id,
     });

@@ -88,6 +88,7 @@ describe("form applicative principali", () => {
     expect(html).toContain("Tipo cliente");
     expect(html).toContain("Nome");
     expect(html).toContain("Cognome");
+    expect(html.indexOf("Cognome")).toBeLessThan(html.indexOf("Nome"));
     expect(html).not.toContain("Contatti");
     expect(html).not.toContain("Indirizzo");
     expect(html).not.toContain("Codice fiscale");
@@ -120,6 +121,26 @@ describe("form applicative principali", () => {
     expect(html).toContain("Tipo controparte");
     expect(html).toContain("Debitori collegati");
     expect(html).toContain("Soggetti della controparte");
+  });
+
+  it("renderizza la form Controparte persona fisica con cognome prima del nome", () => {
+    const html = renderWithQueryClient(
+      <CounterpartyForm
+        initial={{
+          id: "counterparty-1",
+          kind: "individual",
+          first_name: "Luca",
+          last_name: "Bianchi",
+          business_name: null,
+        }}
+        onSaved={noop}
+        onCancel={noop}
+      />,
+    );
+
+    expect(html).toContain("Cognome");
+    expect(html).toContain("Nome");
+    expect(html.indexOf("Cognome")).toBeLessThan(html.indexOf("Nome"));
   });
 
   it("renderizza la form Pratica con dati recupero crediti", () => {

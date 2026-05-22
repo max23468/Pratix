@@ -93,7 +93,7 @@
     "playwright": "^1.59.1",
     "prettier": "^3.8.3",
     "react-doctor": "0.1.4",
-    "supabase": "^2.98.2",
+    "supabase": "^2.101.0",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.2",
     "vite": "^8.0.11",

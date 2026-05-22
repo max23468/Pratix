@@ -5,7 +5,11 @@ import { Pencil, Plus, Search } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { ListToolbar } from "@/components/list-toolbar";
 import { PageHeader } from "@/components/page-header";
-import { CaseActivityDialog, type CaseActivityDialogActivity } from "@/components/case-activities";
+import {
+  ActivityReviewBadge,
+  CaseActivityDialog,
+  type CaseActivityDialogActivity,
+} from "@/components/case-activities";
 import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import { SummaryTile } from "@/components/summary-tile";
@@ -73,6 +77,7 @@ export const Route = createFileRoute("/attivita/")({
     status: parseFilterValue(search.status, caseActivityStatusLabels),
     kind: parseFilterValue(search.kind, priceItemKindLabels),
     attachments: parseAttachmentsSearch(search.attachments),
+    review: parseReviewSearch(search.review),
     sort: parseTableSortKey(search.sort, attivitaSortKeys),
     dir: parseTableSortDirection(search.dir),
   }),
@@ -102,6 +107,7 @@ type ActivitiesSearch = {
   status?: string;
   kind?: string;
   attachments?: "missing" | "all";
+  review?: "needs_review" | "all";
   sort?: AttivitaSortKey;
   dir?: "asc" | "desc";
 };
@@ -119,8 +125,11 @@ function ActivitiesList() {
   const status = search.status ?? "all";
   const kind = search.kind ?? "all";
   const attachments = search.attachments ?? "all";
+  const review = search.review ?? "all";
   const urlSort =
     search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
+  const hasActiveFilters =
+    Boolean(q) || status !== "all" || kind !== "all" || attachments !== "all" || review !== "all";
 
   const updateSearch = (next: ActivitiesSearch) =>
     navigate({
@@ -129,6 +138,7 @@ function ActivitiesList() {
         status: next.status && next.status !== "all" ? next.status : undefined,
         kind: next.kind && next.kind !== "all" ? next.kind : undefined,
         attachments: next.attachments && next.attachments !== "all" ? next.attachments : undefined,
+        review: next.review && next.review !== "all" ? next.review : undefined,
         sort: next.sort ?? search.sort,
         dir: next.dir ?? search.dir,
       },
@@ -143,7 +153,7 @@ function ActivitiesList() {
       const { data, error } = await supabase
         .from("case_activities")
         .select(
-          "id, case_id, price_book_id, price_item_id, activity_date, kind, status, snapshot_price_year, snapshot_price_code, snapshot_price_name, description, quantity, unit_price, amount, invoice_id, notes, case_activity_hearings(*), activity_attachments(*), cases(id, public_code, practice_number, case_number, title, principal_id, client_id, counterparty_id, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name))",
+          "id, case_id, price_book_id, price_item_id, activity_date, kind, status, needs_review, snapshot_price_year, snapshot_price_code, snapshot_price_name, description, quantity, unit_price, amount, invoice_id, notes, case_activity_hearings(*), activity_attachments(*), cases(id, public_code, practice_number, case_number, title, principal_id, client_id, counterparty_id, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name))",
         )
         .order("activity_date", { ascending: false });
       if (error) throw error;
@@ -195,7 +205,7 @@ function ActivitiesList() {
     defaultSort: attivitaDefaultSort,
     urlSort,
     onSortChange: (next) =>
-      updateSearch({ q, status, kind, attachments, sort: next.key, dir: next.direction }),
+      updateSearch({ q, status, kind, attachments, review, sort: next.key, dir: next.direction }),
   });
 
   const filtered = useMemo(() => {
@@ -203,6 +213,7 @@ function ActivitiesList() {
     return data.filter((activity) => {
       if (status !== "all" && activity.status !== status) return false;
       if (kind !== "all" && activity.kind !== kind) return false;
+      if (review === "needs_review" && !activity.needs_review) return false;
       if (
         attachments === "missing" &&
         (activity.kind !== "expense_reimbursement" ||
@@ -216,10 +227,11 @@ function ActivitiesList() {
       return (
         activity.description.toLowerCase().includes(term) ||
         activity.snapshot_price_name.toLowerCase().includes(term) ||
+        (activity.needs_review && "da verificare".includes(term)) ||
         caseLabel.includes(term)
       );
     });
-  }, [attachments, data, kind, q, status]);
+  }, [attachments, data, kind, q, review, status]);
 
   const sorted = useMemo(
     () => sortRows(filtered, attivitaColumns, sort),
@@ -232,9 +244,10 @@ function ActivitiesList() {
       if (activity.kind === "fee") acc.fees += amount;
       else acc.reimbursements += amount;
       if (activity.status === "to_invoice") acc.toInvoice += amount;
+      if (activity.needs_review) acc.needsReview += 1;
       return acc;
     },
-    { fees: 0, reimbursements: 0, toInvoice: 0 },
+    { fees: 0, reimbursements: 0, toInvoice: 0, needsReview: 0 },
   );
 
   return (
@@ -253,10 +266,11 @@ function ActivitiesList() {
         }
       />
 
-      <div className="mb-4 grid gap-3 md:grid-cols-3">
+      <div className="mb-4 grid gap-3 md:grid-cols-4">
         <SummaryTile label="Compensi" value={formatCurrency(totals.fees)} />
         <SummaryTile label="Rimborsi spese" value={formatCurrency(totals.reimbursements)} />
         <SummaryTile label="Da fatturare" value={formatCurrency(totals.toInvoice)} tone="gold" />
+        <SummaryTile label="Da verificare" value={String(totals.needsReview)} />
       </div>
 
       <ListToolbar>
@@ -265,13 +279,15 @@ function ActivitiesList() {
           <Input
             placeholder="Cerca per pratica, voce, committente, cliente…"
             value={q}
-            onChange={(event) => updateSearch({ q: event.target.value, status, kind, attachments })}
+            onChange={(event) =>
+              updateSearch({ q: event.target.value, status, kind, attachments, review })
+            }
             className="pl-9"
           />
         </div>
         <Select
           value={status}
-          onValueChange={(value) => updateSearch({ q, status: value, kind, attachments })}
+          onValueChange={(value) => updateSearch({ q, status: value, kind, attachments, review })}
         >
           <SelectTrigger aria-label="Filtra attività per stato" className="lg:w-44">
             <SelectValue />
@@ -287,7 +303,7 @@ function ActivitiesList() {
         </Select>
         <Select
           value={kind}
-          onValueChange={(value) => updateSearch({ q, status, kind: value, attachments })}
+          onValueChange={(value) => updateSearch({ q, status, kind: value, attachments, review })}
         >
           <SelectTrigger aria-label="Filtra attività per tipo" className="lg:w-48">
             <SelectValue />
@@ -304,7 +320,13 @@ function ActivitiesList() {
         <Select
           value={attachments}
           onValueChange={(value) =>
-            updateSearch({ q, status, kind, attachments: value as "all" | "missing" })
+            updateSearch({
+              q,
+              status,
+              kind,
+              attachments: value as "all" | "missing",
+              review,
+            })
           }
         >
           <SelectTrigger aria-label="Filtra attività per allegati" className="lg:w-48">
@@ -313,6 +335,26 @@ function ActivitiesList() {
           <SelectContent>
             <SelectItem value="all">Tutti gli allegati</SelectItem>
             <SelectItem value="missing">Senza allegato</SelectItem>
+          </SelectContent>
+        </Select>
+        <Select
+          value={review}
+          onValueChange={(value) =>
+            updateSearch({
+              q,
+              status,
+              kind,
+              attachments,
+              review: value as "all" | "needs_review",
+            })
+          }
+        >
+          <SelectTrigger aria-label="Filtra attività da verificare" className="lg:w-48">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Tutte le verifiche</SelectItem>
+            <SelectItem value="needs_review">Da verificare</SelectItem>
           </SelectContent>
         </Select>
       </ListToolbar>
@@ -327,18 +369,14 @@ function ActivitiesList() {
         ) : sorted.length === 0 ? (
           <Card className="p-4">
             <TableEmptyState
-              title={
-                q || status !== "all" || kind !== "all" || attachments !== "all"
-                  ? "Nessuna attività trovata"
-                  : "Nessuna attività"
-              }
+              title={hasActiveFilters ? "Nessuna attività trovata" : "Nessuna attività"}
               description={
-                q || status !== "all" || kind !== "all" || attachments !== "all"
+                hasActiveFilters
                   ? "Modifica ricerca o filtri per ampliare i risultati."
                   : "Registra compensi o rimborsi spese dalla pratica o da inserimento rapido."
               }
               action={
-                !q && status === "all" && kind === "all" && attachments === "all" ? (
+                !hasActiveFilters ? (
                   <CaseActivityDialog
                     trigger={
                       <Button size="sm">
@@ -366,6 +404,11 @@ function ActivitiesList() {
                     <p className="mt-1 truncate text-sm font-medium text-foreground">
                       {activity.description}
                     </p>
+                    {activity.needs_review ? (
+                      <div className="mt-2">
+                        <ActivityReviewBadge needsReview={activity.needs_review} />
+                      </div>
+                    ) : null}
                     <p className="mt-1 truncate text-xs text-muted-foreground">
                       {priceItemKindLabels[activity.kind]} · {activity.snapshot_price_name}
                     </p>
@@ -474,18 +517,14 @@ function ActivitiesList() {
               <TableRow>
                 <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
                   <TableEmptyState
-                    title={
-                      q || status !== "all" || kind !== "all" || attachments !== "all"
-                        ? "Nessuna attività trovata"
-                        : "Nessuna attività"
-                    }
+                    title={hasActiveFilters ? "Nessuna attività trovata" : "Nessuna attività"}
                     description={
-                      q || status !== "all" || kind !== "all" || attachments !== "all"
+                      hasActiveFilters
                         ? "Modifica ricerca o filtri per ampliare i risultati."
                         : "Registra compensi o rimborsi spese dalla pratica o da inserimento rapido."
                     }
                     action={
-                      !q && status === "all" && kind === "all" && attachments === "all" ? (
+                      !hasActiveFilters ? (
                         <CaseActivityDialog
                           trigger={
                             <Button size="sm">
@@ -556,13 +595,14 @@ function ActivitiesList() {
                             aria-label={`Modifica ${activity.description}`}
                             title={editTitle}
                           >
-                            <span className="flex min-w-0 flex-col gap-1">
+                            <div className="flex min-w-0 flex-col gap-1">
                               <span className="truncate font-medium">{activity.description}</span>
+                              <ActivityReviewBadge needsReview={activity.needs_review} />
                               <span className="truncate text-xs text-muted-foreground">
                                 {priceItemKindLabels[activity.kind]} ·{" "}
                                 {activity.snapshot_price_name}
                               </span>
-                            </span>
+                            </div>
                           </Button>
                         }
                       />
@@ -619,4 +659,9 @@ function parseFilterValue(value: unknown, labels: Record<string, string>) {
 function parseAttachmentsSearch(value: unknown) {
   if (typeof value !== "string") return undefined;
   return value === "missing" ? value : undefined;
+}
+
+function parseReviewSearch(value: unknown) {
+  if (typeof value !== "string") return undefined;
+  return value === "needs_review" ? value : undefined;
 }

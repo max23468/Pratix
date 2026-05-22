@@ -255,19 +255,21 @@ export function CounterpartyForm({
           {form.kind === "individual" ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="flex flex-col gap-2">
-                <Label htmlFor="first_name">Nome</Label>
-                <Input
-                  id="first_name"
-                  value={form.first_name ?? ""}
-                  onChange={(event) => upd("first_name", event.target.value)}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
                 <Label htmlFor="last_name">Cognome</Label>
                 <Input
                   id="last_name"
                   value={form.last_name ?? ""}
                   onChange={(event) => upd("last_name", event.target.value)}
+                  placeholder="Es. Rossi"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <Label htmlFor="first_name">Nome</Label>
+                <Input
+                  id="first_name"
+                  value={form.first_name ?? ""}
+                  onChange={(event) => upd("first_name", event.target.value)}
+                  placeholder="Es. Anna"
                 />
               </div>
             </div>
@@ -280,6 +282,9 @@ export function CounterpartyForm({
                 id="business_name"
                 value={form.business_name ?? ""}
                 onChange={(event) => upd("business_name", event.target.value)}
+                placeholder={
+                  form.kind === "group" ? "Es. Debitori collegati" : "Es. Debitore S.r.l."
+                }
               />
             </div>
           )}
@@ -291,6 +296,7 @@ export function CounterpartyForm({
               rows={3}
               value={form.notes ?? ""}
               onChange={(event) => upd("notes", event.target.value)}
+              placeholder="Es. recapiti, ruolo nel credito o note di recupero"
             />
           </div>
         </CardContent>
@@ -374,20 +380,11 @@ export function CounterpartyForm({
                         onChange={(event) =>
                           updateSubject(index, "business_name", event.target.value)
                         }
+                        placeholder="Es. Debitore S.r.l."
                       />
                     </div>
                   ) : (
                     <>
-                      <div className="flex flex-col gap-2">
-                        <Label htmlFor={`subject_first_${index}`}>Nome</Label>
-                        <Input
-                          id={`subject_first_${index}`}
-                          value={subject.first_name ?? ""}
-                          onChange={(event) =>
-                            updateSubject(index, "first_name", event.target.value)
-                          }
-                        />
-                      </div>
                       <div className="flex flex-col gap-2">
                         <Label htmlFor={`subject_last_${index}`}>Cognome</Label>
                         <Input
@@ -396,6 +393,18 @@ export function CounterpartyForm({
                           onChange={(event) =>
                             updateSubject(index, "last_name", event.target.value)
                           }
+                          placeholder="Es. Rossi"
+                        />
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <Label htmlFor={`subject_first_${index}`}>Nome</Label>
+                        <Input
+                          id={`subject_first_${index}`}
+                          value={subject.first_name ?? ""}
+                          onChange={(event) =>
+                            updateSubject(index, "first_name", event.target.value)
+                          }
+                          placeholder="Es. Anna"
                         />
                       </div>
                     </>
@@ -407,6 +416,7 @@ export function CounterpartyForm({
                       rows={2}
                       value={subject.notes ?? ""}
                       onChange={(event) => updateSubject(index, "notes", event.target.value)}
+                      placeholder="Es. ruolo del soggetto nella controparte"
                     />
                   </div>
                 </div>
