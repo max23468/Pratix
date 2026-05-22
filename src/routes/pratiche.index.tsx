@@ -26,7 +26,6 @@ import {
   caseStatusVariant,
   clientDisplayName,
   counterpartyDisplayName,
-  practiceDisplayName,
 } from "@/lib/labels";
 import { formatCurrency, formatDate } from "@/lib/format";
 import {
@@ -463,7 +462,7 @@ function PraticheList() {
                 <div className="flex min-w-0 items-start justify-between gap-3">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium text-foreground">
-                      {practiceDisplayName(c)}
+                      {c.practice_number}
                     </p>
                   </div>
                   <Badge variant={caseStatusVariant[c.status] ?? "outline"} className="shrink-0">
@@ -614,7 +613,7 @@ function PraticheList() {
                         params={{ caseId: routeRef(c) }}
                         className="font-medium hover:underline"
                       >
-                        {practiceDisplayName(c)}
+                        {c.practice_number}
                       </Link>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
