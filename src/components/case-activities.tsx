@@ -166,13 +166,17 @@ const currentYearFromDate = (value: string) => {
 const formatDecimalInputValue = (value: number) =>
   Number.isFinite(value)
     ? value.toLocaleString("it-IT", {
+        useGrouping: false,
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       })
     : "";
 
 const parseDecimalInputValue = (value: string) => {
-  const normalized = value.trim().replace(/\s/g, "").replace(",", ".");
+  const compactValue = value.trim().replace(/\s/g, "");
+  const normalized = compactValue.includes(",")
+    ? compactValue.replace(/\./g, "").replace(",", ".")
+    : compactValue;
   if (!normalized) return null;
   if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(normalized)) return null;
   const parsed = Number(normalized);
