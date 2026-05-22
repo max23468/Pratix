@@ -38,6 +38,8 @@ Comando standard: `npm run release`.
 
 Il comando legge il blocco `## [Non rilasciato]`, rifiuta il rilascio se è vuoto, inferisce il bump quando possibile (`Novità`/`Aggiunto` = MINOR, sezioni breaking/`Rimosso` = MAJOR, `Correzioni`/`Sotto il cofano` = PATCH, solo `Non versionato` = nessuna release), aggiorna `src/lib/version.ts`, rinomina il blocco in `## [X.Y.Z] — YYYY-MM-DD`, crea un nuovo `## [Non rilasciato]` vuoto e aggiorna i link in fondo a `CHANGELOG.md`. Se trova sezioni non riconosciute o mescola voci versionate e non versionate, si ferma.
 
+Prima di preparare la release, il comando esegue anche `npm run changelog:check -- --target unreleased`: le voci `Novità` devono parlare dell'effetto visibile per l'utente e non usare termini da implementazione come "flag", "badge", "parser", "route", nomi file o nomi di piattaforme.
+
 Varianti utili:
 
 - `npm run release:dry-run` per vedere cosa succederebbe senza scrivere file.
@@ -49,6 +51,13 @@ Varianti utili:
 ## Changelog
 
 `CHANGELOG.md` in root, formato adattato da Keep a Changelog in italiano, sempre con blocco `## [Non rilasciato]` in cima. Voci scritte dal punto di vista utente (no commit-style, no riferimenti a file/PR).
+
+`npm run changelog:check` controlla il blocco `[Non rilasciato]` non vuoto,
+l'ultima release e i blocchi modificati nel diff. Pre-push e CI lo eseguono
+quando cambia `CHANGELOG.md`.
+
+I bullet possono andare a capo nel Markdown: il parser della pagina `/novita`
+ricompone le righe indentate nello stesso item prima del render.
 
 ### Tre categorie standard
 

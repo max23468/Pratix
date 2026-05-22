@@ -56,6 +56,7 @@ function buildPlan(files) {
   const hasPackageChanges = files.some((file) =>
     ["package.json", "package-lock.json"].includes(file),
   );
+  const hasChangelogChanges = files.includes("CHANGELOG.md");
   const hasFormatRelevantChanges = files.some(isFormatRelevant);
   const hasBuildRelevantChanges = files.some(
     (file) =>
@@ -92,6 +93,10 @@ function buildPlan(files) {
 
   if (hasFormatRelevantChanges) {
     checks.push({ command: "npm", args: ["run", "format:changed:check"] });
+  }
+
+  if (hasChangelogChanges) {
+    checks.push({ command: "npm", args: ["run", "changelog:check"] });
   }
 
   if (hasBuildRelevantChanges) {

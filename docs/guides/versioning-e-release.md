@@ -192,9 +192,21 @@ le mostra con gerarchia visiva diversa, quindi scegliere bene la categoria
 - Frasi brevi, soggetto implicito ("Aggiunto X" non "Abbiamo aggiunto X").
 - Niente riferimenti a file, commit, PR, issue: il changelog è per l'utente,
   non per gli sviluppatori.
+- In `### Novità`, scrivi l'effetto visibile per l'utente. Evita termini da
+  implementazione come "flag", "badge", "parser", "route", nomi file o nomi di
+  piattaforme: se servono, probabilmente la voce appartiene a `Sotto il cofano`.
 - Termini di prodotto coerenti con il glossario: Committente, Cliente,
   Controparte, Pratica, Attivita, Compenso, Rimborso spese, Fattura.
 - Bold (`**`) per evidenziare il nome di una funzionalità.
+
+`npm run changelog:check` controlla le voci `Novità` del blocco da rilasciare,
+dell'ultima release e dei blocchi modificati nel diff. Lo stesso controllo viene
+eseguito da `npm run release`, dal pre-push e dalla CI quando cambia
+`CHANGELOG.md`.
+
+I bullet possono andare a capo nel Markdown per restare leggibili nel file; il
+parser della pagina `/novita` ricompone le righe indentate nello stesso item
+prima del render.
 
 ### Esempio buono
 

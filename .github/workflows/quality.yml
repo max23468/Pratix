@@ -46,6 +46,22 @@ jobs:
             PRATIX_FORMAT_BASE="${{ github.event.pull_request.base.sha }}" npm run format:changed:check
           fi
 
+      - name: Check changelog quality
+        shell: bash
+        run: |
+          base_ref="${GITHUB_BASE_REF:-main}"
+          git fetch origin "$base_ref"
+          diff_base="origin/${base_ref}"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            diff_base="${{ github.event.pull_request.base.sha }}"
+          fi
+
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]] || git diff --name-only "${diff_base}...HEAD" | grep -qx 'CHANGELOG.md'; then
+            npm run changelog:check
+          else
+            echo "CHANGELOG.md not changed."
+          fi
+
       - name: Build
         run: npm run build
 

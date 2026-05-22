@@ -73,6 +73,24 @@ Nota interna da ignorare.
 
     expect(entries[0].sections[0].items).toEqual(["Voce pubblica."]);
   });
+
+  it("ricompone le voci bullet mandate a capo nel markdown", () => {
+    const entries = parseChangelog(`
+## [1.11.0] — 2026-05-22
+
+### Novità
+
+- **Attività**: gli importi da controllare si possono segnare come “da
+  verificare”, filtrare e riconoscere nelle liste.
+- **Pratiche**: la sezione Attività è stata spostata subito dopo il cruscotto
+  della Pratica.
+`);
+
+    expect(entries[0].sections[0].items).toEqual([
+      "**Attività**: gli importi da controllare si possono segnare come “da verificare”, filtrare e riconoscere nelle liste.",
+      "**Pratiche**: la sezione Attività è stata spostata subito dopo il cruscotto della Pratica.",
+    ]);
+  });
 });
 
 describe("compareVersions", () => {

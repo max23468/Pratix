@@ -174,6 +174,7 @@ Vincoli di terminologia (vedi [`docs/glossario.md`](./docs/glossario.md)):
 - Usa `npm run build` come comando principale di validazione.
 - Usa `npm run lint` quando le modifiche toccano TypeScript, React, routing, componenti UI condivisi o configurazione correlata.
 - Usa `npm run format:changed:check` quando tocchi file formattabili; se fallisce, esegui `npm run format:changed` e ricommitta.
+- Usa `npm run changelog:check` quando tocchi `CHANGELOG.md`, soprattutto voci `Novità`; `npm run release` e `npm run prepush:guard` lo eseguono automaticamente nei casi rilevanti.
 - Usa `npm audit --audit-level=moderate` dopo modifiche alle dipendenze.
 - Usa `npm run ci:local` come gate completo quando la modifica è abbastanza ampia da giustificarlo.
 - Prima del push usa `npm run prepush:guard` oppure lascia lavorare `.githooks/pre-push`: esegue solo i controlli necessari al diff e li mette in cache per la stessa fingerprint, evitando di ripetere format/build/lint/audit già validati dallo stesso guard.
