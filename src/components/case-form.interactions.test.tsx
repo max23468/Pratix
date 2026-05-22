@@ -202,8 +202,6 @@ describe("CaseForm", () => {
     await screen.findByText("Ada Rossi");
     await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "client-1");
     await userEvent.selectOptions(screen.getAllByRole("combobox")[2], "counterparty-1");
-    await userEvent.clear(screen.getByLabelText("Titolo"));
-    await userEvent.type(screen.getByLabelText("Titolo"), " Recupero fattura ");
     await userEvent.type(screen.getByLabelText("Autorità giudiziaria"), " Tribunale di Milano ");
     await userEvent.type(screen.getByLabelText("N. R.G."), " 123/2026 ");
     await userEvent.type(screen.getByLabelText("Note"), " Nota pratica ");
@@ -219,7 +217,7 @@ describe("CaseForm", () => {
         counterparty_id: "counterparty-1",
         practice_number: 157,
         case_number: "157",
-        title: "Recupero fattura",
+        title: "Pratica 157",
         authority: "Tribunale di Milano",
         rg_number: "123/2026",
         notes: "Nota pratica",
@@ -325,6 +323,74 @@ describe("CaseForm", () => {
       }),
     );
     expect(onSaved).toHaveBeenCalledWith("case-quick");
+  });
+
+  it("crea rapidamente una controparte composta con più soggetti", async () => {
+    single.mockResolvedValueOnce({ data: { id: "counterparty-group" }, error: null });
+
+    render(<CaseForm onSaved={vi.fn()} onCancel={vi.fn()} />, { wrapper: Wrapper });
+
+    await screen.findByText("Banca Test");
+
+    await userEvent.click(screen.getByRole("button", { name: /Nuova/ }));
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[3], "group");
+    await userEvent.type(screen.getByLabelText("Nome controparte composta"), " Debitori gruppo ");
+
+    expect(screen.getByText("Soggetti della controparte")).toBeTruthy();
+    await userEvent.type(screen.getByLabelText("Cognome"), " Rossi ");
+    await userEvent.type(screen.getByLabelText("Nome"), " Mario ");
+    await userEvent.type(screen.getAllByLabelText("Note")[0], " Garante ");
+
+    await userEvent.click(screen.getByRole("button", { name: /Soggetto/ }));
+    const subjectKindSelects = screen.getAllByRole("combobox").filter((element) => {
+      const values = Array.from((element as HTMLSelectElement).options).map(
+        (option) => option.value,
+      );
+      return (
+        values.includes("individual") && values.includes("company") && !values.includes("group")
+      );
+    });
+    await userEvent.selectOptions(subjectKindSelects[subjectKindSelects.length - 1], "company");
+    await userEvent.type(screen.getByLabelText("Ragione sociale"), " Gamma S.r.l. ");
+
+    await userEvent.click(screen.getByRole("button", { name: "Crea" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Controparte creata"));
+    expect(query.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        user_id: "user-test",
+        kind: "group",
+        first_name: null,
+        last_name: null,
+        business_name: "Debitori gruppo",
+      }),
+    );
+    expect(query.insert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        user_id: "user-test",
+        counterparty_id: "counterparty-group",
+        kind: "individual",
+        first_name: "Mario",
+        last_name: "Rossi",
+        business_name: null,
+        notes: "Garante",
+        position: 0,
+      }),
+      expect.objectContaining({
+        user_id: "user-test",
+        counterparty_id: "counterparty-group",
+        kind: "company",
+        first_name: null,
+        last_name: null,
+        business_name: "Gamma S.r.l.",
+        position: 1,
+      }),
+    ]);
+    await waitFor(() =>
+      expect((screen.getAllByRole("combobox")[2] as HTMLSelectElement).value).toBe(
+        "counterparty-group",
+      ),
+    );
   });
 
   it("aggiorna una pratica e registra il trasferimento quando cambia cliente", async () => {

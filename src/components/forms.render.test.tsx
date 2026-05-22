@@ -164,7 +164,8 @@ describe("form applicative principali", () => {
     );
 
     expect(html).toContain("Numero pratica");
-    expect(html).toContain("Recupero fattura");
+    expect(html).not.toContain("Recupero fattura");
+    expect(html).not.toContain("Titolo");
     expect(html).toContain("Autorità");
   });
 

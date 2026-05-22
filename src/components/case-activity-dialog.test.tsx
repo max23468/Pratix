@@ -514,27 +514,27 @@ describe("CaseActivityDialog", () => {
     expect(query.insert).not.toHaveBeenCalled();
   });
 
-  it("mostra le pratiche in ordine alfabetico e permette di cercarle digitando", async () => {
+  it("mostra le pratiche in ordine di numero e permette di cercarle digitando", async () => {
     renderGlobalDialog();
 
     await userEvent.click(screen.getByRole("combobox", { name: "Seleziona pratica" }));
 
     expect(getPracticePickerOptions().map((option) => option.textContent)).toEqual([
-      expect.stringContaining("Alfa diffida"),
-      expect.stringContaining("Beta intimazione"),
-      expect.stringContaining("Zeta recupero"),
+      expect.stringContaining("Pratica 10"),
+      expect.stringContaining("Pratica 20"),
+      expect.stringContaining("Pratica 30"),
     ]);
 
     await userEvent.type(screen.getByPlaceholderText("Cerca pratica…"), "beta");
 
     expect(getPracticePickerOptions().map((option) => option.textContent)).toEqual([
-      expect.stringContaining("Beta intimazione"),
+      expect.stringContaining("Pratica 20"),
     ]);
 
-    await userEvent.click(screen.getByRole("option", { name: /Beta intimazione/ }));
+    await userEvent.click(screen.getByRole("option", { name: /Pratica 20/ }));
 
     expect(screen.getByRole("combobox", { name: "Seleziona pratica" }).textContent).toContain(
-      "Pratica 20 · Beta intimazione",
+      "Pratica 20",
     );
   });
 
@@ -559,10 +559,12 @@ describe("CaseActivityDialog", () => {
     await userEvent.click(screen.getByRole("button", { name: /Attività/ }));
     await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "item-hearing");
     await screen.findByDisplayValue("Partecipazione udienza");
+    await userEvent.clear(screen.getByLabelText("Data"));
+    await userEvent.type(screen.getByLabelText("Data"), "2026-05-20");
     await userEvent.clear(screen.getByLabelText("Numero udienze"));
     await userEvent.type(screen.getByLabelText("Numero udienze"), "2");
-    await userEvent.type(screen.getByLabelText("Udienza 1"), "2026-05-20");
-    await userEvent.type(screen.getByLabelText("Udienza 2"), "2026-06-20");
+    expect((screen.getByLabelText("Udienza 1") as HTMLInputElement).value).toBe("2026-05-20");
+    expect((screen.getByLabelText("Udienza 2") as HTMLInputElement).value).toBe("2026-05-20");
     await userEvent.upload(
       screen.getByLabelText("Allegato"),
       new File(["pdf"], "verbale.pdf", { type: "application/pdf" }),
@@ -574,6 +576,7 @@ describe("CaseActivityDialog", () => {
     await userEvent.click(screen.getByRole("button", { name: "Salva" }));
 
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Voce fatturabile registrata"));
+    expect(toast.error).not.toHaveBeenCalled();
     expect(query.insert).toHaveBeenCalledWith(
       expect.objectContaining({
         price_item_id: "item-hearing",
@@ -584,7 +587,7 @@ describe("CaseActivityDialog", () => {
     );
     expect(query.insert).toHaveBeenCalledWith([
       expect.objectContaining({ hearing_date: "2026-05-20", position: 1 }),
-      expect.objectContaining({ hearing_date: "2026-06-20", position: 2 }),
+      expect.objectContaining({ hearing_date: "2026-05-20", position: 2 }),
     ]);
     expect(storage.upload).toHaveBeenCalledWith(
       expect.stringContaining("verbale.pdf"),

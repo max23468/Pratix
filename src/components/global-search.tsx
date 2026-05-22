@@ -215,7 +215,7 @@ export function GlobalSearch() {
 
       const caseQuery = supabase
         .from("cases")
-        .select("id, public_code, case_number, practice_number, title, updated_at")
+        .select("id, public_code, case_number, practice_number, updated_at")
         .order("updated_at", { ascending: false })
         .limit(6);
       const clientQuery = supabase
@@ -236,7 +236,7 @@ export function GlobalSearch() {
       const activityQuery = supabase
         .from("case_activities")
         .select(
-          "id, activity_date, kind, status, description, snapshot_price_name, amount, cases(id, public_code, practice_number, title)",
+          "id, activity_date, kind, status, description, snapshot_price_name, amount, cases(id, public_code, practice_number)",
         )
         .order("activity_date", { ascending: false })
         .limit(6);
@@ -249,7 +249,7 @@ export function GlobalSearch() {
         .limit(6);
 
       if (hasTerm) {
-        caseQuery.or(`title.ilike.${likeTerm},case_number.ilike.${likeTerm}`);
+        caseQuery.or(`case_number.ilike.${likeTerm}`);
         clientQuery.or(
           `first_name.ilike.${likeTerm},last_name.ilike.${likeTerm},business_name.ilike.${likeTerm}`,
         );
@@ -284,7 +284,7 @@ export function GlobalSearch() {
         id: `case-${item.id}`,
         kind: "case",
         title: `Pratica ${item.practice_number}`,
-        subtitle: item.title || item.case_number,
+        subtitle: "Pratica",
         caseRef: routeRef(item),
       }));
 

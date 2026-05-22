@@ -56,9 +56,14 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import {
   caseActivityStatusLabels,
   caseActivityStatusVariant,
+  practiceDisplayName,
   priceItemKindLabels,
 } from "@/lib/labels";
-import { activityCaseLabel, type CaseActivityContext } from "@/lib/case-activities";
+import {
+  activityCaseLabel,
+  activityCasePartiesLabel,
+  type CaseActivityContext,
+} from "@/lib/case-activities";
 import { buildActivityAttachmentStoragePath, PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
 import { useSubmitLock } from "@/lib/submit-lock";
 import { cn } from "@/lib/utils";
@@ -137,25 +142,15 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 const caseOptionCollator = new Intl.Collator("it", { numeric: true, sensitivity: "base" });
 
-const caseOptionTitle = (option: CaseOption) => option.title?.trim() || activityCaseLabel(option);
-
-const caseOptionDisplayLabel = (option: CaseOption) => {
-  const title = option.title?.trim();
-  return title ? `Pratica ${option.practice_number} · ${title}` : activityCaseLabel(option);
-};
+const caseOptionDisplayLabel = (option: CaseOption) => practiceDisplayName(option);
 
 const caseOptionSearchValue = (option: CaseOption) =>
-  [
-    caseOptionDisplayLabel(option),
-    caseOptionTitle(option),
-    activityCaseLabel(option),
-    option.principals?.business_name,
-  ]
+  [caseOptionDisplayLabel(option), activityCaseLabel(option), option.principals?.business_name]
     .filter((value): value is string => Boolean(value))
     .join(" ");
 
 const compareCaseOptions = (a: CaseOption, b: CaseOption) =>
-  caseOptionCollator.compare(caseOptionTitle(a), caseOptionTitle(b)) ||
+  a.practice_number - b.practice_number ||
   caseOptionCollator.compare(activityCaseLabel(a), activityCaseLabel(b));
 
 const currentYearFromDate = (value: string) => {
@@ -448,7 +443,7 @@ function CasePicker({
           <CommandList className="max-h-[min(20rem,var(--radix-popover-content-available-height))]">
             <CommandEmpty>Nessuna pratica trovata.</CommandEmpty>
             {options.map((option) => {
-              const label = activityCaseLabel(option);
+              const label = activityCasePartiesLabel(option);
               const title = caseOptionDisplayLabel(option);
               const isSelected = option.id === selectedCaseId;
 
@@ -678,9 +673,6 @@ export function CaseActivityDialog({
       if (requiresHearingDates && hearingDates.some((date) => !date)) {
         throw new Error("Completa tutte le date udienza");
       }
-      if (requiresHearingDates && new Set(hearingDates).size !== hearingDates.length) {
-        throw new Error("Rimuovi le date udienza duplicate");
-      }
 
       if (isEditing) {
         if (!activity) throw new Error("Attività non disponibile");
@@ -862,7 +854,10 @@ export function CaseActivityDialog({
     const normalized = Math.max(0, count);
     setHearingDates((current) => {
       if (normalized <= current.length) return current.slice(0, normalized);
-      return [...current, ...Array.from({ length: normalized - current.length }, () => "")];
+      return [
+        ...current,
+        ...Array.from({ length: normalized - current.length }, () => activityDate),
+      ];
     });
   };
 

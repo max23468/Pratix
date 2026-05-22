@@ -19,6 +19,16 @@ export const caseStatusVariant: Record<
   archived: "secondary",
 };
 
+export type PracticeDisplayData = {
+  practice_number?: number | null;
+  case_number?: string | null;
+};
+
+export const practiceDisplayName = (practice: PracticeDisplayData): string => {
+  const practiceNumber = practice.practice_number ?? practice.case_number ?? "-";
+  return `Pratica ${practiceNumber}`;
+};
+
 export type InvoiceStatus = "draft" | "issued" | "paid" | "overdue";
 
 export const invoiceStatusLabels: Record<InvoiceStatus, string> = {

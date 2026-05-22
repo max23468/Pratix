@@ -61,7 +61,8 @@ describe("buildCaseDossierWorkbook", () => {
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     );
     expect(sheet).toContain("Dossier pratica");
-    expect(sheet).toContain("Recupero credito Beta");
+    expect(sheet).toContain("Pratica 42");
+    expect(sheet).not.toContain("Recupero credito Beta");
     expect(sheet).toContain("Alfa S.r.l.");
     expect(sheet).toContain("Udienza");
     expect(sheet).toContain("Verbale.pdf");

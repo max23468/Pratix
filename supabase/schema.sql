@@ -950,8 +950,7 @@ CREATE TABLE public.case_activity_hearings (
   notes         text,
   created_at    timestamptz NOT NULL DEFAULT now(),
   updated_at    timestamptz NOT NULL DEFAULT now(),
-  UNIQUE (activity_id, position),
-  UNIQUE (activity_id, hearing_date)
+  UNIQUE (activity_id, position)
 );
 CREATE INDEX idx_case_activity_hearings_user ON public.case_activity_hearings (user_id);
 CREATE INDEX idx_case_activity_hearings_activity ON public.case_activity_hearings (activity_id);

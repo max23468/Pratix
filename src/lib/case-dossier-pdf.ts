@@ -74,11 +74,6 @@ export function generateCaseDossierPdf(input: CaseDossierInput) {
   doc.text(`Pratica ${input.practiceNumber}`, pageWidth - MARGIN, y, { align: "right" });
   y += 8;
 
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(10);
-  doc.text(input.title, MARGIN, y);
-  y += 8;
-
   section("Soggetti e stato");
   line("Stato", input.status);
   line("Apertura", formatDate(input.openedAt));

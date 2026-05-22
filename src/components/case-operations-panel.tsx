@@ -3,7 +3,6 @@ import { useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   AlertTriangle,
-  ChevronDown,
   CheckCircle2,
   Download,
   Flag,
@@ -48,6 +47,7 @@ import {
   counterpartyDisplayName,
   invoiceStatusLabels,
   priceItemKindLabels,
+  practiceDisplayName,
   type ClientDisplayData,
   type CounterpartyDisplayData,
 } from "@/lib/labels";
@@ -444,20 +444,15 @@ export function CaseTimeline({
 
 function CaseDetailsSection({ children }: { children: ReactNode }) {
   return (
-    <details className="group">
-      <summary className="flex cursor-pointer list-none items-start justify-between gap-3 rounded-md border border-border p-4 transition-colors hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-        <span className="min-w-0">
-          <span className="block text-sm font-medium text-foreground">
-            Dati e riferimenti pratica
-          </span>
-          <span className="mt-1 block text-sm text-muted-foreground">
-            Apri quando devi modificare soggetti, stato, autorità, R.G. o note.
-          </span>
-        </span>
-        <ChevronDown className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180" />
-      </summary>
-      <div className="mt-4">{children}</div>
-    </details>
+    <section className="space-y-4">
+      <div className="rounded-md border border-border p-4">
+        <h2 className="text-sm font-medium text-foreground">Dati e riferimenti pratica</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Modifica soggetti, stato, autorità, R.G. e note.
+        </p>
+      </div>
+      {children}
+    </section>
   );
 }
 
@@ -583,7 +578,7 @@ function buildDossierInput({
 }): CaseDossierInput {
   return {
     practiceNumber: caseRow.practice_number,
-    title: caseRow.title,
+    title: practiceDisplayName(caseRow),
     status: caseStatusLabels[caseRow.status] ?? caseRow.status,
     openedAt: caseRow.opened_at,
     closedAt: caseRow.closed_at,
