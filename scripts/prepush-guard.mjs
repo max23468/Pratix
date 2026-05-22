@@ -114,7 +114,7 @@ function buildPlan(fingerprint) {
     checks.push({ key: "lint", command: "npm", args: ["run", "lint"], phase: "quality" });
   }
 
-  if (hasPackageChanges && packageImpact.dependencyFieldsChanged) {
+  if (hasPackageChanges) {
     checks.push({
       key: "audit",
       command: "npm",
