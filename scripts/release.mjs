@@ -188,6 +188,27 @@ function runReactDoctorForMajorRelease() {
   }
 }
 
+function runChangelogQualityCheck() {
+  console.log("Controllo qualita changelog prima della release.");
+
+  const result = spawnSync(
+    process.execPath,
+    ["scripts/changelog-quality-check.mjs", "--target", "unreleased"],
+    {
+      cwd: root,
+      stdio: "inherit",
+    },
+  );
+
+  if (result.error) {
+    fail(`Controllo qualita changelog non eseguibile: ${result.error.message}`);
+  }
+
+  if (result.status !== 0) {
+    fail("Il changelog non supera il controllo qualita.");
+  }
+}
+
 function extractUnreleased(changelog) {
   const headerRegex = /^## \[Non rilasciato\]\s*$/m;
   const headerMatch = changelog.match(headerRegex);
@@ -408,6 +429,7 @@ const versionFile = readFileSync(versionPath, "utf8");
 const current = readCurrentVersion(versionFile);
 const unreleased = extractUnreleased(changelog);
 validateSections(unreleased.body);
+runChangelogQualityCheck();
 const bump = options.bump ?? (options.version ? null : inferBump(unreleased.body));
 const nextVersion = options.version ?? bumpVersion(current.version, bump);
 const releaseDate = options.date ?? todayInRome();

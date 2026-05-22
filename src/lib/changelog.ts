@@ -73,10 +73,7 @@ export function parseChangelog(raw: string): ChangelogEntry[] {
       const sStart = sm.index! + sm[0].length;
       const sEnd = j + 1 < sectionMatches.length ? sectionMatches[j + 1].index! : body.length;
       const sBody = body.slice(sStart, sEnd).trim();
-      const items = sBody
-        .split(/\n/)
-        .map((line) => line.replace(/^\s*[-*]\s+/, "").trim())
-        .filter((line) => line.length > 0);
+      const items = parseSectionItems(sBody);
       return { title: sm[1].trim(), items };
     });
 
@@ -84,6 +81,36 @@ export function parseChangelog(raw: string): ChangelogEntry[] {
   }
 
   return entries;
+}
+
+function parseSectionItems(sectionBody: string): string[] {
+  const items: string[] = [];
+  let current: string[] = [];
+
+  for (const line of sectionBody.split("\n")) {
+    const bulletMatch = line.match(/^\s*[-*]\s+(.+)$/);
+
+    if (bulletMatch) {
+      pushCurrentItem();
+      current = [bulletMatch[1].trim()];
+      continue;
+    }
+
+    if (current.length > 0 && line.trim()) {
+      current.push(line.trim());
+    }
+  }
+
+  pushCurrentItem();
+  return items;
+
+  function pushCurrentItem() {
+    if (current.length === 0) return;
+
+    const item = current.join(" ").replace(/\s+/g, " ").trim();
+    if (item) items.push(item);
+    current = [];
+  }
 }
 
 /** Versioni del changelog, già parsate. */

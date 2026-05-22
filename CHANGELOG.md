@@ -6,6 +6,18 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.11.3] — 2026-05-22
+
+### Correzioni
+
+- **Novità**: le voci del changelog mandate a capo nel Markdown vengono
+  ricomposte in un solo testo nella pagina Novità.
+
+### Sotto il cofano
+
+- **Changelog**: aggiunto un controllo di qualità per le voci in Novità,
+  integrato in release, pre-push e CI.
+
 ## [1.11.2] — 2026-05-22
 
 ### Correzioni
@@ -22,15 +34,16 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [1.11.0] — 2026-05-22
 
-Release di consolidamento operativo: Attività più centrali, importi da
-verificare, form e menu più prevedibili.
+Nella Pratica le Attività sono più vicine al cruscotto. Gli importi da
+controllare si possono segnare e filtrare. Form e menu sono più prevedibili.
 
 ### Novità
 
-- **Attività**: aggiunto il flag “Importo da verificare”, con filtro dedicato,
-  badge nelle liste e motivo gestito nel campo Note esistente.
-- **Pratiche**: la sezione Attività appare subito dopo il cruscotto della
-  Pratica.
+- **Attività**: gli importi da controllare si possono segnare come “da
+  verificare”, filtrare e riconoscere nelle liste. Il motivo del controllo resta
+  nelle Note dell'Attività.
+- **Pratiche**: la sezione Attività è stata spostata subito dopo il cruscotto
+  della Pratica.
 
 ### Correzioni
 
@@ -1061,6 +1074,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.11.3]: #1113--2026-05-22
 [1.11.2]: #1112--2026-05-22
 [1.11.1]: #1111--2026-05-22
 [1.11.0]: #1110--2026-05-22
