@@ -1,0 +1,2 @@
+ALTER TABLE public.case_activity_hearings
+  DROP CONSTRAINT IF EXISTS case_activity_hearings_activity_id_hearing_date_key;

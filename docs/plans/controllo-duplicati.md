@@ -100,7 +100,6 @@ Ogni potenziale duplicato deve spiegare perché è emerso. Esempi:
 - `Nome e cognome molto simili`;
 - `Nome e cognome invertiti`;
 - `Stessa combinazione committente, cliente e controparte`;
-- `Titolo pratica simile nello stesso contesto operativo`;
 - `Numero pratica uguale`;
 - `RG uguale o molto simile`.
 

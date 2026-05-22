@@ -108,7 +108,7 @@ function dossierRows(input: CaseDossierInput): DossierRow[] {
       section: "Pratica",
       date: input.openedAt,
       type: `Pratica ${input.practiceNumber}`,
-      description: input.title,
+      description: `Pratica ${input.practiceNumber}`,
       status: input.status,
       amount: null,
       notes: [

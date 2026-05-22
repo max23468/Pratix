@@ -33,6 +33,11 @@ type CounterpartyOption = {
 
 const emptyCounterpartyOptions: CounterpartyOption[] = [];
 
+const emitSelectedValue = (onValueChange: (value: string) => void) => (value: string) => {
+  if (!value) return;
+  onValueChange(value);
+};
+
 export function PrincipalSelect({
   id,
   value,
@@ -54,7 +59,11 @@ export function PrincipalSelect({
   });
 
   return (
-    <Select value={value ?? ""} onValueChange={onValueChange} disabled={disabled || isLoading}>
+    <Select
+      value={value ?? ""}
+      onValueChange={emitSelectedValue(onValueChange)}
+      disabled={disabled || isLoading}
+    >
       <SelectTrigger id={id}>
         <SelectValue placeholder={isLoading ? "Caricamento…" : placeholder} />
       </SelectTrigger>
@@ -89,7 +98,11 @@ export function ClientSelect({
   });
 
   return (
-    <Select value={value ?? ""} onValueChange={onValueChange} disabled={disabled || isLoading}>
+    <Select
+      value={value ?? ""}
+      onValueChange={emitSelectedValue(onValueChange)}
+      disabled={disabled || isLoading}
+    >
       <SelectTrigger id={id}>
         <SelectValue placeholder={isLoading ? "Caricamento…" : placeholder} />
       </SelectTrigger>
@@ -130,7 +143,11 @@ export function CounterpartySelect({
   }, [additionalOptions, data]);
 
   return (
-    <Select value={value ?? ""} onValueChange={onValueChange} disabled={disabled || isLoading}>
+    <Select
+      value={value ?? ""}
+      onValueChange={emitSelectedValue(onValueChange)}
+      disabled={disabled || isLoading}
+    >
       <SelectTrigger id={id}>
         <SelectValue placeholder={isLoading ? "Caricamento…" : placeholder} />
       </SelectTrigger>

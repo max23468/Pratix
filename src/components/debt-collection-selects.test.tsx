@@ -22,6 +22,20 @@ const { supabase } = vi.hoisted(() => {
         error: null,
       };
     }
+    if (table === "counterparties") {
+      return {
+        data: [
+          {
+            id: "counterparty-1",
+            kind: "company",
+            first_name: null,
+            last_name: null,
+            business_name: "Beta S.p.A.",
+          },
+        ],
+        error: null,
+      };
+    }
     return { data: [], error: null };
   };
   const builderFor = (table: string) => {
@@ -74,7 +88,7 @@ vi.mock("@/components/ui/select", () => ({
   ),
 }));
 
-import { ClientSelect } from "./debt-collection-selects";
+import { ClientSelect, CounterpartySelect } from "./debt-collection-selects";
 
 const renderWithClient = (node: ReactNode) => {
   const client = new QueryClient({
@@ -101,5 +115,37 @@ describe("ClientSelect", () => {
 
     await waitFor(() => expect(onValueChange).toHaveBeenCalledWith("client-1"));
     expect(supabase.from).toHaveBeenCalledWith("clients");
+  });
+});
+
+describe("CounterpartySelect", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it("ignora valori vuoti emessi dal select dopo una selezione controllata", async () => {
+    const onValueChange = vi.fn();
+    renderWithClient(
+      <CounterpartySelect
+        value="counterparty-new"
+        onValueChange={onValueChange}
+        additionalOptions={[
+          {
+            id: "counterparty-new",
+            kind: "company",
+            business_name: "Controparte appena creata",
+          },
+        ]}
+      />,
+    );
+
+    await screen.findByText("Controparte appena creata");
+    await userEvent.selectOptions(screen.getByRole("combobox"), "");
+
+    expect(onValueChange).not.toHaveBeenCalled();
   });
 });

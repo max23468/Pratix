@@ -1,11 +1,14 @@
+// @vitest-environment jsdom
+
 import { strFromU8, unzipSync } from "fflate";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   invoicePdfBytes,
   invoicePdfFileName,
   invoiceXmlBytes,
   archiveBytes,
+  downloadBytes,
   safeArchiveSegment,
 } from "./invoice-file-exports";
 import type { InvoicePdfData } from "./invoice-pdf";
@@ -75,5 +78,33 @@ describe("invoice file exports", () => {
 
     expect(strFromU8(archive["Fattura-12.xml"])).toBe("<xml />");
     expect(Array.from(archive["Fattura-13.pdf"])).toEqual([1, 2, 3]);
+  });
+
+  it("scarica bytes tramite link temporaneo e revoca l'URL creato", () => {
+    const createObjectURL = vi.fn(() => "blob:invoice-export");
+    const revokeObjectURL = vi.fn();
+    const anchorClick = vi.fn();
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: createObjectURL,
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: revokeObjectURL,
+    });
+    Object.defineProperty(HTMLAnchorElement.prototype, "click", {
+      configurable: true,
+      value: anchorClick,
+    });
+
+    downloadBytes({
+      bytes: new Uint8Array([1, 2, 3]),
+      fileName: "fattura.xml",
+      mimeType: "application/xml",
+    });
+
+    expect(createObjectURL).toHaveBeenCalledTimes(1);
+    expect(anchorClick).toHaveBeenCalledTimes(1);
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:invoice-export");
   });
 });

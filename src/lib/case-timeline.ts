@@ -5,6 +5,7 @@ import {
   clientDisplayName,
   invoiceStatusLabels,
   priceItemKindLabels,
+  practiceDisplayName,
   type ClientDisplayData,
 } from "@/lib/labels";
 
@@ -71,6 +72,7 @@ export type CaseTimelineTransfer = {
 export type CaseTimelineCase = {
   id: string;
   opened_at: string;
+  practice_number: number;
   title: string;
   status: string;
 };
@@ -103,7 +105,7 @@ export function buildCaseTimelineItems({
       id: `case-opened-${caseRow.id}`,
       date: caseRow.opened_at,
       title: "Pratica aperta",
-      description: caseRow.title,
+      description: practiceDisplayName(caseRow),
       meta: caseStatusLabels[caseRow.status] ?? caseRow.status,
     },
   ];

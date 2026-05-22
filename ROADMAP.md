@@ -73,6 +73,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Tabelle ordinabili e persistenti   | Intestazioni cliccabili per le liste operative; preferenza ordinamento sincronizzata per utente fra dispositivi tramite Supabase                                         |
 | ✅    | Esempi form e selettori ordinati   | Placeholder principali allineati a esempi realistici del dominio; selettori Cliente in ordine alfabetico per società e per Cognome Nome                                  |
 | ✅    | Sintesi duplicati in dashboard     | Box operativo dopo le azioni rapide, con conteggi del Controllo duplicati e accesso diretto alla pagina dedicata                                                         |
+| ✅    | Identità Pratica per numero        | La Pratica non ha un nome pratica separato: form, liste, dashboard, Attività, ricerca e dossier usano il solo numero pratica come identificativo operativo               |
 
 ## 4. Funzionalità di prodotto
 

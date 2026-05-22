@@ -1,4 +1,4 @@
-import { clientDisplayName, counterpartyDisplayName } from "@/lib/labels";
+import { clientDisplayName, counterpartyDisplayName, practiceDisplayName } from "@/lib/labels";
 
 export type CaseActivityContext = {
   id: string;
@@ -24,11 +24,19 @@ export type CaseActivityContext = {
 };
 
 export function activityCaseLabel(option: CaseActivityContext) {
-  const practiceNumber = option.practice_number ?? option.case_number ?? "-";
   const clientName = option.clients ? clientDisplayName(option.clients) : "-";
   const counterpartyName = option.counterparties
     ? counterpartyDisplayName(option.counterparties)
     : "-";
 
-  return `Pratica ${practiceNumber} · ${clientName} · ${counterpartyName}`;
+  return `${practiceDisplayName(option)} · ${clientName} · ${counterpartyName}`;
+}
+
+export function activityCasePartiesLabel(option: CaseActivityContext) {
+  const clientName = option.clients ? clientDisplayName(option.clients) : "-";
+  const counterpartyName = option.counterparties
+    ? counterpartyDisplayName(option.counterparties)
+    : "-";
+
+  return `${clientName} · ${counterpartyName}`;
 }

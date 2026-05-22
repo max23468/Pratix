@@ -36,6 +36,7 @@ import {
   clientKindLabels,
   compareClients,
   counterpartyKindLabels,
+  practiceDisplayName,
 } from "@/lib/labels";
 import type { DuplicateCandidate } from "@/lib/duplicate-matching";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
@@ -103,6 +104,15 @@ type QuickCounterpartyDraft = {
   first_name: string;
   last_name: string;
   business_name: string;
+  subjects: QuickCounterpartySubjectDraft[];
+};
+
+type QuickCounterpartySubjectDraft = {
+  kind: ClientKind;
+  first_name: string;
+  last_name: string;
+  business_name: string;
+  notes: string;
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -134,12 +144,21 @@ const emptyQuickClient: QuickClientDraft = {
   business_name: "",
 };
 
-const emptyQuickCounterparty: QuickCounterpartyDraft = {
+const emptyQuickCounterpartySubject = (): QuickCounterpartySubjectDraft => ({
+  kind: "individual",
+  first_name: "",
+  last_name: "",
+  business_name: "",
+  notes: "",
+});
+
+const emptyQuickCounterparty = (): QuickCounterpartyDraft => ({
   kind: "",
   first_name: "",
   last_name: "",
   business_name: "",
-};
+  subjects: [emptyQuickCounterpartySubject()],
+});
 
 type Props = {
   initial?: Partial<CaseRow> & { id?: string };
@@ -162,8 +181,9 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
   const [quickCounterpartyOpen, setQuickCounterpartyOpen] = useState(false);
   const [quickPrincipal, setQuickPrincipal] = useState<QuickPrincipalDraft>(emptyQuickPrincipal);
   const [quickClient, setQuickClient] = useState<QuickClientDraft>(emptyQuickClient);
-  const [quickCounterparty, setQuickCounterparty] =
-    useState<QuickCounterpartyDraft>(emptyQuickCounterparty);
+  const [quickCounterparty, setQuickCounterparty] = useState<QuickCounterpartyDraft>(() =>
+    emptyQuickCounterparty(),
+  );
   const [quickCreatedClients, setQuickCreatedClients] = useState<ClientOption[]>([]);
   const [quickCreatedCounterparties, setQuickCreatedCounterparties] = useState<
     CounterpartyOption[]
@@ -215,6 +235,44 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
     markDirty();
     setQuickCounterparty((current) => ({ ...current, [key]: value }));
   };
+  const updateQuickCounterpartySubject = <K extends keyof QuickCounterpartySubjectDraft>(
+    index: number,
+    key: K,
+    value: QuickCounterpartySubjectDraft[K],
+  ) => {
+    markDirty();
+    setQuickCounterparty((current) => ({
+      ...current,
+      subjects: current.subjects.map((subject, currentIndex) =>
+        currentIndex === index ? { ...subject, [key]: value } : subject,
+      ),
+    }));
+  };
+  const addQuickCounterpartySubject = () => {
+    markDirty();
+    setQuickCounterparty((current) => ({
+      ...current,
+      subjects: [...current.subjects, emptyQuickCounterpartySubject()],
+    }));
+  };
+  const removeQuickCounterpartySubject = (index: number) => {
+    markDirty();
+    setQuickCounterparty((current) => ({
+      ...current,
+      subjects:
+        current.subjects.length === 1
+          ? [emptyQuickCounterpartySubject()]
+          : current.subjects.filter((_, currentIndex) => currentIndex !== index),
+    }));
+  };
+
+  const normalizedQuickCounterpartySubjects = () =>
+    quickCounterparty.subjects
+      .map((subject, index) => ({ ...subject, position: index }))
+      .filter((subject) => {
+        if (subject.kind === "company") return Boolean(subject.business_name.trim());
+        return Boolean(subject.first_name.trim() || subject.last_name.trim());
+      });
 
   const { data: nextPracticeNumber, refetch: refetchNextPracticeNumber } = useQuery({
     queryKey: ["cases", "next-practice-number"],
@@ -479,6 +537,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       const firstName = quickCounterparty.first_name.trim();
       const lastName = quickCounterparty.last_name.trim();
       const businessName = quickCounterparty.business_name.trim();
+      const subjectRows = normalizedQuickCounterpartySubjects();
 
       if (isIndividual && !firstName && !lastName) throw new Error("Inserisci nome e cognome");
       if (!isIndividual && !businessName) {
@@ -494,6 +553,17 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                 first_name: isIndividual ? firstName || null : null,
                 last_name: isIndividual ? lastName || null : null,
                 business_name: isIndividual ? null : businessName,
+                subjectLabels:
+                  quickCounterparty.kind === "group"
+                    ? subjectRows.map((subject) =>
+                        subject.kind === "company"
+                          ? subject.business_name.trim()
+                          : [subject.first_name, subject.last_name]
+                              .map((value) => value.trim())
+                              .filter(Boolean)
+                              .join(" "),
+                      )
+                    : [],
               },
             },
             headers: await getAuthHeaders(),
@@ -520,6 +590,22 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
         .single();
       if (error) throw error;
 
+      if (quickCounterparty.kind === "group" && subjectRows.length > 0) {
+        const { error: subjectsError } = await supabase.from("counterparty_subjects").insert(
+          subjectRows.map((subject) => ({
+            user_id: user.id,
+            counterparty_id: data.id,
+            kind: subject.kind,
+            first_name: subject.kind === "individual" ? subject.first_name.trim() || null : null,
+            last_name: subject.kind === "individual" ? subject.last_name.trim() || null : null,
+            business_name: subject.kind === "company" ? subject.business_name.trim() || null : null,
+            notes: subject.notes.trim() || null,
+            position: subject.position,
+          })),
+        );
+        if (subjectsError) throw subjectsError;
+      }
+
       return {
         id: data.id,
         kind: quickCounterparty.kind,
@@ -539,7 +625,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       ]);
       qc.invalidateQueries({ queryKey: ["counterparties"] });
       upd("counterparty_id", counterparty.id);
-      setQuickCounterparty(emptyQuickCounterparty);
+      setQuickCounterparty(emptyQuickCounterparty());
       setQuickCounterpartyDuplicates([]);
       quickCounterpartyOverrideRef.current = false;
       setQuickCounterpartyOpen(false);
@@ -561,7 +647,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
         throw new Error("Inserisci un numero pratica numerico positivo");
       }
 
-      const title = form.title.trim() || `Pratica ${practiceNumber}`;
+      const title = practiceDisplayName({ practice_number: practiceNumber });
       if (!isEdit && !duplicateOverrideRef.current && canUseAuthHeaders()) {
         const principal = form.principal_id;
         const client = allClients.find((item) => item.id === form.client_id);
@@ -777,7 +863,9 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                 <div className="min-w-0 flex-1">
                   <Select
                     value={form.client_id ?? ""}
-                    onValueChange={(value) => upd("client_id", value)}
+                    onValueChange={(value) => {
+                      if (value) upd("client_id", value);
+                    }}
                     disabled={!form.principal_id}
                   >
                     <SelectTrigger id="client_id">
@@ -998,11 +1086,135 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                       />
                     </div>
                   ) : null}
+                  {quickCounterparty.kind === "group" ? (
+                    <div className="flex flex-col gap-3 rounded-md border border-border p-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <p className="text-sm font-medium">Soggetti della controparte</p>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={addQuickCounterpartySubject}
+                        >
+                          <Plus className="mr-1 size-4" /> Soggetto
+                        </Button>
+                      </div>
+                      {quickCounterparty.subjects.map((subject, index) => (
+                        <div key={index} className="rounded-md border border-border p-3">
+                          <div className="mb-3 flex items-center justify-between gap-2">
+                            <p className="text-sm font-medium">Soggetto {index + 1}</p>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => removeQuickCounterpartySubject(index)}
+                            >
+                              <Trash2 className="mr-1 size-4" /> Rimuovi
+                            </Button>
+                          </div>
+                          <div className="grid gap-3 sm:grid-cols-2">
+                            <div className="flex flex-col gap-2">
+                              <Label htmlFor={`quick_counterparty_subject_kind_${index}`}>
+                                Tipo
+                              </Label>
+                              <Select
+                                value={subject.kind}
+                                onValueChange={(value) =>
+                                  updateQuickCounterpartySubject(index, "kind", value as ClientKind)
+                                }
+                              >
+                                <SelectTrigger id={`quick_counterparty_subject_kind_${index}`}>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {Object.entries(clientKindLabels).map(([value, label]) => (
+                                    <SelectItem key={value} value={value}>
+                                      {label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            {subject.kind === "company" ? (
+                              <div className="flex flex-col gap-2">
+                                <Label htmlFor={`quick_counterparty_subject_business_${index}`}>
+                                  Ragione sociale
+                                </Label>
+                                <Input
+                                  id={`quick_counterparty_subject_business_${index}`}
+                                  value={subject.business_name}
+                                  onChange={(event) =>
+                                    updateQuickCounterpartySubject(
+                                      index,
+                                      "business_name",
+                                      event.target.value,
+                                    )
+                                  }
+                                  placeholder="Es. Debitore S.r.l."
+                                />
+                              </div>
+                            ) : (
+                              <>
+                                <div className="flex flex-col gap-2">
+                                  <Label htmlFor={`quick_counterparty_subject_last_${index}`}>
+                                    Cognome
+                                  </Label>
+                                  <Input
+                                    id={`quick_counterparty_subject_last_${index}`}
+                                    value={subject.last_name}
+                                    onChange={(event) =>
+                                      updateQuickCounterpartySubject(
+                                        index,
+                                        "last_name",
+                                        event.target.value,
+                                      )
+                                    }
+                                    placeholder="Es. Rossi"
+                                  />
+                                </div>
+                                <div className="flex flex-col gap-2">
+                                  <Label htmlFor={`quick_counterparty_subject_first_${index}`}>
+                                    Nome
+                                  </Label>
+                                  <Input
+                                    id={`quick_counterparty_subject_first_${index}`}
+                                    value={subject.first_name}
+                                    onChange={(event) =>
+                                      updateQuickCounterpartySubject(
+                                        index,
+                                        "first_name",
+                                        event.target.value,
+                                      )
+                                    }
+                                    placeholder="Es. Anna"
+                                  />
+                                </div>
+                              </>
+                            )}
+                            <div className="flex flex-col gap-2 sm:col-span-2">
+                              <Label htmlFor={`quick_counterparty_subject_notes_${index}`}>
+                                Note
+                              </Label>
+                              <Textarea
+                                id={`quick_counterparty_subject_notes_${index}`}
+                                rows={2}
+                                value={subject.notes}
+                                onChange={(event) =>
+                                  updateQuickCounterpartySubject(index, "notes", event.target.value)
+                                }
+                                placeholder="Es. ruolo del soggetto nella controparte"
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : null}
                   <DuplicateWarningPanel
                     candidates={quickCounterpartyDuplicates}
                     onUseExisting={(record) => {
                       upd("counterparty_id", record.id);
-                      setQuickCounterparty(emptyQuickCounterparty);
+                      setQuickCounterparty(emptyQuickCounterparty());
                       setQuickCounterpartyDuplicates([]);
                       setQuickCounterpartyOpen(false);
                     }}
@@ -1017,7 +1229,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                       type="button"
                       variant="outline"
                       onClick={() => {
-                        setQuickCounterparty(emptyQuickCounterparty);
+                        setQuickCounterparty(emptyQuickCounterparty());
                         setQuickCounterpartyOpen(false);
                       }}
                     >
@@ -1039,7 +1251,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
             </div>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+          <div className="max-w-sm">
             <div className="flex flex-col gap-2">
               <Label htmlFor="practice_number">Numero pratica</Label>
               <div className="flex gap-2">
@@ -1063,15 +1275,6 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                   </Button>
                 )}
               </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="title">Titolo</Label>
-              <Input
-                id="title"
-                value={form.title}
-                onChange={(event) => upd("title", event.target.value)}
-                placeholder="Es. Recupero credito fattura insoluta"
-              />
             </div>
           </div>
 

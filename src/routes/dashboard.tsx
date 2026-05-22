@@ -39,6 +39,7 @@ import {
   caseStatusVariant,
   clientDisplayName,
   counterpartyDisplayName,
+  practiceDisplayName,
   type ClientDisplayData,
   type CounterpartyDisplayData,
 } from "@/lib/labels";
@@ -154,7 +155,6 @@ type DashboardInvoiceRow = {
 type WorkQueueItem = {
   caseRef: string;
   practiceNumber: number;
-  title: string;
   updatedAt: string;
   stage: string;
   action: string;
@@ -433,9 +433,9 @@ function DashboardContent() {
                       className="flex min-w-0 items-center justify-between gap-2"
                     >
                       <div className="min-w-0">
-                        <p className="truncate text-sm font-medium">{c.title}</p>
+                        <p className="truncate text-sm font-medium">{practiceDisplayName(c)}</p>
                         <p className="truncate text-xs text-muted-foreground">
-                          {c.practice_number} · {c.principal?.business_name ?? "—"} ·{" "}
+                          {c.principal?.business_name ?? "—"} ·{" "}
                           {c.client ? clientDisplayName(c.client as ClientDisplayData) : "—"} ·{" "}
                           {c.counterparty
                             ? counterpartyDisplayName(c.counterparty as CounterpartyDisplayData)
@@ -539,7 +539,6 @@ function WorkQueueCard({ items, isLoading }: { items: WorkQueueItem[]; isLoading
               </div>
               <h2 className="mt-3 text-base font-semibold text-foreground">{firstItem.action}</h2>
               <p className="mt-1 text-sm text-muted-foreground">{firstItem.reason}</p>
-              <p className="mt-3 truncate text-sm font-medium text-foreground">{firstItem.title}</p>
             </Link>
 
             <div className="space-y-2">
@@ -827,7 +826,6 @@ function buildDashboardWorkQueue({
       return {
         caseRef: routeRef(caseRow),
         practiceNumber: caseRow.practice_number,
-        title: caseRow.title,
         updatedAt: caseRow.updated_at,
         stage: workflow.stage,
         action: workflow.action,

@@ -25,6 +25,7 @@ import {
   caseStatusVariant,
   clientDisplayName,
   counterpartyDisplayName,
+  practiceDisplayName,
 } from "@/lib/labels";
 import { publicCodeLookup } from "@/lib/public-route-code";
 
@@ -89,13 +90,13 @@ function CaseDetail() {
   return (
     <>
       <PageHeader
-        title={caseRow.title}
+        title={practiceDisplayName(caseRow)}
         titleAccessory={
           <Badge variant={caseStatusVariant[caseRow.status] ?? "outline"}>
             {caseStatusLabels[caseRow.status] ?? caseRow.status}
           </Badge>
         }
-        description={`Pratica ${caseRow.practice_number} · ${principalName} · ${clientName} · ${counterpartyName}`}
+        description={`${principalName} · ${clientName} · ${counterpartyName}`}
         actions={
           <>
             <Link to="/pratiche/nuova">

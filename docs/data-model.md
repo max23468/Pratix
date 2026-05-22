@@ -145,6 +145,10 @@ Contiene:
 l'inserimento manuale di un numero esistente, sia la generazione atomica del
 prossimo numero libero.
 
+Il campo `title` resta nel database per compatibilità tecnica e import storici,
+ma non è un nome pratica esposto all'utente: nelle superfici operative la pratica
+è identificata dal solo numero pratica.
+
 ### `case_credit_transfers`
 
 Storico delle cessioni del credito. Registra quando una pratica passa da un
@@ -208,6 +212,8 @@ fatturazione successivo.
 
 Date udienza collegate a una riga attività quando la voce prezzo le richiede.
 Servono per conteggiare udienze multiple senza perdere il dettaglio temporale.
+Più udienze possono avere la stessa data; l'ordine resta determinato dal campo
+`position`.
 
 ### `activity_attachments`
 

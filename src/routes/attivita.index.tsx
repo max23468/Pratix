@@ -34,12 +34,17 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import { activityCaseLabel, type CaseActivityContext } from "@/lib/case-activities";
+import {
+  activityCaseLabel,
+  activityCasePartiesLabel,
+  type CaseActivityContext,
+} from "@/lib/case-activities";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { routeRef } from "@/lib/public-route-code";
 import {
   caseActivityStatusLabels,
   caseActivityStatusVariant,
+  practiceDisplayName,
   priceItemKindLabels,
 } from "@/lib/labels";
 import {
@@ -571,11 +576,9 @@ function ActivitiesList() {
                           params={{ caseId: routeRef(activity.cases) }}
                           className="hover:underline"
                         >
-                          <div className="font-medium">
-                            Pratica {activity.cases.practice_number}
-                          </div>
+                          <div className="font-medium">{practiceDisplayName(activity.cases)}</div>
                           <div className="text-xs text-muted-foreground">
-                            {activity.cases.title}
+                            {activityCasePartiesLabel(activity.cases)}
                           </div>
                         </Link>
                       ) : (

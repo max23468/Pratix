@@ -19,6 +19,7 @@ describe("case operations timeline", () => {
       caseRow: {
         id: "case-1",
         opened_at: "2026-05-01",
+        practice_number: 42,
         title: "Recupero credito Beta",
         status: "in_progress",
       },

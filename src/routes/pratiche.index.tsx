@@ -26,6 +26,7 @@ import {
   caseStatusVariant,
   clientDisplayName,
   counterpartyDisplayName,
+  practiceDisplayName,
 } from "@/lib/labels";
 import { formatCurrency, formatDate } from "@/lib/format";
 import {
@@ -107,7 +108,6 @@ type PracticeWorkflowRow = {
 
 const praticheSortKeys = [
   "practice_number",
-  "title",
   "principal",
   "client",
   "counterparty",
@@ -253,12 +253,11 @@ function PraticheList() {
     () => [
       {
         key: "practice_number",
-        label: "Numero",
+        label: "Pratica",
         valueType: "number",
         defaultDirection: "desc",
         getValue: (practice) => practice.practice_number,
       },
-      { key: "title", label: "Pratica", getValue: (practice) => practice.title },
       {
         key: "principal",
         label: "Committente",
@@ -364,7 +363,6 @@ function PraticheList() {
         ? counterpartyDisplayName(c.counterparties).toLowerCase()
         : "";
       return (
-        c.title.toLowerCase().includes(term) ||
         c.case_number.toLowerCase().includes(term) ||
         clientName.includes(term) ||
         principalName.includes(term) ||
@@ -464,10 +462,9 @@ function PraticheList() {
               >
                 <div className="flex min-w-0 items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-xs font-medium text-muted-foreground">
-                      Pratica {c.practice_number}
+                    <p className="truncate text-sm font-medium text-foreground">
+                      {practiceDisplayName(c)}
                     </p>
-                    <p className="mt-1 truncate text-sm font-medium text-foreground">{c.title}</p>
                   </div>
                   <Badge variant={caseStatusVariant[c.status] ?? "outline"} className="shrink-0">
                     {caseStatusLabels[c.status] ?? c.status}
@@ -529,11 +526,10 @@ function PraticheList() {
             <TableRow>
               <SortableTableHead
                 columnKey="practice_number"
-                label="Numero"
+                label="Pratica"
                 sort={sort}
                 onSort={setSort}
               />
-              <SortableTableHead columnKey="title" label="Pratica" sort={sort} onSort={setSort} />
               <SortableTableHead
                 columnKey="principal"
                 label="Committente"
@@ -565,13 +561,13 @@ function PraticheList() {
           <TableBody>
             {isLoading ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
                   Caricamento…
                 </TableCell>
               </TableRow>
             ) : sorted.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={8} className="py-10 text-center text-sm text-muted-foreground">
+                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
                   <TableEmptyState
                     title={
                       q || view !== "open" ? "Nessuna pratica trovata" : "Nessuna pratica aperta"
@@ -612,14 +608,13 @@ function PraticheList() {
                       handleClickableTableRowKeyDown(event, () => openCase(routeRef(c)))
                     }
                   >
-                    <TableCell className="font-mono text-sm">{c.practice_number}</TableCell>
                     <TableCell>
                       <Link
                         to="/pratiche/$caseId"
                         params={{ caseId: routeRef(c) }}
                         className="font-medium hover:underline"
                       >
-                        {c.title}
+                        {practiceDisplayName(c)}
                       </Link>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">

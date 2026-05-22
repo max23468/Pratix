@@ -364,12 +364,6 @@ function scoreCasePair(a: CaseDuplicateRow, b: CaseDuplicateRow, draft?: Duplica
     reasons.push("Stesso committente e cliente con controparte simile");
   }
 
-  const titleScore = textSimilarity(a.title, b.title);
-  if (titleScore >= 0.82) {
-    score = Math.max(score, sameContext ? 0.82 : 0.68);
-    reasons.push("Titolo pratica simile");
-  }
-
   if (score < TOOL_THRESHOLD || reasons.length === 0) return null;
   return buildCandidate({
     entityType: "case",
@@ -472,11 +466,10 @@ function caseRecord(row: CaseDuplicateRow): DuplicateRecord {
   return {
     id: row.id,
     publicCode: row.public_code,
-    label: `${row.practice_number ? `Pratica ${row.practice_number}` : "Pratica"} · ${row.title}`,
+    label: row.practice_number ? `Pratica ${row.practice_number}` : "Pratica",
     subtitle: [row.principalName, row.clientName, row.counterpartyName].filter(Boolean).join(" · "),
     fields: {
       "Numero pratica": row.practice_number,
-      Titolo: row.title,
       Committente: row.principalName,
       Cliente: row.clientName,
       Controparte: row.counterpartyName,

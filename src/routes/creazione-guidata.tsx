@@ -833,7 +833,7 @@ function PracticeStep({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_minmax(0,2fr)]">
+        <div className="max-w-sm">
           <div className="space-y-2">
             <Label htmlFor="practice_number">Numero pratica</Label>
             <Input
@@ -844,15 +844,6 @@ function PracticeStep({
               value={draft.practiceNumber}
               onChange={(event) => updateDraft("practiceNumber", event.target.value)}
               placeholder="Es. 157"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="practice_title">Titolo</Label>
-            <Input
-              id="practice_title"
-              value={draft.title}
-              onChange={(event) => updateDraft("title", event.target.value)}
-              placeholder="Es. Recupero credito fattura insoluta"
             />
           </div>
         </div>
@@ -1222,7 +1213,7 @@ function HearingDatesEditor({
   const setCount = (count: number) => {
     const normalized = Math.max(0, count);
     const next = activity.hearingDates.slice(0, normalized);
-    while (next.length < normalized) next.push("");
+    while (next.length < normalized) next.push(activity.activityDate);
     updateActivity(activity.localId, "hearingDates", next);
   };
 
@@ -1571,9 +1562,6 @@ function buildNormalizedImport(
       errors.push(`Attività ${index + 1}: completa tutte le date udienza.`);
     }
     const hearingDates = activity.hearingDates.filter(Boolean);
-    if (item.requires_hearing_dates && new Set(hearingDates).size !== hearingDates.length) {
-      errors.push(`Attività ${index + 1}: rimuovi le date udienza duplicate.`);
-    }
 
     return {
       id: activity.activityId,
@@ -1629,7 +1617,7 @@ function buildNormalizedImport(
     practice: {
       practiceNumber: Number.isFinite(practiceNumber) ? practiceNumber : 0,
       existingCaseId: null,
-      title: draft.title.trim() || `Pratica ${draft.practiceNumber || "—"}`,
+      title: `Pratica ${draft.practiceNumber || "—"}`,
       status: draft.status,
       openedAt: draft.openedAt || today(),
       closedAt: draft.closedAt || null,

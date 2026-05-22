@@ -6,6 +6,22 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.11.7] — 2026-05-23
+
+### Correzioni
+
+- **Attività**: le nuove date udienza partono dalla data del Compenso inserita
+  nella voce e sono salvabili anche quando più udienze cadono nello stesso
+  giorno.
+- **Pratiche**: la sezione “Dati e riferimenti pratica” resta sempre visibile e
+  non è più comprimibile.
+- **Pratiche**: la creazione rapida di una Controparte composta permette di
+  inserire più soggetti prima di salvarla nella Pratica.
+- **Pratiche**: il nome pratica non è più esposto nei form e nelle superfici
+  operative; la Pratica è identificata dal solo numero pratica.
+- **Pratiche**: la creazione rapida di una Controparte seleziona subito la
+  nuova anagrafica nel form della Pratica.
+
 ## [1.11.6] — 2026-05-23
 
 ### Correzioni
@@ -1104,6 +1120,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.11.7]: #1117--2026-05-23
 [1.11.6]: #1116--2026-05-23
 [1.11.5]: #1115--2026-05-23
 [1.11.4]: #1114--2026-05-23
