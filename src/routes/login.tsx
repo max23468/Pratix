@@ -1,5 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
+import { AuthEmailOtpForm } from "@/components/auth-email-otp-form";
 import { Logo } from "@/components/brand/logo";
 import { toast } from "sonner";
 import { TurnstileChallenge } from "@/components/security/turnstile-challenge";
@@ -33,6 +34,7 @@ function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
   const [passkeySubmitting, setPasskeySubmitting] = useState(false);
   const [sent, setSent] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [passkeySupported, setPasskeySupported] = useState(false);
   const submitLock = useSubmitLock();
 
@@ -63,6 +65,7 @@ function LoginPage() {
         },
       });
       if (error) throw error;
+      setPendingEmail(parsed.data.email);
       setSent(true);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Invio del link non riuscito.");
@@ -108,20 +111,26 @@ function LoginPage() {
         <div className="rounded-xl border border-border bg-card p-6 shadow-elevated">
           <h1 className="font-display text-2xl font-semibold text-foreground">Accedi</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Inserisci la tua email: ti invieremo un link sicuro per entrare.
+            Inserisci la tua email: ti invieremo un link sicuro e un codice monouso.
           </p>
           {sent ? (
-            <div
-              className="mt-6 rounded-md border border-border bg-muted/40 p-4 text-sm text-foreground"
-              role="status"
-              aria-live="polite"
-            >
-              <p className="font-medium">Controlla la tua casella.</p>
-              <p className="mt-1 text-muted-foreground">
-                Se l'indirizzo è registrato, riceverai a breve il link per accedere a Pratix.
-                Controlla anche lo spam.
-              </p>
-            </div>
+            <>
+              <div
+                className="mt-6 rounded-md border border-border bg-muted/40 p-4 text-sm text-foreground"
+                role="status"
+                aria-live="polite"
+              >
+                <p className="font-medium">Controlla la tua casella.</p>
+                <p className="mt-1 text-muted-foreground">
+                  Se l'indirizzo è registrato, riceverai a breve un link e un codice monouso. Puoi
+                  usare l'uno o l'altro per entrare in Pratix.
+                </p>
+              </div>
+              <AuthEmailOtpForm
+                email={pendingEmail}
+                onVerified={() => navigate({ to: "/dashboard" })}
+              />
+            </>
           ) : (
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div className="space-y-2">
@@ -141,7 +150,7 @@ function LoginPage() {
                 resetSignal={captchaResetSignal}
               />
               <Button type="submit" className="w-full" disabled={submitting}>
-                {submitting ? "Invio in corso…" : "Invia link di accesso"}
+                {submitting ? "Invio in corso…" : "Invia link e codice"}
               </Button>
             </form>
           )}

@@ -29,7 +29,9 @@ double_confirm_changes = false
 enable_confirmations = true
 secure_password_change = false
 max_frequency = "1m0s"
-otp_length = 8
+# Config locale Supabase CLI per il codice OTP email.
+# Nel progetto hosted verificare dal Dashboard il campo Email OTP length, non la lunghezza password.
+otp_length = 6
 otp_expiry = 3600
 
 [auth.email.template.magic_link]

@@ -8,12 +8,12 @@ export const Route = createFileRoute("/reimposta-password")({
       { title: "Accesso senza password · Pratix" },
       {
         name: "description",
-        content: "Pratix usa link di accesso sicuri via email al posto della password.",
+        content: "Pratix usa link di accesso e codici monouso via email al posto della password.",
       },
       { property: "og:title", content: "Accesso senza password · Pratix" },
       {
         property: "og:description",
-        content: "Pratix usa link di accesso sicuri via email al posto della password.",
+        content: "Pratix usa link di accesso e codici monouso via email al posto della password.",
       },
       { name: "robots", content: "noindex" },
     ],
@@ -34,8 +34,8 @@ function PasswordlessNoticePage() {
             Accesso senza password
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Pratix non usa più password. Per entrare richiedi un link sicuro via email dalla pagina
-            di accesso.
+            Pratix non usa più password. Per entrare richiedi un link sicuro e un codice monouso via
+            email dalla pagina di accesso.
           </p>
           <div className="mt-6">
             <Button asChild className="w-full">

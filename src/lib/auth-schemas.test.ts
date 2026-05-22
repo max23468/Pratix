@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { loginSchema, registerSchema } from "./auth-schemas";
+import { loginSchema, oneTimeCodeSchema, registerSchema } from "./auth-schemas";
 
 describe("loginSchema", () => {
   it("accetta email valide e normalizza gli spazi", () => {
@@ -40,6 +40,21 @@ describe("registerSchema", () => {
     expect(parsed.success).toBe(false);
     if (!parsed.success) {
       expect(parsed.error.issues[0]?.message).toBe("Inserisci nome e cognome");
+    }
+  });
+});
+
+describe("oneTimeCodeSchema", () => {
+  it("accetta codici a 6 cifre e normalizza gli spazi", () => {
+    expect(oneTimeCodeSchema.parse(" 123 456 ")).toBe("123456");
+  });
+
+  it("rifiuta codici con lunghezza diversa", () => {
+    const parsed = oneTimeCodeSchema.safeParse("12345678");
+
+    expect(parsed.success).toBe(false);
+    if (!parsed.success) {
+      expect(parsed.error.issues[0]?.message).toBe("Inserisci il codice a 6 cifre");
     }
   });
 });

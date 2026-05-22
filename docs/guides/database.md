@@ -123,7 +123,8 @@ Impostazioni operative desiderate nel dashboard Supabase:
   Pro o superiore; sul piano gratuito l'advisor security può continuare a
   segnalarla anche se la UI non usa password.
 - Policy password: non centrale nel percorso corrente, perché login e
-  registrazione usano magic link via email.
+  registrazione usano magic link via email. Non abbassare la lunghezza minima
+  password per configurare il codice OTP: sono impostazioni diverse.
 - Passkey: abilitate lato client come feature sperimentale Supabase; mantenere
   magic link come fallback operativo.
 - Anonymous sign-ins disattivati.
@@ -132,16 +133,25 @@ Impostazioni operative desiderate nel dashboard Supabase:
 - Redirect URL produzione:
   - `https://pratix.vercel.app/dashboard`
   - `https://pratix.vercel.app/reimposta-password`
+- Codice OTP email a 6 cifre. Nel Dashboard hosted va configurato come
+  **Email OTP length** del provider Email; nella Management API corrisponde a
+  `mailer_otp_length`, mentre nel `supabase/config.toml` locale corrisponde a
+  `auth.email.otp_length = 6`.
 - Template email Supabase personalizzati in italiano per conferma account, magic
-  link e cambio email, con link `{{ .ConfirmationURL }}`.
+  link e cambio email. Il template magic link include sia `{{ .ConfirmationURL }}`
+  sia `{{ .Token }}`, così l'utente può entrare con link oppure codice monouso.
 
 La UI usa `signInWithOtp` sia per login sia per registrazione. La registrazione
 passa `full_name` nei metadata Supabase, così il trigger profilo conserva il nome
-del professionista quando l'utente viene creato.
+del professionista quando l'utente viene creato. Dopo l'invio email, login e
+registrazione accettano anche il codice monouso tramite `verifyOtp` con
+`type: "email"`.
 
 Il template Magic Link è tracciato anche in `supabase/config.toml` e
-`supabase/templates/magic_link.html`; la configurazione remota va aggiornata con
-`supabase config push` solo dopo aver controllato il diff prodotto dal CLI.
+`supabase/templates/magic_link.html`. Per il progetto hosted preferire la
+verifica dal Dashboard Supabase o dalla Management API prima di usare
+`supabase config push`, perché un push Auth può sovrascrivere anche impostazioni
+non collegate al codice OTP.
 
 ### Stato corrente Auth
 
