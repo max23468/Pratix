@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.11.1] — 2026-05-22
+
+### Correzioni
+
+- **Attività**: gli importi liberi pari o superiori a 1.000 restano salvabili
+  dopo la formattazione, senza separatori migliaia incompatibili con il parser.
+
 ## [1.11.0] — 2026-05-22
 
 Release di consolidamento operativo: Attività più centrali, importi da
@@ -1047,6 +1054,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.11.1]: #1111--2026-05-22
 [1.11.0]: #1110--2026-05-22
 [1.10.1]: #1101--2026-05-22
 [1.10.0]: #1100--2026-05-22

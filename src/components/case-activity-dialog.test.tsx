@@ -452,6 +452,52 @@ describe("CaseActivityDialog", () => {
     expect(amountInput.value).toBe("16,00");
   });
 
+  it("non aggiunge separatori delle migliaia all'importo libero formattato", async () => {
+    renderDialog();
+
+    await userEvent.click(screen.getByRole("button", { name: /Attività/ }));
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "item-expense");
+    await screen.findByDisplayValue("Rimborso spese");
+
+    const amountInput = screen.getByLabelText("Importo") as HTMLInputElement;
+    await userEvent.clear(amountInput);
+    await userEvent.type(amountInput, "1000");
+    fireEvent.blur(amountInput);
+
+    expect(amountInput.value).toBe("1000,00");
+
+    await userEvent.click(screen.getByRole("button", { name: "Salva" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Voce fatturabile registrata"));
+    expect(query.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        price_item_id: "item-expense",
+        unit_price: 1000,
+      }),
+    );
+  });
+
+  it("accetta importi liberi con separatore migliaia digitato dall'utente", async () => {
+    renderDialog();
+
+    await userEvent.click(screen.getByRole("button", { name: /Attività/ }));
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "item-expense");
+    await screen.findByDisplayValue("Rimborso spese");
+
+    const amountInput = screen.getByLabelText("Importo") as HTMLInputElement;
+    await userEvent.clear(amountInput);
+    await userEvent.type(amountInput, "1.000,50");
+    await userEvent.click(screen.getByRole("button", { name: "Salva" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Voce fatturabile registrata"));
+    expect(query.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        price_item_id: "item-expense",
+        unit_price: 1000.5,
+      }),
+    );
+  });
+
   it("mostra le pratiche in ordine alfabetico e permette di cercarle digitando", async () => {
     renderGlobalDialog();
 
