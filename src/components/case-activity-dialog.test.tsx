@@ -236,6 +236,17 @@ const renderDialog = (activity?: CaseActivityDialogActivity) => {
         requires_hearing_dates: true,
         sort_order: 20,
       },
+      {
+        id: "item-expense",
+        kind: "expense_reimbursement",
+        code: "SPESE",
+        name: "Rimborso spese",
+        invoice_description: "Rimborso spese",
+        unit_price: null,
+        is_enabled: true,
+        requires_hearing_dates: false,
+        sort_order: 30,
+      },
     ],
   );
   return render(
@@ -322,6 +333,20 @@ const editableActivity: CaseActivityDialogActivity = {
   activity_attachments: [],
 };
 
+const editableExpenseActivity: CaseActivityDialogActivity = {
+  ...editableActivity,
+  id: "activity-expense-edit",
+  price_item_id: "item-expense",
+  kind: "expense_reimbursement",
+  snapshot_price_code: "SPESE",
+  snapshot_price_name: "Rimborso spese",
+  description: "Rimborso spese",
+  quantity: 2,
+  unit_price: 50,
+  amount: 100,
+  notes: null,
+};
+
 describe("CaseActivityDialog", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -356,6 +381,35 @@ describe("CaseActivityDialog", () => {
         description: "Redazione diffida",
         quantity: 1,
         unit_price: 120,
+      }),
+    );
+  });
+
+  it("registra un rimborso spese come importo forfettario con virgola decimale", async () => {
+    renderDialog();
+
+    await userEvent.click(screen.getByRole("button", { name: /Attività/ }));
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "item-expense");
+    await screen.findByDisplayValue("Rimborso spese");
+
+    expect(screen.queryByLabelText("Quantità")).toBeNull();
+
+    const amountInput = screen.getByLabelText("Importo") as HTMLInputElement;
+    await userEvent.clear(amountInput);
+    await userEvent.type(amountInput, "12,50");
+
+    expect(amountInput.value).toBe("12,50");
+
+    await userEvent.click(screen.getByRole("button", { name: "Salva" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Voce fatturabile registrata"));
+    expect(query.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        price_item_id: "item-expense",
+        kind: "expense_reimbursement",
+        description: "Rimborso spese",
+        quantity: 1,
+        unit_price: 12.5,
       }),
     );
   });
@@ -471,6 +525,30 @@ describe("CaseActivityDialog", () => {
     );
     expect(query.eq).toHaveBeenCalledWith("id", "activity-edit");
     expect(query.is).toHaveBeenCalledWith("invoice_id", null);
+  });
+
+  it("modifica un rimborso spese mantenendolo come importo forfettario", async () => {
+    renderDialog(editableExpenseActivity);
+
+    await screen.findByRole("heading", { name: "Modifica voce fatturabile" });
+
+    expect(screen.queryByLabelText("Quantità")).toBeNull();
+
+    const amountInput = screen.getByLabelText("Importo") as HTMLInputElement;
+    expect(amountInput.value).toBe("100");
+    await userEvent.clear(amountInput);
+    await userEvent.type(amountInput, "118,50");
+    await userEvent.click(screen.getByRole("button", { name: "Salva modifiche" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Voce fatturabile aggiornata"));
+    expect(query.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        description: "Rimborso spese",
+        quantity: 1,
+        unit_price: 118.5,
+      }),
+      { count: "exact" },
+    );
   });
 
   it("non modifica udienze e allegati se la voce viene fatturata durante il salvataggio", async () => {
