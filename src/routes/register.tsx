@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
+import { AuthEmailOtpForm } from "@/components/auth-email-otp-form";
 import { Logo } from "@/components/brand/logo";
 import { toast } from "sonner";
 import { TurnstileChallenge } from "@/components/security/turnstile-challenge";
@@ -24,6 +25,7 @@ export const Route = createFileRoute("/register")({
 });
 
 function RegisterPage() {
+  const navigate = useNavigate();
   const captchaEnabled = isTurnstileEnabled();
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -31,6 +33,7 @@ function RegisterPage() {
   const [captchaResetSignal, setCaptchaResetSignal] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [confirmationSent, setConfirmationSent] = useState(false);
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const submitLock = useSubmitLock();
 
   const handleSubmit = async (e: FormEvent) => {
@@ -60,8 +63,9 @@ function RegisterPage() {
         toast.error("Invio non riuscito. Riprova tra poco o accedi se hai già un account.");
         return;
       }
+      setPendingEmail(parsed.data.email);
       setConfirmationSent(true);
-      toast.success("Link inviato. Controlla l'email per entrare in Pratix.");
+      toast.success("Link e codice inviati. Controlla l'email per entrare in Pratix.");
     } finally {
       setSubmitting(false);
       submitLock.release();
@@ -82,17 +86,23 @@ function RegisterPage() {
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">Bastano pochi secondi per iniziare.</p>
           {confirmationSent ? (
-            <div
-              className="mt-6 rounded-md border border-border bg-muted/40 p-4 text-sm text-foreground"
-              role="status"
-              aria-live="polite"
-            >
-              <p className="font-medium">Controlla la tua casella.</p>
-              <p className="mt-1 text-muted-foreground">
-                Ti abbiamo inviato il link per completare l'accesso. Dopo l'apertura del link potrai
-                entrare in Pratix.
-              </p>
-            </div>
+            <>
+              <div
+                className="mt-6 rounded-md border border-border bg-muted/40 p-4 text-sm text-foreground"
+                role="status"
+                aria-live="polite"
+              >
+                <p className="font-medium">Controlla la tua casella.</p>
+                <p className="mt-1 text-muted-foreground">
+                  Ti abbiamo inviato un link e un codice monouso. Puoi usare l'uno o l'altro per
+                  entrare in Pratix.
+                </p>
+              </div>
+              <AuthEmailOtpForm
+                email={pendingEmail}
+                onVerified={() => navigate({ to: "/dashboard" })}
+              />
+            </>
           ) : (
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
               <div className="space-y-2">
@@ -121,7 +131,7 @@ function RegisterPage() {
                 resetSignal={captchaResetSignal}
               />
               <Button type="submit" className="w-full" disabled={submitting}>
-                {submitting ? "Invio in corso…" : "Invia link di accesso"}
+                {submitting ? "Invio in corso…" : "Invia link e codice"}
               </Button>
             </form>
           )}

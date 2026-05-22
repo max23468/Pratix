@@ -10,6 +10,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { lazy, Suspense, type ReactNode } from "react";
+import { AuthRedirectErrorNotice } from "@/components/auth-redirect-error-notice";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { queryClient } from "@/lib/query-client";
@@ -222,6 +223,7 @@ function RootComponent() {
         <RouteAuthBoundary>
           <TooltipProvider delayDuration={200}>
             <Outlet />
+            <AuthRedirectErrorNotice />
             <Toaster richColors position="top-right" />
             <Analytics />
             <SpeedInsights />

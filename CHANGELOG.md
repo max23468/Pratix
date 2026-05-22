@@ -8,7 +8,20 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ### Non versionato
 
+- **Supabase Auth**: chiarite le note operative su codice OTP email, lunghezza
+  password e differenza tra `config.toml` locale e configurazione hosted.
+
 - **CI**: il workflow Quality usa la base stabile della PR e fetch non shallow per evitare falsi fallimenti `no merge base` quando una PR viene mergeata mentre partono i controlli.
+
+## [1.10.0] — 2026-05-22
+
+### Novità
+
+- **Accesso**: login e registrazione accettano anche il codice monouso a 6 cifre ricevuto via email, oltre al magic link.
+
+### Correzioni
+
+- **Accesso**: gli errori restituiti da un magic link scaduto, già usato o non valido mostrano un messaggio specifico e invitano a richiedere un nuovo link.
 
 ## [1.9.3] — 2026-05-19
 
@@ -999,6 +1012,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.10.0]: #1100--2026-05-22
 [1.9.3]: #193--2026-05-19
 [1.9.2]: #192--2026-05-19
 [1.9.1]: #191--2026-05-19

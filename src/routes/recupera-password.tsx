@@ -8,12 +8,14 @@ export const Route = createFileRoute("/recupera-password")({
       { title: "Accesso via email · Pratix" },
       {
         name: "description",
-        content: "Richiedi un link di accesso sicuro per entrare in Pratix senza password.",
+        content:
+          "Richiedi un link di accesso e un codice monouso per entrare in Pratix senza password.",
       },
       { property: "og:title", content: "Accesso via email · Pratix" },
       {
         property: "og:description",
-        content: "Richiedi un link di accesso sicuro per entrare in Pratix senza password.",
+        content:
+          "Richiedi un link di accesso e un codice monouso per entrare in Pratix senza password.",
       },
     ],
   }),
@@ -32,11 +34,11 @@ function EmailAccessInfoPage() {
           <h1 className="font-display text-2xl font-semibold text-foreground">Accesso via email</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Non c'è una password da recuperare: inserisci la tua email nella pagina di accesso e
-            riceverai un link sicuro per entrare.
+            riceverai un link sicuro e un codice monouso.
           </p>
           <div className="mt-6">
             <Button asChild className="w-full">
-              <Link to="/login">Richiedi link di accesso</Link>
+              <Link to="/login">Richiedi link e codice</Link>
             </Button>
           </div>
         </div>
