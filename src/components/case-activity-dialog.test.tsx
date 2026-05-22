@@ -498,6 +498,22 @@ describe("CaseActivityDialog", () => {
     );
   });
 
+  it("rifiuta separatori migliaia non validi nell'importo libero", async () => {
+    renderDialog();
+
+    await userEvent.click(screen.getByRole("button", { name: /Attività/ }));
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "item-expense");
+    await screen.findByDisplayValue("Rimborso spese");
+
+    const amountInput = screen.getByLabelText("Importo") as HTMLInputElement;
+    await userEvent.clear(amountInput);
+    await userEvent.type(amountInput, "10.0,50");
+    await userEvent.click(screen.getByRole("button", { name: "Salva" }));
+
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Inserisci un importo valido"));
+    expect(query.insert).not.toHaveBeenCalled();
+  });
+
   it("mostra le pratiche in ordine alfabetico e permette di cercarle digitando", async () => {
     renderGlobalDialog();
 

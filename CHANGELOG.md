@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.11.2] — 2026-05-22
+
+### Correzioni
+
+- **Attività**: gli importi liberi con separatori migliaia digitati in posizioni
+  non valide vengono rifiutati invece di essere convertiti in un importo diverso.
+
 ## [1.11.1] — 2026-05-22
 
 ### Correzioni
@@ -1054,6 +1061,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.11.2]: #1112--2026-05-22
 [1.11.1]: #1111--2026-05-22
 [1.11.0]: #1110--2026-05-22
 [1.10.1]: #1101--2026-05-22

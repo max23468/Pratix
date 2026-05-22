@@ -174,8 +174,11 @@ const formatDecimalInputValue = (value: number) =>
 
 const parseDecimalInputValue = (value: string) => {
   const compactValue = value.trim().replace(/\s/g, "");
+  if (!compactValue) return null;
   const normalized = compactValue.includes(",")
-    ? compactValue.replace(/\./g, "").replace(",", ".")
+    ? /^(?:(?:\d+|\d{1,3}(?:\.\d{3})+),\d*|,\d+)$/.test(compactValue)
+      ? compactValue.replace(/\./g, "").replace(",", ".")
+      : null
     : compactValue;
   if (!normalized) return null;
   if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(normalized)) return null;
