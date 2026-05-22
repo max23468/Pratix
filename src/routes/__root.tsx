@@ -13,6 +13,7 @@ import { lazy, Suspense, type ReactNode } from "react";
 import { AuthRedirectErrorNotice } from "@/components/auth-redirect-error-notice";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { HOME_AUTH_REDIRECT_SCRIPT } from "@/lib/auth-home-redirect";
 import { queryClient } from "@/lib/query-client";
 import { ThemeProvider, NO_FLASH_SCRIPT } from "@/lib/theme-context";
 import { APP_VERSION } from "@/lib/version";
@@ -185,6 +186,7 @@ function RootShell({ children }: { children: ReactNode }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
         />
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
+        <script dangerouslySetInnerHTML={{ __html: HOME_AUTH_REDIRECT_SCRIPT }} />
       </head>
       <body>
         {children}
