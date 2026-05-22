@@ -8,10 +8,9 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ### Non versionato
 
-- **Supabase Auth**: chiarite le note operative su codice OTP email, lunghezza
-  password e differenza tra `config.toml` locale e configurazione hosted.
-
-- **CI**: il workflow Quality usa la base stabile della PR e fetch non shallow per evitare falsi fallimenti `no merge base` quando una PR viene mergeata mentre partono i controlli.
+- **Smoke a11y**: aggiunti avanzamento per route, timeout degli audit axe e
+  chiusura robusta di WebKit/dev server per rendere diagnosticabile lo smoke
+  autenticato completo.
 
 ## [1.10.0] — 2026-05-22
 

@@ -63,6 +63,9 @@ WebKit: non richiede password e non legge la casella email.
 
 Il comando aggiunge dashboard, anagrafiche, pratiche, attività, fatture,
 novità, account, impostazioni, Controllo duplicati e Creazione guidata.
+Sul terminale stampa una riga `[smoke:a11y] audit ...` per ogni combinazione
+route/tema/viewport: il giro autenticato completo è più lungo di quello
+pubblico e può richiedere alcuni minuti.
 
 Prerequisiti:
 
@@ -106,3 +109,16 @@ Per cambiare porta locale:
 ```bash
 PRATIX_SMOKE_PORT=3400 npm run smoke:a11y
 ```
+
+Se lo smoke sembra fermo, guarda l'ultima riga `[smoke:a11y] audit ...`: indica
+la route, il tema e il viewport in corso. Ogni audit axe ha un timeout
+predefinito di 20 secondi, modificabile solo per diagnosi con:
+
+```bash
+PRATIX_SMOKE_AUDIT_TIMEOUT_MS=30000 npm run smoke:a11y:auth
+```
+
+Se il timeout scatta su una route specifica, tratta la route come regressione o
+come problema del test harness da diagnosticare. Non chiudere il lavoro dicendo
+solo che lo smoke "si è bloccato": riporta l'ultima route stampata e il comando
+eseguito.

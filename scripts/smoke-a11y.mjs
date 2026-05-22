@@ -35,6 +35,7 @@ const startServer = args.has("--start-server");
 const publicOnly = args.has("--public-only");
 const authRequired = args.has("--auth-required");
 const port = Number(process.env.PRATIX_SMOKE_PORT || 3300);
+const auditTimeoutMs = Number(process.env.PRATIX_SMOKE_AUDIT_TIMEOUT_MS || 20_000);
 const localEnv = loadEnv(
   process.env.MODE || process.env.NODE_ENV || "development",
   process.cwd(),
@@ -52,6 +53,23 @@ let server;
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function routeLabel(route, theme, viewport, authenticated) {
+  return `${authenticated ? "auth" : "public"} ${viewport.name} ${theme} ${route}`;
+}
+
+function logAudit(message) {
+  process.stderr.write(`[smoke:a11y] ${message}\n`);
+}
+
+function withTimeout(promise, ms, message) {
+  let timeout;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeout = setTimeout(() => reject(new Error(message)), ms);
+  });
+
+  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timeout));
 }
 
 async function waitForServer(url) {
@@ -177,6 +195,8 @@ async function auditPage(page, route, theme, viewport, authenticated, issues) {
 }
 
 async function auditPageOnce(page, route, theme, viewport, authenticated, issues) {
+  const label = routeLabel(route, theme, viewport, authenticated);
+  logAudit(`audit ${label}`);
   const currentPath = new URL(page.url(), baseUrl).pathname;
   if (currentPath !== route) {
     await page.goto(`${baseUrl}${route}`, { waitUntil: "domcontentloaded" });
@@ -185,11 +205,15 @@ async function auditPageOnce(page, route, theme, viewport, authenticated, issues
   await ensureDocumentReady(page, route);
   await page.addScriptTag({ content: axe.source });
 
-  const result = await page.evaluate(async () => {
-    return window.axe.run(document, {
-      runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] },
-    });
-  });
+  const result = await withTimeout(
+    page.evaluate(async () => {
+      return window.axe.run(document, {
+        runOnly: { type: "tag", values: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] },
+      });
+    }),
+    auditTimeoutMs,
+    `Audit axe oltre ${auditTimeoutMs}ms per ${label}`,
+  );
 
   for (const violation of result.violations) {
     for (const node of violation.nodes) {
@@ -263,63 +287,74 @@ async function auditPageOnce(page, route, theme, viewport, authenticated, issues
 
 async function run() {
   if (startServer) await startDevServer();
-  const browser = await webkit.launch({ headless: true });
+  let browser;
   const issues = [];
   let audited = 0;
 
-  for (const viewport of VIEWPORTS) {
-    for (const theme of THEMES) {
-      const context = await newContext(browser, theme, viewport);
-      const page = await context.newPage();
-      for (const route of PUBLIC_ROUTES) {
-        await auditPage(page, route, theme, viewport, false, issues);
-        audited += 1;
-      }
-      await context.close();
-    }
-  }
+  try {
+    browser = await webkit.launch({ headless: true });
 
-  const canAuditAuth = Boolean(!publicOnly && email && supabaseUrl && supabaseServiceRoleKey);
-  if (authRequired && !canAuditAuth) {
-    throw new Error(
-      "Smoke autenticato richiesto ma non configurato: serve SUPABASE_SERVICE_ROLE_KEY. " +
-        "Usa npm run smoke:a11y:auth per recuperarla via Supabase CLI senza password.",
-    );
-  }
-
-  if (canAuditAuth) {
     for (const viewport of VIEWPORTS) {
       for (const theme of THEMES) {
         const context = await newContext(browser, theme, viewport);
-        const page = await context.newPage();
-        await login(page);
-        for (const route of AUTH_ROUTES) {
-          await auditPage(page, route, theme, viewport, true, issues);
-          audited += 1;
+        try {
+          const page = await context.newPage();
+          for (const route of PUBLIC_ROUTES) {
+            await auditPage(page, route, theme, viewport, false, issues);
+            audited += 1;
+          }
+        } finally {
+          await context.close().catch(() => undefined);
         }
-        await context.close();
       }
     }
-  }
 
-  await browser.close();
-  console.log(
-    JSON.stringify(
-      {
-        baseUrl,
-        audited,
-        authenticated: canAuditAuth,
-        authMode: canAuditAuth ? "magiclink-admin" : "none",
-        viewports: VIEWPORTS.map((viewport) => viewport.name),
-        themes: THEMES,
-        issueCount: issues.length,
-        issues: issues.slice(0, 40),
-      },
-      null,
-      2,
-    ),
-  );
-  if (issues.length) process.exitCode = 1;
+    const canAuditAuth = Boolean(!publicOnly && email && supabaseUrl && supabaseServiceRoleKey);
+    if (authRequired && !canAuditAuth) {
+      throw new Error(
+        "Smoke autenticato richiesto ma non configurato: serve SUPABASE_SERVICE_ROLE_KEY. " +
+          "Usa npm run smoke:a11y:auth per recuperarla via Supabase CLI senza password.",
+      );
+    }
+
+    if (canAuditAuth) {
+      for (const viewport of VIEWPORTS) {
+        for (const theme of THEMES) {
+          const context = await newContext(browser, theme, viewport);
+          try {
+            const page = await context.newPage();
+            await login(page);
+            for (const route of AUTH_ROUTES) {
+              await auditPage(page, route, theme, viewport, true, issues);
+              audited += 1;
+            }
+          } finally {
+            await context.close().catch(() => undefined);
+          }
+        }
+      }
+    }
+
+    console.log(
+      JSON.stringify(
+        {
+          baseUrl,
+          audited,
+          authenticated: canAuditAuth,
+          authMode: canAuditAuth ? "magiclink-admin" : "none",
+          viewports: VIEWPORTS.map((viewport) => viewport.name),
+          themes: THEMES,
+          issueCount: issues.length,
+          issues: issues.slice(0, 40),
+        },
+        null,
+        2,
+      ),
+    );
+    if (issues.length) process.exitCode = 1;
+  } finally {
+    await browser?.close().catch(() => undefined);
+  }
 }
 
 function stopDevServer() {
