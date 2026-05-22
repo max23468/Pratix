@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.11.6] — 2026-05-23
+
+### Correzioni
+
+- **Accesso**: la home pubblica reindirizza gli utenti già autenticati prima del
+  primo render visibile, evitando il flash della landing prima della Dashboard.
+
 ## [1.11.5] — 2026-05-23
 
 ### Sotto il cofano
@@ -1097,6 +1104,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.11.6]: #1116--2026-05-23
 [1.11.5]: #1115--2026-05-23
 [1.11.4]: #1114--2026-05-23
 [1.11.3]: #1113--2026-05-22
