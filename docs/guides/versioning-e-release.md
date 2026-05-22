@@ -26,7 +26,7 @@ Per rilasciare la versione `X.Y.Z`:
 2. Esegui `npm run release`.
 3. Controlla il diff generato (`CHANGELOG.md` + `src/lib/version.ts`).
 4. Promuovi il deployment di produzione su Vercel.
-5. Verifica: apri `/impostazioni` e controlla che il footer mostri la nuova versione.
+5. Verifica secondo la corsia corretta: almeno `/impostazioni` per la versione, `/novita` se cambia il changelog, smoke completo solo quando il diff lo giustifica.
 
 ## Definizione di pubblicazione completa
 
@@ -40,6 +40,32 @@ In Pratix, quando il proprietario chiede "pubblica", "pubblica tutto" o
 Una PR aperta, un push sul branch o una preview Vercel non bastano. Se uno di
 questi passaggi non è possibile, va dichiarato esplicitamente come residuo
 operativo.
+
+## Corsie di pubblicazione
+
+"Pubblicazione completa" descrive il traguardo operativo. Non significa eseguire
+sempre il gate tecnico massimo. Prima di pubblicare, classifica il diff e scegli
+la corsia più piccola che copre il rischio reale.
+
+| Corsia       | Quando usarla                                                                                          | Verifiche minime                                                                                                                                                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Veloce**   | Docs interne, roadmap, ADR, regole agenti, memoria, `Non versionato` non esposto in app                | Rilettura/coerenza, `git diff --check`, `npm run format:changed:check` se utile. Niente build/lint/test/smoke se non cambia codice, runtime, UI o contenuti esposti                                               |
+| **Standard** | `CHANGELOG.md`, testi pubblici, microcopy esposta, piccola UI locale, contenuti mostrati in pagina     | Check specifico (`npm run changelog:check` se cambia il changelog), eventuale build/lint se il diff tocca TypeScript/configurazione, verifica pagina o HTTP mirata, `npm run smoke:a11y:quick` se serve sanity UI |
+| **Completa** | Parser, automazione release, routing, componenti condivisi, auth, database, dipendenze, UI sostanziale | `npm run prepush:guard` o controlli equivalenti, GitHub checks, smoke WebKit/a11y quando praticabile                                                                                                              |
+
+La corsia veloce non salta la pubblicazione: se il proprietario ha chiesto
+"pubblica", restano PR/merge su `main`, verifica Vercel proporzionata e pulizia
+di branch/worktree quando esistono. Salta solo i gate applicativi non necessari.
+
+Per chiudere il post-merge usa:
+
+```sh
+npm run publish:finish -- --pr <numero-pr> --routes /,/novita
+```
+
+Il comando richiede worktree pulito, aggiorna `main`, verifica la produzione via
+Vercel API quando `VERCEL_TOKEN` è disponibile, esegue probe HTTP sulle route
+indicate e pulisce branch/worktree dedicati solo con operazioni sicure.
 
 ## Gate di chiusura fase
 
@@ -312,10 +338,14 @@ Usa `--version` solo quando serve una versione specifica.
 5. **Controlla il diff**: devono cambiare solo `CHANGELOG.md` e
    `src/lib/version.ts`, salvo lavori collegati già presenti nel branch.
 6. **Promuovi il deployment di produzione** su Vercel.
-7. **Verifica**:
+7. **Verifica secondo corsia**:
    - Apri `/impostazioni`: il footer deve mostrare `Pratix v0.3.0 · build 2026-05-15`.
    - Apri `/novita`: deve apparire la nuova versione in cima.
    - La campanella in topbar mostra il pallino fino a quando non visiti `/novita`.
+   - Usa `npm run smoke:a11y:quick` per una sanity UI mirata quando non serve
+     lo smoke completo.
+   - Esegui smoke completo solo per la corsia completa: UI sostanziale, routing,
+     flussi autenticati critici, parser o automazioni di release.
 
 ## Cosa NON fare
 

@@ -6,6 +6,21 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.11.4] — 2026-05-23
+
+### Sotto il cofano
+
+- **Pubblicazione**: aggiunto `npm run publish:finish` per aggiornare `main`,
+  verificare produzione, controllare le route indicate e pulire branch/worktree
+  dopo il merge.
+- **Verifiche**: aggiunto `npm run smoke:a11y:quick` per uno smoke mirato e
+  veloce, distinto dallo smoke WebKit/a11y completo.
+- **Pre-push**: la cache usa una fingerprint basata sul contenuto dei diff e i
+  check indipendenti vengono eseguiti in fasi parallele.
+- **Processo agenti**: introdotte corsie di pubblicazione veloce, standard e
+  completa per evitare gate applicativi e smoke test non necessari sui diff a
+  basso rischio.
+
 ## [1.11.3] — 2026-05-22
 
 ### Correzioni
@@ -1074,6 +1089,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.11.4]: #1114--2026-05-23
 [1.11.3]: #1113--2026-05-22
 [1.11.2]: #1112--2026-05-22
 [1.11.1]: #1111--2026-05-22

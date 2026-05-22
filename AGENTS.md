@@ -156,7 +156,7 @@ Vincoli di terminologia (vedi [`docs/glossario.md`](./docs/glossario.md)):
 - Non introdurre nuove dipendenze UI o librerie di stato senza motivazione esplicita e impatto chiaro.
 - **Solo token semantici per i colori** (`bg-primary`, `text-foreground`, `border-border`…). Mai hex inline o classi tipo `bg-white`. La palette vive in `src/styles.css` (oklch). Vedi [`BRAND.md`](./BRAND.md).
 - **Logo**: solo `<Logo>` da `src/components/brand/logo.tsx`. Mai SVG inline.
-- Per modifiche UI sostanziali, verifica quando praticabile la resa desktop/mobile e chiaro/scuro. Usa `npm run smoke:a11y` o `npm run smoke:a11y:auth` come gate di chiusura solo quando il diff tocca superfici UI ampie, routing, componenti condivisi, flussi autenticati critici o pubblicazione/release. Per microcopy, docs, fix locali o assenza di modifiche scegli verifiche mirate e dichiarale. Se non puoi verificare una superficie rilevante, dichiaralo con il rischio residuo.
+- Per modifiche UI sostanziali, verifica quando praticabile la resa desktop/mobile e chiaro/scuro. Usa `npm run smoke:a11y` o `npm run smoke:a11y:auth` come gate di chiusura solo quando il diff tocca superfici UI ampie, routing, componenti condivisi, flussi autenticati critici o release/pubblicazioni che incidono su quelle superfici. Per microcopy, docs, fix locali o assenza di modifiche scegli verifiche mirate e dichiarale. Se non puoi verificare una superficie rilevante, dichiaralo con il rischio residuo.
 
 ## Sicurezza e dati
 
@@ -177,15 +177,20 @@ Vincoli di terminologia (vedi [`docs/glossario.md`](./docs/glossario.md)):
 - Usa `npm run changelog:check` quando tocchi `CHANGELOG.md`, soprattutto voci `Novità`; `npm run release` e `npm run prepush:guard` lo eseguono automaticamente nei casi rilevanti.
 - Usa `npm audit --audit-level=moderate` dopo modifiche alle dipendenze.
 - Usa `npm run ci:local` come gate completo quando la modifica è abbastanza ampia da giustificarlo.
-- Prima del push usa `npm run prepush:guard` oppure lascia lavorare `.githooks/pre-push`: esegue solo i controlli necessari al diff e li mette in cache per la stessa fingerprint, evitando di ripetere format/build/lint/audit già validati dallo stesso guard.
+- Prima del push usa `npm run prepush:guard` oppure lascia lavorare `.githooks/pre-push`: esegue solo i controlli necessari al diff, usa una fingerprint basata sul contenuto dei diff, parallelizza i check indipendenti e mette in cache i risultati per evitare di ripetere format/build/lint/audit già validati dallo stesso guard.
 - Se hai appena eseguito controlli equivalenti manualmente sullo stesso diff, puoi usare `PRATIX_SKIP_PREPUSH=1 git push`, ma solo dichiarando il motivo nel riepilogo operativo.
 - Per modifiche solo documentali, non serve inventare test applicativi: rileggi il documento e verifica la coerenza delle istruzioni.
+- Per ogni richiesta "pubblica", separa i passaggi operativi obbligatori (PR/merge su `main`, Vercel production `READY` quando serve, cleanup branch/worktree) dalla profondità delle verifiche. La pubblicazione resta completa, ma i controlli seguono il rischio reale del diff.
+- Usa tre corsie:
+  - **veloce**: docs interne, roadmap, ADR, regole agenti, memoria o `Non versionato` non esposto in app. Verifica rilettura/coerenza, `git diff --check` e `npm run format:changed:check` se utile; niente build/lint/test/smoke se il diff non tocca codice, runtime, UI o contenuti esposti.
+  - **standard**: changelog, testi pubblici, microcopy esposta o piccola UI locale. Aggiungi i check specifici (`npm run changelog:check` se cambia `CHANGELOG.md`), build/lint solo se il diff tocca TypeScript/configurazione, e verifica pagina o HTTP mirata quando il contenuto è esposto. Se serve un controllo UI leggero usa `npm run smoke:a11y:quick`.
+  - **completa**: parser, automazione release, routing, componenti condivisi, flussi autenticati critici, database, dipendenze o UI sostanziale. Usa `npm run prepush:guard` o controlli equivalenti e smoke WebKit/a11y quando praticabile.
 - Scegli verifiche proporzionate al rischio:
   - nessuna modifica o sola analisi: niente test applicativi, riporta solo cosa è stato verificato;
   - docs interne, roadmap, ADR, regole agenti o memoria: rilettura/coerenza e, se utile, `npm run format:changed:check`;
   - fix piccolo non UI: test mirato, `npm run format:changed:check`, lint/build solo se il diff tocca TypeScript, routing, configurazione o contratti condivisi;
   - microcopy o piccola UI locale: verifica mirata della pagina/componente interessato, eventualmente browser leggero;
-  - UI sostanziale, componenti condivisi, routing, flussi autenticati, release o publish: build/lint/test pertinenti e smoke WebKit/a11y completo quando praticabile.
+  - UI sostanziale, componenti condivisi, routing, flussi autenticati critici, release o publish in corsia completa: build/lint/test pertinenti e smoke WebKit/a11y completo quando praticabile.
 - Non inventare risultati di test o comandi non eseguiti. Se un controllo non può essere eseguito, dichiaralo esplicitamente con motivo e rischio residuo.
 - Nelle risposte finali evita footer rituali sui test. Riporta verifiche solo quando sono utili: comando eseguito, fallimento, controllo non eseguibile, limite noto o rischio residuo.
 - Ogni volta che termini un'attività, includi sempre nelle conclusioni i prossimi passi consigliati. Devono essere concreti, ordinati e proporzionati al lavoro appena concluso; se non c'è un seguito operativo reale, dichiaralo esplicitamente.
@@ -233,6 +238,7 @@ Pratix usa **SemVer convenzionale** adattato a SaaS hostato (vedi [`docs/decisio
 - **Nessuna release**: quarta categoria obbligatoria per bozze, note locali, test-only, commenti, formattazione isolata, piani, ADR, regole agenti e docs interne non operative; non produce una nuova versione. Se viene annotata nel changelog, usa `### Non versionato`.
 - **Rilasciare** = eseguire `npm run release` (oppure `npm run release -- --bump patch|minor|major`), verificare il diff generato e promuovere il deployment Vercel. Il comando aggiorna `src/lib/version.ts`, rinomina `[Non rilasciato]` → `[X.Y.Z] — YYYY-MM-DD`, crea il nuovo blocco `[Non rilasciato]` e aggiorna i link del changelog.
 - **Pubblicare / tutto pubblicato** = merge su `main` + deployment production Vercel completato e verificato + branch dedicato chiuso/eliminato se esiste. Una PR aperta, un push sul branch o una preview Vercel non bastano. Quando il proprietario chiede "pubblica", "pubblica tutto" o "è tutto pubblicato?", completa questi passaggi oppure dichiara esattamente cosa manca.
+- Dopo il merge usa `npm run publish:finish -- --pr <numero-pr> --routes /,/novita` quando applicabile: aggiorna `main`, verifica produzione via Vercel API se `VERCEL_TOKEN` è disponibile, fa probe HTTP sulle route indicate e pulisce branch/worktree dedicati solo se sicuro.
 - **Pubblicare non significa sempre rilasciare**: se il diff contiene solo piani, ADR, guide interne, PDF di pianificazione o regole di processo non esposte nell'app, pubblica su GitHub/main senza bump SemVer e senza modificare `src/lib/version.ts`.
 - Per modifiche solo documentali non esposte all'app (`AGENTS.md`, `README.md`, `docs/**` interne), il deploy Vercel automatico non deve bloccare la chiusura: basta verificare PR/check pertinenti. Per documenti o release esposti nella UI (`CHANGELOG.md`, `src/lib/version.ts`, testi pubblici, landing, privacy/termini), verifica almeno che il deployment production sia `READY` e che la pagina interessata risponda.
 - **Regola obbligatoria per ogni cambio progetto**: ogni volta che modifichi codice, documentazione, configurazione, schema DB, brand, processo o deploy, valuta sempre l'impatto sul versioning prima di chiudere il lavoro.

@@ -23,7 +23,8 @@ const releaseAdvice = classifyUnreleased(unreleased.body);
 const packageImpact = inspectPackageImpact(baseRef);
 const categories = classifyChangedFiles(changedFiles, releaseAdvice, packageImpact);
 const dependencyState = inspectDependencies();
-const checks = buildChecks({ categories, changedFiles });
+const lane = classifyPublishLane(categories);
+const checks = buildChecks({ categories, changedFiles, lane });
 
 printReport({
   baseRef,
@@ -32,6 +33,7 @@ printReport({
   changedFiles,
   checks,
   dependencyState,
+  lane,
   releaseAdvice,
   statusLines,
   upstream,
@@ -119,6 +121,7 @@ function printReport(report) {
   }
 
   section("Impatto stimato");
+  item("Corsia", report.lane.label);
   if (report.categories.docsOnlyInternal) {
     item("Tipo", "solo documentazione/processo interno");
     note(
@@ -130,6 +133,7 @@ function printReport(report) {
     if (report.categories.database) item("Supabase/schema", "sì");
     if (report.categories.dependencies) item("Dipendenze", "sì");
     if (report.categories.uiCandidate) item("UI potenzialmente toccata", "sì");
+    if (report.categories.releaseAutomation) item("Automazione release/pubblicazione", "sì");
     if (report.categories.toolingOnly) item("Tooling", "sì");
   }
 
@@ -154,10 +158,13 @@ function printReport(report) {
   if (report.unreleased.body && report.releaseAdvice.bump !== "none")
     sequence.push("npm run release:dry-run");
   sequence.push("npm run publish:prepare -- --run-checks");
-  if (report.categories.uiCandidate) sequence.push("npm run smoke:a11y");
+  if (report.lane.key === "standard" && report.categories.uiCandidate)
+    sequence.push("npm run smoke:a11y:quick");
+  if (report.lane.key === "complete" && report.categories.uiCandidate)
+    sequence.push("npm run smoke:a11y");
   sequence.push("git push");
   sequence.push("apri PR verso main e controlla Quality + preview Vercel");
-  sequence.push("merge su main, verifica production Vercel, pulisci branch");
+  sequence.push("npm run publish:finish -- --pr <numero-pr> --routes /");
   sublist(sequence);
 }
 
@@ -280,6 +287,11 @@ function classifyChangedFiles(files, releaseAdvice, packageImpact) {
     normalizedFiles.some((file) =>
       /^(src\/|vite\.config\.ts$|vercel\.json$|package-lock\.json$)/.test(file),
     ) || packageImpact.runtimeFieldsChanged;
+  const releaseAutomation = normalizedFiles.some((file) =>
+    /^(scripts\/(release|prepush-guard|publish-|smoke-a11y)|\.github\/workflows\/quality\.yml$|package\.json$)/.test(
+      file,
+    ),
+  );
   const docsOrProcessOnly = docsOnlyInternal || processToolingOnly;
 
   return {
@@ -288,6 +300,7 @@ function classifyChangedFiles(files, releaseAdvice, packageImpact) {
     dependencies,
     docsOnlyInternal: docsOrProcessOnly,
     exposedContent,
+    releaseAutomation,
     trackedFiles,
     toolingOnly: toolingOnly || processToolingOnly,
     uiCandidate,
@@ -349,14 +362,61 @@ function stableJson(value) {
   return JSON.stringify(value ?? null);
 }
 
-function buildChecks({ categories, changedFiles }) {
-  const checks = ["npm run prepush:guard"];
+function classifyPublishLane(categories) {
+  if (
+    categories.database ||
+    categories.dependencies ||
+    categories.releaseAutomation ||
+    categories.uiCandidate ||
+    categories.appOrRuntime
+  ) {
+    return {
+      key: "complete",
+      label: "completa",
+    };
+  }
+
+  if (categories.docsOnlyInternal && !categories.exposedContent) {
+    return {
+      key: "fast",
+      label: "veloce",
+    };
+  }
+
+  if (categories.exposedContent || categories.toolingOnly) {
+    return {
+      key: "standard",
+      label: "standard",
+    };
+  }
+
+  return {
+    key: "fast",
+    label: "veloce",
+  };
+}
+
+function buildChecks({ categories, changedFiles, lane }) {
+  const checks = [];
 
   if (!changedFiles.length) {
     return ["prepara prima il diff, poi rilancia npm run publish:prepare"];
   }
 
-  if (categories.uiCandidate) {
+  if (lane.key === "fast") {
+    checks.push("git diff --check");
+    if (changedFiles.some(isFormatRelevant)) checks.push("npm run format:changed:check");
+    if (changedFiles.includes("CHANGELOG.md")) checks.push("npm run changelog:check");
+    return checks;
+  }
+
+  checks.push("npm run prepush:guard");
+
+  if (lane.key === "standard" && categories.uiCandidate) {
+    checks.push("npm run smoke:a11y:quick per sanity UI mirata");
+  }
+
+  if (lane.key === "complete" && categories.uiCandidate) {
     checks.push("npm run smoke:a11y per modifiche UI sostanziali");
   }
 
@@ -375,6 +435,14 @@ function buildChecks({ categories, changedFiles }) {
   }
 
   return checks;
+}
+
+function isFormatRelevant(file) {
+  const normalized = file.replace(/^\(untracked\) /, "");
+  return (
+    /\.(cjs|css|html|js|jsx|json|md|mdx|mjs|ts|tsx|yaml|yml)$/.test(normalized) ||
+    [".prettierrc", ".prettierignore", "components.json"].includes(normalized)
+  );
 }
 
 function getChangedFiles(baseRef) {
