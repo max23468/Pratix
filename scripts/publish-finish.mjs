@@ -5,6 +5,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
+const VERCEL_TOKEN_KEYCHAIN_SERVICE = "pratix.vercel.token";
 const root = execGit(["rev-parse", "--show-toplevel"], process.cwd());
 const args = parseArgs(process.argv.slice(2));
 
@@ -129,7 +130,7 @@ Cosa fa:
   - richiede worktree pulito;
   - verifica che la PR indicata sia mergeata;
   - aggiorna main con fetch/prune e pull --ff-only;
-  - verifica il deployment production Vercel via API quando VERCEL_TOKEN è presente;
+  - verifica il deployment production Vercel via API quando VERCEL_TOKEN o il token nel Portachiavi macOS è presente;
   - esegue probe HTTP sulle route indicate;
   - elimina il branch locale dedicato solo con git branch -d;
   - rimuove worktree dedicati solo se puliti.`);
@@ -184,7 +185,8 @@ function ensureMergedSha(sha) {
 }
 
 async function verifyVercelProduction({ expectedSha }) {
-  const token = process.env.VERCEL_TOKEN || "";
+  const vercelToken = readVercelToken();
+  const token = vercelToken.token;
   const project = readVercelProject();
 
   if (!token) {
@@ -192,7 +194,7 @@ async function verifyVercelProduction({ expectedSha }) {
       messages: [
         {
           label: "Vercel API",
-          value: "saltata: VERCEL_TOKEN non configurato, uso probe HTTP mirati",
+          value: `saltata: VERCEL_TOKEN non configurato e token Portachiavi "${VERCEL_TOKEN_KEYCHAIN_SERVICE}" non trovato, uso probe HTTP mirati`,
         },
       ],
     };
@@ -240,6 +242,7 @@ async function verifyVercelProduction({ expectedSha }) {
 
   return {
     messages: [
+      { label: "Token Vercel", value: vercelToken.source },
       { label: "Vercel deployment", value: ready.uid || ready.id || "READY" },
       { label: "Stato", value: ready.state },
       { label: "URL", value: ready.url || "(non indicato)" },
@@ -250,6 +253,33 @@ async function verifyVercelProduction({ expectedSha }) {
       { label: "Ref", value: deploymentRef || "non esposta dall'API" },
     ],
   };
+}
+
+function readVercelToken() {
+  const envToken = process.env.VERCEL_TOKEN?.trim();
+  if (envToken) return { source: "VERCEL_TOKEN", token: envToken };
+
+  const account = process.env.USER || process.env.LOGNAME || "";
+  if (process.platform !== "darwin" || !account) return { source: "", token: "" };
+
+  try {
+    const token = execFileSync(
+      "security",
+      ["find-generic-password", "-a", account, "-s", VERCEL_TOKEN_KEYCHAIN_SERVICE, "-w"],
+      {
+        cwd: root,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      },
+    ).trim();
+    if (token) {
+      return { source: `Portachiavi macOS (${VERCEL_TOKEN_KEYCHAIN_SERVICE})`, token };
+    }
+  } catch {
+    // Fallback silenzioso ai probe HTTP: il token non va mai stampato nei log.
+  }
+
+  return { source: "", token: "" };
 }
 
 function readVercelProject() {
@@ -366,11 +396,15 @@ function parseWorktrees(output) {
 }
 
 function parseRoutes(value) {
-  return value
+  const routes = value
     .split(",")
     .map((route) => route.trim())
     .filter(Boolean)
     .map((route) => (route.startsWith("/") ? route : `/${route}`));
+  if (!routes.length) {
+    fail("--routes deve contenere almeno una route effettiva, per esempio /,/novita.");
+  }
+  return routes;
 }
 
 function trimTrailingSlash(value) {

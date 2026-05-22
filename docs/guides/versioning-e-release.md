@@ -64,8 +64,10 @@ npm run publish:finish -- --pr <numero-pr> --routes /,/novita
 ```
 
 Il comando richiede worktree pulito, aggiorna `main`, verifica la produzione via
-Vercel API quando `VERCEL_TOKEN` è disponibile, esegue probe HTTP sulle route
-indicate e pulisce branch/worktree dedicati solo con operazioni sicure.
+Vercel API quando `VERCEL_TOKEN` o il token nel Portachiavi macOS
+`pratix.vercel.token` è disponibile, esegue probe HTTP sulle route indicate e
+pulisce branch/worktree dedicati solo con operazioni sicure. Se `--routes` viene
+passato, deve contenere almeno una route effettiva.
 
 ## Gate di chiusura fase
 
