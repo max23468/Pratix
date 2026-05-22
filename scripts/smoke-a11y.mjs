@@ -31,10 +31,10 @@ const VIEWPORTS = [
 const DEFAULT_SMOKE_EMAIL = "codex.pratix.test.20260509@gmail.com";
 const DEFAULT_AUDIT_TIMEOUT_MS = 20_000;
 
-const args = new Set(process.argv.slice(2));
-const startServer = args.has("--start-server");
-const publicOnly = args.has("--public-only");
-const authRequired = args.has("--auth-required");
+const options = parseArgs(process.argv.slice(2));
+const startServer = options.startServer;
+const publicOnly = options.publicOnly;
+const authRequired = options.authRequired;
 const port = Number(process.env.PRATIX_SMOKE_PORT || 3300);
 const auditTimeoutMs = parsePositiveIntegerEnv(
   "PRATIX_SMOKE_AUDIT_TIMEOUT_MS",
@@ -52,8 +52,140 @@ const baseUrl =
 const email = envValue("PRATIX_SMOKE_EMAIL") || DEFAULT_SMOKE_EMAIL;
 const supabaseUrl = envValue("SUPABASE_URL") || envValue("VITE_SUPABASE_URL");
 const supabaseServiceRoleKey = envValue("SUPABASE_SERVICE_ROLE_KEY");
+const selectedThemes = options.themes ?? (options.quick ? ["light"] : THEMES);
+const selectedViewports =
+  options.viewports ??
+  (options.quick
+    ? VIEWPORTS.filter((viewport) => ["desktop", "mobile"].includes(viewport.name))
+    : VIEWPORTS);
+const selectedRoutes = selectRoutes(options);
 
 let server;
+
+function parseArgs(argv) {
+  const parsed = {
+    authRequired: false,
+    help: false,
+    publicOnly: false,
+    quick: false,
+    routes: null,
+    startServer: false,
+    themes: null,
+    viewports: null,
+  };
+
+  for (const arg of argv) {
+    if (arg === "--help" || arg === "-h") {
+      parsed.help = true;
+      continue;
+    }
+    if (arg === "--start-server") {
+      parsed.startServer = true;
+      continue;
+    }
+    if (arg === "--public-only") {
+      parsed.publicOnly = true;
+      continue;
+    }
+    if (arg === "--auth-required") {
+      parsed.authRequired = true;
+      continue;
+    }
+    if (arg === "--quick") {
+      parsed.quick = true;
+      continue;
+    }
+    if (arg.startsWith("--routes=")) {
+      parsed.routes = parseCsv(arg.slice("--routes=".length));
+      continue;
+    }
+    if (arg.startsWith("--themes=")) {
+      parsed.themes = parseCsv(arg.slice("--themes=".length));
+      continue;
+    }
+    if (arg.startsWith("--viewports=")) {
+      parsed.viewports = parseViewportList(parseCsv(arg.slice("--viewports=".length)));
+      continue;
+    }
+
+    throw new Error(`Argomento smoke non riconosciuto: ${arg}`);
+  }
+
+  if (parsed.help) {
+    console.log(`Uso:
+  npm run smoke:a11y
+  npm run smoke:a11y:quick
+  node scripts/smoke-a11y.mjs --start-server --routes=/,/novita --themes=light --viewports=desktop,mobile
+
+Opzioni:
+  --quick          Smoke leggero: route /, tema light, viewport desktop+mobile.
+  --routes=a,b    Limita le route. Le route non pubbliche richiedono auth Supabase.
+  --themes=a,b    Limita i temi: light,dark.
+  --viewports=a,b Limita viewport: desktop,tablet,mobile.
+  --public-only   Salta route autenticate.
+  --auth-required Fallisce se una route autenticata non è verificabile.`);
+    process.exit(0);
+  }
+
+  validateSubset("themes", parsed.themes, THEMES);
+  return parsed;
+}
+
+function parseCsv(value) {
+  return value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function parseViewportList(names) {
+  validateSubset(
+    "viewports",
+    names,
+    VIEWPORTS.map((viewport) => viewport.name),
+  );
+  return VIEWPORTS.filter((viewport) => names.includes(viewport.name));
+}
+
+function validateSubset(label, values, allowed) {
+  if (!values) return;
+  const invalid = values.filter((value) => !allowed.includes(value));
+  if (invalid.length) {
+    throw new Error(
+      `${label} non validi: ${invalid.join(", ")}. Valori ammessi: ${allowed.join(", ")}.`,
+    );
+  }
+}
+
+function selectRoutes(parsed) {
+  const requestedRoutes = parsed.routes ?? (parsed.quick ? ["/"] : null);
+  if (!requestedRoutes) {
+    return {
+      auth: AUTH_ROUTES,
+      authExplicit: false,
+      public: PUBLIC_ROUTES,
+    };
+  }
+
+  const normalizedRoutes = [...new Set(requestedRoutes.map(normalizeRoute))];
+  const unknownRoutes = normalizedRoutes.filter(
+    (route) => !PUBLIC_ROUTES.includes(route) && !AUTH_ROUTES.includes(route),
+  );
+  if (unknownRoutes.length) {
+    throw new Error(`Route smoke non riconosciute: ${unknownRoutes.join(", ")}`);
+  }
+
+  return {
+    auth: normalizedRoutes.filter((route) => AUTH_ROUTES.includes(route)),
+    authExplicit: normalizedRoutes.some((route) => AUTH_ROUTES.includes(route)),
+    public: normalizedRoutes.filter((route) => PUBLIC_ROUTES.includes(route)),
+  };
+}
+
+function normalizeRoute(route) {
+  if (!route.startsWith("/")) return `/${route}`;
+  return route;
+}
 
 function parsePositiveIntegerEnv(name, defaultValue) {
   const rawValue = process.env[name];
@@ -313,12 +445,12 @@ async function run() {
   try {
     browser = await webkit.launch({ headless: true });
 
-    for (const viewport of VIEWPORTS) {
-      for (const theme of THEMES) {
+    for (const viewport of selectedViewports) {
+      for (const theme of selectedThemes) {
         const context = await newContext(browser, theme, viewport);
         try {
           const page = await context.newPage();
-          for (const route of PUBLIC_ROUTES) {
+          for (const route of selectedRoutes.public) {
             await auditPage(page, route, theme, viewport, false, issues);
             audited += 1;
           }
@@ -329,21 +461,22 @@ async function run() {
     }
 
     const canAuditAuth = Boolean(!publicOnly && email && supabaseUrl && supabaseServiceRoleKey);
-    if (authRequired && !canAuditAuth) {
+    if ((authRequired || selectedRoutes.authExplicit) && !canAuditAuth) {
       throw new Error(
         "Smoke autenticato richiesto ma non configurato: serve SUPABASE_SERVICE_ROLE_KEY. " +
           "Usa npm run smoke:a11y:auth per recuperarla via Supabase CLI senza password.",
       );
     }
 
-    if (canAuditAuth) {
-      for (const viewport of VIEWPORTS) {
-        for (const theme of THEMES) {
+    const auditAuthRoutes = canAuditAuth && selectedRoutes.auth.length > 0;
+    if (auditAuthRoutes) {
+      for (const viewport of selectedViewports) {
+        for (const theme of selectedThemes) {
           const context = await newContext(browser, theme, viewport);
           try {
             const page = await context.newPage();
             await login(page);
-            for (const route of AUTH_ROUTES) {
+            for (const route of selectedRoutes.auth) {
               await auditPage(page, route, theme, viewport, true, issues);
               audited += 1;
             }
@@ -359,10 +492,12 @@ async function run() {
         {
           baseUrl,
           audited,
-          authenticated: canAuditAuth,
-          authMode: canAuditAuth ? "magiclink-admin" : "none",
-          viewports: VIEWPORTS.map((viewport) => viewport.name),
-          themes: THEMES,
+          authenticated: auditAuthRoutes,
+          authMode: auditAuthRoutes ? "magiclink-admin" : "none",
+          quick: options.quick,
+          routes: [...selectedRoutes.public, ...selectedRoutes.auth],
+          viewports: selectedViewports.map((viewport) => viewport.name),
+          themes: selectedThemes,
           issueCount: issues.length,
           issues: issues.slice(0, 40),
         },
