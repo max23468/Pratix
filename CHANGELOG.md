@@ -6,6 +6,15 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.10.1] — 2026-05-22
+
+### Correzioni
+
+- **Attività**: i rimborsi spese si inseriscono come importo forfettario, senza
+  quantità modificabile, e accettano la virgola decimale durante la digitazione.
+
+## [Non versionato] — 2026-05-22
+
 ### Non versionato
 
 - **Smoke a11y**: aggiunti avanzamento per route, timeout degli audit axe e
@@ -1011,6 +1020,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.10.1]: #1101--2026-05-22
 [1.10.0]: #1100--2026-05-22
 [1.9.3]: #193--2026-05-19
 [1.9.2]: #192--2026-05-19

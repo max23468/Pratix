@@ -161,6 +161,16 @@ const currentYearFromDate = (value: string) => {
   return Number.isNaN(date.getTime()) ? new Date().getFullYear() : date.getFullYear();
 };
 
+const formatDecimalInputValue = (value: number) => (Number.isFinite(value) ? String(value) : "");
+
+const parseDecimalInputValue = (value: string) => {
+  const normalized = value.trim().replace(/\s/g, "").replace(",", ".");
+  if (!normalized) return null;
+  if (!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(normalized)) return null;
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
 export function CaseActivitiesTab({ caseRow }: { caseRow: CaseActivityContext }) {
   const qc = useQueryClient();
   const { data: activities = [], isLoading } = useQuery({
@@ -475,7 +485,7 @@ export function CaseActivityDialog({
   const [priceItemId, setPriceItemId] = useState("");
   const [description, setDescription] = useState("");
   const [quantity, setQuantity] = useState(1);
-  const [freeAmount, setFreeAmount] = useState(0);
+  const [freeAmountInput, setFreeAmountInput] = useState("0");
   const [status, setStatus] = useState<"to_invoice" | "invoiced">("to_invoice");
   const [notes, setNotes] = useState("");
   const [hearingDates, setHearingDates] = useState<string[]>([]);
@@ -557,8 +567,10 @@ export function CaseActivityDialog({
 
   const selectedItem = availablePriceItems.find((item) => item.id === priceItemId) ?? null;
   const effectiveKind = selectedItem?.kind ?? activity?.kind;
+  const isExpenseReimbursement = effectiveKind === "expense_reimbursement";
   const requiresHearingDates =
-    selectedItem?.requires_hearing_dates ?? Boolean(activity?.case_activity_hearings?.length);
+    !isExpenseReimbursement &&
+    (selectedItem?.requires_hearing_dates ?? Boolean(activity?.case_activity_hearings?.length));
 
   useEffect(() => {
     if (!selectedItem || isEditing) return;
@@ -578,7 +590,13 @@ export function CaseActivityDialog({
     setPriceItemId(activity.price_item_id);
     setDescription(activity.description);
     setQuantity(Number(activity.quantity) || 1);
-    setFreeAmount(Number(activity.unit_price) || 0);
+    setFreeAmountInput(
+      formatDecimalInputValue(
+        activity.kind === "expense_reimbursement"
+          ? Number(activity.amount) || 0
+          : Number(activity.unit_price) || 0,
+      ),
+    );
     setStatus(activity.status);
     setNotes(activity.notes ?? "");
     setHearingDates(
@@ -592,9 +610,17 @@ export function CaseActivityDialog({
     setAttachmentNotes("");
   }, [activity, caseRow, open]);
 
-  const calculatedQuantity = requiresHearingDates ? hearingDates.length : quantity;
-  const unitPrice =
-    !isEditing && selectedItem?.kind === "fee" ? Number(selectedItem.unit_price ?? 0) : freeAmount;
+  const calculatedQuantity = isExpenseReimbursement
+    ? 1
+    : requiresHearingDates
+      ? hearingDates.length
+      : quantity;
+  const parsedFreeAmount = parseDecimalInputValue(freeAmountInput);
+  const isFixedFeePrice = !isEditing && selectedItem?.kind === "fee";
+  const unitPrice = isFixedFeePrice
+    ? Number(selectedItem.unit_price ?? 0)
+    : (parsedFreeAmount ?? 0);
+  const amountInputValue = isFixedFeePrice ? formatDecimalInputValue(unitPrice) : freeAmountInput;
   const total = calculatedQuantity * unitPrice;
 
   const save = useMutation({
@@ -611,7 +637,12 @@ export function CaseActivityDialog({
       if (!isEditing && !selectedItem) throw new Error("Seleziona una voce prezzo");
       if (!description.trim()) throw new Error("Inserisci una descrizione");
       if (calculatedQuantity <= 0) throw new Error("Inserisci una quantità positiva");
-      if (unitPrice < 0) throw new Error("Inserisci un importo valido");
+      const unitPriceForSave = isFixedFeePrice
+        ? Number(selectedItem?.unit_price ?? 0)
+        : parsedFreeAmount;
+      if (unitPriceForSave === null || unitPriceForSave < 0) {
+        throw new Error("Inserisci un importo valido");
+      }
       if (requiresHearingDates && hearingDates.some((date) => !date)) {
         throw new Error("Completa tutte le date udienza");
       }
@@ -629,7 +660,7 @@ export function CaseActivityDialog({
               status,
               description: description.trim(),
               quantity: calculatedQuantity,
-              unit_price: unitPrice,
+              unit_price: unitPriceForSave,
               notes: notes.trim() || null,
             },
             { count: "exact" },
@@ -711,7 +742,7 @@ export function CaseActivityDialog({
           snapshot_price_name: currentItem.name,
           description: description.trim(),
           quantity: calculatedQuantity,
-          unit_price: unitPrice,
+          unit_price: unitPriceForSave,
           notes: notes.trim() || null,
         })
         .select("id")
@@ -775,7 +806,7 @@ export function CaseActivityDialog({
     setPriceItemId("");
     setDescription("");
     setQuantity(1);
-    setFreeAmount(0);
+    setFreeAmountInput("0");
     setStatus("to_invoice");
     setNotes("");
     setHearingDates([]);
@@ -900,8 +931,10 @@ export function CaseActivityDialog({
             />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3">
-            {requiresHearingDates ? (
+          <div
+            className={cn("grid gap-4", isExpenseReimbursement ? "sm:max-w-xs" : "sm:grid-cols-3")}
+          >
+            {!isExpenseReimbursement && requiresHearingDates ? (
               <div className="flex flex-col gap-2">
                 <Label htmlFor="hearing_count">Numero udienze</Label>
                 <Input
@@ -913,7 +946,7 @@ export function CaseActivityDialog({
                   onChange={(event) => setHearingCount(Number(event.target.value))}
                 />
               </div>
-            ) : (
+            ) : !isExpenseReimbursement ? (
               <div className="flex flex-col gap-2">
                 <Label htmlFor="quantity">Quantità</Label>
                 <Input
@@ -926,27 +959,31 @@ export function CaseActivityDialog({
                   disabled={!isEditing && !selectedItem}
                 />
               </div>
-            )}
+            ) : null}
             <div className="flex flex-col gap-2">
               <Label htmlFor="unit_price">
                 {effectiveKind === "expense_reimbursement" ? "Importo" : "Prezzo unitario"}
               </Label>
               <Input
                 id="unit_price"
-                type="number"
+                type="text"
+                inputMode="decimal"
                 min="0"
                 step="0.01"
-                value={unitPrice}
-                disabled={!isEditing && selectedItem?.kind === "fee"}
-                onChange={(event) => setFreeAmount(Number(event.target.value))}
+                value={amountInputValue}
+                placeholder="0,00"
+                disabled={!isEditing && (!selectedItem || selectedItem.kind === "fee")}
+                onChange={(event) => setFreeAmountInput(event.target.value)}
               />
             </div>
-            <div className="flex flex-col gap-2">
-              <Label>Totale</Label>
-              <div className="rounded-md border border-border px-3 py-2 text-sm font-medium">
-                {formatCurrency(total)}
+            {!isExpenseReimbursement ? (
+              <div className="flex flex-col gap-2">
+                <Label>Totale</Label>
+                <div className="rounded-md border border-border px-3 py-2 text-sm font-medium">
+                  {formatCurrency(total)}
+                </div>
               </div>
-            </div>
+            ) : null}
           </div>
 
           {requiresHearingDates ? (
