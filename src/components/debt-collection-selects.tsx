@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import {
   Select,
@@ -7,7 +8,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
-import { clientDisplayName, compareCounterparties, counterpartyDisplayName } from "@/lib/labels";
+import {
+  clientDisplayName,
+  compareClients,
+  compareCounterparties,
+  counterpartyDisplayName,
+} from "@/lib/labels";
 
 type CommonSelectProps = {
   id?: string;
@@ -16,6 +22,16 @@ type CommonSelectProps = {
   placeholder?: string;
   disabled?: boolean;
 };
+
+type CounterpartyOption = {
+  id: string;
+  kind: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  business_name?: string | null;
+};
+
+const emptyCounterpartyOptions: CounterpartyOption[] = [];
 
 export function PrincipalSelect({
   id,
@@ -68,7 +84,7 @@ export function ClientSelect({
         .select("id, kind, first_name, last_name, business_name")
         .order("created_at", { ascending: false });
       if (error) throw error;
-      return data ?? [];
+      return (data ?? []).slice().sort(compareClients);
     },
   });
 
@@ -94,7 +110,8 @@ export function CounterpartySelect({
   onValueChange,
   placeholder = "Seleziona controparte",
   disabled,
-}: CommonSelectProps) {
+  additionalOptions = emptyCounterpartyOptions,
+}: CommonSelectProps & { additionalOptions?: CounterpartyOption[] }) {
   const { data, isLoading } = useQuery({
     queryKey: ["counterparties", "selector"],
     queryFn: async () => {
@@ -105,6 +122,12 @@ export function CounterpartySelect({
       return (data ?? []).slice().sort(compareCounterparties);
     },
   });
+  const options = useMemo(() => {
+    const byId = new Map<string, CounterpartyOption>();
+    (data ?? []).forEach((counterparty) => byId.set(counterparty.id, counterparty));
+    additionalOptions.forEach((counterparty) => byId.set(counterparty.id, counterparty));
+    return Array.from(byId.values()).sort(compareCounterparties);
+  }, [additionalOptions, data]);
 
   return (
     <Select value={value ?? ""} onValueChange={onValueChange} disabled={disabled || isLoading}>
@@ -112,7 +135,7 @@ export function CounterpartySelect({
         <SelectValue placeholder={isLoading ? "Caricamento…" : placeholder} />
       </SelectTrigger>
       <SelectContent>
-        {(data ?? []).map((counterparty) => (
+        {options.map((counterparty) => (
           <SelectItem key={counterparty.id} value={counterparty.id}>
             {counterpartyDisplayName(counterparty)}
           </SelectItem>

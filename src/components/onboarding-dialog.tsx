@@ -133,7 +133,7 @@ export function OnboardingDialog() {
                   id="bn"
                   value={businessName}
                   onChange={(e) => setBusinessName(e.target.value)}
-                  placeholder="Es. Avv. Mario Rossi"
+                  placeholder="Es. Avv. Nome Cognome"
                 />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -143,11 +143,17 @@ export function OnboardingDialog() {
                     id="vat"
                     value={vatNumber}
                     onChange={(e) => setVatNumber(e.target.value)}
+                    placeholder="Es. 01234567890"
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="tc">Codice fiscale</Label>
-                  <Input id="tc" value={taxCode} onChange={(e) => setTaxCode(e.target.value)} />
+                  <Input
+                    id="tc"
+                    value={taxCode}
+                    onChange={(e) => setTaxCode(e.target.value)}
+                    placeholder="Es. RSSNNA80A01F205X"
+                  />
                 </div>
               </div>
               <div className="space-y-2">
@@ -156,7 +162,7 @@ export function OnboardingDialog() {
                   id="addr"
                   value={addressStreet}
                   onChange={(e) => setAddressStreet(e.target.value)}
-                  placeholder="Via..."
+                  placeholder="Es. Via Roma 10"
                 />
               </div>
               <div className="grid gap-3 sm:grid-cols-3">
@@ -166,6 +172,7 @@ export function OnboardingDialog() {
                     id="city"
                     value={addressCity}
                     onChange={(e) => setAddressCity(e.target.value)}
+                    placeholder="Es. Milano"
                   />
                 </div>
                 <div className="space-y-2">
@@ -174,6 +181,7 @@ export function OnboardingDialog() {
                     id="zip"
                     value={addressZip}
                     onChange={(e) => setAddressZip(e.target.value)}
+                    placeholder="Es. 20121"
                   />
                 </div>
               </div>
@@ -184,6 +192,7 @@ export function OnboardingDialog() {
                   value={addressProvince}
                   maxLength={2}
                   onChange={(e) => setAddressProvince(e.target.value.toUpperCase())}
+                  placeholder="MI"
                 />
               </div>
             </div>
@@ -193,7 +202,13 @@ export function OnboardingDialog() {
             <div className="space-y-3">
               <div className="space-y-2">
                 <Label htmlFor="pec">PEC</Label>
-                <Input id="pec" type="email" value={pec} onChange={(e) => setPec(e.target.value)} />
+                <Input
+                  id="pec"
+                  type="email"
+                  value={pec}
+                  onChange={(e) => setPec(e.target.value)}
+                  placeholder="Es. nome.cognome@pec.it"
+                />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="regime">Regime fiscale</Label>
@@ -232,6 +247,7 @@ export function OnboardingDialog() {
                   id="iban"
                   value={iban}
                   onChange={(e) => setIban(e.target.value.toUpperCase())}
+                  placeholder="Es. IT60X0542811101000000123456"
                 />
               </div>
               <div className="space-y-2">
@@ -240,10 +256,10 @@ export function OnboardingDialog() {
                   id="prefix"
                   value={invoicePrefix}
                   onChange={(e) => setInvoicePrefix(e.target.value)}
-                  placeholder="es. FT"
+                  placeholder="Es. FT-"
                 />
                 <p className="text-xs text-muted-foreground">
-                  Es. con prefisso "FT" la prima fattura sarà FT-1/2026.
+                  Es. con prefisso "FT-" la prima fattura sarà FT-1/2026.
                 </p>
               </div>
             </div>

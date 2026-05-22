@@ -46,6 +46,7 @@ export type BillingActivity = {
   activity_date: string;
   kind: "fee" | "expense_reimbursement";
   status: "to_invoice" | "invoiced";
+  needs_review?: boolean | null;
   invoice_id: string | null;
   description: string;
   quantity: number | string;

@@ -28,6 +28,7 @@ describe("case operations timeline", () => {
           activity_date: "2026-05-03",
           kind: "fee",
           status: "to_invoice",
+          needs_review: true,
           description: "Udienza",
           quantity: 1,
           unit_price: 120,
@@ -77,6 +78,7 @@ describe("case operations timeline", () => {
     expect(html).toContain("Timeline pratica");
     expect(html).toContain("Fattura TST1/2026");
     expect(html).toContain("Udienza");
+    expect(html).toContain("Da verificare");
     expect(html).toContain("Verbale.pdf");
     expect(html).toContain("In corso");
   });

@@ -274,6 +274,12 @@ describe("CaseForm", () => {
     await userEvent.type(screen.getByLabelText("Ragione sociale"), " Beta Debitrice ");
     await userEvent.click(screen.getByRole("button", { name: "Crea" }));
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Controparte creata"));
+    await waitFor(() =>
+      expect((screen.getAllByRole("combobox")[2] as HTMLSelectElement).value).toBe(
+        "counterparty-new",
+      ),
+    );
+    expect(screen.getByRole("option", { name: "Beta Debitrice" })).toBeTruthy();
 
     await userEvent.click(screen.getByRole("button", { name: "Salva" }));
 

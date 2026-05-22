@@ -6,12 +6,48 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.11.0] — 2026-05-22
+
+Release di consolidamento operativo: Attività più centrali, importi da
+verificare, form e menu più prevedibili.
+
+### Novità
+
+- **Attività**: aggiunto il flag “Importo da verificare”, con filtro dedicato,
+  badge nelle liste e motivo gestito nel campo Note esistente.
+- **Pratiche**: la sezione Attività appare subito dopo il cruscotto della
+  Pratica.
+
+### Correzioni
+
+- **Anagrafiche**: nei form con persona fisica il campo Cognome precede sempre
+  il campo Nome; la creazione rapida di una Controparte nella Pratica mantiene
+  selezionata la voce appena salvata.
+- **Attività**: gli importi liberi vengono formattati con due decimali quando il
+  campo perde il focus.
+- **Menu**: i menu a comparsa di selezione e azione restano entro l'altezza
+  disponibile e scorrono quando hanno molte voci, inclusa la scelta Pratica
+  nelle Attività.
+- **Form**: aggiornati esempi e placeholder dei campi principali con valori
+  realistici e aggiunti esempi mancanti; i selettori Cliente usano sempre
+  l'ordine alfabetico per società e per Cognome Nome.
+- **Accesso**: il comando “Esci” termina solo la sessione del dispositivo
+  corrente, senza scollegare le altre sessioni dello stesso utente.
+
+### Sotto il cofano
+
+- **Supabase**: riallineata la CLI di progetto alla versione `2.101.0` e
+  rigenerati i tipi dal database remoto dopo la migrazione sulle Attività.
+- **Smoke a11y**: validato il timeout configurabile degli audit axe, così un
+  valore non numerico fallisce con errore esplicito invece di produrre falsi
+  regressi.
+
 ## [1.10.1] — 2026-05-22
 
 ### Correzioni
 
-- **Attività**: i rimborsi spese si inseriscono come importo forfettario, senza
-  quantità modificabile, e accettano la virgola decimale durante la digitazione.
+- **Attività**: i rimborsi spese si inseriscono senza quantità da modificare,
+  come importo libero, e accettano la virgola decimale durante la digitazione.
 
 ## [Non versionato] — 2026-05-22
 
@@ -124,10 +160,6 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 - **Bonifica codice**: rimossi componenti UI shadcn non usati, dipendenze frontend collegate e duplicazioni locali degli helper per server functions.
 - **Supabase Auth**: azzerati gli hash password legacy rimasti, rimosso lo script storico che creava utenti con password temporanea e mantenuto il flusso passwordless via link email.
 
-## [Non versionato] — 2026-05-17
-
-### Non versionato
-
 ## [1.7.3] — 2026-05-16
 
 ### Correzioni
@@ -188,18 +220,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 ### Correzioni
 
 - **Rendiconti Excel**: i file generati partono dai template Excel originali ripuliti, preservando struttura, stili e formule, usando i prezzi salvati sulle attività ed evitando l'avviso di file corrotto.
+- **UI mobile**: dashboard, listati operativi e controlli di navigazione restano leggibili e utilizzabili su iPhone senza aree tagliate o tabelle da trascinare orizzontalmente.
 
 ## [Non versionato] — 2026-05-16
 
 ### Non versionato
 
 - **Documentazione**: riallineate istruzioni operative, guide, roadmap e glossario allo stato pubblicato fino a Pratix 1.4.0.
-
-## [1.5.1] — 2026-05-16
-
-### Correzioni
-
-- **UI mobile**: dashboard, listati operativi e controlli di navigazione restano leggibili e utilizzabili su iPhone senza aree tagliate o tabelle da trascinare orizzontalmente.
 
 ## [1.5.0] — 2026-05-16
 
@@ -1020,6 +1047,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.11.0]: #1110--2026-05-22
 [1.10.1]: #1101--2026-05-22
 [1.10.0]: #1100--2026-05-22
 [1.9.3]: #193--2026-05-19

@@ -96,6 +96,7 @@ const {
             activity_date: "2026-05-10",
             kind: "fee",
             status: "to_invoice",
+            needs_review: true,
             invoice_id: null,
             description: "Redazione diffida",
             quantity: 2,
@@ -121,6 +122,7 @@ const {
             activity_date: "2026-05-11",
             kind: "expense_reimbursement",
             status: "to_invoice",
+            needs_review: false,
             invoice_id: null,
             description: "Contributo unificato",
             quantity: 1,
@@ -337,7 +339,7 @@ describe("InvoiceForm", () => {
     await userEvent.selectOptions(screen.getAllByRole("combobox")[2], `${invoiceYear}-Q1`);
     await userEvent.selectOptions(screen.getAllByRole("combobox")[4], "postponed");
     await userEvent.type(
-      screen.getByPlaceholderText("Note interne o descrizione da riportare in fattura"),
+      screen.getByPlaceholderText("Es. Attività da fatturare per il periodo indicato"),
       "Note fattura",
     );
     await userEvent.click(screen.getByRole("button", { name: /Crea fattura/ }));

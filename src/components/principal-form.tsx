@@ -219,6 +219,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
                 id="business_name"
                 value={form.business_name}
                 onChange={(event) => upd("business_name", event.target.value)}
+                placeholder="Es. Banca Alfa S.p.A."
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -227,6 +228,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
                 id="tax_code"
                 value={form.tax_code ?? ""}
                 onChange={(event) => upd("tax_code", event.target.value.toUpperCase())}
+                placeholder="Es. 01234567890"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -235,6 +237,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
                 id="vat_number"
                 value={form.vat_number ?? ""}
                 onChange={(event) => upd("vat_number", event.target.value)}
+                placeholder="Es. 01234567890"
               />
             </div>
           </div>
@@ -322,6 +325,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
               type="email"
               value={form.email ?? ""}
               onChange={(event) => upd("email", event.target.value)}
+              placeholder="Es. amministrazione@bancaalfa.it"
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -330,6 +334,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
               id="phone"
               value={form.phone ?? ""}
               onChange={(event) => upd("phone", event.target.value)}
+              placeholder="Es. 0212345678"
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -339,6 +344,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
               type="email"
               value={form.pec ?? ""}
               onChange={(event) => upd("pec", event.target.value)}
+              placeholder="Es. bancaalfa@pec.it"
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -347,7 +353,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
               id="sdi_code"
               value={form.sdi_code ?? ""}
               onChange={(event) => upd("sdi_code", event.target.value.toUpperCase().slice(0, 7))}
-              placeholder="7 caratteri o 0000000"
+              placeholder="Es. 0000000"
             />
           </div>
         </CardContent>
@@ -364,6 +370,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
               id="address_street"
               value={form.address_street ?? ""}
               onChange={(event) => upd("address_street", event.target.value)}
+              placeholder="Es. Via Roma 10"
             />
           </div>
           <div className="grid gap-4 sm:grid-cols-4">
@@ -373,6 +380,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
                 id="address_city"
                 value={form.address_city ?? ""}
                 onChange={(event) => upd("address_city", event.target.value)}
+                placeholder="Es. Milano"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -381,6 +389,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
                 id="address_zip"
                 value={form.address_zip ?? ""}
                 onChange={(event) => upd("address_zip", event.target.value)}
+                placeholder="Es. 20121"
               />
             </div>
             <div className="flex flex-col gap-2">
@@ -390,6 +399,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
                 maxLength={2}
                 value={form.address_province ?? ""}
                 onChange={(event) => upd("address_province", event.target.value.toUpperCase())}
+                placeholder="MI"
               />
             </div>
           </div>
@@ -405,6 +415,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
             rows={3}
             value={form.notes ?? ""}
             onChange={(event) => upd("notes", event.target.value)}
+            placeholder="Es. regole operative, referente o istruzioni di fatturazione"
           />
         </CardContent>
       </Card>

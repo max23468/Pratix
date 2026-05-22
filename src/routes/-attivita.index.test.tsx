@@ -63,6 +63,7 @@ const activities = [
     activity_date: "2026-05-09",
     kind: "fee",
     status: "to_invoice",
+    needs_review: true,
     snapshot_price_year: 2026,
     snapshot_price_code: "COMP",
     snapshot_price_name: "Udienza",
@@ -100,6 +101,7 @@ const activities = [
     activity_date: "2026-05-10",
     kind: "expense_reimbursement",
     status: "invoiced",
+    needs_review: false,
     snapshot_price_year: 2026,
     snapshot_price_code: "RIMB",
     snapshot_price_name: "Contributo unificato",
@@ -146,6 +148,7 @@ const renderRoute = () => {
 describe("pagina Attività", () => {
   afterEach(() => {
     cleanup();
+    for (const key of Object.keys(search)) delete (search as Record<string, unknown>)[key];
     vi.clearAllMocks();
   });
 
@@ -167,5 +170,19 @@ describe("pagina Attività", () => {
         .getByRole("link", { name: /Pratica 42/i })
         .getAttribute("href"),
     ).toBe("/pratiche/case-1");
+    expect(within(editableRow).getByText("Da verificare")).toBeTruthy();
+  });
+
+  it("filtra le Attività con importo da verificare", () => {
+    (search as Record<string, unknown>).review = "needs_review";
+
+    renderRoute();
+
+    const table = screen.getByRole("table");
+    expect(within(table).getByText("Partecipazione udienza")).toBeTruthy();
+    expect(within(table).queryByText("Contributo unificato")).toBeNull();
+    expect(screen.getByLabelText("Filtra attività da verificare").textContent).toContain(
+      "Da verificare",
+    );
   });
 });

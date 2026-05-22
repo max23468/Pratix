@@ -4,6 +4,7 @@ import { activityCaseLabel } from "./case-activities";
 import {
   caseActivityStatusLabels,
   clientDisplayName,
+  compareClients,
   compareCounterparties,
   counterpartyDisplayName,
   priceItemKindLabels,
@@ -24,6 +25,19 @@ describe("clientDisplayName", () => {
     expect(counterpartyDisplayName({ kind: "individual", first_name: null, last_name: null })).toBe(
       "—",
     );
+  });
+});
+
+describe("compareClients", () => {
+  it("ordina società e privati alfabeticamente usando Cognome Nome per le persone fisiche", () => {
+    const sorted = [
+      { id: "3", kind: "company", business_name: "Zeta S.r.l." },
+      { id: "2", kind: "individual", first_name: "Anna", last_name: "Rossi" },
+      { id: "1", kind: "individual", first_name: "Luca", last_name: "Bianchi" },
+      { id: "4", kind: "company", business_name: "Alfa S.r.l." },
+    ].sort(compareClients);
+
+    expect(sorted.map((client) => client.id)).toEqual(["4", "1", "2", "3"]);
   });
 });
 

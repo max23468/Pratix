@@ -274,6 +274,7 @@ export type Database = {
           id: string
           invoice_id: string | null
           kind: Database["public"]["Enums"]["price_item_kind"]
+          needs_review: boolean
           notes: string | null
           postponed_count: number
           postponed_until: string | null
@@ -300,6 +301,7 @@ export type Database = {
           id?: string
           invoice_id?: string | null
           kind: Database["public"]["Enums"]["price_item_kind"]
+          needs_review?: boolean
           notes?: string | null
           postponed_count?: number
           postponed_until?: string | null
@@ -326,6 +328,7 @@ export type Database = {
           id?: string
           invoice_id?: string | null
           kind?: Database["public"]["Enums"]["price_item_kind"]
+          needs_review?: boolean
           notes?: string | null
           postponed_count?: number
           postponed_until?: string | null

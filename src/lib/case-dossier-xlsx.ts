@@ -4,6 +4,7 @@ export type CaseDossierActivity = {
   activityDate: string;
   kind: string;
   status: string;
+  needsReview?: boolean | null;
   description: string;
   quantity: number;
   unitPrice: number;
@@ -135,7 +136,9 @@ function dossierRows(input: CaseDossierInput): DossierRow[] {
       date: activity.activityDate,
       type: activity.kind,
       description: activity.description,
-      status: activity.status,
+      status: [activity.status, activity.needsReview ? "Da verificare" : ""]
+        .filter(Boolean)
+        .join(" · "),
       amount: activity.amount,
       notes: [
         `Quantità: ${activity.quantity}`,

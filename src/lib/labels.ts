@@ -88,6 +88,7 @@ export const caseActivityStatusVariant: Record<
 };
 
 export type ClientDisplayData = {
+  id?: string | null;
   kind: string;
   first_name?: string | null;
   last_name?: string | null;
@@ -97,6 +98,26 @@ export type ClientDisplayData = {
 export const clientDisplayName = (c: ClientDisplayData): string => {
   if (c.kind === "company") return c.business_name || "—";
   return [c.first_name, c.last_name].filter(Boolean).join(" ") || "—";
+};
+
+const clientNameCollator = new Intl.Collator("it", {
+  sensitivity: "base",
+  numeric: true,
+});
+
+const clientSortName = (c: ClientDisplayData): string => {
+  if (c.kind === "company") return c.business_name || "";
+  return [c.last_name, c.first_name].filter(Boolean).join(" ");
+};
+
+export const compareClients = <T extends ClientDisplayData>(a: T, b: T): number => {
+  const byName = clientNameCollator.compare(clientSortName(a), clientSortName(b));
+  if (byName !== 0) return byName;
+
+  const byKind = clientNameCollator.compare(a.kind, b.kind);
+  if (byKind !== 0) return byKind;
+
+  return clientNameCollator.compare(a.id ?? "", b.id ?? "");
 };
 
 export type CounterpartyDisplayData = {

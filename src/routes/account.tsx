@@ -283,7 +283,7 @@ function AccountPage() {
             email={user?.email ?? ""}
             onDeleted={async () => {
               qc.clear();
-              await supabase.auth.signOut().catch(() => undefined);
+              await supabase.auth.signOut({ scope: "local" }).catch(() => undefined);
               navigate({ to: "/" });
             }}
           />

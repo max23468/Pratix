@@ -72,6 +72,7 @@ const activities = [
     activity_date: "2026-05-09",
     kind: "fee",
     status: "to_invoice",
+    needs_review: true,
     snapshot_price_code: "COMP_PIGN_MOB_TERZI_RUOLO",
     snapshot_price_name: "Udienza",
     description: "Partecipazione udienza",
@@ -103,6 +104,7 @@ const activities = [
     activity_date: "2026-05-11",
     kind: "expense_reimbursement",
     status: "invoiced",
+    needs_review: false,
     snapshot_price_code: "RIMB_PIGNORAMENTO",
     snapshot_price_name: "Contributo unificato",
     description: "Contributo unificato",
@@ -149,6 +151,7 @@ describe("CaseActivitiesTab", () => {
     expect(html).toContain("Documento");
     expect(html).toContain("Da fatturare");
     expect(html).toContain("Fatturata");
+    expect(html).toContain("Da verificare");
     expect(html).not.toContain("COMP_PIGN_MOB_TERZI_RUOLO");
     expect(html).not.toContain("RIMB_PIGNORAMENTO");
   });

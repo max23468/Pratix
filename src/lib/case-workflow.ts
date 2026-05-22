@@ -8,7 +8,10 @@ export type CaseWorkflowCase = {
   counterparty_id?: string | null;
 };
 
-export type CaseWorkflowActivity = Pick<CaseTimelineActivity, "status" | "kind" | "amount"> & {
+export type CaseWorkflowActivity = Pick<
+  CaseTimelineActivity,
+  "status" | "kind" | "amount" | "needs_review"
+> & {
   activity_attachments?: unknown[];
 };
 
@@ -49,6 +52,7 @@ export function summarizeCaseOperations(
       else acc.reimbursements += amount;
       acc.attachments += activity.activity_attachments?.length ?? 0;
       if ((activity.activity_attachments?.length ?? 0) === 0) acc.activitiesWithoutAttachments += 1;
+      if (activity.needs_review) acc.activitiesToReview += 1;
       return acc;
     },
     {
@@ -57,6 +61,7 @@ export function summarizeCaseOperations(
       reimbursements: 0,
       attachments: 0,
       activitiesWithoutAttachments: 0,
+      activitiesToReview: 0,
     },
   );
 
@@ -278,6 +283,14 @@ export function buildCaseWorkflowQualityChecks({
       severity: "warning",
       title: "Attività da fatturare",
       description: `${formatCurrency(totals.toInvoice)} non ancora collegati a una Fattura.`,
+    });
+  }
+  if (totals.activitiesToReview > 0) {
+    checks.push({
+      id: "activities-to-review",
+      severity: "warning",
+      title: "Importi da verificare",
+      description: `${totals.activitiesToReview} Attività hanno importi segnati da verificare.`,
     });
   }
   if (totals.activitiesWithoutAttachments > 0) {

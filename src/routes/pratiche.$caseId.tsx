@@ -114,6 +114,7 @@ function CaseDetail() {
 
       <CaseOperationsPanel
         caseRow={caseRow}
+        afterDashboardSlot={<CaseActivitiesTab caseRow={caseRow} />}
         detailsSlot={
           <CaseForm
             initial={caseRow}
@@ -123,16 +124,11 @@ function CaseDetail() {
         }
       />
 
-      <Tabs defaultValue="activities" className="mt-6">
+      <Tabs defaultValue="transfers" className="mt-6">
         <TabsList>
-          <TabsTrigger value="activities">Attività</TabsTrigger>
           <TabsTrigger value="transfers">Cessioni credito</TabsTrigger>
           <TabsTrigger value="history">Storico stati</TabsTrigger>
         </TabsList>
-
-        <TabsContent value="activities" className="mt-4">
-          <CaseActivitiesTab caseRow={caseRow} />
-        </TabsContent>
 
         <TabsContent value="transfers" className="mt-4">
           <CreditTransfersTab caseId={caseRow.id} />

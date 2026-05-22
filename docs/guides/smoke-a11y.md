@@ -118,6 +118,9 @@ predefinito di 20 secondi, modificabile solo per diagnosi con:
 PRATIX_SMOKE_AUDIT_TIMEOUT_MS=30000 npm run smoke:a11y:auth
 ```
 
+Il valore è espresso in millisecondi e deve essere un numero intero positivo:
+usa `30000`, non formati testuali come `30s`.
+
 Se il timeout scatta su una route specifica, tratta la route come regressione o
 come problema del test harness da diagnosticare. Non chiudere il lavoro dicendo
 solo che lo smoke "si è bloccato": riporta l'ultima route stampata e il comando

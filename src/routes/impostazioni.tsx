@@ -219,23 +219,25 @@ function SettingsPage() {
                 label="Ragione sociale / Denominazione"
                 value={form.business_name}
                 onChange={(v) => set("business_name", v)}
-                placeholder="Es. Avv. Mario Rossi"
+                placeholder="Es. Avv. Nome Cognome"
               />
               <Field
                 label="Nome e cognome titolare"
                 value={form.full_name}
                 onChange={(v) => set("full_name", v)}
+                placeholder="Es. Nome Cognome"
               />
               <Field
                 label="Partita IVA *"
                 value={form.vat_number}
                 onChange={(v) => set("vat_number", v)}
-                placeholder="11 cifre"
+                placeholder="Es. 01234567890"
               />
               <Field
                 label="Codice Fiscale"
                 value={form.tax_code}
                 onChange={(v) => set("tax_code", v)}
+                placeholder="Es. RSSNNA80A01F205X"
               />
               <Field
                 label="Ordine degli Avvocati"
@@ -248,9 +250,21 @@ function SettingsPage() {
                 type="email"
                 value={form.email}
                 onChange={(v) => set("email", v)}
+                placeholder="Es. nome.cognome@example.it"
               />
-              <Field label="PEC" type="email" value={form.pec} onChange={(v) => set("pec", v)} />
-              <Field label="Telefono" value={form.phone} onChange={(v) => set("phone", v)} />
+              <Field
+                label="PEC"
+                type="email"
+                value={form.pec}
+                onChange={(v) => set("pec", v)}
+                placeholder="Es. nome.cognome@pec.it"
+              />
+              <Field
+                label="Telefono"
+                value={form.phone}
+                onChange={(v) => set("phone", v)}
+                placeholder="Es. 0212345678"
+              />
             </CardContent>
           </Card>
 
@@ -264,14 +278,20 @@ function SettingsPage() {
                   label="Indirizzo"
                   value={form.address_street}
                   onChange={(v) => set("address_street", v)}
-                  placeholder="Via, numero civico"
+                  placeholder="Es. Via Roma 10"
                 />
               </div>
-              <Field label="CAP" value={form.address_zip} onChange={(v) => set("address_zip", v)} />
+              <Field
+                label="CAP"
+                value={form.address_zip}
+                onChange={(v) => set("address_zip", v)}
+                placeholder="Es. 20121"
+              />
               <Field
                 label="Città"
                 value={form.address_city}
                 onChange={(v) => set("address_city", v)}
+                placeholder="Es. Milano"
               />
               <Field
                 label="Provincia"
@@ -355,13 +375,18 @@ function SettingsPage() {
               <CardTitle>Coordinate bancarie</CardTitle>
             </CardHeader>
             <CardContent className="grid gap-4 sm:grid-cols-2">
-              <Field label="Banca" value={form.bank_name} onChange={(v) => set("bank_name", v)} />
+              <Field
+                label="Banca"
+                value={form.bank_name}
+                onChange={(v) => set("bank_name", v)}
+                placeholder="Es. Banca Alfa"
+              />
               <div className="sm:col-span-2">
                 <Field
                   label="IBAN"
                   value={form.iban}
                   onChange={(v) => set("iban", v.toUpperCase().replace(/\s+/g, ""))}
-                  placeholder="IT60X0542811101000000123456"
+                  placeholder="Es. IT60X0542811101000000123456"
                 />
               </div>
             </CardContent>
