@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -66,7 +66,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [form, setForm] = useState<ClientRow>({ ...empty, ...(initial ?? {}) });
-  const [selectedPrincipalIds, setSelectedPrincipalIds] = useState<string[]>([]);
+  const [selectedPrincipalIds, setSelectedPrincipalIds] = useState<string[] | null>(null);
   const [principalLinkError, setPrincipalLinkError] = useState<string | null>(null);
   const [duplicateCandidates, setDuplicateCandidates] = useState<DuplicateCandidate[]>([]);
   const [duplicateOverride, setDuplicateOverride] = useState(false);
@@ -106,20 +106,21 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
     },
   });
 
-  useEffect(() => {
-    if (linkedPrincipalIds) setSelectedPrincipalIds(linkedPrincipalIds);
-  }, [linkedPrincipalIds]);
+  const effectiveSelectedPrincipalIds = selectedPrincipalIds ?? linkedPrincipalIds ?? [];
 
   const togglePrincipal = (principalId: string, checked: boolean) => {
     if (checked) setPrincipalLinkError(null);
     markDirty();
-    setSelectedPrincipalIds((current) =>
-      checked ? [...current, principalId] : current.filter((id) => id !== principalId),
-    );
+    setSelectedPrincipalIds((current) => {
+      const selectedIds = current ?? linkedPrincipalIds ?? [];
+      return checked
+        ? [...selectedIds, principalId]
+        : selectedIds.filter((id) => id !== principalId);
+    });
   };
 
   const validatePrincipalLinks = () => {
-    if (selectedPrincipalIds.length > 0) return true;
+    if (effectiveSelectedPrincipalIds.length > 0) return true;
     const message =
       principals.length === 0
         ? "Aggiungi un committente prima di salvare il cliente"
@@ -149,7 +150,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
           ? await updateClient(initial.id, payload)
           : await createClient(payload);
 
-      await syncPrincipalLinks(clientId.id, user.id, selectedPrincipalIds);
+      await syncPrincipalLinks(clientId.id, user.id, effectiveSelectedPrincipalIds);
 
       return clientId;
     },
@@ -316,7 +317,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
                   )}
                 </span>
                 <Checkbox
-                  checked={selectedPrincipalIds.includes(principal.id)}
+                  checked={effectiveSelectedPrincipalIds.includes(principal.id)}
                   aria-describedby={principalLinkError ? "principal-link-error" : undefined}
                   onCheckedChange={(checked) => togglePrincipal(principal.id, checked === true)}
                 />

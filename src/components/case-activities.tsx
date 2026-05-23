@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Check,
@@ -133,6 +133,11 @@ type ActivityRow = {
   activity_attachments?: ActivityAttachment[];
 };
 
+type HearingDateDraft = {
+  id: string;
+  date: string;
+};
+
 export type CaseActivityDialogActivity = ActivityRow;
 
 type CaseOption = CaseActivityContext & {
@@ -141,6 +146,8 @@ type CaseOption = CaseActivityContext & {
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
+const newLocalId = () => crypto.randomUUID();
+const newHearingDateDraft = (date: string): HearingDateDraft => ({ id: newLocalId(), date });
 
 const caseOptionCollator = new Intl.Collator("it", { numeric: true, sensitivity: "base" });
 
@@ -526,11 +533,12 @@ export function CaseActivityDialog({
   const [status, setStatus] = useState<"to_invoice" | "invoiced">("to_invoice");
   const [needsReview, setNeedsReview] = useState(false);
   const [notes, setNotes] = useState("");
-  const [hearingDates, setHearingDates] = useState<string[]>([]);
+  const [hearingDates, setHearingDates] = useState<HearingDateDraft[]>([]);
   const [file, setFile] = useState<File | null>(null);
   const [attachmentName, setAttachmentName] = useState("");
   const [attachmentType, setAttachmentType] = useState("");
   const [attachmentNotes, setAttachmentNotes] = useState("");
+  const [loadedFormKey, setLoadedFormKey] = useState<string | null>(null);
   const isEditing = Boolean(activity);
   const open = controlledOpen ?? internalOpen;
   const saveLock = useSubmitLock();
@@ -610,44 +618,57 @@ export function CaseActivityDialog({
     !isExpenseReimbursement &&
     (selectedItem?.requires_hearing_dates ?? Boolean(activity?.case_activity_hearings?.length));
 
-  useEffect(() => {
-    if (!selectedItem || isEditing) return;
-    setDescription(selectedItem.invoice_description || selectedItem.name);
-    if (selectedItem.kind === "fee") setQuantity(selectedItem.requires_hearing_dates ? 0 : 1);
-    if (selectedItem.kind === "expense_reimbursement") setQuantity(1);
-  }, [isEditing, selectedItem]);
+  const formKey = open
+    ? activity
+      ? `activity:${activity.id}`
+      : `new:${caseRow?.id ?? "global"}`
+    : null;
 
-  useEffect(() => {
-    if (!open) return;
+  if (formKey && loadedFormKey !== formKey) {
     if (!activity) {
-      if (caseRow) setSelectedCaseId(caseRow.id);
-      return;
+      setSelectedCaseId(caseRow?.id ?? "");
+      setActivityDate(today());
+      setPriceItemId("");
+      setDescription("");
+      setQuantity(1);
+      setFreeAmountInput("0");
+      setStatus("to_invoice");
+      setNeedsReview(false);
+      setNotes("");
+      setHearingDates([]);
+      setFile(null);
+      setAttachmentName("");
+      setAttachmentType("");
+      setAttachmentNotes("");
+      setLoadedFormKey(formKey);
+    } else {
+      setSelectedCaseId(activity.case_id);
+      setActivityDate(activity.activity_date);
+      setPriceItemId(activity.price_item_id);
+      setDescription(activity.description);
+      setQuantity(Number(activity.quantity) || 1);
+      setFreeAmountInput(
+        formatDecimalInputValue(
+          activity.kind === "expense_reimbursement"
+            ? Number(activity.amount) || 0
+            : Number(activity.unit_price) || 0,
+        ),
+      );
+      setStatus(activity.status);
+      setNeedsReview(activity.needs_review);
+      setNotes(activity.notes ?? "");
+      setHearingDates(
+        [...(activity.case_activity_hearings ?? [])]
+          .sort((a, b) => a.position - b.position)
+          .map((hearing) => ({ id: hearing.id, date: hearing.hearing_date })),
+      );
+      setFile(null);
+      setAttachmentName("");
+      setAttachmentType("");
+      setAttachmentNotes("");
+      setLoadedFormKey(formKey);
     }
-    setSelectedCaseId(activity.case_id);
-    setActivityDate(activity.activity_date);
-    setPriceItemId(activity.price_item_id);
-    setDescription(activity.description);
-    setQuantity(Number(activity.quantity) || 1);
-    setFreeAmountInput(
-      formatDecimalInputValue(
-        activity.kind === "expense_reimbursement"
-          ? Number(activity.amount) || 0
-          : Number(activity.unit_price) || 0,
-      ),
-    );
-    setStatus(activity.status);
-    setNeedsReview(activity.needs_review);
-    setNotes(activity.notes ?? "");
-    setHearingDates(
-      [...(activity.case_activity_hearings ?? [])]
-        .sort((a, b) => a.position - b.position)
-        .map((hearing) => hearing.hearing_date),
-    );
-    setFile(null);
-    setAttachmentName("");
-    setAttachmentType("");
-    setAttachmentNotes("");
-  }, [activity, caseRow, open]);
+  }
 
   const calculatedQuantity = isExpenseReimbursement
     ? 1
@@ -682,7 +703,7 @@ export function CaseActivityDialog({
       if (unitPriceForSave === null || unitPriceForSave < 0) {
         throw new Error("Inserisci un importo valido");
       }
-      if (requiresHearingDates && hearingDates.some((date) => !date)) {
+      if (requiresHearingDates && hearingDates.some((hearingDate) => !hearingDate.date)) {
         throw new Error("Completa tutte le date udienza");
       }
 
@@ -722,7 +743,7 @@ export function CaseActivityDialog({
             hearingDates.map((hearingDate, index) => ({
               user_id: user.id,
               activity_id: activity.id,
-              hearing_date: hearingDate,
+              hearing_date: hearingDate.date,
               position: index + 1,
             })),
           );
@@ -792,7 +813,7 @@ export function CaseActivityDialog({
           hearingDates.map((hearingDate, index) => ({
             user_id: user.id,
             activity_id: createdActivity.id,
-            hearing_date: hearingDate,
+            hearing_date: hearingDate.date,
             position: index + 1,
           })),
         );
@@ -854,6 +875,7 @@ export function CaseActivityDialog({
     setAttachmentType("");
     setAttachmentNotes("");
     if (!caseRow) setSelectedCaseId("");
+    setLoadedFormKey(null);
   };
 
   const setDialogOpen = (nextOpen: boolean) => {
@@ -868,9 +890,20 @@ export function CaseActivityDialog({
       if (normalized <= current.length) return current.slice(0, normalized);
       return [
         ...current,
-        ...Array.from({ length: normalized - current.length }, () => activityDate),
+        ...Array.from({ length: normalized - current.length }, () =>
+          newHearingDateDraft(activityDate),
+        ),
       ];
     });
+  };
+
+  const selectPriceItem = (value: string) => {
+    setPriceItemId(value);
+    if (isEditing) return;
+    const item = availablePriceItems.find((priceItem) => priceItem.id === value);
+    if (!item) return;
+    setDescription(item.invoice_description || item.name);
+    setQuantity(item.kind === "fee" && item.requires_hearing_dates ? 0 : 1);
   };
 
   const handleSubmit = (event: FormEvent) => {
@@ -950,7 +983,7 @@ export function CaseActivityDialog({
             <Label htmlFor="price_item_id">Prezzo</Label>
             <Select
               value={priceItemId}
-              onValueChange={setPriceItemId}
+              onValueChange={selectPriceItem}
               disabled={isEditing || !priceBook}
             >
               <SelectTrigger id="price_item_id">
@@ -1037,17 +1070,19 @@ export function CaseActivityDialog({
 
           {requiresHearingDates ? (
             <div className="grid gap-3 sm:grid-cols-2">
-              {hearingDates.map((date, index) => (
-                <div key={index} className="flex flex-col gap-2">
+              {hearingDates.map((hearingDate, index) => (
+                <div key={hearingDate.id} className="flex flex-col gap-2">
                   <Label htmlFor={`hearing_${index}`}>Udienza {index + 1}</Label>
                   <Input
                     id={`hearing_${index}`}
                     type="date"
-                    value={date}
+                    value={hearingDate.date}
                     onChange={(event) =>
                       setHearingDates((current) =>
                         current.map((currentDate, currentIndex) =>
-                          currentIndex === index ? event.target.value : currentDate,
+                          currentIndex === index
+                            ? { ...currentDate, date: event.target.value }
+                            : currentDate,
                         ),
                       )
                     }

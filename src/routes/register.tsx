@@ -87,17 +87,16 @@ function RegisterPage() {
           <p className="mt-1 text-sm text-muted-foreground">Bastano pochi secondi per iniziare.</p>
           {confirmationSent ? (
             <>
-              <div
+              <output
                 className="mt-6 rounded-md border border-border bg-muted/40 p-4 text-sm text-foreground"
-                role="status"
                 aria-live="polite"
               >
-                <p className="font-medium">Controlla la tua casella.</p>
-                <p className="mt-1 text-muted-foreground">
+                <span className="block font-medium">Controlla la tua casella.</span>
+                <span className="mt-1 block text-muted-foreground">
                   Ti abbiamo inviato un link e un codice monouso. Puoi usare l'uno o l'altro per
                   entrare in Pratix.
-                </p>
-              </div>
+                </span>
+              </output>
               <AuthEmailOtpForm
                 email={pendingEmail}
                 onVerified={() => navigate({ to: "/dashboard" })}

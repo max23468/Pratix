@@ -92,7 +92,7 @@ vi.mock("@tanstack/react-query", async () => {
 
 vi.mock("@/components/ui/command", () => ({
   CommandDialog: ({ children, open }: { children: ReactNode; open?: boolean }) =>
-    open ? <div role="dialog">{children}</div> : null,
+    open ? <dialog open>{children}</dialog> : null,
   CommandEmpty: ({ children }: { children: ReactNode }) => <p>{children}</p>,
   CommandGroup: ({ children, heading }: { children: ReactNode; heading: string }) => (
     <section aria-label={heading}>

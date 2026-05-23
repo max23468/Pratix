@@ -1,29 +1,19 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { CaseForm } from "@/components/case-form";
 import { CaseActivitiesTab } from "@/components/case-activities";
 import { CaseOperationsPanel } from "@/components/case-operations-panel";
+import { CreditTransfersTab } from "@/components/practices/credit-transfers-tab";
+import { HistoryTab } from "@/components/practices/case-history-tab";
 import { supabase } from "@/integrations/supabase/client";
-import { formatDate } from "@/lib/format";
 import {
   caseStatusLabels,
   caseStatusVariant,
-  clientDisplayName,
   counterpartyDisplayName,
   practiceDisplayName,
 } from "@/lib/labels";
@@ -86,32 +76,35 @@ function CaseDetail() {
   const counterpartyName = caseRow.counterparties
     ? counterpartyDisplayName(caseRow.counterparties)
     : "—";
-
   return (
     <>
-      <PageHeader
-        title={practiceDisplayName(caseRow)}
-        titleAccessory={
-          <Badge variant={caseStatusVariant[caseRow.status] ?? "outline"}>
-            {caseStatusLabels[caseRow.status] ?? caseRow.status}
-          </Badge>
-        }
-        description={`${principalName} · ${clientName} · ${counterpartyName}`}
-        actions={
-          <>
-            <Link to="/pratiche/nuova">
-              <Button size="sm">
-                <Plus className="mr-1 size-4" /> Nuova pratica
-              </Button>
-            </Link>
-            <Link to="/pratiche">
-              <Button size="sm" variant="outline">
-                <ArrowLeft className="mr-1 size-4" /> Torna alle pratiche
-              </Button>
-            </Link>
-          </>
-        }
-      />
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <h1 className="min-w-0 max-w-full truncate font-display text-[26px] font-semibold tracking-tight text-foreground">
+              {practiceDisplayName(caseRow)}
+            </h1>
+            <Badge variant={caseStatusVariant[caseRow.status] ?? "outline"}>
+              {caseStatusLabels[caseRow.status] ?? caseRow.status}
+            </Badge>
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {principalName} · {clientName} · {counterpartyName}
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <Link to="/pratiche/nuova">
+            <Button size="sm">
+              <Plus className="mr-1 size-4" /> Nuova pratica
+            </Button>
+          </Link>
+          <Link to="/pratiche">
+            <Button size="sm" variant="outline">
+              <ArrowLeft className="mr-1 size-4" /> Torna alle pratiche
+            </Button>
+          </Link>
+        </div>
+      </div>
 
       <CaseOperationsPanel
         caseRow={caseRow}
@@ -140,111 +133,5 @@ function CaseDetail() {
         </TabsContent>
       </Tabs>
     </>
-  );
-}
-
-function HistoryTab({ caseId }: { caseId: string }) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["case-history", caseId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("case_status_history")
-        .select("*")
-        .eq("case_id", caseId)
-        .order("changed_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Storico stati</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <p className="text-sm text-muted-foreground">Caricamento…</p>
-        ) : data && data.length > 0 ? (
-          <ul className="space-y-3">
-            {data.map((h) => (
-              <li key={h.id} className="flex items-center justify-between text-sm">
-                <div className="flex items-center gap-2">
-                  {h.previous_status && (
-                    <>
-                      <Badge variant="outline">
-                        {caseStatusLabels[h.previous_status] ?? h.previous_status}
-                      </Badge>
-                      <span className="text-muted-foreground">→</span>
-                    </>
-                  )}
-                  <Badge variant={caseStatusVariant[h.new_status] ?? "outline"}>
-                    {caseStatusLabels[h.new_status] ?? h.new_status}
-                  </Badge>
-                </div>
-                <span className="text-xs text-muted-foreground">{formatDate(h.changed_at)}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-muted-foreground">Nessun cambio di stato registrato.</p>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function CreditTransfersTab({ caseId }: { caseId: string }) {
-  const { data, isLoading } = useQuery({
-    queryKey: ["case-credit-transfers", caseId],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("case_credit_transfers")
-        .select(
-          "*, previous_client:clients!case_credit_transfers_previous_client_owner_fkey(kind, first_name, last_name, business_name), new_client:clients!case_credit_transfers_new_client_owner_fkey(kind, first_name, last_name, business_name)",
-        )
-        .eq("case_id", caseId)
-        .order("transferred_at", { ascending: false });
-      if (error) throw error;
-      return data ?? [];
-    },
-  });
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Cessioni credito</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <p className="text-sm text-muted-foreground">Caricamento…</p>
-        ) : data && data.length > 0 ? (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data</TableHead>
-                <TableHead>Cliente precedente</TableHead>
-                <TableHead>Cliente corrente</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {data.map((transfer) => (
-                <TableRow key={transfer.id}>
-                  <TableCell className="text-sm">{formatDate(transfer.transferred_at)}</TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {transfer.previous_client ? clientDisplayName(transfer.previous_client) : "—"}
-                  </TableCell>
-                  <TableCell className="text-sm">
-                    {transfer.new_client ? clientDisplayName(transfer.new_client) : "—"}
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        ) : (
-          <p className="text-sm text-muted-foreground">Nessuna cessione registrata.</p>
-        )}
-      </CardContent>
-    </Card>
   );
 }
