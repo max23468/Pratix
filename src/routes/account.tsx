@@ -42,7 +42,7 @@ import {
   type PersonalDataPayload,
 } from "@/lib/personal-data-export";
 import { APP_VERSION, BUILD_DATE } from "@/lib/version";
-import { downloadBytes } from "@/lib/invoice-file-exports";
+import { downloadBytes } from "@/lib/file-downloads";
 import { readServerResult } from "@/lib/server-functions";
 import { useSubmitLock } from "@/lib/submit-lock";
 import { deleteAccountFn } from "@/server/account.functions";

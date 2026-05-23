@@ -42,7 +42,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { formatCurrency, formatDate } from "@/lib/format";
-import { downloadBytes } from "@/lib/invoice-file-exports";
+import { downloadBytes } from "@/lib/file-downloads";
 import type { InvoiceLineKind } from "@/lib/invoice-calc";
 import { invoiceLineKindLabels } from "@/lib/invoice-calc";
 import type { InvoicePdfData } from "@/lib/invoice-pdf";
