@@ -27,6 +27,10 @@ declare global {
 
 let turnstileScriptPromise: Promise<void> | null = null;
 
+function clearWidgetId(widgetIdRef: { current: string | null }) {
+  widgetIdRef.current = null;
+}
+
 function loadTurnstileScript() {
   if (typeof window === "undefined") {
     return Promise.resolve();
@@ -86,14 +90,15 @@ export function TurnstileChallenge({
     }
 
     let cancelled = false;
+    let renderedWidgetId: string | null = null;
 
     loadTurnstileScript()
       .then(() => {
-        if (cancelled || !window.turnstile || !containerRef.current || widgetIdRef.current) {
+        if (cancelled || !window.turnstile || !containerRef.current || renderedWidgetId) {
           return;
         }
 
-        widgetIdRef.current = window.turnstile.render(containerRef.current, {
+        renderedWidgetId = window.turnstile.render(containerRef.current, {
           sitekey: TURNSTILE_SITE_KEY,
           action,
           theme: "auto",
@@ -101,14 +106,15 @@ export function TurnstileChallenge({
           "expired-callback": () => onTokenChange(null),
           "error-callback": () => onTokenChange(null),
         });
+        widgetIdRef.current = renderedWidgetId;
       })
       .catch(() => onTokenChange(null));
 
     return () => {
       cancelled = true;
-      if (widgetIdRef.current && window.turnstile) {
-        window.turnstile.remove(widgetIdRef.current);
-        widgetIdRef.current = null;
+      if (renderedWidgetId && window.turnstile) {
+        window.turnstile.remove(renderedWidgetId);
+        clearWidgetId(widgetIdRef);
       }
     };
   }, [action, onTokenChange]);

@@ -225,6 +225,7 @@ function Wordmark({
   return (
     <span
       className="font-display"
+      aria-hidden="true"
       style={{
         color: wordColor,
         fontSize,
@@ -264,12 +265,8 @@ export function Logo({
 }: LogoProps) {
   const gap = Math.max(6, Math.round(size * 0.32));
   return (
-    <span
-      role="img"
-      aria-label={ariaLabel}
-      className={cn("inline-flex items-center", className)}
-      style={{ gap }}
-    >
+    <span className={cn("inline-flex items-center", className)} style={{ gap }}>
+      {ariaLabel ? <span className="sr-only">{ariaLabel}</span> : null}
       {form !== "wordmark" && <Mark direction={direction} tone={tone} size={size} />}
       {form !== "mark" && <Wordmark direction={direction} tone={tone} size={size} />}
     </span>

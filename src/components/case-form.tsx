@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useMemo, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -108,6 +108,7 @@ type QuickCounterpartyDraft = {
 };
 
 type QuickCounterpartySubjectDraft = {
+  localId: string;
   kind: ClientKind;
   first_name: string;
   last_name: string;
@@ -145,6 +146,7 @@ const emptyQuickClient: QuickClientDraft = {
 };
 
 const emptyQuickCounterpartySubject = (): QuickCounterpartySubjectDraft => ({
+  localId: crypto.randomUUID(),
   kind: "individual",
   first_name: "",
   last_name: "",
@@ -284,14 +286,13 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
     },
   });
 
-  useEffect(() => {
-    if (isEdit || form.practice_number || !nextPracticeNumber) return;
+  if (!isEdit && !form.practice_number && nextPracticeNumber) {
     setForm((current) => ({
       ...current,
       practice_number: nextPracticeNumber,
       case_number: String(nextPracticeNumber),
     }));
-  }, [form.practice_number, isEdit, nextPracticeNumber]);
+  }
 
   const { data: clients = [], isFetched: clientsFetched } = useQuery({
     queryKey: ["clients", "case-form"],
@@ -332,18 +333,15 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       .sort(compareClients);
   }, [allClients, form.client_id, form.principal_id, principalClientIds]);
 
-  useEffect(() => {
-    if (!clientsFetched || !principalClientIdsFetched) return;
-    if (!form.principal_id || !form.client_id) return;
-    if (availableClients.some((client) => client.id === form.client_id)) return;
+  if (
+    clientsFetched &&
+    principalClientIdsFetched &&
+    form.principal_id &&
+    form.client_id &&
+    !availableClients.some((client) => client.id === form.client_id)
+  ) {
     setForm((current) => ({ ...current, client_id: null }));
-  }, [
-    availableClients,
-    clientsFetched,
-    form.client_id,
-    form.principal_id,
-    principalClientIdsFetched,
-  ]);
+  }
 
   const createQuickPrincipalMutation = useMutation({
     mutationFn: async () => {
@@ -1100,7 +1098,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                         </Button>
                       </div>
                       {quickCounterparty.subjects.map((subject, index) => (
-                        <div key={index} className="rounded-md border border-border p-3">
+                        <div key={subject.localId} className="rounded-md border border-border p-3">
                           <div className="mb-3 flex items-center justify-between gap-2">
                             <p className="text-sm font-medium">Soggetto {index + 1}</p>
                             <Button

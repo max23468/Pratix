@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { AuthEmailOtpForm } from "@/components/auth-email-otp-form";
 import { Logo } from "@/components/brand/logo";
 import { toast } from "sonner";
@@ -7,6 +7,7 @@ import { TurnstileChallenge } from "@/components/security/turnstile-challenge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { usePasskeySupported } from "@/hooks/use-passkey-supported";
 import { supabase } from "@/integrations/supabase/client";
 import { loginSchema } from "@/lib/auth-schemas";
 import { PASSKEYS_ENABLED, passkeysUnavailableMessage } from "@/lib/passkeys";
@@ -35,12 +36,8 @@ function LoginPage() {
   const [passkeySubmitting, setPasskeySubmitting] = useState(false);
   const [sent, setSent] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
-  const [passkeySupported, setPasskeySupported] = useState(false);
+  const passkeySupported = usePasskeySupported();
   const submitLock = useSubmitLock();
-
-  useEffect(() => {
-    setPasskeySupported("PublicKeyCredential" in window);
-  }, []);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -115,17 +112,16 @@ function LoginPage() {
           </p>
           {sent ? (
             <>
-              <div
+              <output
                 className="mt-6 rounded-md border border-border bg-muted/40 p-4 text-sm text-foreground"
-                role="status"
                 aria-live="polite"
               >
-                <p className="font-medium">Controlla la tua casella.</p>
-                <p className="mt-1 text-muted-foreground">
+                <span className="block font-medium">Controlla la tua casella.</span>
+                <span className="mt-1 block text-muted-foreground">
                   Se l'indirizzo è registrato, riceverai a breve un link e un codice monouso. Puoi
                   usare l'uno o l'altro per entrare in Pratix.
-                </p>
-              </div>
+                </span>
+              </output>
               <AuthEmailOtpForm
                 email={pendingEmail}
                 onVerified={() => navigate({ to: "/dashboard" })}

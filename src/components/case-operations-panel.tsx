@@ -5,7 +5,6 @@ import {
   AlertTriangle,
   CheckCircle2,
   Download,
-  Flag,
   FileText,
   FileSpreadsheet,
   ListChecks,
@@ -14,12 +13,14 @@ import {
   Upload,
   WalletCards,
 } from "lucide-react";
-import { Badge, badgeVariants } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { CaseTimeline } from "@/components/case-timeline-card";
 import { SummaryTile } from "@/components/summary-tile";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { SubjectTile } from "@/components/subject-tile";
 import { Separator } from "@/components/ui/separator";
+import { WorkflowField } from "@/components/workflow-field";
+import { WorkflowPriorityBadge } from "@/components/workflow-priority-badge";
 import { CaseActivityDialog, type CaseActivityDialogActivity } from "@/components/case-activities";
 import { supabase } from "@/integrations/supabase/client";
 import { buildCaseDossierWorkbook, type CaseDossierInput } from "@/lib/case-dossier-xlsx";
@@ -36,7 +37,6 @@ import {
 import {
   buildCaseWorkflowQualityChecks,
   buildDebtCollectionWorkflow,
-  formatCaseWorkflowPriorityLabel,
   summarizeCaseOperations,
 } from "@/lib/case-workflow";
 import { formatCurrency, formatDate } from "@/lib/format";
@@ -51,7 +51,8 @@ import {
   type ClientDisplayData,
   type CounterpartyDisplayData,
 } from "@/lib/labels";
-import { cn } from "@/lib/utils";
+export { CaseTimeline } from "@/components/case-timeline-card";
+export { WorkflowPriorityBadge } from "@/components/workflow-priority-badge";
 
 type OperationsActivityRow = ActivityRow & CaseActivityDialogActivity;
 
@@ -314,7 +315,7 @@ export function CaseOperationsPanel({
 
       {afterDashboardSlot}
 
-      {detailsSlot ? <CaseDetailsSection>{detailsSlot}</CaseDetailsSection> : null}
+      {detailsSlot ? renderCaseDetailsSection(detailsSlot) : null}
 
       <CaseTimeline
         timeline={timeline}
@@ -393,56 +394,7 @@ export function CaseOperationsPanel({
   );
 }
 
-export function CaseTimeline({
-  timeline,
-  isLoading,
-  onEditActivity,
-}: {
-  timeline: CaseTimelineItem[];
-  isLoading?: boolean;
-  onEditActivity?: (activityId: string) => void;
-}) {
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Timeline pratica</CardTitle>
-        <CardDescription>
-          Attività, allegati, fatture, cessioni credito e cambi di stato in ordine cronologico.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {isLoading ? (
-          <p className="text-sm text-muted-foreground">Caricamento…</p>
-        ) : timeline.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nessun evento operativo registrato.</p>
-        ) : (
-          <ol className="space-y-3">
-            {timeline.map((item) => (
-              <li key={item.id}>
-                {item.activityId && onEditActivity ? (
-                  <button
-                    type="button"
-                    className="w-full rounded-md border border-border p-3 text-left transition hover:bg-muted/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                    aria-label={`Modifica attività ${item.title}`}
-                    onClick={() => onEditActivity(item.activityId as string)}
-                  >
-                    <TimelineItemContent item={item} />
-                  </button>
-                ) : (
-                  <div className="rounded-md border border-border p-3">
-                    <TimelineItemContent item={item} />
-                  </div>
-                )}
-              </li>
-            ))}
-          </ol>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function CaseDetailsSection({ children }: { children: ReactNode }) {
+function renderCaseDetailsSection(children: ReactNode) {
   return (
     <section className="space-y-4">
       <div className="rounded-md border border-border p-4">
@@ -453,24 +405,6 @@ function CaseDetailsSection({ children }: { children: ReactNode }) {
       </div>
       {children}
     </section>
-  );
-}
-
-function TimelineItemContent({ item }: { item: CaseTimelineItem }) {
-  return (
-    <div className="flex flex-wrap items-start justify-between gap-2">
-      <div className="min-w-0">
-        <div className="flex flex-wrap items-center gap-2">
-          <p className="font-medium">{item.title}</p>
-          <Badge variant="outline">{item.meta}</Badge>
-        </div>
-        <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
-      </div>
-      <div className="text-right">
-        <p className="text-xs text-muted-foreground">{formatDate(item.date)}</p>
-        {item.amount ? <p className="text-sm font-medium">{formatCurrency(item.amount)}</p> : null}
-      </div>
-    </div>
   );
 }
 
@@ -631,71 +565,6 @@ function buildDossierInput({
         : "-",
     })),
   };
-}
-
-export function WorkflowPriorityBadge({
-  workflow,
-}: {
-  workflow: ReturnType<typeof buildDebtCollectionWorkflow>;
-}) {
-  const priorityLabel = formatCaseWorkflowPriorityLabel(workflow.priority);
-
-  if (!workflow.priorityInsight) {
-    return <Badge variant={workflow.priorityVariant}>{priorityLabel}</Badge>;
-  }
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(badgeVariants({ variant: workflow.priorityVariant }), "cursor-help")}
-          aria-label={`Mostra perché questa pratica ${priorityLabel.toLocaleLowerCase("it-IT")}`}
-        >
-          {priorityLabel}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-3">
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-medium">{workflow.priorityInsight.title}</p>
-          <p className="text-sm text-muted-foreground">{workflow.priorityInsight.description}</p>
-        </div>
-        <ul className="flex flex-col gap-2 text-sm">
-          {workflow.priorityInsight.items.map((item) => (
-            <li key={item} className="flex gap-2">
-              <Flag className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
-        <div className="rounded-md border border-border bg-muted/40 p-3 text-sm">
-          <p className="font-medium">Azione consigliata</p>
-          <p className="mt-1 text-muted-foreground">{workflow.priorityInsight.nextStep}</p>
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-function SubjectTile({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="truncate text-sm font-medium">{value}</p>
-    </div>
-  );
-}
-
-function WorkflowField({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="min-w-0">
-      <p className="flex items-center gap-1 text-xs text-muted-foreground">
-        <Flag className="size-3" />
-        {label}
-      </p>
-      <p className="mt-1 text-sm font-medium">{value}</p>
-    </div>
-  );
 }
 
 function downloadFile({

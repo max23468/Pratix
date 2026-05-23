@@ -23,6 +23,7 @@ export function DefaultErrorComponent({ error, reset }: { error: Error; reset: (
         )}
         <div className="mt-6 flex items-center justify-center gap-3">
           <button
+            type="button"
             onClick={() => {
               router.invalidate();
               reset();

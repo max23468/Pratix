@@ -6,6 +6,14 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.11.14] — 2026-05-23
+
+### Sotto il cofano
+
+- **React Doctor**: portato il controllo online a `100/100` separando i
+  componenti rimasti nelle route e rimuovendo le render function segnalate,
+  senza cambiare score, ignore, suppression o configurazione.
+
 ## [1.11.13] — 2026-05-23
 
 ### Sotto il cofano
@@ -1169,6 +1177,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.11.14]: #11114--2026-05-23
 [1.11.13]: #11113--2026-05-23
 [1.11.11]: #11111--2026-05-23
 [1.11.10]: #11110--2026-05-23

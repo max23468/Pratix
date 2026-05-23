@@ -1,4 +1,3 @@
-import { useEffect, useState } from "react";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +10,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useClientMounted } from "@/hooks/use-client-mounted";
 import { useTheme, type ThemeMode } from "@/lib/theme-context";
 import { cn } from "@/lib/utils";
 
@@ -28,14 +28,10 @@ const labels: Record<ThemeMode, string> = {
 
 export function ThemeToggle({ variant = "icon", className }: ThemeToggleProps) {
   const { mode, resolved, setMode } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const mounted = useClientMounted();
   const displayMode = mounted ? mode : "system";
   const displayResolved = mounted ? resolved : "light";
   const Icon = displayResolved === "dark" ? Moon : Sun;
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   return (
     <DropdownMenu>

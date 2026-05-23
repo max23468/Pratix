@@ -60,9 +60,9 @@ describe("componenti presentazionali globali", () => {
     expect(screen.getByText("Pratiche")).toBeTruthy();
     expect(screen.getByText("Aperta")).toBeTruthy();
     expect(screen.getByText("Nessuna attività")).toBeTruthy();
-    expect(screen.getByRole("img", { name: "Logo bar" })).toBeTruthy();
-    expect(screen.getByRole("img", { name: "Logo seal" })).toBeTruthy();
-    expect(screen.getByRole("img", { name: "Logo sigillo" })).toBeTruthy();
+    expect(screen.getByText("Logo bar")).toBeTruthy();
+    expect(screen.getByText("Logo seal")).toBeTruthy();
+    expect(screen.getByText("Logo sigillo")).toBeTruthy();
 
     await userEvent.click(screen.getByRole("button", { name: /Chiaro/ }));
 

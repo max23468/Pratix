@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState, type FormEvent } from "react";
+import { useId, useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -136,17 +136,6 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
       return { book, items: previousItems ?? [] };
     },
   });
-
-  const selectedPrincipal = principals.find((principal) => principal.id === form.principal_id);
-
-  useEffect(() => {
-    if (isEdit || !selectedPrincipal) return;
-    setForm((current) => ({
-      ...current,
-      fees_enabled: selectedPrincipal.fees_enabled,
-      expense_reimbursements_enabled: selectedPrincipal.expense_reimbursements_enabled,
-    }));
-  }, [isEdit, selectedPrincipal]);
 
   const itemUsage = useMemo(() => {
     return items.reduce<Record<string, number>>((acc, item) => {
@@ -311,7 +300,21 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
               <Label htmlFor="principal_id">Committente</Label>
               <Select
                 value={form.principal_id}
-                onValueChange={(value) => setField("principal_id", value)}
+                onValueChange={(value) => {
+                  const selectedPrincipal = principals.find((principal) => principal.id === value);
+                  markDirty();
+                  setForm((current) => ({
+                    ...current,
+                    principal_id: value,
+                    fees_enabled: isEdit
+                      ? current.fees_enabled
+                      : (selectedPrincipal?.fees_enabled ?? current.fees_enabled),
+                    expense_reimbursements_enabled: isEdit
+                      ? current.expense_reimbursements_enabled
+                      : (selectedPrincipal?.expense_reimbursements_enabled ??
+                        current.expense_reimbursements_enabled),
+                  }));
+                }}
                 disabled={isEdit}
               >
                 <SelectTrigger id="principal_id">
@@ -612,7 +615,7 @@ function PriceItemsEditor({
                         size="sm"
                         onClick={() => onRemove(index)}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="size-4" />
                       </Button>
                     </TableCell>
                   </TableRow>

@@ -599,7 +599,7 @@ function ActivitiesList() {
                           <Button
                             type="button"
                             variant="ghost"
-                            className="h-auto max-w-full justify-start px-0 py-0 text-left hover:bg-transparent"
+                            className="h-auto max-w-full justify-start p-0 text-left hover:bg-transparent"
                             disabled={Boolean(activity.invoice_id)}
                             aria-label={`Modifica ${activity.description}`}
                             title={editTitle}

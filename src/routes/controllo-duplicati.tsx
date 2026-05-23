@@ -8,7 +8,8 @@ import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
+import { SummaryCard } from "@/components/duplicates/summary-card";
 import {
   Dialog,
   DialogContent,
@@ -203,19 +204,19 @@ function DuplicateControlPage() {
             </CardContent>
           </Card>
         ) : (
-          candidates.map((candidate) => (
-            <DuplicateCandidateCard
-              key={`${candidate.entityType}-${candidate.left.id}-${candidate.right.id}-${candidate.status}`}
-              candidate={candidate}
-              onOpen={() => {
+          candidates.map((candidate) =>
+            renderDuplicateCandidateCard({
+              key: `${candidate.entityType}-${candidate.left.id}-${candidate.right.id}-${candidate.status}`,
+              candidate,
+              onOpen: () => {
                 setSelected(candidate);
                 setMergeKeepId(candidate.left.id);
-              }}
-              onDismiss={() => resolveMutation.mutate({ candidate, action: "dismiss" })}
-              onSnooze={() => resolveMutation.mutate({ candidate, action: "snooze" })}
-              disabled={resolveMutation.isPending}
-            />
-          ))
+              },
+              onDismiss: () => resolveMutation.mutate({ candidate, action: "dismiss" }),
+              onSnooze: () => resolveMutation.mutate({ candidate, action: "snooze" }),
+              disabled: resolveMutation.isPending,
+            }),
+          )
         )}
       </div>
 
@@ -227,14 +228,14 @@ function DuplicateControlPage() {
               <DialogDescription>{selected.reasons.join(" · ")}</DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 md:grid-cols-2">
-              {[selected.left, selected.right].map((record) => (
-                <RecordPanel
-                  key={record.id}
-                  record={record}
-                  selected={mergeKeepId === record.id}
-                  onSelect={() => setMergeKeepId(record.id)}
-                />
-              ))}
+              {[selected.left, selected.right].map((record) =>
+                renderRecordPanel({
+                  key: record.id,
+                  record,
+                  selected: mergeKeepId === record.id,
+                  onSelect: () => setMergeKeepId(record.id),
+                }),
+              )}
             </div>
             <DialogFooter className="gap-2">
               <Button
@@ -277,35 +278,15 @@ function DuplicateControlPage() {
   );
 }
 
-function SummaryCard({
-  title,
-  value,
-  description,
-}: {
-  title: string;
-  value: number | string;
-  description?: string;
-}) {
-  return (
-    <Card>
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm text-muted-foreground">{title}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="text-2xl font-semibold">{value}</div>
-        {description && <div className="mt-1 text-xs text-muted-foreground">{description}</div>}
-      </CardContent>
-    </Card>
-  );
-}
-
-function DuplicateCandidateCard({
+function renderDuplicateCandidateCard({
+  key,
   candidate,
   onOpen,
   onDismiss,
   onSnooze,
   disabled,
 }: {
+  key: string;
   candidate: DuplicateCandidate;
   onOpen: () => void;
   onDismiss: () => void;
@@ -313,7 +294,7 @@ function DuplicateCandidateCard({
   disabled: boolean;
 }) {
   return (
-    <Card>
+    <Card key={key}>
       <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0 space-y-2">
           <div className="flex flex-wrap items-center gap-2">
@@ -350,17 +331,19 @@ function DuplicateCandidateCard({
   );
 }
 
-function RecordPanel({
+function renderRecordPanel({
+  key,
   record,
   selected,
   onSelect,
 }: {
+  key: string;
   record: DuplicateRecord;
   selected: boolean;
   onSelect: () => void;
 }) {
   return (
-    <div className="space-y-3 rounded-md border border-border p-4">
+    <div key={key} className="space-y-3 rounded-md border border-border p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="font-medium">{record.label}</div>

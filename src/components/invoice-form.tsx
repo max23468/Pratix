@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -149,6 +149,7 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
   const [notes, setNotes] = useState("");
   const [selection, setSelection] = useState<Record<string, BillingItemStatus>>({});
   const [loadedDraftId, setLoadedDraftId] = useState<string | null>(null);
+  const [appliedProfileDefaultsKey, setAppliedProfileDefaultsKey] = useState<string | null>(null);
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
   const createInvoiceLock = useSubmitLock();
 
@@ -258,22 +259,25 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
 
   const draftInvoiceDbId = draftData?.invoice.id ?? null;
 
-  useEffect(() => {
-    if (!profile || isEditingDraft) return;
+  const profileDefaultsKey =
+    profile && !isEditingDraft
+      ? [
+          profile.cassa_rate ?? 4,
+          profile.vat_rate ?? 22,
+          profile.withholding_rate ?? 20,
+          profile.tax_regime ?? "",
+        ].join("|")
+      : null;
+
+  if (profile && profileDefaultsKey && appliedProfileDefaultsKey !== profileDefaultsKey) {
     setCassaRate(Number(profile.cassa_rate ?? 4));
     setVatRate(Number(profile.vat_rate ?? 22));
     setWithholdingRate(Number(profile.withholding_rate ?? 20));
     setApplyWithholding(profile.tax_regime !== "forfettario");
-  }, [isEditingDraft, profile]);
+    setAppliedProfileDefaultsKey(profileDefaultsKey);
+  }
 
-  useEffect(() => {
-    if (!selectedPrincipal || isEditingDraft) return;
-    setGeneralExpensesRate(Number(selectedPrincipal.default_general_expenses_rate ?? 10));
-    setCassaRate(Number(selectedPrincipal.default_cassa_rate ?? 4));
-  }, [isEditingDraft, selectedPrincipal]);
-
-  useEffect(() => {
-    if (!draftData || loadedDraftId === draftData.invoice.id) return;
+  if (draftData && loadedDraftId !== draftData.invoice.id) {
     setPrincipalId(draftData.invoice.principal_id ?? "");
     setPeriodStart(draftData.billingRun.period_start);
     setPeriodEnd(draftData.billingRun.period_end);
@@ -297,7 +301,7 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
       Object.fromEntries(draftData.items.map((item) => [item.activity_id, item.status] as const)),
     );
     setLoadedDraftId(draftData.invoice.id);
-  }, [draftData, loadedDraftId]);
+  }
 
   const { data: activities = EMPTY_ACTIVITIES, isLoading: activitiesLoading } = useQuery({
     queryKey: [
@@ -357,27 +361,17 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
     },
   });
 
-  useEffect(() => {
-    setSelection((current) => {
-      const next: Record<string, BillingItemStatus> = {};
-      activities.forEach((activity) => {
-        next[activity.id] = current[activity.id] ?? "included";
-      });
-      const nextKeys = Object.keys(next);
-      const currentKeys = Object.keys(current);
-      if (
-        nextKeys.length === currentKeys.length &&
-        nextKeys.every((key) => current[key] === next[key])
-      ) {
-        return current;
-      }
-      return next;
+  const selectionForActivities = useMemo(() => {
+    const next: Record<string, BillingItemStatus> = {};
+    activities.forEach((activity) => {
+      next[activity.id] = selection[activity.id] ?? "included";
     });
-  }, [activities]);
+    return next;
+  }, [activities, selection]);
 
   const includedActivities = useMemo(
-    () => activities.filter((activity) => selection[activity.id] === "included"),
-    [activities, selection],
+    () => activities.filter((activity) => selectionForActivities[activity.id] === "included"),
+    [activities, selectionForActivities],
   );
   const isForfettario = profile?.tax_regime === "forfettario";
 
@@ -431,7 +425,7 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
         notes,
         selections: activities.map((activity) => ({
           activityId: activity.id,
-          status: selection[activity.id] ?? "excluded",
+          status: selectionForActivities[activity.id] ?? "excluded",
         })),
       };
       const result = isEditingDraft
@@ -536,7 +530,12 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
                 value={principalId}
                 onValueChange={(value) => {
                   markDirty();
+                  const principal = principals.find((item) => item.id === value);
                   setPrincipalId(value);
+                  if (!isEditingDraft && principal) {
+                    setGeneralExpensesRate(Number(principal.default_general_expenses_rate ?? 10));
+                    setCassaRate(Number(principal.default_cassa_rate ?? 4));
+                  }
                 }}
               >
                 <SelectTrigger id="principal_id">
@@ -695,7 +694,7 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
                     >
                       <TableCell className="block p-0 pb-3 sm:table-cell sm:p-2">
                         <Select
-                          value={selection[activity.id] ?? "included"}
+                          value={selectionForActivities[activity.id] ?? "included"}
                           onValueChange={(value) => {
                             markDirty();
                             setSelection((current) => ({
