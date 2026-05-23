@@ -7,7 +7,10 @@ const repository = process.env.GITHUB_REPOSITORY;
 const token = process.env.GITHUB_TOKEN;
 const codexLoginPattern = new RegExp(process.env.CODEX_BOT_LOGIN_PATTERN ?? "codex", "i");
 const inboxIssueTitle = process.env.CODEX_INBOX_ISSUE_TITLE ?? "Codex feedback inbox";
-const inboxMarker = "<!-- pratix-codex-feedback-inbox -->";
+const repositoryName = repository?.split("/")[1] ?? "repository";
+const inboxMarker =
+  process.env.CODEX_INBOX_MARKER ??
+  `<!-- ${normalizeInboxMarkerName(repositoryName)}-codex-feedback-inbox -->`;
 const dryRun = process.env.DRY_RUN === "true";
 const eventName = process.env.GITHUB_EVENT_NAME ?? "";
 const eventPayload = await readGitHubEventPayload();
@@ -95,6 +98,15 @@ async function listPullRequests() {
     prsByNumber.set(pr.number, pr);
   }
 
+  for (const prNumber of await listInboxPullRequestNumbers()) {
+    if (prsByNumber.has(prNumber)) continue;
+
+    const inboxPr = await getPullRequestFromInbox(prNumber);
+    if (!inboxPr) continue;
+
+    prsByNumber.set(inboxPr.number, inboxPr);
+  }
+
   if (eventPullRequestNumber && !prsByNumber.has(eventPullRequestNumber)) {
     const eventPr = await githubJson(`/repos/${owner}/${repo}/pulls/${eventPullRequestNumber}`);
     prsByNumber.set(eventPr.number, eventPr);
@@ -107,6 +119,35 @@ async function listPullRequests() {
 
 async function listAllPullRequests() {
   return listPullRequestPages({ state: "all" });
+}
+
+async function getPullRequestFromInbox(prNumber) {
+  try {
+    return await githubJson(`/repos/${owner}/${repo}/pulls/${prNumber}`);
+  } catch (error) {
+    if (error.status === 404) {
+      console.warn(`PR #${prNumber} presente nella inbox ma non trovata: la salto.`);
+      return null;
+    }
+
+    throw error;
+  }
+}
+
+async function listInboxPullRequestNumbers() {
+  const existingIssue = chooseCanonicalInboxIssue(await findInboxIssues());
+
+  return existingIssue ? extractInboxPullRequestNumbers(existingIssue.body ?? "") : [];
+}
+
+function extractInboxPullRequestNumbers(body) {
+  return [
+    ...new Set(
+      [...body.matchAll(/^### PR #(\d+) - /gm)]
+        .map((match) => Number.parseInt(match[1], 10))
+        .filter(Number.isInteger),
+    ),
+  ];
 }
 
 async function listOpenPullRequests() {
@@ -480,6 +521,15 @@ function parsePositiveInteger(value, fallback) {
   return Number.isInteger(parsed) && parsed > 0 ? parsed : fallback;
 }
 
+function normalizeInboxMarkerName(value) {
+  return (
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "repository"
+  );
+}
+
 async function githubJson(path, body, method) {
   const response = await fetch(`https://api.github.com${path}`, {
     body: body ? JSON.stringify(body) : undefined,
@@ -494,7 +544,9 @@ async function githubJson(path, body, method) {
 
   if (!response.ok) {
     const text = await response.text();
-    throw new Error(`GitHub REST ${path} ha risposto ${response.status}: ${text}`);
+    const error = new Error(`GitHub REST ${path} ha risposto ${response.status}: ${text}`);
+    error.status = response.status;
+    throw error;
   }
 
   return response.json();
