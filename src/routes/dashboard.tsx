@@ -135,6 +135,7 @@ type DashboardActivityRow = {
   amount: number | null;
   principal_id: string;
   status: "to_invoice" | "invoiced";
+  invoice_id: string | null;
   activity_attachments?: { id: string }[] | null;
 };
 
@@ -229,7 +230,9 @@ function DashboardContent() {
             ),
           supabase
             .from("case_activities")
-            .select("id, case_id, kind, amount, principal_id, status, activity_attachments(id)"),
+            .select(
+              "id, case_id, kind, amount, principal_id, status, invoice_id, activity_attachments(id)",
+            ),
           supabase
             .from("invoices")
             .select(
@@ -254,7 +257,9 @@ function DashboardContent() {
       const cases = casesRes.data ?? [];
       const activities = activitiesRes.data ?? [];
       const invoices = invoicesRes.data ?? [];
-      const toInvoiceActivities = activities.filter((activity) => activity.status === "to_invoice");
+      const toInvoiceActivities = activities.filter(
+        (activity) => activity.status === "to_invoice" && !activity.invoice_id,
+      );
       const activeCases = cases.filter((c) => c.status !== "closed" && c.status !== "archived");
       const caseIdsWithActivities = new Set(activities.map((activity) => activity.case_id));
       const casesWithoutActivities = activeCases.filter((c) => !caseIdsWithActivities.has(c.id));

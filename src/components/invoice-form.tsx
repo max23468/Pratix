@@ -319,6 +319,7 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
         .select(activitySelect)
         .eq("principal_id", principalId)
         .eq("status", "to_invoice")
+        .is("invoice_id", null)
         .lte("activity_date", periodEnd)
         .order("activity_date", { ascending: true });
 

@@ -90,6 +90,14 @@ netto_a_pagare     = totale_documento
 - Numerazione progressiva annuale, reset a inizio anno.
 - Configurabile in _Impostazioni → Numerazione_.
 
+## Bozze e Attività
+
+- Salvare una bozza collega le Attività alla fattura, ma non le marca come
+  fatturate.
+- Le Attività incluse diventano fatturate solo quando la fattura viene emessa.
+- Riportare una fattura emessa in bozza mantiene il collegamento alla fattura e
+  riporta le Attività nello stato operativo di bozza.
+
 ## Ricezione committente (codice destinatario / PEC)
 
 - **Codice destinatario** SDI: 7 caratteri.

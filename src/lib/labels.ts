@@ -89,6 +89,11 @@ export const caseActivityStatusLabels: Record<string, string> = {
   invoiced: "Fatturata",
 };
 
+export const caseActivityDisplayStatusLabels: Record<string, string> = {
+  ...caseActivityStatusLabels,
+  draft_invoice: "In bozza",
+};
+
 export const caseActivityStatusVariant: Record<
   string,
   "default" | "secondary" | "destructive" | "outline"
@@ -96,6 +101,23 @@ export const caseActivityStatusVariant: Record<
   to_invoice: "outline",
   invoiced: "secondary",
 };
+
+export const caseActivityDisplayStatusVariant: Record<
+  string,
+  "default" | "secondary" | "destructive" | "outline"
+> = {
+  ...caseActivityStatusVariant,
+  draft_invoice: "outline",
+};
+
+export function caseActivityDisplayStatus(activity: {
+  status: string;
+  invoice_id?: string | null;
+}) {
+  return activity.status === "to_invoice" && activity.invoice_id
+    ? "draft_invoice"
+    : activity.status;
+}
 
 export type ClientDisplayData = {
   id?: string | null;

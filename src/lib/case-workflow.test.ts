@@ -16,6 +16,15 @@ describe("case workflow", () => {
         kind: "fee",
         amount: 100,
         needs_review: true,
+        invoice_id: null,
+        activity_attachments: [],
+      },
+      {
+        status: "to_invoice",
+        kind: "fee",
+        amount: 70,
+        needs_review: false,
+        invoice_id: "invoice-draft-1",
         activity_attachments: [],
       },
       {
@@ -41,13 +50,13 @@ describe("case workflow", () => {
 
     expect(totals).toMatchObject({
       toInvoice: 100,
-      fees: 100,
+      fees: 170,
       reimbursements: 30,
       attachments: 1,
-      matured: 130,
+      matured: 200,
       invoiceTotal: 50,
       paidTotal: 20,
-      residual: 110,
+      residual: 180,
     });
     expect(checks.map((check) => check.id)).toEqual([
       "missing-principal",

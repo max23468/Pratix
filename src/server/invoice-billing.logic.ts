@@ -170,6 +170,20 @@ export function assertIncludedActivitiesEditable(included: BillingActivity[], in
   }
 }
 
+export function includedActivityUpdateForInvoiceStatus({
+  invoiceId,
+  invoiceStatus,
+}: {
+  invoiceId: string;
+  invoiceStatus: CreateBillingInvoiceInput["status"];
+}) {
+  return {
+    status: invoiceStatus === "issued" ? ("invoiced" as const) : ("to_invoice" as const),
+    invoice_id: invoiceId,
+    postponed_until: null,
+  };
+}
+
 export function invoiceLinesForTotals(included: BillingActivity[]): InvoiceLineInput[] {
   return included.map((activity) => ({
     kind: activity.kind === "fee" ? "fee" : "expense_art15",

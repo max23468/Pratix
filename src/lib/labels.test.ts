@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 
 import { activityCaseLabel } from "./case-activities";
 import {
+  caseActivityDisplayStatus,
+  caseActivityDisplayStatusLabels,
   caseActivityStatusLabels,
   clientDisplayName,
   compareClients,
@@ -96,6 +98,13 @@ describe("product labels", () => {
       to_invoice: "Da fatturare",
       invoiced: "Fatturata",
     });
+    expect(caseActivityDisplayStatusLabels.draft_invoice).toBe("In bozza");
+    expect(caseActivityDisplayStatus({ status: "to_invoice", invoice_id: "invoice-1" })).toBe(
+      "draft_invoice",
+    );
+    expect(caseActivityDisplayStatus({ status: "invoiced", invoice_id: "invoice-1" })).toBe(
+      "invoiced",
+    );
     expect(priceItemKindLabels).toMatchObject({
       fee: "Compenso",
       expense_reimbursement: "Rimborso spese",

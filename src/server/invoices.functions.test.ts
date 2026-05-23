@@ -314,7 +314,13 @@ describe("server functions fatture", () => {
       ],
     });
     expect(supabase.callsFor("invoice_lines", "insert")[0].payload).toHaveLength(2);
-    expect(supabase.callsFor("case_activities", "update")).toHaveLength(2);
+    const activityUpdates = supabase.callsFor("case_activities", "update");
+    expect(activityUpdates).toHaveLength(2);
+    expect(activityUpdates[0].payload).toMatchObject({
+      status: "to_invoice",
+      invoice_id: "invoice-1",
+      postponed_until: null,
+    });
     expect(supabase.uploads).toHaveLength(2);
     expect(supabase.uploads[0].path).toContain("billing-exports/run-1/");
   });
@@ -412,6 +418,17 @@ describe("server functions fatture", () => {
       principal_id: "principal-1",
       stamp_amount: 2,
     });
+    expect(supabase.callsFor("case_activities", "update")).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          payload: expect.objectContaining({
+            status: "invoiced",
+            invoice_id: "invoice-1",
+            postponed_until: null,
+          }),
+        }),
+      ]),
+    );
     expect(supabase.callsFor("case_activities", "update").at(-1)?.payload).toMatchObject({
       postponed_count: 1,
     });

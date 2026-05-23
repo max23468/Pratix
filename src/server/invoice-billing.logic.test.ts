@@ -11,6 +11,7 @@ import {
   buildInvoiceRow,
   draftPostponedActivityUpdate,
   firstIncludedClientId,
+  includedActivityUpdateForInvoiceStatus,
   invoiceLinesForTotals,
   partitionBillingActivities,
   postponedActivityUpdate,
@@ -142,6 +143,18 @@ describe("selezioni e attività fatturabili", () => {
     expect(() =>
       assertIncludedActivitiesBillable([activity({ status: "invoiced", invoice_id: "invoice-1" })]),
     ).toThrow("già fatturate");
+    expect(
+      includedActivityUpdateForInvoiceStatus({
+        invoiceId: "invoice-1",
+        invoiceStatus: "draft",
+      }),
+    ).toEqual({ status: "to_invoice", invoice_id: "invoice-1", postponed_until: null });
+    expect(
+      includedActivityUpdateForInvoiceStatus({
+        invoiceId: "invoice-1",
+        invoiceStatus: "issued",
+      }),
+    ).toEqual({ status: "invoiced", invoice_id: "invoice-1", postponed_until: null });
   });
 
   it("costruisce righe per totali, fattura, rendiconto e rinvio", () => {
