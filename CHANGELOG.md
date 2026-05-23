@@ -6,6 +6,14 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.11.10] — 2026-05-23
+
+### Correzioni
+
+- **Fatture**: l'emissione e il ritorno in bozza aggiornano Fattura e Attività
+  collegate in un'unica transizione database, evitando stati contabili
+  incoerenti se una scrittura fallisce.
+
 ## [1.11.9] — 2026-05-23
 
 ### Correzioni
@@ -1134,6 +1142,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.11.10]: #11110--2026-05-23
 [1.11.9]: #1119--2026-05-23
 [1.11.8]: #1118--2026-05-23
 [1.11.7]: #1117--2026-05-23

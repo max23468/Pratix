@@ -7,6 +7,10 @@ type StoredCall = {
   payload?: unknown;
   filters: Array<[string, unknown]>;
 };
+type StoredRpcCall = {
+  fn: string;
+  args?: unknown;
+};
 
 const capturedServerFns = vi.hoisted(() => [] as Array<Record<string, unknown>>);
 
@@ -51,6 +55,7 @@ import {
   generateBillingExportFn,
   generateInvoiceXmlFn,
   reserveInvoiceNumber,
+  setInvoiceIssueStateFn,
   updateDraftBillingInvoiceFn,
 } from "./invoices.functions";
 
@@ -133,6 +138,7 @@ class FakeQueryBuilder {
 
 class FakeSupabase {
   readonly calls: StoredCall[] = [];
+  readonly rpcCalls: StoredRpcCall[] = [];
   readonly uploads: Array<{ bucket: string; path: string; body: Buffer; options: unknown }> = [];
   private readonly responses = new Map<string, QueryResult[]>();
 
@@ -148,6 +154,11 @@ class FakeSupabase {
 
   from(table: string) {
     return new FakeQueryBuilder(this, table);
+  }
+
+  rpc(fn: string, args?: unknown) {
+    this.rpcCalls.push({ fn, args });
+    return Promise.resolve(this.next(`rpc:${fn}`));
   }
 
   queue(key: string, ...responses: QueryResult[]) {
@@ -433,6 +444,32 @@ describe("server functions fatture", () => {
       postponed_count: 1,
     });
     expect(supabase.uploads).toHaveLength(2);
+  });
+
+  it("cambia emissione fattura tramite RPC atomica", async () => {
+    const supabase = new FakeSupabase();
+    supabase.queue("rpc:set_invoice_issue_state", { data: "invoice-1", error: null });
+
+    const result = await handlerOf<
+      {
+        data: { invoiceId: string; issued: boolean };
+        context: { supabase: FakeSupabase; userId: string };
+      },
+      { invoiceId: string }
+    >(setInvoiceIssueStateFn)({
+      data: { invoiceId: "invoice-1", issued: true },
+      context: { supabase, userId: "user-1" },
+    });
+
+    expect(result).toEqual({ invoiceId: "invoice-1" });
+    expect(supabase.rpcCalls).toEqual([
+      {
+        fn: "set_invoice_issue_state",
+        args: { p_invoice_id: "invoice-1", p_issued: true },
+      },
+    ]);
+    expect(supabase.callsFor("invoices", "update")).toHaveLength(0);
+    expect(supabase.callsFor("case_activities", "update")).toHaveLength(0);
   });
 
   it("rigenera un rendiconto Excel scaricabile dai dati della fattura", async () => {

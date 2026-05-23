@@ -97,6 +97,8 @@ netto_a_pagare     = totale_documento
 - Le Attività incluse diventano fatturate solo quando la fattura viene emessa.
 - Riportare una fattura emessa in bozza mantiene il collegamento alla fattura e
   riporta le Attività nello stato operativo di bozza.
+- Emissione e ritorno in bozza usano la RPC `set_invoice_issue_state`, che
+  aggiorna Fattura e Attività collegate nella stessa transazione database.
 
 ## Ricezione committente (codice destinatario / PEC)
 

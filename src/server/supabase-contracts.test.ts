@@ -51,6 +51,19 @@ describe("contratti Supabase recupero crediti", () => {
     expect(schema).toContain("SET status = 'imported'");
   });
 
+  it("mantiene la RPC emissione fattura atomica e owner-scoped", () => {
+    expect(schema).toContain("CREATE OR REPLACE FUNCTION public.set_invoice_issue_state");
+    expect(schema).toContain("SECURITY INVOKER");
+    expect(schema).toContain("v_user_id uuid := auth.uid()");
+    expect(schema).toContain("UPDATE public.invoices");
+    expect(schema).toContain("UPDATE public.case_activities");
+    expect(schema).toContain("AND user_id = v_user_id");
+    expect(schema).toContain(
+      "REVOKE EXECUTE ON FUNCTION public.set_invoice_issue_state(uuid, boolean) FROM PUBLIC, anon",
+    );
+    expect(schema).toContain("GRANT EXECUTE ON FUNCTION public.set_invoice_issue_state");
+  });
+
   it("mantiene storage owner-scoped su primo segmento path", () => {
     const migration = readFileSync(
       "supabase/migrations/20260503103536_add_private_storage_bucket.sql",
