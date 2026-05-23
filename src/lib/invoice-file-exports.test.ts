@@ -63,8 +63,10 @@ describe("invoice file exports", () => {
     expect(invoicePdfFileName(invoiceData().invoice)).toBe("Fattura_2026_12-A.pdf");
   });
 
-  it("genera bytes separati per PDF e XML", () => {
-    expect(invoicePdfBytes(invoiceData()).length).toBeGreaterThan(1000);
+  it("genera bytes separati per PDF e XML", async () => {
+    await expect(
+      invoicePdfBytes(invoiceData()).then((bytes) => bytes.length),
+    ).resolves.toBeGreaterThan(1000);
     expect(strFromU8(invoiceXmlBytes("<FatturaElettronica />"))).toBe("<FatturaElettronica />");
   });
 

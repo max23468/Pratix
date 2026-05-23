@@ -379,7 +379,7 @@ function InvoicesIndex() {
         filtered.map(async (invoice) => {
           const pdfData = await loadInvoicePdfData(invoice.id);
           return {
-            bytes: invoicePdfBytes(pdfData),
+            bytes: await invoicePdfBytes(pdfData),
             fileName: invoicePdfFileName(pdfData.invoice),
           };
         }),

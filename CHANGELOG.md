@@ -6,6 +6,14 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.11.12] — 2026-05-23
+
+### Sotto il cofano
+
+- **Export fatture**: separato il download file leggero dalla generazione PDF
+  delle fatture, così le pagine che scaricano JSON, CSV o rendiconti non
+  caricano il codice PDF prima del bisogno.
+
 ## [1.11.11] — 2026-05-23
 
 ### Sotto il cofano
