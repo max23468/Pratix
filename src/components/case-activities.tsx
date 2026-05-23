@@ -417,6 +417,7 @@ function CasePicker({
 }) {
   const [open, setOpen] = useState(false);
   const selectedOption = options.find((option) => option.id === selectedCaseId);
+  const listId = `${id}-list`;
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -426,6 +427,7 @@ function CasePicker({
           type="button"
           variant="outline"
           role="combobox"
+          aria-controls={listId}
           aria-expanded={open}
           aria-label="Seleziona pratica"
           className="justify-between"
@@ -447,7 +449,10 @@ function CasePicker({
       >
         <Command>
           <CommandInput placeholder="Cerca pratica…" />
-          <CommandList className="max-h-[min(20rem,var(--radix-popover-content-available-height))]">
+          <CommandList
+            id={listId}
+            className="max-h-[min(20rem,var(--radix-popover-content-available-height))]"
+          >
             <CommandEmpty>Nessuna pratica trovata.</CommandEmpty>
             {options.map((option) => {
               const label = activityCasePartiesLabel(option);

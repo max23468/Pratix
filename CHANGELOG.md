@@ -6,6 +6,15 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.11.11] — 2026-05-23
+
+### Sotto il cofano
+
+- **Verifiche React**: aggiornato `react-doctor` alla versione `0.2.3`,
+  riallineato il lockfile npm, corrette le segnalazioni accessibilità sul
+  combobox di selezione pratica e mantenuta esclusa la regola Fast Refresh non
+  adatta alle route TanStack attuali.
+
 ## [1.11.10] — 2026-05-23
 
 ### Correzioni
@@ -1142,6 +1151,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.11.11]: #11111--2026-05-23
 [1.11.10]: #11110--2026-05-23
 [1.11.9]: #1119--2026-05-23
 [1.11.8]: #1118--2026-05-23

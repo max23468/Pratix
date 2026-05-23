@@ -1,9 +1,6 @@
 {
   "ignore": {
     "rules": [
-      "knip/exports",
-      "knip/files",
-      "knip/types",
       "react-doctor/advanced-event-handler-refs",
       "react-doctor/async-await-in-loop",
       "react-doctor/async-defer-await",
@@ -23,6 +20,7 @@
       "react-doctor/no-prevent-default",
       "react-doctor/no-react19-deprecated-apis",
       "react-doctor/no-usememo-simple-expression",
+      "react-doctor/only-export-components",
       "react-doctor/prefer-dynamic-import",
       "react-doctor/prefer-useReducer",
       "react-doctor/query-mutation-missing-invalidation",

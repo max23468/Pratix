@@ -165,7 +165,7 @@ vi.mock("@/components/ui/command", async () => {
       const normalizedSearch = search.trim().toLowerCase();
       if (normalizedSearch && !value.toLowerCase().includes(normalizedSearch)) return null;
       return (
-        <button type="button" role="option" onClick={onSelect}>
+        <button type="button" role="option" aria-selected={false} onClick={onSelect}>
           {children}
         </button>
       );
