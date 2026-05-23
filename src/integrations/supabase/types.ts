@@ -1533,6 +1533,10 @@ export type Database = {
     Functions: {
       apply_import_row: { Args: { p_import_row_id: string }; Returns: string }
       get_next_practice_number: { Args: never; Returns: number }
+      set_invoice_issue_state: {
+        Args: { p_invoice_id: string; p_issued: boolean }
+        Returns: string
+      }
     }
     Enums: {
       billing_export_kind: "fees" | "expenses"

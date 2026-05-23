@@ -49,9 +49,13 @@ import type { InvoicePdfData } from "@/lib/invoice-pdf";
 import { getUnpaidInvoiceStatus } from "@/lib/invoice-status";
 import { invoiceStatusLabels, invoiceStatusVariant } from "@/lib/labels";
 import { publicCodeLookup } from "@/lib/public-route-code";
-import { readServerResult } from "@/lib/server-functions";
+import { getAuthHeaders, readServerResult } from "@/lib/server-functions";
 import { PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
-import { generateBillingExportFn, generateInvoiceXmlFn } from "@/server/invoices.functions";
+import {
+  generateBillingExportFn,
+  generateInvoiceXmlFn,
+  setInvoiceIssueStateFn,
+} from "@/server/invoices.functions";
 
 type GenerateInvoiceXmlResult = {
   xml: string;
@@ -62,6 +66,10 @@ type GenerateBillingExportResult = {
   bytesBase64: string;
   fileName: string;
   mimeType: string;
+};
+
+type SetInvoiceIssueStateResult = {
+  invoiceId: string;
 };
 
 const bytesFromBase64 = (value: string) => {
@@ -96,6 +104,7 @@ function InvoiceDetailPage() {
   const navigate = useNavigate();
   const generateInvoiceXml = useServerFn(generateInvoiceXmlFn);
   const generateBillingExport = useServerFn(generateBillingExportFn);
+  const setInvoiceIssueState = useServerFn(setInvoiceIssueStateFn);
   const qc = useQueryClient();
   const [downloadingExportId, setDownloadingExportId] = useState<string | null>(null);
 
@@ -147,6 +156,16 @@ function InvoiceDetailPage() {
       };
     },
   });
+
+  const setIssuedState = async (issued: boolean) => {
+    const resolvedInvoiceId = data?.invoice.id;
+    if (!resolvedInvoiceId) throw new Error("Fattura non caricata");
+    const result = await setInvoiceIssueState({
+      data: { invoiceId: resolvedInvoiceId, issued },
+      headers: await getAuthHeaders(),
+    });
+    return readServerResult<SetInvoiceIssueStateResult>(result);
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async () => {
@@ -239,22 +258,7 @@ function InvoiceDetailPage() {
 
   const markIssuedMutation = useMutation({
     mutationFn: async () => {
-      const resolvedInvoiceId = data?.invoice.id;
-      if (!resolvedInvoiceId) throw new Error("Fattura non caricata");
-      const { data: updatedInvoice, error } = await supabase
-        .from("invoices")
-        .update({ status: "issued", paid_at: null })
-        .eq("id", resolvedInvoiceId)
-        .eq("status", "draft")
-        .select("id")
-        .maybeSingle();
-      if (error) throw error;
-      if (!updatedInvoice) throw new Error("Solo le fatture in bozza possono essere emesse");
-      const { error: activitiesError } = await supabase
-        .from("case_activities")
-        .update({ status: "invoiced" })
-        .eq("invoice_id", resolvedInvoiceId);
-      if (activitiesError) throw activitiesError;
+      await setIssuedState(true);
     },
     onSuccess: () => {
       toast.success("Fattura segnata come emessa");
@@ -268,22 +272,7 @@ function InvoiceDetailPage() {
 
   const unmarkIssuedMutation = useMutation({
     mutationFn: async () => {
-      const resolvedInvoiceId = data?.invoice.id;
-      if (!resolvedInvoiceId) throw new Error("Fattura non caricata");
-      const { data: updatedInvoice, error } = await supabase
-        .from("invoices")
-        .update({ status: "draft", paid_at: null })
-        .eq("id", resolvedInvoiceId)
-        .in("status", ["issued", "overdue"])
-        .select("id")
-        .maybeSingle();
-      if (error) throw error;
-      if (!updatedInvoice) throw new Error("Solo le fatture emesse possono tornare in bozza");
-      const { error: activitiesError } = await supabase
-        .from("case_activities")
-        .update({ status: "to_invoice" })
-        .eq("invoice_id", resolvedInvoiceId);
-      if (activitiesError) throw activitiesError;
+      await setIssuedState(false);
     },
     onSuccess: () => {
       toast.success("Fattura riportata in bozza");

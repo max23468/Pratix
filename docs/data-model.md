@@ -207,6 +207,10 @@ in bozza; quando la fattura viene emessa passa a `invoiced`. Il campo resta
 facoltativo per consentire l'inserimento manuale di voci storiche già fatturate
 prima dell'adozione del SaaS.
 
+La transizione tra bozza ed emessa passa dalla RPC
+`set_invoice_issue_state`, così stato fattura e stato Attività collegate vengono
+aggiornati nella stessa transazione database.
+
 `postponed_until` e `postponed_count` supportano il rinvio al periodo di
 fatturazione successivo.
 
