@@ -19,6 +19,7 @@ import {
   buildInvoiceRow,
   buildInvoiceUpdateRow,
   firstIncludedClientId,
+  includedActivityUpdateForInvoiceStatus,
   invoiceLinesForTotals,
   partitionBillingActivities,
   draftPostponedActivityUpdate,
@@ -244,7 +245,12 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
     if (included.length > 0) {
       const { error: includedError } = await supabase
         .from("case_activities")
-        .update({ status: "invoiced", invoice_id: invoice.id })
+        .update(
+          includedActivityUpdateForInvoiceStatus({
+            invoiceId: invoice.id,
+            invoiceStatus: data.status,
+          }),
+        )
         .in(
           "id",
           included.map((activity) => activity.id),
@@ -443,7 +449,12 @@ export const updateDraftBillingInvoiceFn = createServerFn({ method: "POST" })
     if (included.length > 0) {
       const { error: includedError } = await supabase
         .from("case_activities")
-        .update({ status: "invoiced", invoice_id: invoice.id, postponed_until: null })
+        .update(
+          includedActivityUpdateForInvoiceStatus({
+            invoiceId: invoice.id,
+            invoiceStatus: data.status,
+          }),
+        )
         .in(
           "id",
           included.map((activity) => activity.id),

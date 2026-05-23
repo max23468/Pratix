@@ -250,11 +250,18 @@ function InvoiceDetailPage() {
         .maybeSingle();
       if (error) throw error;
       if (!updatedInvoice) throw new Error("Solo le fatture in bozza possono essere emesse");
+      const { error: activitiesError } = await supabase
+        .from("case_activities")
+        .update({ status: "invoiced" })
+        .eq("invoice_id", resolvedInvoiceId);
+      if (activitiesError) throw activitiesError;
     },
     onSuccess: () => {
       toast.success("Fattura segnata come emessa");
       qc.invalidateQueries({ queryKey: ["invoice", invoiceId] });
       qc.invalidateQueries({ queryKey: ["invoices"] });
+      qc.invalidateQueries({ queryKey: ["activities"] });
+      qc.invalidateQueries({ queryKey: ["case-activities"] });
     },
     onError: (err: Error) => toast.error(err.message),
   });
@@ -272,11 +279,18 @@ function InvoiceDetailPage() {
         .maybeSingle();
       if (error) throw error;
       if (!updatedInvoice) throw new Error("Solo le fatture emesse possono tornare in bozza");
+      const { error: activitiesError } = await supabase
+        .from("case_activities")
+        .update({ status: "to_invoice" })
+        .eq("invoice_id", resolvedInvoiceId);
+      if (activitiesError) throw activitiesError;
     },
     onSuccess: () => {
       toast.success("Fattura riportata in bozza");
       qc.invalidateQueries({ queryKey: ["invoice", invoiceId] });
       qc.invalidateQueries({ queryKey: ["invoices"] });
+      qc.invalidateQueries({ queryKey: ["activities"] });
+      qc.invalidateQueries({ queryKey: ["case-activities"] });
     },
     onError: (err: Error) => toast.error(err.message),
   });

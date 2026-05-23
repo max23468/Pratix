@@ -85,6 +85,7 @@ type PracticeListRow = {
 type PracticeActivityRow = {
   case_id: string;
   status: "to_invoice" | "invoiced";
+  invoice_id: string | null;
   kind: "fee" | "expense_reimbursement";
   amount: number | null;
   activity_attachments?: { id: string }[] | null;
@@ -182,7 +183,7 @@ function PraticheList() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("case_activities")
-        .select("case_id, status, kind, amount, activity_attachments(id)");
+        .select("case_id, status, invoice_id, kind, amount, activity_attachments(id)");
       if (error) throw error;
       return (data ?? []) as PracticeActivityRow[];
     },

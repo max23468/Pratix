@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.11.9] — 2026-05-23
+
+### Correzioni
+
+- **Fatture**: le Attività incluse in una bozza restano in bozza e diventano
+  fatturate solo quando la Fattura viene emessa.
+
 ## [1.11.8] — 2026-05-23
 
 ### Correzioni
@@ -1127,6 +1134,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.11.9]: #1119--2026-05-23
 [1.11.8]: #1118--2026-05-23
 [1.11.7]: #1117--2026-05-23
 [1.11.6]: #1116--2026-05-23

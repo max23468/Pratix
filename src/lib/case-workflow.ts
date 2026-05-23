@@ -12,6 +12,7 @@ export type CaseWorkflowActivity = Pick<
   CaseTimelineActivity,
   "status" | "kind" | "amount" | "needs_review"
 > & {
+  invoice_id?: string | null;
   activity_attachments?: unknown[];
 };
 
@@ -47,7 +48,7 @@ export function summarizeCaseOperations(
   const activityTotals = activities.reduce(
     (acc, activity) => {
       const amount = Number(activity.amount) || 0;
-      if (activity.status === "to_invoice") acc.toInvoice += amount;
+      if (activity.status === "to_invoice" && !activity.invoice_id) acc.toInvoice += amount;
       if (activity.kind === "fee") acc.fees += amount;
       else acc.reimbursements += amount;
       acc.attachments += activity.activity_attachments?.length ?? 0;
@@ -188,7 +189,9 @@ export function buildDebtCollectionWorkflow({
   }
 
   if (totals.toInvoice > 0) {
-    const toInvoiceActivities = activities.filter((activity) => activity.status === "to_invoice");
+    const toInvoiceActivities = activities.filter(
+      (activity) => activity.status === "to_invoice" && !activity.invoice_id,
+    );
 
     return {
       stage: "Preparazione Fattura",

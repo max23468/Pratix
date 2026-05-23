@@ -42,8 +42,9 @@ import {
 import { formatCurrency, formatDate } from "@/lib/format";
 import { routeRef } from "@/lib/public-route-code";
 import {
-  caseActivityStatusLabels,
-  caseActivityStatusVariant,
+  caseActivityDisplayStatus,
+  caseActivityDisplayStatusLabels,
+  caseActivityDisplayStatusVariant,
   practiceDisplayName,
   priceItemKindLabels,
 } from "@/lib/labels";
@@ -79,7 +80,7 @@ const attivitaDefaultSort: TableSort<AttivitaSortKey> = {
 export const Route = createFileRoute("/attivita/")({
   validateSearch: (search: Record<string, unknown>): ActivitiesSearch => ({
     q: parseTextSearch(search.q),
-    status: parseFilterValue(search.status, caseActivityStatusLabels),
+    status: parseFilterValue(search.status, caseActivityDisplayStatusLabels),
     kind: parseFilterValue(search.kind, priceItemKindLabels),
     attachments: parseAttachmentsSearch(search.attachments),
     review: parseReviewSearch(search.review),
@@ -185,7 +186,10 @@ function ActivitiesList() {
       {
         key: "status",
         label: "Stato",
-        getValue: (activity) => caseActivityStatusLabels[activity.status] ?? activity.status,
+        getValue: (activity) => {
+          const displayStatus = caseActivityDisplayStatus(activity);
+          return caseActivityDisplayStatusLabels[displayStatus] ?? displayStatus;
+        },
       },
       {
         key: "quantity",
@@ -216,7 +220,7 @@ function ActivitiesList() {
   const filtered = useMemo(() => {
     const term = q.trim().toLowerCase();
     return data.filter((activity) => {
-      if (status !== "all" && activity.status !== status) return false;
+      if (status !== "all" && caseActivityDisplayStatus(activity) !== status) return false;
       if (kind !== "all" && activity.kind !== kind) return false;
       if (review === "needs_review" && !activity.needs_review) return false;
       if (
@@ -248,7 +252,7 @@ function ActivitiesList() {
       const amount = Number(activity.amount) || 0;
       if (activity.kind === "fee") acc.fees += amount;
       else acc.reimbursements += amount;
-      if (activity.status === "to_invoice") acc.toInvoice += amount;
+      if (activity.status === "to_invoice" && !activity.invoice_id) acc.toInvoice += amount;
       if (activity.needs_review) acc.needsReview += 1;
       return acc;
     },
@@ -299,7 +303,7 @@ function ActivitiesList() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Tutti gli stati</SelectItem>
-            {Object.entries(caseActivityStatusLabels).map(([value, label]) => (
+            {Object.entries(caseActivityDisplayStatusLabels).map(([value, label]) => (
               <SelectItem key={value} value={value}>
                 {label}
               </SelectItem>
@@ -399,6 +403,7 @@ function ActivitiesList() {
             const editTitle = activity.invoice_id
               ? "Le voci collegate a una Fattura non si modificano"
               : "Modifica voce";
+            const displayStatus = caseActivityDisplayStatus(activity);
             return (
               <Card key={activity.id} className="p-4">
                 <div className="flex min-w-0 items-start justify-between gap-3">
@@ -419,10 +424,10 @@ function ActivitiesList() {
                     </p>
                   </div>
                   <Badge
-                    variant={caseActivityStatusVariant[activity.status] ?? "outline"}
+                    variant={caseActivityDisplayStatusVariant[displayStatus] ?? "outline"}
                     className="shrink-0"
                   >
-                    {caseActivityStatusLabels[activity.status] ?? activity.status}
+                    {caseActivityDisplayStatusLabels[displayStatus] ?? displayStatus}
                   </Badge>
                 </div>
                 <dl className="mt-3 grid gap-2 text-xs text-muted-foreground">
@@ -548,6 +553,7 @@ function ActivitiesList() {
                 const editTitle = activity.invoice_id
                   ? "Le voci collegate a una Fattura non si modificano"
                   : "Modifica voce";
+                const displayStatus = caseActivityDisplayStatus(activity);
                 return (
                   <TableRow
                     key={activity.id}
@@ -611,8 +617,8 @@ function ActivitiesList() {
                       />
                     </TableCell>
                     <TableCell>
-                      <Badge variant={caseActivityStatusVariant[activity.status] ?? "outline"}>
-                        {caseActivityStatusLabels[activity.status] ?? activity.status}
+                      <Badge variant={caseActivityDisplayStatusVariant[displayStatus] ?? "outline"}>
+                        {caseActivityDisplayStatusLabels[displayStatus] ?? displayStatus}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right text-sm">{activity.quantity}</TableCell>

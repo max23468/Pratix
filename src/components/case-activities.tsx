@@ -54,8 +54,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { formatCurrency, formatDate } from "@/lib/format";
 import {
+  caseActivityDisplayStatus,
+  caseActivityDisplayStatusLabels,
+  caseActivityDisplayStatusVariant,
   caseActivityStatusLabels,
-  caseActivityStatusVariant,
   practiceDisplayName,
   priceItemKindLabels,
 } from "@/lib/labels";
@@ -223,7 +225,9 @@ export function CaseActivitiesTab({ caseRow }: { caseRow: CaseActivityContext })
     (acc, activity) => {
       if (activity.kind === "fee") acc.fees += Number(activity.amount) || 0;
       else acc.reimbursements += Number(activity.amount) || 0;
-      if (activity.status === "to_invoice") acc.toInvoice += Number(activity.amount) || 0;
+      if (activity.status === "to_invoice" && !activity.invoice_id) {
+        acc.toInvoice += Number(activity.amount) || 0;
+      }
       if (activity.needs_review) acc.needsReview += 1;
       return acc;
     },
@@ -268,83 +272,86 @@ export function CaseActivitiesTab({ caseRow }: { caseRow: CaseActivityContext })
               </TableRow>
             </TableHeader>
             <TableBody>
-              {activities.map((activity) => (
-                <TableRow key={activity.id}>
-                  <TableCell className="text-sm">{formatDate(activity.activity_date)}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
-                      <span className="font-medium">{activity.description}</span>
-                      <ActivityReviewBadge needsReview={activity.needs_review} />
-                      <span className="text-xs text-muted-foreground">
-                        {priceItemKindLabels[activity.kind]} · {activity.snapshot_price_name}
-                      </span>
-                      {activity.case_activity_hearings?.length ? (
+              {activities.map((activity) => {
+                const displayStatus = caseActivityDisplayStatus(activity);
+                return (
+                  <TableRow key={activity.id}>
+                    <TableCell className="text-sm">{formatDate(activity.activity_date)}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium">{activity.description}</span>
+                        <ActivityReviewBadge needsReview={activity.needs_review} />
                         <span className="text-xs text-muted-foreground">
-                          Udienze:{" "}
-                          {activity.case_activity_hearings
-                            .sort((a, b) => a.position - b.position)
-                            .map((hearing) => formatDate(hearing.hearing_date))
-                            .join(", ")}
+                          {priceItemKindLabels[activity.kind]} · {activity.snapshot_price_name}
                         </span>
-                      ) : null}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={caseActivityStatusVariant[activity.status] ?? "outline"}>
-                      {caseActivityStatusLabels[activity.status] ?? activity.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right text-sm">{activity.quantity}</TableCell>
-                  <TableCell className="text-right text-sm">
-                    {formatCurrency(activity.unit_price)}
-                  </TableCell>
-                  <TableCell className="text-right text-sm font-medium">
-                    {formatCurrency(activity.amount)}
-                  </TableCell>
-                  <TableCell>
-                    <AttachmentList attachments={activity.activity_attachments ?? []} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex justify-end gap-1">
-                      <CaseActivityDialog
-                        caseRow={caseRow}
-                        activity={activity}
-                        trigger={
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            disabled={Boolean(activity.invoice_id)}
-                            aria-label={`Modifica ${activity.description}`}
-                            title={
-                              activity.invoice_id
-                                ? "Le voci collegate a una Fattura non si modificano"
-                                : "Modifica voce"
-                            }
-                          >
-                            <Pencil className="size-4" />
-                          </Button>
-                        }
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        disabled={Boolean(activity.invoice_id) || remove.isPending}
-                        onClick={() => remove.mutate(activity)}
-                        aria-label={`Elimina ${activity.description}`}
-                        title={
-                          activity.invoice_id
-                            ? "Le voci collegate a una Fattura non si eliminano"
-                            : "Elimina voce"
-                        }
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+                        {activity.case_activity_hearings?.length ? (
+                          <span className="text-xs text-muted-foreground">
+                            Udienze:{" "}
+                            {activity.case_activity_hearings
+                              .sort((a, b) => a.position - b.position)
+                              .map((hearing) => formatDate(hearing.hearing_date))
+                              .join(", ")}
+                          </span>
+                        ) : null}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant={caseActivityDisplayStatusVariant[displayStatus] ?? "outline"}>
+                        {caseActivityDisplayStatusLabels[displayStatus] ?? displayStatus}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right text-sm">{activity.quantity}</TableCell>
+                    <TableCell className="text-right text-sm">
+                      {formatCurrency(activity.unit_price)}
+                    </TableCell>
+                    <TableCell className="text-right text-sm font-medium">
+                      {formatCurrency(activity.amount)}
+                    </TableCell>
+                    <TableCell>
+                      <AttachmentList attachments={activity.activity_attachments ?? []} />
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-1">
+                        <CaseActivityDialog
+                          caseRow={caseRow}
+                          activity={activity}
+                          trigger={
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              disabled={Boolean(activity.invoice_id)}
+                              aria-label={`Modifica ${activity.description}`}
+                              title={
+                                activity.invoice_id
+                                  ? "Le voci collegate a una Fattura non si modificano"
+                                  : "Modifica voce"
+                              }
+                            >
+                              <Pencil className="size-4" />
+                            </Button>
+                          }
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          disabled={Boolean(activity.invoice_id) || remove.isPending}
+                          onClick={() => remove.mutate(activity)}
+                          aria-label={`Elimina ${activity.description}`}
+                          title={
+                            activity.invoice_id
+                              ? "Le voci collegate a una Fattura non si eliminano"
+                              : "Elimina voce"
+                          }
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         )}

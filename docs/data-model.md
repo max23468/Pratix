@@ -201,9 +201,11 @@ Gli stati ammessi sono:
 `needs_review` segnala le Attività con importo da verificare. Il motivo resta
 nel campo testuale `notes`, così non si duplica la spiegazione operativa.
 
-`invoice_id` viene valorizzato quando la voce viene fatturata tramite il modulo
-Pratix. Resta facoltativo per consentire l'inserimento manuale di voci storiche
-già fatturate prima dell'adozione del SaaS.
+`invoice_id` collega la voce alla fattura preparata tramite il modulo Pratix. Se
+la fattura è ancora in bozza, la voce resta `to_invoice` e viene mostrata come
+in bozza; quando la fattura viene emessa passa a `invoiced`. Il campo resta
+facoltativo per consentire l'inserimento manuale di voci storiche già fatturate
+prima dell'adozione del SaaS.
 
 `postponed_until` e `postponed_count` supportano il rinvio al periodo di
 fatturazione successivo.
