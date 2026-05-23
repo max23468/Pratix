@@ -68,7 +68,7 @@ const PUBLIC_ROUTE_PATHS = new Set([
 ]);
 
 const LazyAuthProvider = lazy(async () => {
-  const { AuthProvider } = await import("@/lib/auth-context");
+  const { AuthProvider } = await import("@/lib/auth-provider");
   return { default: AuthProvider };
 });
 

@@ -16,7 +16,8 @@ const { supabase } = vi.hoisted(() => ({
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase }));
 
-import { AuthProvider, useAuth } from "./auth-context";
+import { useAuth } from "./auth-context";
+import { AuthProvider } from "./auth-provider";
 
 function Probe() {
   const { loading, user, signOut } = useAuth();

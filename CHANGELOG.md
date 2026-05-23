@@ -6,6 +6,16 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.11.13] — 2026-05-23
+
+### Sotto il cofano
+
+- **Vercel**: resa esplicita la regione `fra1` per le funzioni, allineando il
+  repository alla configurazione production su Francoforte.
+- **Build Vercel**: ridotti i warning di build fissando il runtime Node a
+  `24.x`, rendendo efficace la lazy import dell'autenticazione e separando i
+  principali chunk vendor.
+
 ## [1.11.12] — 2026-05-23
 
 ### Sotto il cofano
@@ -1159,6 +1169,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.11.13]: #11113--2026-05-23
 [1.11.11]: #11111--2026-05-23
 [1.11.10]: #11110--2026-05-23
 [1.11.9]: #1119--2026-05-23
