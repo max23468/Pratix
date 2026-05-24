@@ -1,4 +1,16 @@
-export type DuplicateEntityType = "principal" | "client" | "counterparty" | "case";
+export type DuplicateEntityType =
+  | "principal"
+  | "client"
+  | "counterparty"
+  | "case"
+  | "activity"
+  | "counterparty_subject"
+  | "cross_entity";
+
+export type MergeableDuplicateEntityType = Extract<
+  DuplicateEntityType,
+  "principal" | "client" | "counterparty" | "case"
+>;
 
 export type DuplicateConfidence = "high" | "medium" | "low";
 
@@ -88,13 +100,32 @@ export function displayDuplicateEntity(entityType: DuplicateEntityType) {
     client: "Cliente",
     counterparty: "Controparte",
     case: "Pratica",
+    activity: "Attività",
+    counterparty_subject: "Soggetto controparte",
+    cross_entity: "Tipi diversi",
   };
   return labels[entityType];
 }
 
+export function canMergeDuplicateEntity(
+  entityType: DuplicateEntityType,
+): entityType is MergeableDuplicateEntityType {
+  return (
+    entityType === "principal" ||
+    entityType === "client" ||
+    entityType === "counterparty" ||
+    entityType === "case"
+  );
+}
+
 export function duplicateEntityPath(entityType: DuplicateEntityType, record: DuplicateRecord) {
+  if (entityType === "activity") return "/attivita";
+  if (entityType === "counterparty_subject" || entityType === "cross_entity") {
+    return record.href ?? "/controllo-duplicati";
+  }
+
   const ref = record.publicCode || record.id;
-  const bases: Record<DuplicateEntityType, string> = {
+  const bases: Record<MergeableDuplicateEntityType, string> = {
     principal: "/committenti",
     client: "/clienti",
     counterparty: "/controparti",

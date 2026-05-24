@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
+  canMergeDuplicateEntity,
   duplicatePairKey,
   type DuplicateCandidate,
   type DuplicateEntityType,
@@ -11,9 +12,11 @@ import {
   reviewInsertFromCandidate,
   scanDuplicateCandidates,
   scanDuplicateDraft,
+  type ActivityDuplicateRow,
   type CaseDuplicateRow,
   type ClientDuplicateRow,
   type CounterpartyDuplicateRow,
+  type CounterpartySubjectDuplicateRow,
   type DuplicateReviewRow,
   type PrincipalDuplicateRow,
 } from "@/server/duplicates.logic";
@@ -186,6 +189,7 @@ async function loadDuplicateScanData(client: unknown, userId: string) {
     counterpartiesResult,
     subjectsResult,
     casesResult,
+    activitiesResult,
     reviewsResult,
   ] = await Promise.all([
     db
@@ -211,14 +215,26 @@ async function loadDuplicateScanData(client: unknown, userId: string) {
     db
       .from<
         Array<{
+          id: string;
           counterparty_id: string;
           kind: string;
           first_name: string | null;
           last_name: string | null;
           business_name: string | null;
+          notes: string | null;
+          position: number;
+          counterparties: {
+            public_code: string | null;
+            kind: string;
+            first_name: string | null;
+            last_name: string | null;
+            business_name: string | null;
+          } | null;
         }>
       >("counterparty_subjects")
-      .select("counterparty_id, kind, first_name, last_name, business_name")
+      .select(
+        "id, counterparty_id, kind, first_name, last_name, business_name, notes, position, counterparties(public_code, kind, first_name, last_name, business_name)",
+      )
       .eq("user_id", userId),
     db
       .from<
@@ -244,6 +260,31 @@ async function loadDuplicateScanData(client: unknown, userId: string) {
         "id, public_code, practice_number, principal_id, client_id, counterparty_id, authority, rg_number, opened_at, status, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
       )
       .eq("user_id", userId),
+    db
+      .from<
+        Array<
+          ActivityDuplicateRow & {
+            cases: { public_code: string | null; practice_number: number } | null;
+            principals: { business_name: string } | null;
+            clients: {
+              kind: string;
+              first_name: string | null;
+              last_name: string | null;
+              business_name: string | null;
+            } | null;
+            counterparties: {
+              kind: string;
+              first_name: string | null;
+              last_name: string | null;
+              business_name: string | null;
+            } | null;
+          }
+        >
+      >("case_activities")
+      .select(
+        "id, case_id, principal_id, client_id, counterparty_id, price_item_id, invoice_id, activity_date, kind, status, snapshot_price_code, snapshot_price_name, description, quantity, unit_price, amount, cases(public_code, practice_number), principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
+      )
+      .eq("user_id", userId),
     db.from<DuplicateReviewRow[]>("duplicate_reviews").select("*").eq("user_id", userId),
   ]);
 
@@ -254,6 +295,7 @@ async function loadDuplicateScanData(client: unknown, userId: string) {
     counterpartiesResult,
     subjectsResult,
     casesResult,
+    activitiesResult,
     reviewsResult,
   ]) {
     if (result.error) throw result.error;
@@ -292,6 +334,22 @@ async function loadDuplicateScanData(client: unknown, userId: string) {
       ...counterparty,
       subjectLabels: subjectLabelsByCounterparty.get(counterparty.id) ?? [],
     })),
+    counterpartySubjects: (subjectsResult.data ?? []).map(
+      (subject): CounterpartySubjectDuplicateRow => ({
+        id: subject.id,
+        counterparty_id: subject.counterparty_id,
+        kind: subject.kind,
+        first_name: subject.first_name,
+        last_name: subject.last_name,
+        business_name: subject.business_name,
+        notes: subject.notes,
+        position: subject.position,
+        counterpartyPublicCode: subject.counterparties?.public_code ?? null,
+        counterpartyName: subject.counterparties
+          ? duplicateCounterpartyLabel(subject.counterparties)
+          : null,
+      }),
+    ),
     cases: (casesResult.data ?? []).map((caseRow) => ({
       ...caseRow,
       principalName: caseRow.principals?.business_name ?? null,
@@ -306,6 +364,16 @@ async function loadDuplicateScanData(client: unknown, userId: string) {
               .filter(Boolean)
               .join(" ")
           : caseRow.counterparties.business_name
+        : null,
+    })),
+    activities: (activitiesResult.data ?? []).map((activity) => ({
+      ...activity,
+      casePublicCode: activity.cases?.public_code ?? null,
+      casePracticeNumber: activity.cases?.practice_number ?? null,
+      principalName: activity.principals?.business_name ?? null,
+      clientName: activity.clients ? duplicateClientLabel(activity.clients) : null,
+      counterpartyName: activity.counterparties
+        ? duplicateCounterpartyLabel(activity.counterparties)
         : null,
     })),
     reviews: reviewsResult.data ?? [],
@@ -340,6 +408,9 @@ async function mergeRecords(
   keptId: string,
   mergedId: string,
 ) {
+  if (!canMergeDuplicateEntity(entityType)) {
+    throw new Error("Questo tipo di sospetto non supporta l'unione automatica");
+  }
   if (entityType === "principal") return mergePrincipals(client, userId, keptId, mergedId);
   if (entityType === "client") return mergeClients(client, userId, keptId, mergedId);
   if (entityType === "counterparty") return mergeCounterparties(client, userId, keptId, mergedId);
@@ -674,6 +745,28 @@ async function canDeleteMinimalCounterparty(
   return Boolean(counterparty && !counterparty.notes && (subjects ?? []).length === 0);
 }
 
+function duplicateClientLabel(client: {
+  kind: string;
+  first_name: string | null;
+  last_name: string | null;
+  business_name: string | null;
+}) {
+  return client.kind === "company"
+    ? client.business_name
+    : [client.first_name, client.last_name].filter(Boolean).join(" ");
+}
+
+function duplicateCounterpartyLabel(counterparty: {
+  kind: string;
+  first_name: string | null;
+  last_name: string | null;
+  business_name: string | null;
+}) {
+  return counterparty.kind === "individual"
+    ? [counterparty.first_name, counterparty.last_name].filter(Boolean).join(" ")
+    : counterparty.business_name;
+}
+
 function validateFindDuplicateDraftInput(input: FindDuplicateDraftInput) {
   if (!input || typeof input !== "object") throw new Error("Input controllo duplicati non valido");
   if (!["principal", "client", "counterparty", "case"].includes(input.entityType)) {
@@ -688,11 +781,24 @@ function validateFindDuplicateDraftInput(input: FindDuplicateDraftInput) {
 function validateResolveDuplicateInput(input: ResolveDuplicateInput) {
   if (!input || typeof input !== "object")
     throw new Error("Input risoluzione duplicato non valido");
-  if (!["principal", "client", "counterparty", "case"].includes(input.entityType)) {
+  if (
+    ![
+      "principal",
+      "client",
+      "counterparty",
+      "case",
+      "activity",
+      "counterparty_subject",
+      "cross_entity",
+    ].includes(input.entityType)
+  ) {
     throw new Error("Tipo duplicato non valido");
   }
   if (!["snooze", "dismiss", "merge"].includes(input.action)) {
     throw new Error("Azione duplicato non valida");
+  }
+  if (input.action === "merge" && !canMergeDuplicateEntity(input.entityType)) {
+    throw new Error("Questo tipo di sospetto non supporta l'unione automatica");
   }
   if (!input.leftRecordId || !input.rightRecordId) throw new Error("Coppia duplicato non valida");
   return input;

@@ -295,6 +295,151 @@ describe("duplicates logic", () => {
     expect(result.openCandidates[0].left.subtitle).toBe("Banca Alfa · Mario Rossi · Beta S.r.l.");
   });
 
+  it("segnala attività sospette solo con contesto operativo forte", () => {
+    const result = scanDuplicateCandidates({
+      principals: [],
+      clients: [],
+      counterparties: [],
+      cases: [],
+      activities: [
+        {
+          id: "activity-a",
+          case_id: "case-1",
+          principal_id: "principal-1",
+          client_id: "client-1",
+          counterparty_id: "counterparty-1",
+          price_item_id: "price-1",
+          activity_date: "2026-05-20",
+          kind: "fee",
+          status: "to_invoice",
+          snapshot_price_name: "Diffida stragiudiziale",
+          description: "Diffida stragiudiziale",
+          quantity: 1,
+          unit_price: 120,
+          amount: 120,
+          casePracticeNumber: 12,
+          principalName: "Banca Alfa",
+          clientName: "Mario Rossi",
+          counterpartyName: "Beta S.r.l.",
+        },
+        {
+          id: "activity-b",
+          case_id: "case-1",
+          principal_id: "principal-1",
+          client_id: "client-1",
+          counterparty_id: "counterparty-1",
+          price_item_id: "price-1",
+          activity_date: "2026-05-20",
+          kind: "fee",
+          status: "to_invoice",
+          snapshot_price_name: "Diffida stragiudiziale",
+          description: "Diffida stragiudiziale",
+          quantity: 1,
+          unit_price: 120,
+          amount: 120,
+          casePracticeNumber: 12,
+          principalName: "Banca Alfa",
+          clientName: "Mario Rossi",
+          counterpartyName: "Beta S.r.l.",
+        },
+        {
+          id: "activity-c",
+          case_id: "case-2",
+          principal_id: "principal-2",
+          client_id: "client-2",
+          activity_date: "2026-05-20",
+          kind: "fee",
+          status: "to_invoice",
+          snapshot_price_name: "Diffida stragiudiziale",
+          description: "Diffida stragiudiziale",
+          quantity: 1,
+          unit_price: 120,
+          amount: 120,
+        },
+      ],
+      reviews: [],
+    });
+
+    expect(result.openCandidates).toHaveLength(1);
+    expect(result.openCandidates[0]).toMatchObject({
+      entityType: "activity",
+      confidence: "high",
+      reasons: expect.arrayContaining([
+        "Stessa pratica",
+        "Stessa data attività",
+        "Importo coincidente",
+      ]),
+    });
+  });
+
+  it("tratta i soggetti interni come duplicati verificabili separati", () => {
+    const result = scanDuplicateCandidates({
+      principals: [],
+      clients: [],
+      counterparties: [],
+      cases: [],
+      counterpartySubjects: [
+        {
+          id: "subject-a",
+          counterparty_id: "counterparty-1",
+          kind: "individual",
+          first_name: "Mario",
+          last_name: "Rossi",
+          counterpartyName: "Debitori collegati",
+        },
+        {
+          id: "subject-b",
+          counterparty_id: "counterparty-1",
+          kind: "individual",
+          first_name: "Rossi",
+          last_name: "Mario",
+          counterpartyName: "Debitori collegati",
+        },
+      ],
+      reviews: [],
+    });
+
+    expect(result.openCandidates).toHaveLength(1);
+    expect(result.openCandidates[0]).toMatchObject({
+      entityType: "counterparty_subject",
+      confidence: "high",
+      reasons: expect.arrayContaining(["Stessa controparte composta"]),
+    });
+  });
+
+  it("segnala duplicati tra tipi diversi senza trasformarli in merge automatico", () => {
+    const result = scanDuplicateCandidates({
+      principals: [],
+      clients: [
+        {
+          id: "client-1",
+          public_code: "CL-00001",
+          kind: "individual",
+          first_name: "Mario",
+          last_name: "Rossi",
+        },
+      ],
+      counterparties: [
+        {
+          id: "counterparty-1",
+          public_code: "CP-00001",
+          kind: "individual",
+          first_name: "Rossi",
+          last_name: "Mario",
+        },
+      ],
+      cases: [],
+      reviews: [],
+    });
+
+    expect(result.openCandidates).toHaveLength(1);
+    expect(result.openCandidates[0]).toMatchObject({
+      entityType: "cross_entity",
+      confidence: "high",
+      reasons: expect.arrayContaining(["Nome coincidente tra Cliente e Controparte"]),
+    });
+  });
+
   it("applica review aperte, rimandate e risolte senza perdere snapshot", () => {
     const result = scanDuplicateCandidates({
       principals: [

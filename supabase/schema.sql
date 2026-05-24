@@ -1137,7 +1137,15 @@ CREATE TABLE public.duplicate_reviews (
   created_at       timestamptz NOT NULL DEFAULT now(),
   updated_at       timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT duplicate_reviews_entity_type_check CHECK (
-    entity_type IN ('principal', 'client', 'counterparty', 'case')
+    entity_type IN (
+      'principal',
+      'client',
+      'counterparty',
+      'case',
+      'activity',
+      'counterparty_subject',
+      'cross_entity'
+    )
   ),
   CONSTRAINT duplicate_reviews_confidence_check CHECK (confidence IN ('high', 'medium', 'low')),
   CONSTRAINT duplicate_reviews_status_check CHECK (

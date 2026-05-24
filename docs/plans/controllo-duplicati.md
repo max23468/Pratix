@@ -49,9 +49,20 @@ La prima versione copre subito:
 - Controparti;
 - Pratiche.
 
-Fuori scope dalla prima versione:
+Estensione approvata il 2026-05-25:
 
-- Attività duplicate;
+- Attività sospette;
+- soggetti interni di una Controparte composta;
+- duplicati tra tipi diversi, ad esempio Cliente e Controparte con lo stesso
+  nome.
+
+Queste estensioni sono **assistive**: Pratix le mostra nel Controllo duplicati,
+permette di rimandarle o segnarle come non duplicati, ma non propone un merge
+automatico perché la ripetizione può essere legittima o richiedere una scelta
+manuale fuori dal modello dati attuale.
+
+Fuori scope dalla prima versione e dall'estensione:
+
 - Fatture duplicate;
 - controlli schedulati in background o cron;
 - deduplica massiva completamente automatica;
@@ -81,6 +92,10 @@ La pagina deve permettere di filtrare i sospetti per:
 - `Clienti`;
 - `Controparti`;
 - `Pratiche`;
+- `Attività`;
+- `Soggetti`;
+- `Tipi diversi`;
+- `Rimandati`;
 - `Risolti`.
 
 Ogni sospetto deve mostrare:
@@ -258,6 +273,10 @@ L'utente sceglie quale record mantenere. Pratix mostra sempre cosa verrà
 spostato o aggiornato prima della conferma.
 
 Niente merge silenziosi. Ogni unione deve essere confermata esplicitamente.
+
+Per Attività, Soggetti interni e Tipi diversi l'azione `Unisci` non è esposta:
+il controllo è un segnale operativo da verificare manualmente, non una modifica
+automatica dei dati.
 
 ## Regola sul record perdente
 

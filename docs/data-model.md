@@ -307,9 +307,15 @@ conferma, usando gli ID attività pre-generati nello staging e i metadati in
 
 Decisioni dell'utente sui potenziali duplicati rilevati dal Controllo duplicati.
 La tabella non contiene i dati sorgente canonici: conserva la coppia di record
-coinvolta, il tipo entità (`principal`, `client`, `counterparty`, `case`), lo
-score, la probabilità (`high`, `medium`, `low`), i motivi leggibili mostrati in
-UI e uno snapshot minimo utile a spiegare perché la coppia era stata proposta.
+coinvolta, il tipo entità (`principal`, `client`, `counterparty`, `case`,
+`activity`, `counterparty_subject`, `cross_entity`), lo score, la probabilità
+(`high`, `medium`, `low`), i motivi leggibili mostrati in UI e uno snapshot
+minimo utile a spiegare perché la coppia era stata proposta.
+
+I valori `activity`, `counterparty_subject` e `cross_entity` servono a salvare
+decisioni su sospetti da verificare manualmente: Attività simili, soggetti
+interni di Controparti composte e record omonimi tra tipi diversi. Non implicano
+un merge automatico dei dati sorgente.
 
 `status` distingue:
 

@@ -2,6 +2,7 @@ import {
   buildCandidate,
   businessNameSimilarity,
   canonicalPair,
+  canMergeDuplicateEntity,
   displayDuplicateEntity,
   duplicateEntityPath,
   duplicatePairKey,
@@ -13,7 +14,14 @@ import {
   type DuplicateRecord,
   type DuplicateReviewStatus,
 } from "@/lib/duplicate-matching";
-import { clientDisplayName, counterpartyDisplayName } from "@/lib/labels";
+import { formatCurrency, formatDate } from "@/lib/format";
+import {
+  caseActivityDisplayStatus,
+  caseActivityDisplayStatusLabels,
+  clientDisplayName,
+  counterpartyDisplayName,
+  priceItemKindLabels,
+} from "@/lib/labels";
 
 export type PrincipalDuplicateRow = {
   id: string;
@@ -67,6 +75,43 @@ export type CaseDuplicateRow = {
   counterpartyName?: string | null;
 };
 
+export type ActivityDuplicateRow = {
+  id: string;
+  case_id: string;
+  principal_id: string;
+  client_id: string;
+  counterparty_id?: string | null;
+  price_item_id?: string | null;
+  invoice_id?: string | null;
+  activity_date: string;
+  kind: string;
+  status: string;
+  snapshot_price_code?: string | null;
+  snapshot_price_name: string;
+  description: string;
+  quantity: number | string;
+  unit_price: number | string;
+  amount: number | string;
+  casePublicCode?: string | null;
+  casePracticeNumber?: number | null;
+  principalName?: string | null;
+  clientName?: string | null;
+  counterpartyName?: string | null;
+};
+
+export type CounterpartySubjectDuplicateRow = {
+  id: string;
+  counterparty_id: string;
+  kind: string;
+  first_name?: string | null;
+  last_name?: string | null;
+  business_name?: string | null;
+  notes?: string | null;
+  position?: number | null;
+  counterpartyPublicCode?: string | null;
+  counterpartyName?: string | null;
+};
+
 export type DuplicateReviewRow = {
   id: string;
   entity_type: DuplicateEntityType;
@@ -91,11 +136,16 @@ export type DuplicateScanInput = {
   clients: ClientDuplicateRow[];
   counterparties: CounterpartyDuplicateRow[];
   cases: CaseDuplicateRow[];
+  activities?: ActivityDuplicateRow[];
+  counterpartySubjects?: CounterpartySubjectDuplicateRow[];
   reviews: DuplicateReviewRow[];
 };
 
 const TOOL_THRESHOLD = 0.62;
 const FORM_THRESHOLD = 0.74;
+const ACTIVITY_THRESHOLD = 0.78;
+const SUBJECT_THRESHOLD = 0.74;
+const CROSS_TYPE_THRESHOLD = 0.88;
 
 export function scanDuplicateCandidates(input: DuplicateScanInput) {
   const reviewsByPair = new Map(
@@ -110,6 +160,9 @@ export function scanDuplicateCandidates(input: DuplicateScanInput) {
     ...pairwise(input.clients, scoreClientPair),
     ...pairwise(input.counterparties, scoreCounterpartyPair),
     ...pairwise(input.cases, scoreCasePair),
+    ...scoreActivityCandidates(input.activities ?? []),
+    ...pairwise(input.counterpartySubjects ?? [], scoreCounterpartySubjectPair),
+    ...scoreCrossEntityCandidates(input),
   ];
 
   const openCandidates = generated
@@ -153,6 +206,8 @@ export function scanDuplicateDraft(input: {
   counterparties?: CounterpartyDuplicateRow[];
   cases?: CaseDuplicateRow[];
 }) {
+  if (!canMergeDuplicateEntity(input.entityType)) return [];
+
   const draftId = "draft";
   const draft =
     input.entityType === "principal"
@@ -231,6 +286,27 @@ function pairwise<T>(rows: T[], scorer: (a: T, b: T) => DuplicateCandidate | nul
     for (let j = i + 1; j < rows.length; j += 1) {
       const candidate = scorer(rows[i], rows[j]);
       if (candidate) candidates.push(candidate);
+    }
+  }
+  return candidates;
+}
+
+function pairwiseFromGroups<T extends { id: string }>(
+  groups: Map<string, T[]>,
+  scorer: (a: T, b: T) => DuplicateCandidate | null,
+) {
+  const candidates: DuplicateCandidate[] = [];
+  const seen = new Set<string>();
+  for (const rows of groups.values()) {
+    for (let i = 0; i < rows.length; i += 1) {
+      for (let j = i + 1; j < rows.length; j += 1) {
+        const [left, right] = canonicalPair(rows[i].id, rows[j].id);
+        const key = `${left}:${right}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        const candidate = scorer(rows[i], rows[j]);
+        if (candidate) candidates.push(candidate);
+      }
     }
   }
   return candidates;
@@ -373,6 +449,222 @@ function scoreCasePair(a: CaseDuplicateRow, b: CaseDuplicateRow, draft?: Duplica
   });
 }
 
+function scoreActivityCandidates(rows: ActivityDuplicateRow[]) {
+  const groups = new Map<string, ActivityDuplicateRow[]>();
+  const add = (key: string, row: ActivityDuplicateRow) => {
+    groups.set(key, [...(groups.get(key) ?? []), row]);
+  };
+
+  for (const row of rows) {
+    if (!row.activity_date) continue;
+    add(`case:${row.case_id}:${row.activity_date}`, row);
+    add(
+      [
+        "context",
+        row.principal_id,
+        row.client_id,
+        row.counterparty_id ?? "none",
+        row.activity_date,
+      ].join(":"),
+      row,
+    );
+  }
+
+  return pairwiseFromGroups(groups, scoreActivityPair);
+}
+
+function scoreActivityPair(a: ActivityDuplicateRow, b: ActivityDuplicateRow) {
+  const sameCase = a.case_id === b.case_id;
+  const sameOperationalContext =
+    a.principal_id === b.principal_id &&
+    a.client_id === b.client_id &&
+    (a.counterparty_id ?? null) === (b.counterparty_id ?? null);
+  if (!sameCase && !sameOperationalContext) return null;
+
+  const sameDate = sameFilled(a.activity_date, b.activity_date);
+  if (!sameDate) return null;
+
+  const priceNameScore = textSimilarity(a.snapshot_price_name, b.snapshot_price_name);
+  const descriptionScore = textSimilarity(a.description, b.description);
+  const samePriceItem = sameFilled(a.price_item_id, b.price_item_id);
+  const sameAmount = sameNumber(a.amount, b.amount);
+  const sameQuantity = sameNumber(a.quantity, b.quantity);
+  const sameKind = a.kind === b.kind;
+
+  const reasons: string[] = [
+    sameCase ? "Stessa pratica" : "Stesso committente, cliente e controparte",
+    "Stessa data attività",
+  ];
+  let score = sameCase ? 0.72 : 0.68;
+
+  if (samePriceItem || priceNameScore >= 0.92) {
+    score = Math.max(score, 0.84);
+    reasons.push("Stessa voce prezzo");
+  } else if (priceNameScore >= 0.78) {
+    score = Math.max(score, 0.8);
+    reasons.push("Voce prezzo simile");
+  }
+
+  if (descriptionScore >= 0.92) {
+    score = Math.max(score, 0.86);
+    reasons.push("Descrizione quasi identica");
+  } else if (descriptionScore >= 0.78) {
+    score = Math.max(score, 0.8);
+    reasons.push("Descrizione simile");
+  }
+
+  if (sameAmount) {
+    score = Math.max(score, 0.86);
+    reasons.push("Importo coincidente");
+  }
+  if (sameQuantity) reasons.push("Quantità coincidente");
+  if (sameKind) reasons.push("Stesso tipo attività");
+
+  if (sameAmount && (samePriceItem || priceNameScore >= 0.9 || descriptionScore >= 0.9)) {
+    score = Math.max(score, 0.94);
+  } else if (samePriceItem || priceNameScore >= 0.9 || descriptionScore >= 0.9) {
+    score = Math.max(score, 0.84);
+  }
+
+  if (score < ACTIVITY_THRESHOLD || reasons.length < 4) return null;
+  return buildCandidate({
+    entityType: "activity",
+    left: activityRecord(a),
+    right: activityRecord(b),
+    score,
+    reasons,
+  });
+}
+
+function scoreCounterpartySubjectPair(
+  a: CounterpartySubjectDuplicateRow,
+  b: CounterpartySubjectDuplicateRow,
+) {
+  const score =
+    a.kind === "company" || b.kind === "company"
+      ? businessNameSimilarity(a.business_name, b.business_name)
+      : personNameSimilarity(
+          { firstName: a.first_name, lastName: a.last_name },
+          { firstName: b.first_name, lastName: b.last_name },
+        );
+  const sameCounterparty = a.counterparty_id === b.counterparty_id;
+  const reasons: string[] = [];
+  let finalScore = score;
+
+  if (score < SUBJECT_THRESHOLD) return null;
+
+  if (score >= 0.92) {
+    reasons.push(a.kind === "company" ? "Ragione sociale quasi identica" : "Nome molto simile");
+  } else {
+    reasons.push("Soggetto interno simile");
+  }
+
+  if (sameCounterparty) {
+    finalScore = Math.max(finalScore, 0.9);
+    reasons.push("Stessa controparte composta");
+  } else if (score >= 0.82) {
+    reasons.push("Soggetto simile in controparti diverse");
+  }
+
+  if (reasons.length === 0) return null;
+  return buildCandidate({
+    entityType: "counterparty_subject",
+    left: counterpartySubjectRecord(a),
+    right: counterpartySubjectRecord(b),
+    score: finalScore,
+    reasons,
+  });
+}
+
+type CrossEntitySourceType = "principal" | "client" | "counterparty" | "counterparty_subject";
+
+type CrossEntityDuplicateRow = {
+  id: string;
+  sourceType: CrossEntitySourceType;
+  sourceLabel: string;
+  publicCode?: string | null;
+  href: string;
+  kind: "individual" | "company";
+  firstName?: string | null;
+  lastName?: string | null;
+  businessName?: string | null;
+  email?: string | null;
+  taxCode?: string | null;
+  vatNumber?: string | null;
+  pec?: string | null;
+  parentId?: string | null;
+  parentLabel?: string | null;
+};
+
+function scoreCrossEntityCandidates(input: DuplicateScanInput) {
+  const rows = [
+    ...input.principals.map(principalCrossEntityRow),
+    ...input.clients.map(clientCrossEntityRow),
+    ...input.counterparties.map(counterpartyCrossEntityRow).filter(isCrossEntityRow),
+    ...(input.counterpartySubjects ?? []).map(subjectCrossEntityRow),
+  ];
+
+  return pairwise(rows, scoreCrossEntityPair);
+}
+
+function isCrossEntityRow(row: CrossEntityDuplicateRow | null): row is CrossEntityDuplicateRow {
+  return Boolean(row);
+}
+
+function scoreCrossEntityPair(a: CrossEntityDuplicateRow, b: CrossEntityDuplicateRow) {
+  if (a.sourceType === b.sourceType) return null;
+  if (
+    (a.sourceType === "counterparty" &&
+      b.sourceType === "counterparty_subject" &&
+      b.parentId === a.id) ||
+    (b.sourceType === "counterparty" &&
+      a.sourceType === "counterparty_subject" &&
+      a.parentId === b.id)
+  ) {
+    return null;
+  }
+
+  const nameScore =
+    a.kind === "company" && b.kind === "company"
+      ? businessNameSimilarity(a.businessName, b.businessName)
+      : a.kind === "individual" && b.kind === "individual"
+        ? personNameSimilarity(
+            { firstName: a.firstName, lastName: a.lastName },
+            { firstName: b.firstName, lastName: b.lastName },
+          )
+        : 0;
+
+  const reasons: string[] = [];
+  let score = nameScore;
+  if (nameScore >= 0.94) {
+    reasons.push(`Nome coincidente tra ${a.sourceLabel} e ${b.sourceLabel}`);
+  } else if (nameScore >= CROSS_TYPE_THRESHOLD) {
+    reasons.push(`Nome molto simile tra ${a.sourceLabel} e ${b.sourceLabel}`);
+  }
+
+  if (sameFilled(a.vatNumber, b.vatNumber)) {
+    score = Math.max(score, 0.98);
+    reasons.push("Partita IVA coincidente");
+  }
+  if (sameFilled(a.taxCode, b.taxCode)) {
+    score = Math.max(score, 0.96);
+    reasons.push("Codice fiscale coincidente");
+  }
+  if (sameFilled(a.pec, b.pec) || sameFilled(a.email, b.email)) {
+    score = Math.max(score, 0.94);
+    reasons.push("Contatto coincidente");
+  }
+
+  if (score < CROSS_TYPE_THRESHOLD || reasons.length === 0) return null;
+  return buildCandidate({
+    entityType: "cross_entity",
+    left: crossEntityRecord(a),
+    right: crossEntityRecord(b),
+    score,
+    reasons,
+  });
+}
+
 function attachReview(
   candidate: DuplicateCandidate,
   reviewsByPair: Map<string, DuplicateReviewRow>,
@@ -479,10 +771,166 @@ function caseRecord(row: CaseDuplicateRow): DuplicateRecord {
   };
 }
 
+function activityRecord(row: ActivityDuplicateRow): DuplicateRecord {
+  const displayStatus = caseActivityDisplayStatus({
+    status: row.status,
+    invoice_id: row.invoice_id,
+  });
+  return {
+    id: row.id,
+    label: row.snapshot_price_name || row.description || "Attività",
+    subtitle: [
+      row.casePracticeNumber ? `Pratica ${row.casePracticeNumber}` : null,
+      formatDate(row.activity_date),
+      formatCurrency(toNumber(row.amount)),
+    ]
+      .filter(Boolean)
+      .join(" · "),
+    href: "/attivita",
+    fields: {
+      Pratica: row.casePracticeNumber ? `Pratica ${row.casePracticeNumber}` : null,
+      Committente: row.principalName,
+      Cliente: row.clientName,
+      Controparte: row.counterpartyName,
+      Data: formatDate(row.activity_date),
+      Tipo: priceItemKindLabels[row.kind] ?? row.kind,
+      Voce: row.snapshot_price_name,
+      Descrizione: row.description,
+      Quantità: toNumber(row.quantity),
+      "Prezzo unitario": formatCurrency(toNumber(row.unit_price)),
+      Importo: formatCurrency(toNumber(row.amount)),
+      Stato: caseActivityDisplayStatusLabels[displayStatus] ?? displayStatus,
+    },
+  };
+}
+
+function counterpartySubjectRecord(row: CounterpartySubjectDuplicateRow): DuplicateRecord {
+  return {
+    id: row.id,
+    label: counterpartySubjectLabel(row),
+    subtitle: row.counterpartyName ? `In ${row.counterpartyName}` : null,
+    href: `/controparti/${row.counterpartyPublicCode || row.counterparty_id}`,
+    fields: {
+      "Tipo record": "Soggetto interno",
+      "Controparte composta": row.counterpartyName,
+      Tipo: row.kind === "company" ? "Società" : "Persona fisica",
+      Nome: [row.first_name, row.last_name].filter(Boolean).join(" "),
+      "Ragione sociale": row.business_name,
+      Posizione: row.position,
+      Note: row.notes,
+    },
+  };
+}
+
+function principalCrossEntityRow(row: PrincipalDuplicateRow): CrossEntityDuplicateRow {
+  return {
+    id: row.id,
+    sourceType: "principal",
+    sourceLabel: "Committente",
+    publicCode: row.public_code,
+    href: `/committenti/${row.public_code || row.id}`,
+    kind: "company",
+    businessName: row.business_name,
+    email: row.email,
+    taxCode: row.tax_code,
+    vatNumber: row.vat_number,
+    pec: row.pec,
+  };
+}
+
+function clientCrossEntityRow(row: ClientDuplicateRow): CrossEntityDuplicateRow {
+  return {
+    id: row.id,
+    sourceType: "client",
+    sourceLabel: "Cliente",
+    publicCode: row.public_code,
+    href: `/clienti/${row.public_code || row.id}`,
+    kind: row.kind === "company" ? "company" : "individual",
+    firstName: row.first_name,
+    lastName: row.last_name,
+    businessName: row.business_name,
+    email: row.email,
+  };
+}
+
+function counterpartyCrossEntityRow(row: CounterpartyDuplicateRow): CrossEntityDuplicateRow | null {
+  if (row.kind === "group") return null;
+  return {
+    id: row.id,
+    sourceType: "counterparty",
+    sourceLabel: "Controparte",
+    publicCode: row.public_code,
+    href: `/controparti/${row.public_code || row.id}`,
+    kind: row.kind === "company" ? "company" : "individual",
+    firstName: row.first_name,
+    lastName: row.last_name,
+    businessName: row.business_name,
+  };
+}
+
+function subjectCrossEntityRow(row: CounterpartySubjectDuplicateRow): CrossEntityDuplicateRow {
+  return {
+    id: row.id,
+    sourceType: "counterparty_subject",
+    sourceLabel: "Soggetto interno",
+    href: `/controparti/${row.counterpartyPublicCode || row.counterparty_id}`,
+    kind: row.kind === "company" ? "company" : "individual",
+    firstName: row.first_name,
+    lastName: row.last_name,
+    businessName: row.business_name,
+    parentId: row.counterparty_id,
+    parentLabel: row.counterpartyName,
+  };
+}
+
+function crossEntityRecord(row: CrossEntityDuplicateRow): DuplicateRecord {
+  return {
+    id: row.id,
+    publicCode: row.publicCode,
+    label: crossEntityLabel(row),
+    subtitle: row.parentLabel ?? row.sourceLabel,
+    href: row.href,
+    fields: {
+      "Tipo record": row.sourceLabel,
+      Tipo: row.kind === "company" ? "Società" : "Persona fisica",
+      Nome: [row.firstName, row.lastName].filter(Boolean).join(" "),
+      "Ragione sociale": row.businessName,
+      "Controparte composta": row.parentLabel,
+      Email: row.email,
+      PEC: row.pec,
+      "P.IVA": row.vatNumber,
+      "Codice fiscale": row.taxCode,
+    },
+  };
+}
+
+function counterpartySubjectLabel(row: CounterpartySubjectDuplicateRow) {
+  return row.kind === "company"
+    ? row.business_name || "Soggetto società"
+    : [row.first_name, row.last_name].filter(Boolean).join(" ") || "Soggetto persona";
+}
+
+function crossEntityLabel(row: CrossEntityDuplicateRow) {
+  return row.kind === "company"
+    ? row.businessName || row.sourceLabel
+    : [row.firstName, row.lastName].filter(Boolean).join(" ") || row.sourceLabel;
+}
+
 function sameFilled(a: string | null | undefined, b: string | null | undefined) {
   const left = (a ?? "").trim().toLowerCase();
   const right = (b ?? "").trim().toLowerCase();
   return Boolean(left && right && left === right);
+}
+
+function sameNumber(a: number | string | null | undefined, b: number | string | null | undefined) {
+  const left = toNumber(a);
+  const right = toNumber(b);
+  return Number.isFinite(left) && Number.isFinite(right) && Math.abs(left - right) < 0.005;
+}
+
+function toNumber(value: number | string | null | undefined) {
+  const numberValue = typeof value === "number" ? value : Number(value ?? 0);
+  return Number.isFinite(numberValue) ? numberValue : 0;
 }
 
 export function resolvedStatusLabel(status: DuplicateReviewStatus) {
@@ -505,5 +953,8 @@ export function confidenceLabel(confidence: DuplicateConfidence) {
 }
 
 function mergeSummaryLabel(entityType: DuplicateEntityType) {
+  if (!canMergeDuplicateEntity(entityType)) {
+    return `Verifica ${displayDuplicateEntity(entityType).toLowerCase()}`;
+  }
   return `Unione ${displayDuplicateEntity(entityType).toLowerCase()}`;
 }

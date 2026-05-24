@@ -19,6 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  canMergeDuplicateEntity,
   displayDuplicateEntity,
   type DuplicateCandidate,
   type DuplicateEntityType,
@@ -44,6 +45,9 @@ const filters: Array<{ value: DuplicateFilter; label: string }> = [
   { value: "client", label: "Clienti" },
   { value: "counterparty", label: "Controparti" },
   { value: "case", label: "Pratiche" },
+  { value: "activity", label: "Attività" },
+  { value: "counterparty_subject", label: "Soggetti" },
+  { value: "cross_entity", label: "Tipi diversi" },
   { value: "snoozed", label: "Rimandati" },
   { value: "resolved", label: "Risolti" },
 ];
@@ -150,7 +154,7 @@ function DuplicateControlPage() {
     <div className="space-y-6">
       <PageHeader
         title="Controllo duplicati"
-        description="Rivedi Committenti, Clienti, Controparti e Pratiche che potrebbero riferirsi allo stesso dato."
+        description="Rivedi anagrafiche, Pratiche, Attività e sospetti tra tipi diversi che potrebbero riferirsi allo stesso dato."
         actions={
           <Button
             type="button"
@@ -170,8 +174,8 @@ function DuplicateControlPage() {
         <SummaryCard title="Risolti" value={resolvedCount} />
         <SummaryCard
           title="Copertura"
-          value="4"
-          description="Committenti, Clienti, Controparti, Pratiche"
+          value="7"
+          description="Anagrafiche, Pratiche, Attività, Soggetti e Tipi diversi"
         />
       </div>
 
@@ -210,7 +214,9 @@ function DuplicateControlPage() {
               candidate,
               onOpen: () => {
                 setSelected(candidate);
-                setMergeKeepId(candidate.left.id);
+                setMergeKeepId(
+                  canMergeDuplicateEntity(candidate.entityType) ? candidate.left.id : null,
+                );
               },
               onDismiss: () => resolveMutation.mutate({ candidate, action: "dismiss" }),
               onSnooze: () => resolveMutation.mutate({ candidate, action: "snooze" }),
@@ -227,49 +233,69 @@ function DuplicateControlPage() {
               <DialogTitle>Confronto {displayDuplicateEntity(selected.entityType)}</DialogTitle>
               <DialogDescription>{selected.reasons.join(" · ")}</DialogDescription>
             </DialogHeader>
+            {!canMergeDuplicateEntity(selected.entityType) && (
+              <div className="rounded-md border border-border bg-muted/30 p-3 text-sm text-muted-foreground">
+                Questo sospetto richiede verifica manuale: puoi aprire i record, rimandare il
+                controllo o segnarlo come non duplicato.
+              </div>
+            )}
             <div className="grid gap-4 md:grid-cols-2">
               {[selected.left, selected.right].map((record) =>
                 renderRecordPanel({
                   key: record.id,
                   record,
-                  selected: mergeKeepId === record.id,
-                  onSelect: () => setMergeKeepId(record.id),
+                  selected: canMergeDuplicateEntity(selected.entityType)
+                    ? mergeKeepId === record.id
+                    : undefined,
+                  onSelect: canMergeDuplicateEntity(selected.entityType)
+                    ? () => setMergeKeepId(record.id)
+                    : undefined,
                 }),
               )}
             </div>
             <DialogFooter className="gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => resolveMutation.mutate({ candidate: selected, action: "snooze" })}
-                disabled={resolveMutation.isPending}
-              >
-                <Clock className="mr-1 size-4" />
-                Rimanda
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => resolveMutation.mutate({ candidate: selected, action: "dismiss" })}
-                disabled={resolveMutation.isPending}
-              >
-                <Check className="mr-1 size-4" />
-                Non duplicato
-              </Button>
-              <Button
-                type="button"
-                onClick={() =>
-                  resolveMutation.mutate({
-                    candidate: selected,
-                    action: "merge",
-                    keepRecordId: mergeKeepId,
-                  })
-                }
-                disabled={resolveMutation.isPending || !mergeKeepId}
-              >
-                <GitMerge className="mr-1 size-4" />
-                Unisci
-              </Button>
+              {selected.status !== "dismissed" && selected.status !== "merged" && (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      resolveMutation.mutate({ candidate: selected, action: "snooze" })
+                    }
+                    disabled={resolveMutation.isPending}
+                  >
+                    <Clock className="mr-1 size-4" />
+                    Rimanda
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() =>
+                      resolveMutation.mutate({ candidate: selected, action: "dismiss" })
+                    }
+                    disabled={resolveMutation.isPending}
+                  >
+                    <Check className="mr-1 size-4" />
+                    Non duplicato
+                  </Button>
+                  {canMergeDuplicateEntity(selected.entityType) && (
+                    <Button
+                      type="button"
+                      onClick={() =>
+                        resolveMutation.mutate({
+                          candidate: selected,
+                          action: "merge",
+                          keepRecordId: mergeKeepId,
+                        })
+                      }
+                      disabled={resolveMutation.isPending || !mergeKeepId}
+                    >
+                      <GitMerge className="mr-1 size-4" />
+                      Unisci
+                    </Button>
+                  )}
+                </>
+              )}
             </DialogFooter>
           </DialogContent>
         )}
@@ -339,8 +365,8 @@ function renderRecordPanel({
 }: {
   key: string;
   record: DuplicateRecord;
-  selected: boolean;
-  onSelect: () => void;
+  selected?: boolean;
+  onSelect?: () => void;
 }) {
   return (
     <div key={key} className="space-y-3 rounded-md border border-border p-4">
@@ -351,14 +377,16 @@ function renderRecordPanel({
             <div className="text-xs text-muted-foreground">{record.subtitle}</div>
           )}
         </div>
-        <Button
-          type="button"
-          size="sm"
-          variant={selected ? "default" : "outline"}
-          onClick={onSelect}
-        >
-          Mantieni
-        </Button>
+        {onSelect && (
+          <Button
+            type="button"
+            size="sm"
+            variant={selected ? "default" : "outline"}
+            onClick={onSelect}
+          >
+            Mantieni
+          </Button>
+        )}
       </div>
       <div className="space-y-2 text-sm">
         {Object.entries(record.fields ?? {}).map(([key, value]) => (
