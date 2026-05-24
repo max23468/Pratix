@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowLeft } from "lucide-react";
-import { ManualImportWizard } from "@/components/import-archive/manual-import-wizard";
+import { GuidedCreationWizard } from "@/components/guided-creation/guided-creation-wizard";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
@@ -22,12 +22,12 @@ export const Route = createFileRoute("/creazione-guidata")({
   }),
   component: () => (
     <AppLayout>
-      <ImportArchive />
+      <GuidedCreation />
     </AppLayout>
   ),
 });
 
-function ImportArchive() {
+function GuidedCreation() {
   const navigate = useNavigate();
 
   return (
@@ -44,8 +44,8 @@ function ImportArchive() {
         }
       />
 
-      <ManualImportWizard
-        onImported={(caseId) => navigate({ to: "/pratiche/$caseId", params: { caseId } })}
+      <GuidedCreationWizard
+        onCreated={(caseId) => navigate({ to: "/pratiche/$caseId", params: { caseId } })}
       />
     </>
   );

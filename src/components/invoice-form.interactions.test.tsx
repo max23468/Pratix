@@ -103,7 +103,7 @@ const {
             unit_price: 500,
             amount: 1000,
             postponed_until: null,
-            cases: { practice_number: 42, title: "Pratica 42" },
+            cases: { practice_number: 42 },
             clients: {
               kind: "individual",
               first_name: "Ada",
@@ -129,7 +129,7 @@ const {
             unit_price: 118.5,
             amount: 118.5,
             postponed_until: null,
-            cases: { practice_number: 42, title: "Pratica 42" },
+            cases: { practice_number: 42 },
             clients: {
               kind: "individual",
               first_name: "Ada",

@@ -62,8 +62,6 @@ export type CaseOperationsCase = {
   client_id: string | null;
   counterparty_id: string | null;
   practice_number: number;
-  case_number?: string | null;
-  title: string;
   status: string;
   opened_at: string;
   closed_at?: string | null;
@@ -180,8 +178,6 @@ export function CaseOperationsPanel({
       client_id: caseRow.client_id,
       counterparty_id: caseRow.counterparty_id,
       practice_number: caseRow.practice_number,
-      case_number: caseRow.case_number,
-      title: caseRow.title,
       principals: caseRow.principals,
       clients: caseRow.clients,
       counterparties: caseRow.counterparties,

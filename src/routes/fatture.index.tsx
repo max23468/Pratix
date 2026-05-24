@@ -345,7 +345,6 @@ function InvoicesIndex() {
         due_date: invoice.due_date,
         notes: invoice.notes,
         taxable_fees: Number(invoice.taxable_fees),
-        taxable_expenses: Number(invoice.taxable_expenses),
         art15_expenses: Number(invoice.art15_expenses),
         general_expenses_amount: Number(invoice.general_expenses_amount),
         cassa_amount: Number(invoice.cassa_amount),

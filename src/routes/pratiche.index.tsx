@@ -58,9 +58,7 @@ type PraticheSearch = {
 type PracticeListRow = {
   id: string;
   public_code: string;
-  case_number: string;
   practice_number: number;
-  title: string;
   status: string;
   opened_at: string;
   updated_at: string;
@@ -170,7 +168,7 @@ function PraticheList() {
       const { data, error } = await supabase
         .from("cases")
         .select(
-          "id, public_code, case_number, practice_number, title, status, opened_at, updated_at, client_id, principal_id, counterparty_id, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
+          "id, public_code, practice_number, status, opened_at, updated_at, client_id, principal_id, counterparty_id, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
         )
         .order("updated_at", { ascending: false });
       if (error) throw error;
@@ -363,7 +361,7 @@ function PraticheList() {
         ? counterpartyDisplayName(c.counterparties).toLowerCase()
         : "";
       return (
-        c.case_number.toLowerCase().includes(term) ||
+        String(c.practice_number).includes(term) ||
         clientName.includes(term) ||
         principalName.includes(term) ||
         counterpartyName.includes(term)

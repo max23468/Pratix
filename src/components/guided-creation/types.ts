@@ -77,7 +77,7 @@ export type HearingDateDraft = {
   date: string;
 };
 
-export type ImportDraft = {
+export type GuidedCreationDraft = {
   principalMode: ExistingMode;
   principalId: string;
   principalName: string;
@@ -95,7 +95,6 @@ export type ImportDraft = {
   counterpartyBusinessName: string;
   counterpartyNotes: string;
   practiceNumber: string;
-  title: string;
   status: CaseStatus;
   openedAt: string;
   closedAt: string;
@@ -105,15 +104,15 @@ export type ImportDraft = {
   activities: ActivityDraft[];
 };
 
-export type StagedImport = {
+export type StagedGuidedCreation = {
   importId: string;
   rowId: string;
   status: "valid" | "warning" | "imported";
-  normalized: NormalizedImport;
+  normalized: NormalizedGuidedCreation;
   warnings: string[];
 };
 
-export type NormalizedImport = {
+export type NormalizedGuidedCreation = {
   principal: {
     mode: ExistingMode;
     id: string | null;
@@ -139,7 +138,6 @@ export type NormalizedImport = {
   practice: {
     practiceNumber: number;
     existingCaseId?: string | null;
-    title: string;
     status: CaseStatus;
     openedAt: string;
     closedAt: string | null;
@@ -165,8 +163,8 @@ export type NormalizedImport = {
   }>;
 };
 
-export type PreparedImport = {
-  normalized: NormalizedImport;
+export type PreparedGuidedCreation = {
+  normalized: NormalizedGuidedCreation;
   errors: string[];
   warnings: string[];
 };

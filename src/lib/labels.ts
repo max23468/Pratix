@@ -21,11 +21,10 @@ export const caseStatusVariant: Record<
 
 export type PracticeDisplayData = {
   practice_number?: number | null;
-  case_number?: string | null;
 };
 
 export const practiceDisplayName = (practice: PracticeDisplayData): string => {
-  const practiceNumber = practice.practice_number ?? practice.case_number ?? "-";
+  const practiceNumber = practice.practice_number ?? "-";
   return `Pratica ${practiceNumber}`;
 };
 

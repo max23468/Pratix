@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Sotto il cofano
+
+- **Recupero crediti**: rimossi i residui legacy pre-focus da Creazione guidata,
+  schema Pratiche e calcolo Fatture, allineando runtime, migration, snapshot SQL
+  e documentazione al dominio attuale.
+
 ## [1.11.16] — 2026-05-24
 
 ### Correzioni

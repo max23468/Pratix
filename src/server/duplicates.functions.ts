@@ -241,7 +241,7 @@ async function loadDuplicateScanData(client: unknown, userId: string) {
         >
       >("cases")
       .select(
-        "id, public_code, practice_number, title, principal_id, client_id, counterparty_id, authority, rg_number, opened_at, status, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
+        "id, public_code, practice_number, principal_id, client_id, counterparty_id, authority, rg_number, opened_at, status, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
       )
       .eq("user_id", userId),
     db.from<DuplicateReviewRow[]>("duplicate_reviews").select("*").eq("user_id", userId),

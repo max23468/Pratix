@@ -73,7 +73,6 @@ export type CaseTimelineCase = {
   id: string;
   opened_at: string;
   practice_number: number;
-  title: string;
   status: string;
 };
 

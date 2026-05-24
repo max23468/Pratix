@@ -81,8 +81,6 @@ const activities = [
       client_id: "client-1",
       counterparty_id: "counterparty-1",
       practice_number: 42,
-      case_number: "42",
-      title: "Recupero fattura",
       principals: { business_name: "Banca Test" },
       clients: { kind: "individual", first_name: "Ada", last_name: "Rossi", business_name: null },
       counterparties: {
@@ -119,8 +117,6 @@ const activities = [
       client_id: "client-1",
       counterparty_id: "counterparty-1",
       practice_number: 42,
-      case_number: "42",
-      title: "Recupero fattura",
       principals: { business_name: "Banca Test" },
       clients: { kind: "individual", first_name: "Ada", last_name: "Rossi", business_name: null },
       counterparties: {

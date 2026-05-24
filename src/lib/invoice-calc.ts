@@ -1,6 +1,6 @@
 /** Calcoli fiscali per fatture italiane (avvocati). */
 
-export type InvoiceLineKind = "fee" | "expense_taxable" | "expense_art15";
+export type InvoiceLineKind = "fee" | "expense_art15";
 
 export type InvoiceLineInput = {
   kind: InvoiceLineKind;
@@ -30,7 +30,6 @@ export type InvoiceCalcOptions = {
 
 export type InvoiceCalcResult = {
   taxableFees: number;
-  taxableExpenses: number;
   art15Expenses: number;
   generalExpensesAmount: number;
   cassaBaseAmount: number;
@@ -56,9 +55,9 @@ const lineAmount = (l: InvoiceLineInput): number =>
  * Schema:
  *  - Compensi = somma righe `fee`
  *  - Spese generali = compensi × generalExpensesRate% quando abilitate
- *  - Cassa = (compensi + spese generali + eventuali spese imponibili legacy) × cassaRate%
- *  - IVA = (compensi + spese generali + eventuali spese imponibili legacy + cassa) × vatRate%
- *  - Ritenuta = (compensi + spese generali + eventuali spese imponibili legacy) × withholdingRate%
+ *  - Cassa = (compensi + spese generali) × cassaRate%
+ *  - IVA = (compensi + spese generali + cassa) × vatRate%
+ *  - Ritenuta = (compensi + spese generali) × withholdingRate%
  *  - Spese Art. 15 = anticipazioni in nome e per conto (escluse IVA, escluse ritenuta)
  *  - Bollo €2, se abilitato, su Art. 15 > €77,47 oppure (in forfettario) se base + cassa > €77,47
  *  - Totale = imponibile + cassa + IVA + Art.15 + bollo
@@ -71,25 +70,22 @@ export function computeInvoice(
   const isForfettario = options.taxRegime === "forfettario";
 
   let taxableFees = 0;
-  let taxableExpenses = 0;
   let art15Expenses = 0;
 
   for (const l of lines) {
     const amt = lineAmount(l);
     if (l.kind === "fee") taxableFees += amt;
-    else if (l.kind === "expense_taxable") taxableExpenses += amt;
     else if (l.kind === "expense_art15") art15Expenses += amt;
   }
 
   taxableFees = round2(taxableFees);
-  taxableExpenses = round2(taxableExpenses);
   art15Expenses = round2(art15Expenses);
 
   const generalExpensesAmount =
     options.includeGeneralExpenses && taxableFees > 0
       ? round2(taxableFees * ((options.generalExpensesRate ?? 10) / 100))
       : 0;
-  const cassaBaseAmount = round2(taxableFees + generalExpensesAmount + taxableExpenses);
+  const cassaBaseAmount = round2(taxableFees + generalExpensesAmount);
   const taxableTotal = cassaBaseAmount;
 
   const cassaAmount = round2(cassaBaseAmount * (options.cassaRate / 100));
@@ -117,7 +113,6 @@ export function computeInvoice(
 
   return {
     taxableFees,
-    taxableExpenses,
     art15Expenses,
     generalExpensesAmount,
     cassaBaseAmount,
@@ -134,6 +129,5 @@ export function computeInvoice(
 
 export const invoiceLineKindLabels: Record<InvoiceLineKind, string> = {
   fee: "Compenso",
-  expense_taxable: "Spesa imponibile",
   expense_art15: "Anticipazione (Art. 15)",
 };

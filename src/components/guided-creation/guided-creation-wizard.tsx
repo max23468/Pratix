@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, CheckCircle2, FileInput } from "lucide-react";
 import { toast } from "sonner";
 import { ActivitiesStep } from "./activities-step";
 import { initialDraft, makeActivity } from "./draft";
-import { buildNormalizedImport } from "./normalization";
+import { buildNormalizedGuidedCreation } from "./normalization";
 import { PracticeStep } from "./practice-step";
 import { ReviewStep } from "./review-step";
 import { SubjectsStep } from "./subjects-step";
@@ -12,13 +12,13 @@ import type {
   ActivityDraft,
   ClientRow,
   CounterpartyRow,
-  ImportDraft,
-  NormalizedImport,
+  GuidedCreationDraft,
+  NormalizedGuidedCreation,
   PriceBookRow,
   PriceItemRow,
   PriceOption,
   PrincipalRow,
-  StagedImport,
+  StagedGuidedCreation,
 } from "./types";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,17 +29,17 @@ import { routeRef } from "@/lib/public-route-code";
 import { buildActivityAttachmentStoragePath, PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
 import { useSubmitLock } from "@/lib/submit-lock";
 
-export function ManualImportWizard({ onImported }: { onImported: (caseId: string) => void }) {
+export function GuidedCreationWizard({ onCreated }: { onCreated: (caseId: string) => void }) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [step, setStep] = useState(0);
-  const [draft, setDraft] = useState<ImportDraft>(() => initialDraft());
-  const [staged, setStaged] = useState<StagedImport | null>(null);
+  const [draft, setDraft] = useState<GuidedCreationDraft>(() => initialDraft());
+  const [staged, setStaged] = useState<StagedGuidedCreation | null>(null);
   const prepareLock = useSubmitLock();
   const confirmLock = useSubmitLock();
 
   const { data: principals = [] } = useQuery({
-    queryKey: ["principals", "import-archive"],
+    queryKey: ["principals", "guided-creation"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("principals")
@@ -52,7 +52,7 @@ export function ManualImportWizard({ onImported }: { onImported: (caseId: string
   });
 
   const { data: clients = [] } = useQuery({
-    queryKey: ["clients", "import-archive"],
+    queryKey: ["clients", "guided-creation"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("clients")
@@ -64,7 +64,7 @@ export function ManualImportWizard({ onImported }: { onImported: (caseId: string
   });
 
   const { data: counterparties = [] } = useQuery({
-    queryKey: ["counterparties", "import-archive"],
+    queryKey: ["counterparties", "guided-creation"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("counterparties")
@@ -77,7 +77,7 @@ export function ManualImportWizard({ onImported }: { onImported: (caseId: string
   const principalId = draft.principalMode === "existing" ? draft.principalId : "";
 
   const { data: priceBooks = [] } = useQuery({
-    queryKey: ["price-books", "import-archive", principalId],
+    queryKey: ["price-books", "guided-creation", principalId],
     enabled: Boolean(principalId),
     queryFn: async () => {
       const { data, error } = await supabase
@@ -94,7 +94,7 @@ export function ManualImportWizard({ onImported }: { onImported: (caseId: string
   const priceBookIds = useMemo(() => priceBooks.map((book) => book.id), [priceBooks]);
 
   const { data: priceItems = [] } = useQuery({
-    queryKey: ["price-items", "import-archive", priceBookIds],
+    queryKey: ["price-items", "guided-creation", priceBookIds],
     enabled: priceBookIds.length > 0,
     queryFn: async () => {
       const { data, error } = await supabase
@@ -131,7 +131,10 @@ export function ManualImportWizard({ onImported }: { onImported: (caseId: string
       );
   }, [priceBooks, priceItems]);
 
-  const updateDraft = <K extends keyof ImportDraft>(key: K, value: ImportDraft[K]) => {
+  const updateDraft = <K extends keyof GuidedCreationDraft>(
+    key: K,
+    value: GuidedCreationDraft[K],
+  ) => {
     setDraft((current) => ({ ...current, [key]: value }));
     setStaged(null);
   };
@@ -164,7 +167,7 @@ export function ManualImportWizard({ onImported }: { onImported: (caseId: string
   };
 
   const prepared = useMemo(
-    () => buildNormalizedImport(draft, principals, clients, counterparties, priceOptions),
+    () => buildNormalizedGuidedCreation(draft, principals, clients, counterparties, priceOptions),
     [clients, counterparties, draft, priceOptions, principals],
   );
 
@@ -195,7 +198,7 @@ export function ManualImportWizard({ onImported }: { onImported: (caseId: string
           import_id: importRow.id,
           row_number: 1,
           status: prepared.warnings.length > 0 ? "warning" : "valid",
-          raw_data: serializeImportDraft(draft) as unknown as Json,
+          raw_data: serializeGuidedCreationDraft(draft) as unknown as Json,
           normalized_data: prepared.normalized as unknown as Json,
           warning_messages: prepared.warnings,
         })
@@ -223,9 +226,9 @@ export function ManualImportWizard({ onImported }: { onImported: (caseId: string
     mutationFn: async () => {
       if (!user) throw new Error("Sessione non valida");
       if (!staged) throw new Error("Prepara prima l'anteprima");
-      if (staged.status === "imported") throw new Error("Questa riga è già stata importata.");
-      const caseId = await applyImportRow(staged.rowId);
-      const attachmentErrors = await uploadImportActivityAttachments(
+      if (staged.status === "imported") throw new Error("Questa pratica è già stata creata.");
+      const caseId = await confirmGuidedCreationRow(staged.rowId);
+      const attachmentErrors = await uploadGuidedCreationActivityAttachments(
         user.id,
         prepared.normalized.activities,
         draft.activities,
@@ -234,9 +237,9 @@ export function ManualImportWizard({ onImported }: { onImported: (caseId: string
     },
     onSuccess: async ({ caseId, attachmentErrors }) => {
       if (attachmentErrors.length > 0) {
-        toast.error(`Pratica importata, ${attachmentErrors.length} allegati non caricati.`);
+        toast.error(`Pratica creata, ${attachmentErrors.length} allegati non caricati.`);
       } else {
-        toast.success("Pratica importata");
+        toast.success("Pratica creata");
       }
       await Promise.all([
         qc.invalidateQueries({ queryKey: ["imports"] }),
@@ -248,7 +251,7 @@ export function ManualImportWizard({ onImported }: { onImported: (caseId: string
         qc.invalidateQueries({ queryKey: ["dashboard"] }),
       ]);
       setStaged((current) => (current ? { ...current, status: "imported" } : current));
-      onImported(caseId);
+      onCreated(caseId);
     },
     onError: (error: Error) => toast.error(error.message),
     onSettled: confirmLock.release,
@@ -338,10 +341,10 @@ export function ManualImportWizard({ onImported }: { onImported: (caseId: string
             >
               <CheckCircle2 className="mr-1 size-4" />
               {staged.status === "imported"
-                ? "Import completato"
+                ? "Creazione completata"
                 : confirmMutation.isPending
-                  ? "Importazione…"
-                  : "Conferma import"}
+                  ? "Conferma in corso…"
+                  : "Conferma creazione"}
             </Button>
           ) : (
             <Button
@@ -358,10 +361,10 @@ export function ManualImportWizard({ onImported }: { onImported: (caseId: string
   );
 }
 
-async function applyImportRow(rowId: string) {
+async function confirmGuidedCreationRow(rowId: string) {
   const { data, error } = await supabase.rpc("apply_import_row", { p_import_row_id: rowId });
   if (error) throw error;
-  if (!data) throw new Error("Import non completato.");
+  if (!data) throw new Error("Creazione non completata.");
   const { data: caseRow, error: caseError } = await supabase
     .from("cases")
     .select("id, public_code")
@@ -371,7 +374,7 @@ async function applyImportRow(rowId: string) {
   return routeRef(caseRow);
 }
 
-function serializeImportDraft(draft: ImportDraft) {
+function serializeGuidedCreationDraft(draft: GuidedCreationDraft) {
   return {
     ...draft,
     activities: draft.activities.map((activity) => ({
@@ -387,9 +390,9 @@ function serializeImportDraft(draft: ImportDraft) {
   };
 }
 
-async function uploadImportActivityAttachments(
+async function uploadGuidedCreationActivityAttachments(
   userId: string,
-  normalizedActivities: NormalizedImport["activities"],
+  normalizedActivities: NormalizedGuidedCreation["activities"],
   draftActivities: ActivityDraft[],
 ) {
   const errors: string[] = [];

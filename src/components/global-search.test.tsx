@@ -160,8 +160,6 @@ describe("GlobalSearch", () => {
         id: "case-1",
         public_code: "PR-000108",
         practice_number: 108,
-        title: "Recupero credito",
-        case_number: "RGC-108",
         updated_at: "2026-05-22",
       },
     ]);

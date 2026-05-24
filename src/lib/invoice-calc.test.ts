@@ -16,7 +16,6 @@ describe("computeInvoice", () => {
       computeInvoice(
         [
           { kind: "fee", quantity: 2, unit_price: 500 },
-          { kind: "expense_taxable", quantity: 1, unit_price: 50 },
           { kind: "expense_art15", quantity: 1, unit_price: 80 },
         ],
         {
@@ -28,18 +27,17 @@ describe("computeInvoice", () => {
       ),
     ).toEqual({
       taxableFees: 1000,
-      taxableExpenses: 50,
       art15Expenses: 80,
       generalExpensesAmount: 100,
-      cassaBaseAmount: 1150,
-      cassaAmount: 46,
-      vatBase: 1196,
-      vatAmount: 263.12,
-      withholdingBase: 1150,
-      withholdingAmount: 230,
+      cassaBaseAmount: 1100,
+      cassaAmount: 44,
+      vatBase: 1144,
+      vatAmount: 251.68,
+      withholdingBase: 1100,
+      withholdingAmount: 220,
       stampAmount: 2,
-      totalAmount: 1541.12,
-      netToPay: 1311.12,
+      totalAmount: 1477.68,
+      netToPay: 1257.68,
     });
   });
 

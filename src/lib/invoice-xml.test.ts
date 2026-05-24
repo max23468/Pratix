@@ -14,7 +14,6 @@ const baseInvoice: InvoiceXmlData = {
     withholding_rate: 20,
     apply_withholding: true,
     taxable_fees: 1000,
-    taxable_expenses: 0,
     art15_expenses: 80,
     general_expenses_amount: 100,
     cassa_base_amount: 1100,

@@ -119,9 +119,7 @@ type ActivitiesSearch = {
 };
 
 type GlobalActivityRow = CaseActivityDialogActivity & {
-  cases:
-    | (CaseActivityContext & { public_code: string; practice_number: number; title: string })
-    | null;
+  cases: (CaseActivityContext & { public_code: string; practice_number: number }) | null;
 };
 
 function ActivitiesList() {
@@ -159,7 +157,7 @@ function ActivitiesList() {
       const { data, error } = await supabase
         .from("case_activities")
         .select(
-          "id, case_id, price_book_id, price_item_id, activity_date, kind, status, needs_review, snapshot_price_year, snapshot_price_code, snapshot_price_name, description, quantity, unit_price, amount, invoice_id, notes, case_activity_hearings(*), activity_attachments(*), cases(id, public_code, practice_number, case_number, title, principal_id, client_id, counterparty_id, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name))",
+          "id, case_id, price_book_id, price_item_id, activity_date, kind, status, needs_review, snapshot_price_year, snapshot_price_code, snapshot_price_name, description, quantity, unit_price, amount, invoice_id, notes, case_activity_hearings(*), activity_attachments(*), cases(id, public_code, practice_number, principal_id, client_id, counterparty_id, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name))",
         )
         .order("activity_date", { ascending: false });
       if (error) throw error;

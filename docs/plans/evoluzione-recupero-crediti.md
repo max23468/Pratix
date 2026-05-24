@@ -768,10 +768,9 @@ Residui lasciati volutamente alla fase successiva, poi chiusi in Fase 6:
 - la tabella `expenses`, le sue policy RLS e la cartella storage `expenses`
   restavano finché Fase 6 non sostituisse il flusso fatture con
   `case_activities`;
-- gli enum/campi fiscali di fattura legati a `expense_art15` e
-  `taxable_expenses` vanno rivalutati in Fase 6: i rimborsi recupero crediti
-  sono Art. 15, mentre eventuali spese imponibili non devono rientrare nel
-  nuovo flusso standard;
+- gli enum/campi fiscali di fattura legati alle spese imponibili sono stati
+  rimossi dalla bonifica successiva alla Fase 6: i rimborsi recupero crediti
+  restano Art. 15 nel flusso standard;
 - i riferimenti Lovable e `case_deadlines` nelle migration e negli ADR storici
   restano come storia del progetto e non sono residui runtime da bonificare.
 

@@ -6,8 +6,6 @@ export type CaseActivityContext = {
   client_id: string | null;
   counterparty_id: string | null;
   practice_number?: number | null;
-  case_number?: string | null;
-  title?: string | null;
   principals?: { business_name: string | null } | null;
   clients?: {
     kind: string;

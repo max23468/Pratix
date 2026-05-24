@@ -1,4 +1,4 @@
-import type { ActivityDraft, HearingDateDraft, ImportDraft } from "./types";
+import type { ActivityDraft, HearingDateDraft, GuidedCreationDraft } from "./types";
 
 export const today = () => new Date().toISOString().slice(0, 10);
 
@@ -24,7 +24,7 @@ export const makeHearingDate = (date: string): HearingDateDraft => ({
   date,
 });
 
-export const initialDraft = (): ImportDraft => ({
+export const initialDraft = (): GuidedCreationDraft => ({
   principalMode: "existing",
   principalId: "",
   principalName: "",
@@ -42,7 +42,6 @@ export const initialDraft = (): ImportDraft => ({
   counterpartyBusinessName: "",
   counterpartyNotes: "",
   practiceNumber: "",
-  title: "",
   status: "open",
   openedAt: today(),
   closedAt: "",

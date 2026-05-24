@@ -1,7 +1,7 @@
 import { PreviewBlock } from "./preview-block";
 import { Summary } from "./summary";
 import { displayNormalizedClient, displayNormalizedCounterparty } from "./normalization";
-import type { PreparedImport, StagedImport } from "./types";
+import type { PreparedGuidedCreation, StagedGuidedCreation } from "./types";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -21,8 +21,8 @@ export function ReviewStep({
   staged,
   isPreparing,
 }: {
-  prepared: PreparedImport;
-  staged: StagedImport | null;
+  prepared: PreparedGuidedCreation;
+  staged: StagedGuidedCreation | null;
   isPreparing: boolean;
 }) {
   const normalized = prepared.normalized;
@@ -58,13 +58,13 @@ export function ReviewStep({
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <CardTitle className="text-base">Anteprima import</CardTitle>
+              <CardTitle className="text-base">Anteprima creazione</CardTitle>
               <CardDescription>
                 Nessun dato operativo viene scritto prima della conferma finale.
               </CardDescription>
             </div>
             {staged?.status === "imported" ? (
-              <Badge variant="secondary">Import completato</Badge>
+              <Badge variant="secondary">Creazione completata</Badge>
             ) : staged ? (
               <Badge variant="secondary">Anteprima salvata</Badge>
             ) : isPreparing ? (

@@ -40,8 +40,6 @@ type DashboardCaseRow = {
   id: string;
   public_code: string | null;
   practice_number: number;
-  case_number: string | null;
-  title: string;
   status: string;
   updated_at: string;
   principal_id: string | null;
@@ -110,7 +108,7 @@ function DashboardContent() {
           supabase
             .from("cases")
             .select(
-              "id, public_code, practice_number, case_number, title, status, updated_at, principal_id, client_id, counterparty_id",
+              "id, public_code, practice_number, status, updated_at, principal_id, client_id, counterparty_id",
             ),
           supabase
             .from("case_activities")
@@ -125,7 +123,7 @@ function DashboardContent() {
           supabase
             .from("cases")
             .select(
-              "id, public_code, case_number, practice_number, title, status, updated_at, principal:principals(business_name), client:clients(kind, first_name, last_name, business_name), counterparty:counterparties(kind, first_name, last_name, business_name)",
+              "id, public_code, practice_number, status, updated_at, principal:principals(business_name), client:clients(kind, first_name, last_name, business_name), counterparty:counterparties(kind, first_name, last_name, business_name)",
             )
             .order("updated_at", { ascending: false })
             .limit(5),

@@ -194,8 +194,6 @@ function caseRow(): CaseOperationsCase {
     client_id: "client-1",
     counterparty_id: "counterparty-1",
     practice_number: 108,
-    case_number: "RG-108",
-    title: "Recupero credito Beta",
     status: "in_progress",
     opened_at: "2026-05-01",
     closed_at: null,

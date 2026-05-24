@@ -1,17 +1,17 @@
 import { today } from "./draft";
 import type {
   CounterpartyRow,
-  ImportDraft,
-  NormalizedImport,
-  PreparedImport,
+  GuidedCreationDraft,
+  NormalizedGuidedCreation,
+  PreparedGuidedCreation,
   PriceOption,
   PrincipalRow,
   ClientRow,
 } from "./types";
 import { counterpartyDisplayName, counterpartyKindLabels } from "@/lib/labels";
 
-export function buildNormalizedImport(
-  draft: ImportDraft,
+export function buildNormalizedGuidedCreation(
+  draft: GuidedCreationDraft,
   principals: PrincipalRow[],
   clients: ClientRow[],
   counterparties: CounterpartyRow[],
@@ -102,7 +102,7 @@ export function buildNormalizedImport(
   });
 
   if (draft.activities.length === 0) {
-    warnings.push("La pratica verrà importata senza attività storiche.");
+    warnings.push("La pratica verrà creata senza attività storiche.");
   }
   if (draft.principalMode === "new" && draft.activities.length > 0) {
     warnings.push(
@@ -110,7 +110,7 @@ export function buildNormalizedImport(
     );
   }
 
-  const normalized: NormalizedImport = {
+  const normalized: NormalizedGuidedCreation = {
     principal: {
       mode: draft.principalMode,
       id: selectedPrincipal?.id ?? null,
@@ -137,7 +137,6 @@ export function buildNormalizedImport(
     practice: {
       practiceNumber: Number.isFinite(practiceNumber) ? practiceNumber : 0,
       existingCaseId: null,
-      title: `Pratica ${draft.practiceNumber || "—"}`,
       status: draft.status,
       openedAt: draft.openedAt || today(),
       closedAt: draft.closedAt || null,
@@ -145,8 +144,8 @@ export function buildNormalizedImport(
       rgNumber: trimOrNull(draft.rgNumber),
       notes: trimOrNull(draft.notes),
     },
-    activities: activities.filter((activity): activity is NormalizedImport["activities"][number] =>
-      Boolean(activity),
+    activities: activities.filter(
+      (activity): activity is NormalizedGuidedCreation["activities"][number] => Boolean(activity),
     ),
   };
 
@@ -236,12 +235,12 @@ function findPriceOption(priceOptions: PriceOption[], code: string, name: string
   );
 }
 
-function displayDraftClient(draft: ImportDraft) {
+function displayDraftClient(draft: GuidedCreationDraft) {
   if (draft.clientKind === "company") return draft.clientBusinessName.trim();
   return [draft.clientFirstName, draft.clientLastName].filter(Boolean).join(" ").trim();
 }
 
-function displayDraftCounterparty(draft: ImportDraft) {
+function displayDraftCounterparty(draft: GuidedCreationDraft) {
   if (draft.counterpartyKind === "individual") {
     return [draft.counterpartyLastName, draft.counterpartyFirstName]
       .filter(Boolean)
@@ -251,12 +250,14 @@ function displayDraftCounterparty(draft: ImportDraft) {
   return draft.counterpartyBusinessName.trim();
 }
 
-export function displayNormalizedClient(client: NormalizedImport["client"]) {
+export function displayNormalizedClient(client: NormalizedGuidedCreation["client"]) {
   if (client.kind === "company") return client.businessName || "—";
   return [client.firstName, client.lastName].filter(Boolean).join(" ") || "—";
 }
 
-export function displayNormalizedCounterparty(counterparty: NormalizedImport["counterparty"]) {
+export function displayNormalizedCounterparty(
+  counterparty: NormalizedGuidedCreation["counterparty"],
+) {
   if (counterparty.kind === "individual") {
     return [counterparty.lastName, counterparty.firstName].filter(Boolean).join(" ") || "—";
   }

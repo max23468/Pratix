@@ -1,6 +1,6 @@
 import { Plus } from "lucide-react";
 import { ActivityEditor } from "./activity-editor";
-import type { ActivityDraft, ImportDraft, PriceOption } from "./types";
+import type { ActivityDraft, GuidedCreationDraft, PriceOption } from "./types";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -11,7 +11,7 @@ export function ActivitiesStep({
   addActivity,
   removeActivity,
 }: {
-  draft: ImportDraft;
+  draft: GuidedCreationDraft;
   priceOptions: PriceOption[];
   updateActivity: <K extends keyof ActivityDraft>(
     localId: string,
@@ -42,12 +42,11 @@ export function ActivitiesStep({
         {!canAddActivities ? (
           <p className="rounded-md border border-border p-3 text-sm text-muted-foreground">
             Per inserire attività nel wizard seleziona un committente esistente con Prezzi
-            configurati. Se il committente è nuovo, importa prima la pratica e poi configura i
-            Prezzi.
+            configurati. Se il committente è nuovo, crea prima la pratica e poi configura i Prezzi.
           </p>
         ) : priceOptions.length === 0 ? (
           <p className="rounded-md border border-border p-3 text-sm text-muted-foreground">
-            Nessuna voce prezzo trovata per questo committente. Puoi importare la pratica senza
+            Nessuna voce prezzo trovata per questo committente. Puoi creare la pratica senza
             attività e completarle dopo dalla sezione Attività.
           </p>
         ) : null}

@@ -39,8 +39,7 @@ Pratix oggi **genera** il file XML; **non** lo invia ancora a SDI (vedi roadmap)
 ## Cassa Forense
 
 - **Contributo integrativo (CPA) 4%** in fattura, applicato a compensi +
-  spese generali quando abilitate + eventuali spese imponibili legacy,
-  addebitato al committente.
+  spese generali quando abilitate, addebitato al committente.
 - Concorre alla base imponibile IVA nel regime ordinario; nel forfettario non c'è IVA.
 - I rimborsi spese del flusso recupero crediti sono sempre anticipazioni
   Art. 15 e non entrano nella base cassa.
@@ -51,7 +50,7 @@ Pratix oggi **genera** il file XML; **non** lo invia ancora a SDI (vedi roadmap)
 ```
 compensi           = somma attività di tipo compenso
 spese_generali     = compensi * 0.10           (solo se flag attivo)
-base_cassa         = compensi + spese_generali + spese_imponibili_legacy
+base_cassa         = compensi + spese_generali
 contributo_cpa     = base_cassa * 0.04
 base_iva           = base_cassa + contributo_cpa
 iva                = base_iva * 0.22
@@ -67,7 +66,7 @@ netto_a_pagare     = totale_documento - ritenuta_acconto
 ```
 compensi           = somma attività di tipo compenso
 spese_generali     = compensi * 0.10           (solo se flag attivo)
-base_cassa         = compensi + spese_generali + spese_imponibili_legacy
+base_cassa         = compensi + spese_generali
 contributo_cpa     = base_cassa * 0.04
 rimborsi_art15     = somma rimborsi spese
 bollo              = 2.00                    (solo se abilitato e sopra soglia)

@@ -101,7 +101,7 @@ type ActivityRow = {
   unit_price: number;
   amount: number;
   postponed_until: string | null;
-  cases: { practice_number: number; title: string } | null;
+  cases: { practice_number: number } | null;
   clients: {
     kind: string;
     first_name: string | null;
@@ -317,7 +317,7 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
     ),
     queryFn: async () => {
       const activitySelect =
-        "id, activity_date, kind, status, needs_review, invoice_id, description, quantity, unit_price, amount, postponed_until, cases(practice_number, title), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)";
+        "id, activity_date, kind, status, needs_review, invoice_id, description, quantity, unit_price, amount, postponed_until, cases(practice_number), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)";
       const availableQuery = supabase
         .from("case_activities")
         .select(activitySelect)

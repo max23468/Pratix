@@ -338,7 +338,6 @@ function InvoiceDetailPage() {
         due_date: data.invoice.due_date,
         notes: data.invoice.notes,
         taxable_fees: Number(data.invoice.taxable_fees),
-        taxable_expenses: Number(data.invoice.taxable_expenses),
         art15_expenses: Number(data.invoice.art15_expenses),
         general_expenses_amount: Number(data.invoice.general_expenses_amount),
         cassa_amount: Number(data.invoice.cassa_amount),

@@ -1,7 +1,7 @@
 -- =============================================================================
 -- Pratix — Schema baseline
 -- =============================================================================
--- Aggiornato: 2026-05-23 (RPC stato emissione fattura, migration 20260523130746)
+-- Aggiornato: 2026-05-24 (bonifica residui legacy pre-focus recupero crediti)
 -- Sorgente:  introspezione del database di produzione iniziale,
 --            integrata con il trigger auth richiesto per il progetto Supabase.
 --
@@ -33,21 +33,14 @@
 -- ENUM TYPES
 -- ============================================================================
 
-CREATE TYPE public.case_matter AS ENUM (
-  'civile', 'penale', 'lavoro', 'famiglia',
-  'amministrativo', 'tributario', 'commerciale', 'altro'
-);
-
 CREATE TYPE public.case_status AS ENUM (
   'open', 'in_progress', 'suspended', 'closed', 'archived'
 );
 
 CREATE TYPE public.client_kind AS ENUM ('individual', 'company');
 
-CREATE TYPE public.fee_type AS ENUM ('flat', 'hourly');
-
 CREATE TYPE public.invoice_line_kind AS ENUM (
-  'fee', 'expense_taxable', 'expense_art15'
+  'fee', 'expense_art15'
 );
 
 CREATE TYPE public.invoice_status AS ENUM (
@@ -141,26 +134,18 @@ DECLARE
   next_number integer;
 BEGIN
   IF NEW.practice_number IS NULL THEN
-    IF NEW.case_number IS NOT NULL AND btrim(NEW.case_number) ~ '^[0-9]{1,9}$' THEN
-      NEW.practice_number := btrim(NEW.case_number)::integer;
-    ELSE
-      PERFORM pg_advisory_xact_lock(hashtextextended(NEW.user_id::text, 0));
+    PERFORM pg_advisory_xact_lock(hashtextextended(NEW.user_id::text, 0));
 
-      SELECT COALESCE(MAX(practice_number), 0) + 1
-      INTO next_number
-      FROM public.cases
-      WHERE user_id = NEW.user_id;
+    SELECT COALESCE(MAX(practice_number), 0) + 1
+    INTO next_number
+    FROM public.cases
+    WHERE user_id = NEW.user_id;
 
-      NEW.practice_number := next_number;
-    END IF;
+    NEW.practice_number := next_number;
   END IF;
 
   IF NEW.practice_number <= 0 THEN
     RAISE EXCEPTION 'practice_number must be positive';
-  END IF;
-
-  IF NEW.case_number IS NULL OR length(btrim(NEW.case_number)) = 0 THEN
-    NEW.case_number := NEW.practice_number::text;
   END IF;
 
   RETURN NEW;
@@ -248,7 +233,7 @@ BEGIN
 END;
 $$;
 
--- Conferma una riga di import archivio in una singola transazione database.
+-- Conferma una riga di Creazione guidata in una singola transazione database.
 CREATE OR REPLACE FUNCTION public.apply_import_row(p_import_row_id uuid)
 RETURNS uuid
 LANGUAGE plpgsql
@@ -280,11 +265,11 @@ BEGIN
     AND status IN ('valid', 'warning');
 
   IF NOT FOUND THEN
-    RAISE EXCEPTION 'Riga di import non trovata o non confermabile.';
+    RAISE EXCEPTION 'Riga di creazione guidata non trovata o non confermabile.';
   END IF;
 
   IF v_normalized IS NULL OR v_normalized = '{}'::jsonb THEN
-    RAISE EXCEPTION 'Riga di import senza dati normalizzati.';
+    RAISE EXCEPTION 'Riga di creazione guidata senza dati normalizzati.';
   END IF;
 
   IF v_normalized #>> '{principal,mode}' = 'existing' THEN
@@ -404,8 +389,6 @@ BEGIN
     SET principal_id = v_principal_id,
         client_id = v_client_id,
         counterparty_id = v_counterparty_id,
-        case_number = v_normalized #>> '{practice,practiceNumber}',
-        title = v_normalized #>> '{practice,title}',
         status = (v_normalized #>> '{practice,status}')::public.case_status,
         authority = nullif(v_normalized #>> '{practice,authority}', ''),
         rg_number = nullif(v_normalized #>> '{practice,rgNumber}', ''),
@@ -417,18 +400,13 @@ BEGIN
     RETURNING id INTO v_case_id;
   ELSE
     INSERT INTO public.cases (
-      user_id, principal_id, client_id, counterparty_id, practice_number, case_number,
-      title, matter, status, fee_type, agreed_fee, hourly_rate, retainer, counterparty,
-      authority, rg_number, opened_at, closed_at, notes
+      user_id, principal_id, client_id, counterparty_id, practice_number,
+      status, authority, rg_number, opened_at, closed_at, notes
     )
     VALUES (
       v_user_id, v_principal_id, v_client_id, v_counterparty_id,
       (v_normalized #>> '{practice,practiceNumber}')::integer,
-      v_normalized #>> '{practice,practiceNumber}',
-      v_normalized #>> '{practice,title}',
-      'civile',
       (v_normalized #>> '{practice,status}')::public.case_status,
-      'flat', 0, NULL, 0, NULL,
       nullif(v_normalized #>> '{practice,authority}', ''),
       nullif(v_normalized #>> '{practice,rgNumber}', ''),
       (v_normalized #>> '{practice,openedAt}')::date,
@@ -452,7 +430,7 @@ BEGIN
         AND pi.kind = (v_activity ->> 'kind')::public.price_item_kind
         AND pi.is_enabled
     ) THEN
-      RAISE EXCEPTION 'Voce prezzo non valida per la riga di import.';
+      RAISE EXCEPTION 'Voce prezzo non valida per la riga di creazione guidata.';
     END IF;
 
     v_activity_id := NULL;
@@ -685,20 +663,12 @@ CREATE TABLE public.cases (
   public_code  text NOT NULL,
   user_id      uuid NOT NULL,
   client_id    uuid,
-  case_number  text NOT NULL,
   practice_number integer NOT NULL,
   principal_id uuid,
   counterparty_id uuid,
-  title        text NOT NULL,
-  matter       public.case_matter NOT NULL DEFAULT 'civile',
   status       public.case_status NOT NULL DEFAULT 'open',
   authority    text,
   rg_number    text,
-  counterparty text,
-  fee_type     public.fee_type NOT NULL DEFAULT 'flat',
-  agreed_fee   numeric DEFAULT 0,
-  hourly_rate  numeric,
-  retainer     numeric DEFAULT 0,
   opened_at    date NOT NULL DEFAULT CURRENT_DATE,
   closed_at    date,
   notes        text,
@@ -707,7 +677,6 @@ CREATE TABLE public.cases (
   CONSTRAINT cases_public_code_format CHECK (public_code ~ '^PR-[0-9]{5}$'),
   CONSTRAINT cases_practice_number_positive CHECK (practice_number > 0),
   UNIQUE (user_id, public_code),
-  UNIQUE (user_id, case_number),
   UNIQUE (user_id, practice_number),
   UNIQUE (id, user_id)
 );
@@ -744,7 +713,6 @@ CREATE TABLE public.invoices (
   withholding_rate   numeric NOT NULL DEFAULT 20.00,
   apply_withholding  boolean NOT NULL DEFAULT true,
   taxable_fees       numeric NOT NULL DEFAULT 0,
-  taxable_expenses   numeric NOT NULL DEFAULT 0,
   art15_expenses     numeric NOT NULL DEFAULT 0,
   cassa_amount       numeric NOT NULL DEFAULT 0,
   vat_amount         numeric NOT NULL DEFAULT 0,
@@ -1394,7 +1362,7 @@ CREATE TRIGGER cases_log_status_change
   FOR EACH ROW EXECUTE FUNCTION public.log_case_status_change();
 
 CREATE TRIGGER cases_assign_practice_number
-  BEFORE INSERT OR UPDATE OF case_number, practice_number, user_id
+  BEFORE INSERT OR UPDATE OF practice_number, user_id
   ON public.cases
   FOR EACH ROW EXECUTE FUNCTION public.assign_case_practice_number();
 

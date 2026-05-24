@@ -152,9 +152,6 @@ describe("form applicative principali", () => {
           client_id: "client-1",
           counterparty_id: "counterparty-1",
           practice_number: 42,
-          case_number: "42",
-          title: "Recupero fattura",
-          matter: "civile",
           status: "open",
           opened_at: "2026-05-09",
         }}

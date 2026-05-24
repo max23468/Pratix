@@ -7,11 +7,6 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "14.5"
-  }
   public: {
     Tables: {
       activity_attachments: {
@@ -535,77 +530,53 @@ export type Database = {
       }
       cases: {
         Row: {
-          agreed_fee: number | null
           authority: string | null
-          case_number: string
           client_id: string | null
           closed_at: string | null
-          counterparty: string | null
           counterparty_id: string | null
           created_at: string
-          fee_type: Database["public"]["Enums"]["fee_type"]
-          hourly_rate: number | null
           id: string
-          matter: Database["public"]["Enums"]["case_matter"]
           notes: string | null
           opened_at: string
           practice_number: number
           principal_id: string | null
           public_code: string
-          retainer: number | null
           rg_number: string | null
           status: Database["public"]["Enums"]["case_status"]
-          title: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          agreed_fee?: number | null
           authority?: string | null
-          case_number: string
           client_id?: string | null
           closed_at?: string | null
-          counterparty?: string | null
           counterparty_id?: string | null
           created_at?: string
-          fee_type?: Database["public"]["Enums"]["fee_type"]
-          hourly_rate?: number | null
           id?: string
-          matter?: Database["public"]["Enums"]["case_matter"]
           notes?: string | null
           opened_at?: string
           practice_number: number
           principal_id?: string | null
           public_code: string
-          retainer?: number | null
           rg_number?: string | null
           status?: Database["public"]["Enums"]["case_status"]
-          title: string
           updated_at?: string
           user_id: string
         }
         Update: {
-          agreed_fee?: number | null
           authority?: string | null
-          case_number?: string
           client_id?: string | null
           closed_at?: string | null
-          counterparty?: string | null
           counterparty_id?: string | null
           created_at?: string
-          fee_type?: Database["public"]["Enums"]["fee_type"]
-          hourly_rate?: number | null
           id?: string
-          matter?: Database["public"]["Enums"]["case_matter"]
           notes?: string | null
           opened_at?: string
           practice_number?: number
           principal_id?: string | null
           public_code?: string
-          retainer?: number | null
           rg_number?: string | null
           status?: Database["public"]["Enums"]["case_status"]
-          title?: string
           updated_at?: string
           user_id?: string
         }
@@ -1021,7 +992,6 @@ export type Database = {
           public_code: string
           stamp_amount: number
           status: Database["public"]["Enums"]["invoice_status"]
-          taxable_expenses: number
           taxable_fees: number
           total_amount: number
           updated_at: string
@@ -1057,7 +1027,6 @@ export type Database = {
           public_code: string
           stamp_amount?: number
           status?: Database["public"]["Enums"]["invoice_status"]
-          taxable_expenses?: number
           taxable_fees?: number
           total_amount?: number
           updated_at?: string
@@ -1093,7 +1062,6 @@ export type Database = {
           public_code?: string
           stamp_amount?: number
           status?: Database["public"]["Enums"]["invoice_status"]
-          taxable_expenses?: number
           taxable_fees?: number
           total_amount?: number
           updated_at?: string
@@ -1543,19 +1511,9 @@ export type Database = {
       billing_run_item_status: "included" | "postponed" | "excluded"
       billing_run_status: "draft" | "finalized" | "cancelled"
       case_activity_status: "to_invoice" | "invoiced"
-      case_matter:
-        | "civile"
-        | "penale"
-        | "lavoro"
-        | "famiglia"
-        | "amministrativo"
-        | "tributario"
-        | "commerciale"
-        | "altro"
       case_status: "open" | "in_progress" | "suspended" | "closed" | "archived"
       client_kind: "individual" | "company"
       counterparty_kind: "individual" | "company" | "group"
-      fee_type: "flat" | "hourly"
       import_mode: "manual" | "excel"
       import_row_status:
         | "pending"
@@ -1565,7 +1523,7 @@ export type Database = {
         | "imported"
         | "skipped"
       import_status: "draft" | "validated" | "imported" | "cancelled"
-      invoice_line_kind: "fee" | "expense_taxable" | "expense_art15"
+      invoice_line_kind: "fee" | "expense_art15"
       invoice_status: "draft" | "issued" | "paid" | "overdue"
       price_book_status: "draft" | "active" | "archived"
       price_item_kind: "fee" | "expense_reimbursement"
@@ -1701,20 +1659,9 @@ export const Constants = {
       billing_run_item_status: ["included", "postponed", "excluded"],
       billing_run_status: ["draft", "finalized", "cancelled"],
       case_activity_status: ["to_invoice", "invoiced"],
-      case_matter: [
-        "civile",
-        "penale",
-        "lavoro",
-        "famiglia",
-        "amministrativo",
-        "tributario",
-        "commerciale",
-        "altro",
-      ],
       case_status: ["open", "in_progress", "suspended", "closed", "archived"],
       client_kind: ["individual", "company"],
       counterparty_kind: ["individual", "company", "group"],
-      fee_type: ["flat", "hourly"],
       import_mode: ["manual", "excel"],
       import_row_status: [
         "pending",
@@ -1725,7 +1672,7 @@ export const Constants = {
         "skipped",
       ],
       import_status: ["draft", "validated", "imported", "cancelled"],
-      invoice_line_kind: ["fee", "expense_taxable", "expense_art15"],
+      invoice_line_kind: ["fee", "expense_art15"],
       invoice_status: ["draft", "issued", "paid", "overdue"],
       price_book_status: ["draft", "active", "archived"],
       price_item_kind: ["fee", "expense_reimbursement"],

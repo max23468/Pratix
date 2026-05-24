@@ -32,7 +32,6 @@ export type InvoiceXmlData = {
     withholding_rate: number;
     apply_withholding: boolean;
     taxable_fees: number;
-    taxable_expenses: number;
     art15_expenses: number;
     general_expenses_amount: number;
     cassa_base_amount: number;
@@ -43,7 +42,7 @@ export type InvoiceXmlData = {
     total_amount: number;
   };
   lines: Array<{
-    kind: "fee" | "expense_taxable" | "expense_art15";
+    kind: "fee" | "expense_art15";
     description: string;
     quantity: number;
     unit_price: number;
@@ -121,10 +120,7 @@ export function buildInvoiceXml(data: InvoiceXmlData): XmlBuildResult {
 
   // Riepilogo IVA
   const imponibileIvato =
-    data.invoice.taxable_fees +
-    data.invoice.general_expenses_amount +
-    data.invoice.taxable_expenses +
-    data.invoice.cassa_amount;
+    data.invoice.taxable_fees + data.invoice.general_expenses_amount + data.invoice.cassa_amount;
   const aliquotaIva = isForfettario ? 0 : data.invoice.vat_rate;
 
   const riepilogoBlocks: string[] = [];

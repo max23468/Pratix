@@ -12,7 +12,6 @@ export type InvoicePdfData = {
     due_date: string | null;
     notes: string | null;
     taxable_fees: number;
-    taxable_expenses: number;
     art15_expenses: number;
     general_expenses_amount: number;
     cassa_amount: number;
@@ -214,8 +213,6 @@ export function generateInvoicePdf(data: InvoicePdfData): jsPDF {
     row("Imponibile compensi", formatCurrency(data.invoice.taxable_fees));
   if (data.invoice.general_expenses_amount > 0)
     row("Spese generali", formatCurrency(data.invoice.general_expenses_amount));
-  if (data.invoice.taxable_expenses > 0)
-    row("Spese imponibili", formatCurrency(data.invoice.taxable_expenses));
   if (data.invoice.cassa_amount > 0)
     row(`Cassa Forense (${data.invoice.cassa_rate}%)`, formatCurrency(data.invoice.cassa_amount));
   if (data.invoice.vat_amount > 0)

@@ -5,7 +5,7 @@ import type {
   ClientRow,
   CounterpartyKind,
   CounterpartyRow,
-  ImportDraft,
+  GuidedCreationDraft,
   PrincipalRow,
 } from "./types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -28,11 +28,11 @@ export function SubjectsStep({
   counterparties,
   updateDraft,
 }: {
-  draft: ImportDraft;
+  draft: GuidedCreationDraft;
   principals: PrincipalRow[];
   clients: ClientRow[];
   counterparties: CounterpartyRow[];
-  updateDraft: <K extends keyof ImportDraft>(key: K, value: ImportDraft[K]) => void;
+  updateDraft: <K extends keyof GuidedCreationDraft>(key: K, value: GuidedCreationDraft[K]) => void;
 }) {
   return (
     <div className="grid gap-4 xl:grid-cols-3">

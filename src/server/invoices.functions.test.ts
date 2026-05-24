@@ -216,7 +216,7 @@ const billingActivity = {
   unit_price: 500,
   amount: 1000,
   postponed_count: null,
-  cases: { practice_number: 42, title: "Pratica 42" },
+  cases: { practice_number: 42 },
   clients: { kind: "individual", first_name: "Ada", last_name: "Rossi", business_name: null },
   counterparties: {
     kind: "company",
@@ -571,7 +571,6 @@ describe("server functions fatture", () => {
         withholding_rate: 20,
         apply_withholding: true,
         taxable_fees: 1000,
-        taxable_expenses: 0,
         art15_expenses: 0,
         general_expenses_amount: 100,
         cassa_base_amount: 1100,

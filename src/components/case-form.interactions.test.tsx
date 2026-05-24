@@ -216,8 +216,6 @@ describe("CaseForm", () => {
         client_id: "client-1",
         counterparty_id: "counterparty-1",
         practice_number: 157,
-        case_number: "157",
-        title: "Pratica 157",
         authority: "Tribunale di Milano",
         rg_number: "123/2026",
         notes: "Nota pratica",
@@ -403,9 +401,6 @@ describe("CaseForm", () => {
           client_id: "client-old",
           counterparty_id: "counterparty-1",
           practice_number: 42,
-          case_number: "42",
-          title: "",
-          matter: "civile",
           status: "open",
           opened_at: "2026-05-09",
           notes: " Nota iniziale ",
@@ -424,7 +419,6 @@ describe("CaseForm", () => {
     expect(query.update).toHaveBeenCalledWith(
       expect.objectContaining({
         client_id: "client-1",
-        title: "Pratica 42",
         notes: "Nota iniziale",
       }),
     );
@@ -448,9 +442,6 @@ describe("CaseForm", () => {
           client_id: "client-1",
           counterparty_id: "counterparty-1",
           practice_number: 42,
-          case_number: "42",
-          title: "Pratica esistente",
-          matter: "civile",
           status: "open",
           opened_at: "2026-05-09",
         }}
@@ -488,9 +479,6 @@ describe("CaseForm", () => {
           client_id: "client-1",
           counterparty_id: "counterparty-1",
           practice_number: 0,
-          case_number: "",
-          title: "",
-          matter: "civile",
           status: "open",
           opened_at: "2026-05-09",
         }}

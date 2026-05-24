@@ -212,10 +212,12 @@ export function GlobalSearch() {
     queryFn: async () => {
       const likeTerm = `%${escapeLikeTerm(normalizedSearch)}%`;
       const hasTerm = normalizedSearch.length > 0;
+      const practiceNumber = Number(normalizedSearch);
+      const hasPracticeNumber = Number.isInteger(practiceNumber) && practiceNumber > 0;
 
       const caseQuery = supabase
         .from("cases")
-        .select("id, public_code, case_number, practice_number, updated_at")
+        .select("id, public_code, practice_number, updated_at")
         .order("updated_at", { ascending: false })
         .limit(6);
       const clientQuery = supabase
@@ -249,7 +251,11 @@ export function GlobalSearch() {
         .limit(6);
 
       if (hasTerm) {
-        caseQuery.or(`case_number.ilike.${likeTerm}`);
+        caseQuery.or(
+          hasPracticeNumber
+            ? `public_code.ilike.${likeTerm},practice_number.eq.${practiceNumber}`
+            : `public_code.ilike.${likeTerm}`,
+        );
         clientQuery.or(
           `first_name.ilike.${likeTerm},last_name.ilike.${likeTerm},business_name.ilike.${likeTerm}`,
         );

@@ -21,7 +21,6 @@ const invoiceData = (): InvoicePdfData => ({
     due_date: "2026-06-09",
     notes: null,
     taxable_fees: 100,
-    taxable_expenses: 0,
     art15_expenses: 12.5,
     general_expenses_amount: 10,
     cassa_amount: 4.4,

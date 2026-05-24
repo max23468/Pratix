@@ -55,7 +55,6 @@ export type CaseDuplicateRow = {
   id: string;
   public_code: string | null;
   practice_number: number;
-  title: string;
   principal_id?: string | null;
   client_id?: string | null;
   counterparty_id?: string | null;

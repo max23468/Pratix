@@ -36,7 +36,6 @@ import {
   clientKindLabels,
   compareClients,
   counterpartyKindLabels,
-  practiceDisplayName,
 } from "@/lib/labels";
 import type { DuplicateCandidate } from "@/lib/duplicate-matching";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
@@ -51,10 +50,7 @@ type CaseRow = {
   principal_id: string | null;
   client_id: string | null;
   counterparty_id: string | null;
-  case_number: string;
   practice_number: number | null;
-  title: string;
-  matter: string;
   status: string;
   authority: string | null;
   rg_number: string | null;
@@ -122,10 +118,7 @@ const empty: CaseRow = {
   principal_id: null,
   client_id: null,
   counterparty_id: null,
-  case_number: "",
   practice_number: null,
-  title: "",
-  matter: "civile",
   status: "open",
   authority: "",
   rg_number: "",
@@ -290,7 +283,6 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
     setForm((current) => ({
       ...current,
       practice_number: nextPracticeNumber,
-      case_number: String(nextPracticeNumber),
     }));
   }
 
@@ -645,7 +637,6 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
         throw new Error("Inserisci un numero pratica numerico positivo");
       }
 
-      const title = practiceDisplayName({ practice_number: practiceNumber });
       if (!isEdit && !duplicateOverrideRef.current && canUseAuthHeaders()) {
         const principal = form.principal_id;
         const client = allClients.find((item) => item.id === form.client_id);
@@ -655,7 +646,6 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
               entityType: "case",
               draft: {
                 practice_number: practiceNumber,
-                title,
                 principal_id: principal,
                 client_id: form.client_id,
                 counterparty_id: form.counterparty_id,
@@ -680,15 +670,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
         client_id: form.client_id,
         counterparty_id: form.counterparty_id,
         practice_number: practiceNumber,
-        case_number: String(practiceNumber),
-        title,
-        matter: "civile" as const,
         status: form.status as "open",
-        fee_type: "flat" as const,
-        agreed_fee: 0,
-        hourly_rate: null,
-        retainer: 0,
-        counterparty: null,
         authority: form.authority?.trim() || null,
         rg_number: form.rg_number?.trim() || null,
         opened_at: form.opened_at || today(),
@@ -768,7 +750,6 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
     const number = result.data ?? nextPracticeNumber;
     if (!number) return;
     upd("practice_number", number);
-    upd("case_number", String(number));
   };
 
   return (
@@ -1263,7 +1244,6 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
                     const value = event.target.value;
                     const numericValue = value === "" ? null : Number(value);
                     upd("practice_number", numericValue);
-                    upd("case_number", numericValue ? String(numericValue) : "");
                   }}
                   placeholder="Es. 157"
                 />

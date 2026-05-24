@@ -142,7 +142,6 @@ export type CaseActivityDialogActivity = ActivityRow;
 
 type CaseOption = CaseActivityContext & {
   practice_number: number;
-  title: string;
 };
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -552,7 +551,7 @@ export function CaseActivityDialog({
       const { data, error } = await supabase
         .from("cases")
         .select(
-          "id, principal_id, client_id, counterparty_id, practice_number, case_number, title, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
+          "id, principal_id, client_id, counterparty_id, practice_number, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
         )
         .order("updated_at", { ascending: false });
       if (error) throw error;

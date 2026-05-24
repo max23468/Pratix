@@ -132,22 +132,18 @@ pratica è l'incrocio fra committente (`principal_id`), cliente corrente
 
 Contiene:
 
-- numerazione interna storica (`case_number`, unica per utente);
 - numero pratica numerico (`practice_number`, positivo e unico per utente);
 - stato corrente (`status`)
-- dati di causa (autorità, RG, controparte)
-- accordo economico (`fee_type` flat/orario, `agreed_fee`, `hourly_rate`,
-  `retainer`)
+- dati di causa (autorità, RG, controparte strutturata)
 - date di apertura/chiusura
 
-`case_number` resta per compatibilità con la UI attuale; il nuovo dominio usa
-`practice_number`. Il trigger `cases_assign_practice_number` consente sia
+Il trigger `cases_assign_practice_number` consente sia
 l'inserimento manuale di un numero esistente, sia la generazione atomica del
 prossimo numero libero.
 
-Il campo `title` resta nel database per compatibilità tecnica e import storici,
-ma non è un nome pratica esposto all'utente: nelle superfici operative la pratica
-è identificata dal solo numero pratica.
+I campi pre-focus (`case_number`, `title`, `matter`, accordi economici flat/orari
+e controparte testuale) sono stati rimossi: le superfici operative identificano
+la pratica con il solo numero pratica e con soggetti strutturati.
 
 ### `case_credit_transfers`
 
@@ -244,11 +240,11 @@ sessione `billing_runs`: il soggetto fatturato è il committente
 (`principal_id`), mentre `client_id` resta compilato come ancora tecnica
 compatibile con lo schema storico. I campi `include_general_expenses`,
 `general_expenses_rate`, `general_expenses_amount`, `cassa_base_amount`
-congelano le spese generali opzionali. La cassa forense si calcola solo su
-compensi + spese generali + eventuali spese imponibili legacy, non sui rimborsi
-Art. 15.
-Il bollo viene incluso solo se la preferenza `profiles.include_stamp_duty` è
-attiva al momento della generazione.
+congelano le spese generali opzionali. La cassa forense si calcola su compensi
+
+- spese generali, non sui rimborsi Art. 15.
+  Il bollo viene incluso solo se la preferenza `profiles.include_stamp_duty` è
+  attiva al momento della generazione.
 
 ### `billing_runs`
 
@@ -277,8 +273,6 @@ Storage e collegati alla fattura tramite `invoice_id`.
 **Righe di una fattura**. `kind` distingue:
 
 - `fee`: onorario imponibile
-- `expense_taxable`: spesa imponibile legacy, non generata dal nuovo flusso
-  recupero crediti
 - `expense_art15`: anticipazione fuori imponibile
 
 `position` ordina le righe nel documento.
@@ -382,25 +376,23 @@ quando serve.
 
 ## Enum
 
-| Enum                      | Valori                                                                           |
-| ------------------------- | -------------------------------------------------------------------------------- |
-| `billing_export_kind`     | fees, expenses                                                                   |
-| `billing_run_item_status` | included, postponed, excluded                                                    |
-| `billing_run_status`      | draft, finalized, cancelled                                                      |
-| `case_activity_status`    | to_invoice, invoiced                                                             |
-| `case_matter`             | civile, penale, lavoro, famiglia, amministrativo, tributario, commerciale, altro |
-| `case_status`             | open, in_progress, suspended, closed, archived                                   |
-| `client_kind`             | individual, company                                                              |
-| `counterparty_kind`       | individual, company, group                                                       |
-| `fee_type`                | flat, hourly                                                                     |
-| `import_mode`             | manual, excel                                                                    |
-| `import_row_status`       | pending, valid, warning, error, imported, skipped                                |
-| `import_status`           | draft, validated, imported, cancelled                                            |
-| `invoice_line_kind`       | fee, expense_taxable, expense_art15                                              |
-| `invoice_status`          | draft, issued, paid, overdue                                                     |
-| `price_book_status`       | draft, active, archived                                                          |
-| `price_item_kind`         | fee, expense_reimbursement                                                       |
-| `tax_regime`              | ordinario, forfettario                                                           |
+| Enum                      | Valori                                            |
+| ------------------------- | ------------------------------------------------- |
+| `billing_export_kind`     | fees, expenses                                    |
+| `billing_run_item_status` | included, postponed, excluded                     |
+| `billing_run_status`      | draft, finalized, cancelled                       |
+| `case_activity_status`    | to_invoice, invoiced                              |
+| `case_status`             | open, in_progress, suspended, closed, archived    |
+| `client_kind`             | individual, company                               |
+| `counterparty_kind`       | individual, company, group                        |
+| `import_mode`             | manual, excel                                     |
+| `import_row_status`       | pending, valid, warning, error, imported, skipped |
+| `import_status`           | draft, validated, imported, cancelled             |
+| `invoice_line_kind`       | fee, expense_art15                                |
+| `invoice_status`          | draft, issued, paid, overdue                      |
+| `price_book_status`       | draft, active, archived                           |
+| `price_item_kind`         | fee, expense_reimbursement                        |
+| `tax_regime`              | ordinario, forfettario                            |
 
 Convenzione: i valori enum sono in **inglese minuscolo** (perché identifier
 di codice), le label utente sono tradotte in italiano in `src/lib/labels.ts`.

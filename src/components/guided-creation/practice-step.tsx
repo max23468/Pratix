@@ -1,4 +1,4 @@
-import type { CaseStatus, ImportDraft } from "./types";
+import type { CaseStatus, GuidedCreationDraft } from "./types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,8 +16,8 @@ export function PracticeStep({
   draft,
   updateDraft,
 }: {
-  draft: ImportDraft;
-  updateDraft: <K extends keyof ImportDraft>(key: K, value: ImportDraft[K]) => void;
+  draft: GuidedCreationDraft;
+  updateDraft: <K extends keyof GuidedCreationDraft>(key: K, value: GuidedCreationDraft[K]) => void;
 }) {
   return (
     <Card>

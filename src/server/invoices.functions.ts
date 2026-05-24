@@ -167,7 +167,7 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
     const { data: activities, error: activitiesError } = await supabase
       .from("case_activities")
       .select(
-        "id, case_id, principal_id, client_id, counterparty_id, activity_date, kind, status, invoice_id, description, quantity, unit_price, amount, postponed_count, cases(practice_number, title), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name), case_activity_hearings(hearing_date, position)",
+        "id, case_id, principal_id, client_id, counterparty_id, activity_date, kind, status, invoice_id, description, quantity, unit_price, amount, postponed_count, cases(practice_number), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name), case_activity_hearings(hearing_date, position)",
       )
       .eq("user_id", userId)
       .eq("principal_id", data.principalId)
@@ -338,7 +338,7 @@ export const updateDraftBillingInvoiceFn = createServerFn({ method: "POST" })
         supabase
           .from("case_activities")
           .select(
-            "id, case_id, principal_id, client_id, counterparty_id, activity_date, kind, status, invoice_id, description, quantity, unit_price, amount, postponed_count, cases(practice_number, title), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name), case_activity_hearings(hearing_date, position)",
+            "id, case_id, principal_id, client_id, counterparty_id, activity_date, kind, status, invoice_id, description, quantity, unit_price, amount, postponed_count, cases(practice_number), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name), case_activity_hearings(hearing_date, position)",
           )
           .eq("user_id", userId)
           .eq("principal_id", data.principalId)
@@ -683,7 +683,6 @@ export const generateInvoiceXmlFn = createServerFn({ method: "POST" })
         withholding_rate: Number(invoice.withholding_rate),
         apply_withholding: invoice.apply_withholding,
         taxable_fees: Number(invoice.taxable_fees),
-        taxable_expenses: Number(invoice.taxable_expenses),
         art15_expenses: Number(invoice.art15_expenses),
         general_expenses_amount: Number(invoice.general_expenses_amount),
         cassa_base_amount: Number(invoice.cassa_base_amount),
@@ -694,7 +693,7 @@ export const generateInvoiceXmlFn = createServerFn({ method: "POST" })
         total_amount: Number(invoice.total_amount),
       },
       lines: (lines || []).map((l) => ({
-        kind: l.kind as "fee" | "expense_taxable" | "expense_art15",
+        kind: l.kind as "fee" | "expense_art15",
         description: l.description,
         quantity: Number(l.quantity),
         unit_price: Number(l.unit_price),
