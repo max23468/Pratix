@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
@@ -14,6 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 import {
   caseStatusLabels,
   caseStatusVariant,
+  clientDisplayName,
   counterpartyDisplayName,
   practiceDisplayName,
 } from "@/lib/labels";

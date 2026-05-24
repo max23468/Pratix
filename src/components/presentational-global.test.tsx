@@ -4,14 +4,17 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { invalidate, reset, setMode } = vi.hoisted(() => ({
+const { invalidate, reset, routeState, setMode } = vi.hoisted(() => ({
   invalidate: vi.fn(),
   reset: vi.fn(),
+  routeState: { pathname: "/pratiche/case-1" },
   setMode: vi.fn(),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
   useRouter: () => ({ invalidate }),
+  useRouterState: ({ select }: { select: (state: { location: { pathname: string } }) => string }) =>
+    select({ location: { pathname: routeState.pathname } }),
 }));
 
 vi.mock("@/lib/theme-context", () => ({
@@ -28,6 +31,7 @@ import { TableEmptyState } from "./table-empty-state";
 describe("componenti presentazionali globali", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    routeState.pathname = "/pratiche/case-1";
   });
 
   it("renderizza stati informativi e azioni leggere", async () => {
@@ -57,7 +61,7 @@ describe("componenti presentazionali globali", () => {
     expect(screen.getByText(/Tema attivo/)).toBeTruthy();
     expect(screen.getAllByText("Scuro").length).toBeGreaterThan(0);
     expect(screen.getByText("Sezione in arrivo")).toBeTruthy();
-    expect(screen.getByText("Pratiche")).toBeTruthy();
+    expect(screen.getAllByText("Pratiche").length).toBeGreaterThan(0);
     expect(screen.getByText("Aperta")).toBeTruthy();
     expect(screen.getByText("Nessuna attività")).toBeTruthy();
     expect(screen.getByText("Logo bar")).toBeTruthy();
@@ -72,12 +76,31 @@ describe("componenti presentazionali globali", () => {
   it("mostra errore di fallback e permette reset router", async () => {
     render(<DefaultErrorComponent error={new Error("Errore test")} reset={reset} />);
 
-    expect(screen.getByText("Qualcosa è andato storto")).toBeTruthy();
-    expect(screen.getByRole("link", { name: "Torna alla home" }).getAttribute("href")).toBe("/");
+    expect(screen.getAllByText("Pratiche").length).toBeGreaterThan(0);
+    expect(screen.getByText("Caricamento interrotto")).toBeTruthy();
+    expect(screen.getByText(/Pratix ha interrotto il caricamento/)).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Vai alla Dashboard" }).getAttribute("href")).toBe(
+      "/dashboard",
+    );
 
     await userEvent.click(screen.getByRole("button", { name: "Riprova" }));
 
     expect(invalidate).toHaveBeenCalled();
     expect(reset).toHaveBeenCalled();
+  });
+
+  it("classifica errori di connessione e sessione con messaggi specifici", () => {
+    const view = render(
+      <DefaultErrorComponent error={new Error("Failed to fetch")} reset={reset} />,
+    );
+
+    expect(screen.getByText("Connessione non riuscita")).toBeTruthy();
+    expect(screen.getByText(/non riesce a raggiungere i servizi/)).toBeTruthy();
+
+    routeState.pathname = "/account";
+    view.rerender(<DefaultErrorComponent error={new Error("Sessione non valida")} reset={reset} />);
+
+    expect(screen.getByText("Sessione da aggiornare")).toBeTruthy();
+    expect(screen.getByRole("link", { name: "Accedi" }).getAttribute("href")).toBe("/login");
   });
 });
