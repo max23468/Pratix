@@ -338,7 +338,7 @@ Aggiornare o rimuovere:
 - `docs/guides/migrations.md`;
 - `docs/memory/` come mirror leggibile;
 - `CHANGELOG.md`;
-- `ROADMAP.md`;
+- `docs/ROADMAP.md`;
 - questa guida, da archiviare o eliminare dopo la chiusura definitiva;
 - gli ADR storici, da mantenere solo se si conserva il decision log completo;
 - `package.json`, `package-lock.json`, `vite.config.ts`, commenti, errori e

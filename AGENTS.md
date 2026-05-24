@@ -201,7 +201,7 @@ Pratix tiene molta documentazione "viva": va aggiornata insieme alle modifiche.
 
 ### Cosa aggiornare e quando
 
-- **`ROADMAP.md`** — _ogni_ decisione di prodotto, brand o tecnica condivisa in chat deve confluire qui. Aggiorna lo stato (✅ 🟡 ⬜ 💤) quando una voce cambia.
+- **`docs/ROADMAP.md`** — _ogni_ decisione di prodotto, brand o tecnica condivisa in chat deve confluire qui. Aggiorna lo stato (✅ 🟡 ⬜ 💤) quando una voce cambia.
 - **`CHANGELOG.md`** — voci sotto `[Non rilasciato]` per ogni modifica utente-visibile o operativamente rilevante. Categorie versionate: `Novità` (in evidenza), `Correzioni` (bugfix/sicurezza), `Sotto il cofano` (refactor/asset/migrazioni invisibili). Usa `Non versionato` per piani, ADR, guide, regole agenti e documentazione interna che vengono pubblicati nel repo ma non cambiano app, runtime, contenuti esposti o supporto a una versione.
 - **`docs/decisions/`** — un nuovo ADR per ogni decisione "per sempre" (architettura, brand strutturale, vincoli di processo). Numerazione progressiva.
 - **`docs/guides/`** — guide operative per aree tematiche (architettura, database, fatturazione, tema, tono di voce, deploy, migrations, versioning).
@@ -211,17 +211,17 @@ Pratix tiene molta documentazione "viva": va aggiornata insieme alle modifiche.
 
 #### Mappa rapida: tipo di modifica → file da toccare
 
-| Tipo di modifica                                       | File da aggiornare (oltre al codice)                                                                                |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
-| Nuova feature utente-visibile                          | `CHANGELOG.md` (Novità), `ROADMAP.md`, bump MINOR in `version.ts` al rilascio                                       |
-| Bugfix / correzione UI                                 | `CHANGELOG.md` (Correzioni), bump PATCH al rilascio                                                                 |
-| Refactor o asset interno                               | `CHANGELOG.md` (Sotto il cofano), bump PATCH al rilascio se entra in app/runtime                                    |
-| Decisione "per sempre" (architettura, brand, processo) | nuovo ADR in `docs/decisions/` + `ROADMAP.md` + memoria + `CHANGELOG.md` (Non versionato se resta solo documentale) |
-| Cambio modello dati (tabelle, RLS, trigger)            | migrazione SQL + `docs/data-model.md` + `supabase/schema.sql` + `CHANGELOG.md`                                      |
-| Cambio brand (palette, tipografia, logo, tono)         | `BRAND.md` + `src/styles.css` + memoria + `CHANGELOG.md`                                                            |
-| Nuovo, modificato o vietato termine di prodotto        | `docs/glossario.md` + memoria + (se cambia label UI) `CHANGELOG.md`                                                 |
-| Nuova guida operativa                                  | `docs/guides/<nome>.md` + link da `AGENTS.md` o `README.md` se rilevante                                            |
-| Cambio regola di processo per agenti                   | `mem://` + mirror in `docs/memory/` + (se utile) `AGENTS.md`                                                        |
+| Tipo di modifica                                       | File da aggiornare (oltre al codice)                                                                                     |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| Nuova feature utente-visibile                          | `CHANGELOG.md` (Novità), `docs/ROADMAP.md`, bump MINOR in `version.ts` al rilascio                                       |
+| Bugfix / correzione UI                                 | `CHANGELOG.md` (Correzioni), bump PATCH al rilascio                                                                      |
+| Refactor o asset interno                               | `CHANGELOG.md` (Sotto il cofano), bump PATCH al rilascio se entra in app/runtime                                         |
+| Decisione "per sempre" (architettura, brand, processo) | nuovo ADR in `docs/decisions/` + `docs/ROADMAP.md` + memoria + `CHANGELOG.md` (Non versionato se resta solo documentale) |
+| Cambio modello dati (tabelle, RLS, trigger)            | migrazione SQL + `docs/data-model.md` + `supabase/schema.sql` + `CHANGELOG.md`                                           |
+| Cambio brand (palette, tipografia, logo, tono)         | `BRAND.md` + `src/styles.css` + memoria + `CHANGELOG.md`                                                                 |
+| Nuovo, modificato o vietato termine di prodotto        | `docs/glossario.md` + memoria + (se cambia label UI) `CHANGELOG.md`                                                      |
+| Nuova guida operativa                                  | `docs/guides/<nome>.md` + link da `AGENTS.md` o `README.md` se rilevante                                                 |
+| Cambio regola di processo per agenti                   | `mem://` + mirror in `docs/memory/` + (se utile) `AGENTS.md`                                                             |
 
 ### Memoria di progetto
 
@@ -273,6 +273,6 @@ Una modifica è pronta se:
 - non rompe routing, build o UI responsive nelle aree toccate;
 - rispetta RLS e principi di sicurezza se ha toccato il DB;
 - include verifiche eseguite o limiti noti quando rilevanti;
-- aggiorna `ROADMAP.md`, `CHANGELOG.md`, ADR, `docs/` e memoria solo quando serve davvero;
+- aggiorna `docs/ROADMAP.md`, `CHANGELOG.md`, ADR, `docs/` e memoria solo quando serve davvero;
 - se il lavoro è stato mergeato/pubblicato, non lascia branch dedicati locali o remoti inutilizzati né worktree temporanei/directory residue; se restano, il motivo è esplicitato;
 - non lascia file temporanei, dati sensibili o modifiche non correlate.

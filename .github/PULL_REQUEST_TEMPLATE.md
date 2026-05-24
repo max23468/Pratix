@@ -28,7 +28,7 @@ Closes #
 - [ ] Provato manualmente su desktop
 - [ ] Provato manualmente su mobile (se UI)
 - [ ] Aggiornato `CHANGELOG.md` sotto `[Non rilasciato]`
-- [ ] Aggiornato `ROADMAP.md` se è cambiato lo stato di una voce
+- [ ] Aggiornato `docs/ROADMAP.md` se è cambiato lo stato di una voce
 - [ ] Aggiornato `docs/` o `BRAND.md` se è cambiata una regola
 
 ## Sicurezza e dati

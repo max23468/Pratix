@@ -46,5 +46,5 @@ strutturato come funzione di prodotto.
 
 ## Riferimenti
 
-- [ROADMAP](../../ROADMAP.md)
+- [Roadmap](../ROADMAP.md)
 - [ADR 0013 — Focus recupero crediti](./0013-focus-recupero-crediti.md)

@@ -436,7 +436,7 @@ Questa pianificazione è documentazione interna e non richiede release SemVer.
 
 Quando la funzionalità verrà implementata, essendo utente-visibile, servirà:
 
-- aggiornare `ROADMAP.md`;
+- aggiornare `docs/ROADMAP.md`;
 - aggiornare `CHANGELOG.md` sotto `[Non rilasciato] > Novità`;
 - valutare bump MINOR al rilascio;
 - aggiornare `docs/data-model.md` se viene aggiunta `duplicate_reviews`;

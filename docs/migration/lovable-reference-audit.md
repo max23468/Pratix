@@ -30,8 +30,8 @@ migrazione tecnica fuori da Lovable.
 | Decision log          | `docs/decisions/0008-versioning-e-changelog.md`     | ADR storico con vecchio processo          | Valutare aggiornamento o nota di superseding                     |
 | Decision log          | `docs/decisions/0009-uscita-completa-da-lovable.md` | ADR della migrazione completata           | Tenere come decisione architetturale                             |
 | Changelog             | `CHANGELOG.md`                                      | Storico release                           | Non riscrivere salvo scelta esplicita                            |
-| Roadmap               | `ROADMAP.md`                                        | Stato migrazione e dismissione differita  | Aggiornare solo quando Lovable viene chiuso o scollegato         |
-| Indice docs           | `docs/README.md`                                    | Link a documenti storici                  | Aggiornare se i documenti vengono archiviati o rimossi           |
+| Roadmap               | `docs/ROADMAP.md`                                   | Stato migrazione e dismissione differita  | Aggiornare solo quando Lovable viene chiuso o scollegato         |
+| Indice docs           | `docs/INDEX.md`                                     | Link a documenti storici                  | Aggiornare se i documenti vengono archiviati o rimossi           |
 
 ## Gate operativo
 

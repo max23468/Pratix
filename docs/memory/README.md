@@ -18,7 +18,7 @@ Quando una regola cambia:
 | ---------------------------------- | --------------------------------- | ----------------------------------------------------------------------- |
 | [`core.md`](./core.md)             | `mem://index.md` (sezione _Core_) | Regole sempre attive, applicate a ogni intervento                       |
 | [`brand.md`](./brand.md)           | `mem://design/brand`              | Riferimento brand completo                                              |
-| [`roadmap.md`](./roadmap.md)       | `mem://process/roadmap`           | Puntatore a `ROADMAP.md` e regola di sincronizzazione                   |
+| [`roadmap.md`](./roadmap.md)       | `mem://process/roadmap`           | Puntatore a `docs/ROADMAP.md` e regola di sincronizzazione              |
 | [`versioning.md`](./versioning.md) | `mem://process/versioning`        | Regole SemVer, changelog a tre categorie, pagina `/novita` e campanella |
 
 ## Cosa **non** mettere qui

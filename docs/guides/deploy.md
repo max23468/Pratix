@@ -259,4 +259,4 @@ Checklist minima:
 - [ ] Meta tag e og:image sulle pagine pubbliche
 - [ ] Errori auth generici (no enumeration)
 
-Vedi [SECURITY.md](../../SECURITY.md) e [ROADMAP.md](../../ROADMAP.md) per lo stato.
+Vedi [SECURITY.md](../../SECURITY.md) e [ROADMAP.md](../ROADMAP.md) per lo stato.
