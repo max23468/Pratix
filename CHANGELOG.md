@@ -6,6 +6,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.11.18] — 2026-05-25
+
 ### Correzioni
 
 - **UI autenticata**: uniformate toolbar, ricerca, card mobile, stati di
@@ -1214,6 +1216,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.11.18]: #11118--2026-05-25
 [1.11.17]: #11117--2026-05-25
 [1.11.16]: #11116--2026-05-24
 [1.11.15]: #11115--2026-05-24
