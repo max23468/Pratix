@@ -3,7 +3,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const { supabase, query, maybeSingle } = vi.hoisted(() => {
@@ -52,6 +52,19 @@ function Probe() {
   );
 }
 
+function IdentityProbe({ onStableIdentity }: { onStableIdentity: (stable: boolean) => void }) {
+  const changelog = useUnreadChangelog();
+  const firstMarkAsRead = useRef(changelog.markAsRead);
+
+  useEffect(() => {
+    if (!changelog.isLoading) {
+      onStableIdentity(firstMarkAsRead.current === changelog.markAsRead);
+    }
+  }, [changelog.isLoading, changelog.markAsRead, onStableIdentity]);
+
+  return <span>{changelog.isLoading ? "caricamento" : "pronto"}</span>;
+}
+
 describe("useUnreadChangelog", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -77,5 +90,20 @@ describe("useUnreadChangelog", () => {
     await waitFor(() =>
       expect(query.update).toHaveBeenCalledWith({ last_seen_changelog_version: APP_VERSION }),
     );
+  });
+
+  it("mantiene stabile il callback markAsRead fra i render", async () => {
+    maybeSingle.mockResolvedValue({
+      data: { last_seen_changelog_version: "0.1.0" },
+      error: null,
+    });
+    const onStableIdentity = vi.fn();
+
+    render(<IdentityProbe onStableIdentity={onStableIdentity} />, { wrapper: Wrapper });
+
+    await screen.findByText("pronto");
+
+    await waitFor(() => expect(onStableIdentity).toHaveBeenLastCalledWith(true));
+    expect(onStableIdentity).not.toHaveBeenCalledWith(false);
   });
 });

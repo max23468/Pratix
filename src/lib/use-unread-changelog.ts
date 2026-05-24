@@ -29,7 +29,7 @@ export function useUnreadChangelog() {
     },
   });
 
-  const markAsRead = useMutation({
+  const { mutate: markAsRead } = useMutation({
     mutationFn: async () => {
       if (!userId) return;
       const { error } = await supabase
@@ -50,6 +50,6 @@ export function useUnreadChangelog() {
     isLoading,
     lastSeen,
     currentVersion: APP_VERSION,
-    markAsRead: () => markAsRead.mutate(),
+    markAsRead,
   };
 }
