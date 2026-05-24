@@ -1,15 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
+import { ListToolbar } from "@/components/list-toolbar";
+import { MobileListCardHeader, mobileListCardLinkClassName } from "@/components/mobile-list-card";
 import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { PageHeader } from "@/components/page-header";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { SearchInput } from "@/components/search-input";
 import {
   Select,
   SelectContent,
@@ -22,6 +24,12 @@ import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components
 import { supabase } from "@/integrations/supabase/client";
 import { clientDisplayName, clientKindLabels } from "@/lib/labels";
 import { routeRef } from "@/lib/public-route-code";
+import {
+  normalizeTextSearch,
+  parseLooseSelectValue,
+  parseSearchValue,
+  parseTextSearch,
+} from "@/lib/search-params";
 import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
@@ -36,6 +44,9 @@ import {
 } from "@/lib/table-sorting";
 
 type ClientiSearch = {
+  q?: string;
+  kind?: ClientKindFilter;
+  principalId?: string;
   sort?: ClientiSortKey;
   dir?: "asc" | "desc";
 };
@@ -54,10 +65,16 @@ const clientiSortKeys = ["name", "kind", "principals", "created_at"] as const;
 
 type ClientiSortKey = (typeof clientiSortKeys)[number];
 
+const clientKindFilters = ["all", ...Object.keys(clientKindLabels)] as const;
+type ClientKindFilter = (typeof clientKindFilters)[number];
+
 const clientiDefaultSort: TableSort<ClientiSortKey> = { key: "created_at", direction: "desc" };
 
 export const Route = createFileRoute("/clienti/")({
   validateSearch: (search: Record<string, unknown>): ClientiSearch => ({
+    q: parseTextSearch(search.q),
+    kind: parseSearchValue(search.kind, clientKindFilters),
+    principalId: parseLooseSelectValue(search.principalId),
     sort: parseTableSortKey(search.sort, clientiSortKeys),
     dir: parseTableSortDirection(search.dir),
   }),
@@ -78,12 +95,26 @@ export const Route = createFileRoute("/clienti/")({
 
 function ClientiList() {
   const navigate = Route.useNavigate();
-  const search = Route.useSearch();
-  const [q, setQ] = useState("");
-  const [kind, setKind] = useState("all");
-  const [principalId, setPrincipalId] = useState("all");
+  const routeSearch = Route.useSearch();
+  const q = routeSearch.q ?? "";
+  const kind = routeSearch.kind ?? "all";
+  const principalId = routeSearch.principalId ?? "all";
   const urlSort =
-    search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
+    routeSearch.sort && routeSearch.dir
+      ? { key: routeSearch.sort, direction: routeSearch.dir }
+      : undefined;
+
+  const updateSearch = (next: ClientiSearch) =>
+    navigate({
+      search: {
+        q: normalizeTextSearch(next.q ?? q),
+        kind: next.kind && next.kind !== "all" ? next.kind : undefined,
+        principalId: next.principalId && next.principalId !== "all" ? next.principalId : undefined,
+        sort: next.sort ?? routeSearch.sort,
+        dir: next.dir ?? routeSearch.dir,
+      },
+      replace: true,
+    });
 
   const { data, isLoading } = useQuery({
     queryKey: ["clients"],
@@ -160,7 +191,7 @@ function ClientiList() {
     defaultSort: clientiDefaultSort,
     urlSort,
     onSortChange: (next) =>
-      navigate({ search: { sort: next.key, dir: next.direction }, replace: true }),
+      updateSearch({ q, kind, principalId, sort: next.key, dir: next.direction }),
   });
 
   const filtered = useMemo(() => {
@@ -203,17 +234,18 @@ function ClientiList() {
         }
       />
 
-      <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
-        <div className="relative max-w-sm flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Cerca per nome o committente…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={kind} onValueChange={setKind}>
+      <ListToolbar>
+        <SearchInput
+          placeholder="Cerca per nome o committente…"
+          value={q}
+          onChange={(value) => updateSearch({ q: value, kind, principalId })}
+        />
+        <Select
+          value={kind}
+          onValueChange={(value) =>
+            updateSearch({ q, kind: value as ClientKindFilter, principalId })
+          }
+        >
           <SelectTrigger aria-label="Filtra clienti per tipo" className="lg:w-44">
             <SelectValue />
           </SelectTrigger>
@@ -226,7 +258,10 @@ function ClientiList() {
             ))}
           </SelectContent>
         </Select>
-        <Select value={principalId} onValueChange={setPrincipalId}>
+        <Select
+          value={principalId}
+          onValueChange={(value) => updateSearch({ q, kind, principalId: value })}
+        >
           <SelectTrigger aria-label="Filtra clienti per committente" className="lg:w-56">
             <SelectValue />
           </SelectTrigger>
@@ -240,7 +275,7 @@ function ClientiList() {
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </ListToolbar>
 
       <div className="mb-4 md:hidden">
         <MobileSortSelect columns={clientiColumns} sort={sort} onSort={setSort} />
@@ -279,19 +314,15 @@ function ClientiList() {
                 key={c.id}
                 to="/clienti/$clientId"
                 params={{ clientId: routeRef(c) }}
-                className="block rounded-md border border-border bg-card p-4 shadow-soft transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className={mobileListCardLinkClassName}
               >
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
-                    <p className="mt-1 truncate text-xs text-muted-foreground">
-                      {principalNamesByClient[c.id]?.join(", ") || "Nessun committente collegato"}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="shrink-0">
-                    {clientKindLabels[c.kind] ?? c.kind}
-                  </Badge>
-                </div>
+                <MobileListCardHeader
+                  title={displayName}
+                  subtitle={
+                    principalNamesByClient[c.id]?.join(", ") || "Nessun committente collegato"
+                  }
+                  badge={<Badge variant="outline">{clientKindLabels[c.kind] ?? c.kind}</Badge>}
+                />
               </Link>
             );
           })

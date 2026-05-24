@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
+import { PageState } from "@/components/page-state";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -58,18 +59,22 @@ function CaseDetail() {
   });
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Caricamento…</p>;
+    return <PageState variant="loading" title="Caricamento pratica…" />;
   }
   if (!caseRow) {
     return (
-      <>
-        <PageHeader title="Pratica non trovata" />
-        <Link to="/pratiche">
-          <Button size="sm" variant="outline">
-            <ArrowLeft className="mr-1 size-4" /> Torna alle pratiche
+      <PageState
+        variant="not-found"
+        title="Pratica non trovata"
+        description="La pratica non esiste o non è più disponibile."
+        action={
+          <Button size="sm" variant="outline" asChild>
+            <Link to="/pratiche">
+              <ArrowLeft className="mr-1 size-4" /> Torna alle pratiche
+            </Link>
           </Button>
-        </Link>
-      </>
+        }
+      />
     );
   }
 
@@ -80,33 +85,29 @@ function CaseDetail() {
     : "—";
   return (
     <>
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <h1 className="min-w-0 max-w-full truncate font-display text-[26px] font-semibold tracking-tight text-foreground">
-              {practiceDisplayName(caseRow)}
-            </h1>
-            <Badge variant={caseStatusVariant[caseRow.status] ?? "outline"}>
-              {caseStatusLabels[caseRow.status] ?? caseRow.status}
-            </Badge>
-          </div>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {principalName} · {clientName} · {counterpartyName}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link to="/pratiche/nuova">
-            <Button size="sm">
-              <Plus className="mr-1 size-4" /> Nuova pratica
-            </Button>
-          </Link>
-          <Link to="/pratiche">
-            <Button size="sm" variant="outline">
-              <ArrowLeft className="mr-1 size-4" /> Torna alle pratiche
-            </Button>
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title={practiceDisplayName(caseRow)}
+        titleAccessory={
+          <Badge variant={caseStatusVariant[caseRow.status] ?? "outline"}>
+            {caseStatusLabels[caseRow.status] ?? caseRow.status}
+          </Badge>
+        }
+        description={`${principalName} · ${clientName} · ${counterpartyName}`}
+        actions={
+          <>
+            <Link to="/pratiche/nuova">
+              <Button size="sm">
+                <Plus className="mr-1 size-4" /> Nuova pratica
+              </Button>
+            </Link>
+            <Link to="/pratiche">
+              <Button size="sm" variant="outline">
+                <ArrowLeft className="mr-1 size-4" /> Torna alle pratiche
+              </Button>
+            </Link>
+          </>
+        }
+      />
 
       <CaseOperationsPanel
         caseRow={caseRow}

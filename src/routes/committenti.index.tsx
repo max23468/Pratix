@@ -1,15 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
+import { ListToolbar } from "@/components/list-toolbar";
+import {
+  MobileListCardDetails,
+  MobileListCardHeader,
+  mobileListCardLinkClassName,
+} from "@/components/mobile-list-card";
 import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { PageHeader } from "@/components/page-header";
+import { SearchInput } from "@/components/search-input";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { TableEmptyState } from "@/components/table-empty-state";
 import {
   Select,
@@ -21,6 +27,7 @@ import {
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { routeRef } from "@/lib/public-route-code";
+import { normalizeTextSearch, parseSearchValue, parseTextSearch } from "@/lib/search-params";
 import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
@@ -35,6 +42,9 @@ import {
 } from "@/lib/table-sorting";
 
 type CommittentiSearch = {
+  q?: string;
+  status?: PrincipalStatusFilter;
+  economics?: PrincipalEconomicsFilter;
   sort?: CommittentiSortKey;
   dir?: "asc" | "desc";
 };
@@ -70,6 +80,18 @@ const committentiDefaultSort: TableSort<CommittentiSortKey> = {
   direction: "desc",
 };
 
+const principalStatusFilters = ["all", "active", "archived"] as const;
+type PrincipalStatusFilter = (typeof principalStatusFilters)[number];
+
+const principalEconomicsFilters = [
+  "all",
+  "fees",
+  "expenses",
+  "fees_only",
+  "expenses_only",
+] as const;
+type PrincipalEconomicsFilter = (typeof principalEconomicsFilters)[number];
+
 const committentiColumns: readonly SortableColumn<PrincipalListRow, CommittentiSortKey>[] = [
   {
     key: "business_name",
@@ -104,6 +126,9 @@ const committentiColumns: readonly SortableColumn<PrincipalListRow, CommittentiS
 
 export const Route = createFileRoute("/committenti/")({
   validateSearch: (search: Record<string, unknown>): CommittentiSearch => ({
+    q: parseTextSearch(search.q),
+    status: parseSearchValue(search.status, principalStatusFilters),
+    economics: parseSearchValue(search.economics, principalEconomicsFilters),
     sort: parseTableSortKey(search.sort, committentiSortKeys),
     dir: parseTableSortDirection(search.dir),
   }),
@@ -130,12 +155,26 @@ export const Route = createFileRoute("/committenti/")({
 
 function CommittentiList() {
   const navigate = Route.useNavigate();
-  const search = Route.useSearch();
-  const [q, setQ] = useState("");
-  const [status, setStatus] = useState("active");
-  const [economics, setEconomics] = useState("all");
+  const routeSearch = Route.useSearch();
+  const q = routeSearch.q ?? "";
+  const status = routeSearch.status ?? "active";
+  const economics = routeSearch.economics ?? "all";
   const urlSort =
-    search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
+    routeSearch.sort && routeSearch.dir
+      ? { key: routeSearch.sort, direction: routeSearch.dir }
+      : undefined;
+
+  const updateSearch = (next: CommittentiSearch) =>
+    navigate({
+      search: {
+        q: normalizeTextSearch(next.q ?? q),
+        status: next.status && next.status !== "active" ? next.status : undefined,
+        economics: next.economics && next.economics !== "all" ? next.economics : undefined,
+        sort: next.sort ?? routeSearch.sort,
+        dir: next.dir ?? routeSearch.dir,
+      },
+      replace: true,
+    });
 
   const { data, isLoading } = useQuery({
     queryKey: ["principals"],
@@ -157,7 +196,7 @@ function CommittentiList() {
     defaultSort: committentiDefaultSort,
     urlSort,
     onSortChange: (next) =>
-      navigate({ search: { sort: next.key, dir: next.direction }, replace: true }),
+      updateSearch({ q, status, economics, sort: next.key, dir: next.direction }),
   });
 
   const filtered = useMemo(() => {
@@ -212,17 +251,18 @@ function CommittentiList() {
         }
       />
 
-      <div className="mb-4 flex flex-col gap-2 lg:flex-row lg:items-center">
-        <div className="relative max-w-sm flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Cerca per ragione sociale, CF, P.IVA, email…"
-            value={q}
-            onChange={(event) => setQ(event.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={status} onValueChange={setStatus}>
+      <ListToolbar>
+        <SearchInput
+          placeholder="Cerca per ragione sociale, CF, P.IVA, email…"
+          value={q}
+          onChange={(value) => updateSearch({ q: value, status, economics })}
+        />
+        <Select
+          value={status}
+          onValueChange={(value) =>
+            updateSearch({ q, status: value as PrincipalStatusFilter, economics })
+          }
+        >
           <SelectTrigger aria-label="Filtra committenti per stato" className="lg:w-44">
             <SelectValue />
           </SelectTrigger>
@@ -232,7 +272,12 @@ function CommittentiList() {
             <SelectItem value="archived">Archiviati</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={economics} onValueChange={setEconomics}>
+        <Select
+          value={economics}
+          onValueChange={(value) =>
+            updateSearch({ q, status, economics: value as PrincipalEconomicsFilter })
+          }
+        >
           <SelectTrigger aria-label="Filtra committenti per regole economiche" className="lg:w-56">
             <SelectValue />
           </SelectTrigger>
@@ -244,7 +289,7 @@ function CommittentiList() {
             <SelectItem value="expenses_only">Solo rimborsi</SelectItem>
           </SelectContent>
         </Select>
-      </div>
+      </ListToolbar>
 
       <div className="mb-4 md:hidden">
         <MobileSortSelect columns={committentiColumns} sort={sort} onSort={setSort} />
@@ -281,40 +326,27 @@ function CommittentiList() {
               key={principal.id}
               to="/committenti/$principalId"
               params={{ principalId: routeRef(principal) }}
-              className="block rounded-md border border-border bg-card p-4 shadow-soft transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className={mobileListCardLinkClassName}
             >
-              <div className="flex min-w-0 items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-foreground">
-                    {principal.business_name}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {economicRulesLabel(principal)}
-                  </p>
-                </div>
-                <Badge
-                  variant={principal.archived_at ? "secondary" : "outline"}
-                  className="shrink-0"
-                >
-                  {principal.archived_at ? "Archiviato" : "Attivo"}
-                </Badge>
-              </div>
-              <dl className="mt-3 grid gap-2 text-xs text-muted-foreground">
-                <div className="flex min-w-0 justify-between gap-3">
-                  <dt>CF / P.IVA</dt>
-                  <dd className="min-w-0 truncate text-right">
-                    {principal.vat_number || principal.tax_code || "—"}
-                  </dd>
-                </div>
-                <div className="flex min-w-0 justify-between gap-3">
-                  <dt>Email</dt>
-                  <dd className="min-w-0 truncate text-right">{principal.email ?? "—"}</dd>
-                </div>
-                <div className="flex min-w-0 justify-between gap-3">
-                  <dt>Città</dt>
-                  <dd className="min-w-0 truncate text-right">{principal.address_city ?? "—"}</dd>
-                </div>
-              </dl>
+              <MobileListCardHeader
+                title={principal.business_name}
+                subtitle={economicRulesLabel(principal)}
+                badge={
+                  <Badge variant={principal.archived_at ? "secondary" : "outline"}>
+                    {principal.archived_at ? "Archiviato" : "Attivo"}
+                  </Badge>
+                }
+              />
+              <MobileListCardDetails
+                rows={[
+                  {
+                    label: "CF / P.IVA",
+                    value: principal.vat_number || principal.tax_code || "—",
+                  },
+                  { label: "Email", value: principal.email ?? "—" },
+                  { label: "Città", value: principal.address_city ?? "—" },
+                ]}
+              />
             </Link>
           ))
         )}

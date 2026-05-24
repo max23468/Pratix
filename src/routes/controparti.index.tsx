@@ -1,15 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
+import { ListToolbar } from "@/components/list-toolbar";
+import { MobileListCardHeader, mobileListCardLinkClassName } from "@/components/mobile-list-card";
 import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { PageHeader } from "@/components/page-header";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/search-input";
 import { TableEmptyState } from "@/components/table-empty-state";
 import {
   Select,
@@ -26,6 +28,7 @@ import {
   counterpartyKindLabels,
 } from "@/lib/labels";
 import { routeRef } from "@/lib/public-route-code";
+import { normalizeTextSearch, parseSearchValue, parseTextSearch } from "@/lib/search-params";
 import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
@@ -40,6 +43,8 @@ import {
 } from "@/lib/table-sorting";
 
 type ContropartiSearch = {
+  q?: string;
+  kind?: CounterpartyKindFilter;
   sort?: ContropartiSortKey;
   dir?: "asc" | "desc";
 };
@@ -59,10 +64,15 @@ const contropartiSortKeys = ["name", "kind", "subjects", "notes", "updated_at"] 
 
 type ContropartiSortKey = (typeof contropartiSortKeys)[number];
 
+const counterpartyKindFilters = ["all", ...Object.keys(counterpartyKindLabels)] as const;
+type CounterpartyKindFilter = (typeof counterpartyKindFilters)[number];
+
 const contropartiDefaultSort: TableSort<ContropartiSortKey> = { key: "name", direction: "asc" };
 
 export const Route = createFileRoute("/controparti/")({
   validateSearch: (search: Record<string, unknown>): ContropartiSearch => ({
+    q: parseTextSearch(search.q),
+    kind: parseSearchValue(search.kind, counterpartyKindFilters),
     sort: parseTableSortKey(search.sort, contropartiSortKeys),
     dir: parseTableSortDirection(search.dir),
   }),
@@ -89,11 +99,24 @@ export const Route = createFileRoute("/controparti/")({
 
 function ContropartiList() {
   const navigate = Route.useNavigate();
-  const search = Route.useSearch();
-  const [q, setQ] = useState("");
-  const [kind, setKind] = useState("all");
+  const routeSearch = Route.useSearch();
+  const q = routeSearch.q ?? "";
+  const kind = routeSearch.kind ?? "all";
   const urlSort =
-    search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
+    routeSearch.sort && routeSearch.dir
+      ? { key: routeSearch.sort, direction: routeSearch.dir }
+      : undefined;
+
+  const updateSearch = (next: ContropartiSearch) =>
+    navigate({
+      search: {
+        q: normalizeTextSearch(next.q ?? q),
+        kind: next.kind && next.kind !== "all" ? next.kind : undefined,
+        sort: next.sort ?? routeSearch.sort,
+        dir: next.dir ?? routeSearch.dir,
+      },
+      replace: true,
+    });
 
   const { data: counterparties, isLoading } = useQuery({
     queryKey: ["counterparties"],
@@ -163,8 +186,7 @@ function ContropartiList() {
     columns: contropartiColumns,
     defaultSort: contropartiDefaultSort,
     urlSort,
-    onSortChange: (next) =>
-      navigate({ search: { sort: next.key, dir: next.direction }, replace: true }),
+    onSortChange: (next) => updateSearch({ q, kind, sort: next.key, dir: next.direction }),
   });
 
   const filtered = useMemo(() => {
@@ -200,17 +222,16 @@ function ContropartiList() {
         }
       />
 
-      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
-        <div className="relative max-w-sm flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Cerca per nome, ragione sociale o note…"
-            value={q}
-            onChange={(event) => setQ(event.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={kind} onValueChange={setKind}>
+      <ListToolbar className="sm:flex-row sm:items-center">
+        <SearchInput
+          placeholder="Cerca per nome, ragione sociale o note…"
+          value={q}
+          onChange={(value) => updateSearch({ q: value, kind })}
+        />
+        <Select
+          value={kind}
+          onValueChange={(value) => updateSearch({ q, kind: value as CounterpartyKindFilter })}
+        >
           <SelectTrigger aria-label="Filtra controparti per tipo" className="sm:w-52">
             <SelectValue />
           </SelectTrigger>
@@ -223,7 +244,7 @@ function ContropartiList() {
             ))}
           </SelectContent>
         </Select>
-      </div>
+      </ListToolbar>
 
       <div className="mb-4 md:hidden">
         <MobileSortSelect columns={contropartiColumns} sort={sort} onSort={setSort} />
@@ -258,21 +279,21 @@ function ContropartiList() {
                 key={counterparty.id}
                 to="/controparti/$counterpartyId"
                 params={{ counterpartyId: routeRef(counterparty) }}
-                className="block rounded-md border border-border bg-card p-4 shadow-soft transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className={mobileListCardLinkClassName}
               >
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {counterparty.kind === "group"
-                        ? `${subjectCounts[counterparty.id] ?? 0} soggetti`
-                        : "Controparte singola"}
-                    </p>
-                  </div>
-                  <Badge variant="outline" className="shrink-0">
-                    {counterpartyKindLabels[counterparty.kind] ?? counterparty.kind}
-                  </Badge>
-                </div>
+                <MobileListCardHeader
+                  title={displayName}
+                  subtitle={
+                    counterparty.kind === "group"
+                      ? `${subjectCounts[counterparty.id] ?? 0} soggetti`
+                      : "Controparte singola"
+                  }
+                  badge={
+                    <Badge variant="outline">
+                      {counterpartyKindLabels[counterparty.kind] ?? counterparty.kind}
+                    </Badge>
+                  }
+                />
                 {counterparty.notes && (
                   <p className="mt-3 line-clamp-2 text-xs text-muted-foreground">
                     {counterparty.notes}

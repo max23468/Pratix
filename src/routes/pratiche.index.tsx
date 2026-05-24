@@ -1,14 +1,19 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { ListToolbar } from "@/components/list-toolbar";
+import {
+  MobileListCardDetails,
+  MobileListCardHeader,
+  mobileListCardLinkClassName,
+} from "@/components/mobile-list-card";
 import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { PageHeader } from "@/components/page-header";
+import { SearchInput } from "@/components/search-input";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { TableEmptyState } from "@/components/table-empty-state";
@@ -28,6 +33,7 @@ import {
   counterpartyDisplayName,
 } from "@/lib/labels";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { normalizeTextSearch, parseTextSearch } from "@/lib/search-params";
 import {
   buildCaseWorkflowQualityChecks,
   buildDebtCollectionWorkflow,
@@ -50,6 +56,7 @@ import {
 } from "@/lib/table-sorting";
 
 type PraticheSearch = {
+  q?: string;
   view?: PraticheView;
   sort?: PraticheSortKey;
   dir?: "asc" | "desc";
@@ -135,6 +142,7 @@ type PraticheView = (typeof praticheViewKeys)[number];
 
 export const Route = createFileRoute("/pratiche/")({
   validateSearch: (search: Record<string, unknown>): PraticheSearch => ({
+    q: parseTextSearch(search.q),
     view: parsePracticeView(search.view),
     sort: parseTableSortKey(search.sort, praticheSortKeys),
     dir: parseTableSortDirection(search.dir),
@@ -157,7 +165,7 @@ export const Route = createFileRoute("/pratiche/")({
 function PraticheList() {
   const navigate = Route.useNavigate();
   const search = Route.useSearch();
-  const [q, setQ] = useState("");
+  const q = search.q ?? "";
   const view = search.view ?? "open";
   const urlSort =
     search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
@@ -310,6 +318,7 @@ function PraticheList() {
     onSortChange: (next) =>
       navigate({
         search: {
+          q: normalizeTextSearch(q),
           view: view === "open" ? undefined : view,
           sort: next.key,
           dir: next.direction,
@@ -322,7 +331,20 @@ function PraticheList() {
     const parsedView = parsePracticeView(nextView) ?? "open";
     navigate({
       search: {
+        q: normalizeTextSearch(q),
         view: parsedView === "open" ? undefined : parsedView,
+        sort: search.sort,
+        dir: search.dir,
+      },
+      replace: true,
+    });
+  };
+
+  const updateQuery = (nextQ: string) => {
+    navigate({
+      search: {
+        q: normalizeTextSearch(nextQ),
+        view: view === "open" ? undefined : view,
         sort: search.sort,
         dir: search.dir,
       },
@@ -391,15 +413,11 @@ function PraticheList() {
       />
 
       <ListToolbar>
-        <div className="relative max-w-sm flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Cerca per numero, committente, cliente, controparte…"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            className="pl-9"
-          />
-        </div>
+        <SearchInput
+          placeholder="Cerca per numero, committente, cliente, controparte…"
+          value={q}
+          onChange={updateQuery}
+        />
         <Select value={view} onValueChange={updateView}>
           <SelectTrigger aria-label="Filtra pratiche per vista" className="lg:w-52">
             <SelectValue />
@@ -456,18 +474,16 @@ function PraticheList() {
                 key={c.id}
                 to="/pratiche/$caseId"
                 params={{ caseId: routeRef(c) }}
-                className="block rounded-md border border-border bg-card p-4 shadow-soft transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className={mobileListCardLinkClassName}
               >
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {c.practice_number}
-                    </p>
-                  </div>
-                  <Badge variant={caseStatusVariant[c.status] ?? "outline"} className="shrink-0">
-                    {caseStatusLabels[c.status] ?? c.status}
-                  </Badge>
-                </div>
+                <MobileListCardHeader
+                  title={c.practice_number}
+                  badge={
+                    <Badge variant={caseStatusVariant[c.status] ?? "outline"}>
+                      {caseStatusLabels[c.status] ?? c.status}
+                    </Badge>
+                  }
+                />
                 {workflow ? (
                   <div className="mt-3 rounded-md border border-border/70 p-3">
                     <div className="flex flex-wrap items-center gap-2">
@@ -478,40 +494,26 @@ function PraticheList() {
                     <p className="mt-1 text-xs text-muted-foreground">{workflow.reason}</p>
                   </div>
                 ) : null}
-                <dl className="mt-3 grid gap-2 text-xs text-muted-foreground">
-                  <div className="flex min-w-0 justify-between gap-3">
-                    <dt>Committente</dt>
-                    <dd className="min-w-0 truncate text-right">
-                      {c.principals?.business_name ?? "—"}
-                    </dd>
-                  </div>
-                  <div className="flex min-w-0 justify-between gap-3">
-                    <dt>Cliente</dt>
-                    <dd className="min-w-0 truncate text-right">
-                      {c.clients ? clientDisplayName(c.clients) : "—"}
-                    </dd>
-                  </div>
-                  <div className="flex min-w-0 justify-between gap-3">
-                    <dt>Controparte</dt>
-                    <dd className="min-w-0 truncate text-right">
-                      {c.counterparties ? counterpartyDisplayName(c.counterparties) : "—"}
-                    </dd>
-                  </div>
-                  <div className="flex min-w-0 justify-between gap-3">
-                    <dt>Fatturazione</dt>
-                    <dd className="min-w-0 truncate text-right">
-                      {summary.toInvoice > 0
-                        ? `${summary.toInvoice} da fatturare · ${formatCurrency(summary.toInvoiceAmount)}`
-                        : summary.invoiced > 0
-                          ? `${summary.invoiced} fatturate`
-                          : "—"}
-                    </dd>
-                  </div>
-                  <div className="flex min-w-0 justify-between gap-3">
-                    <dt>Aperta il</dt>
-                    <dd className="text-right">{formatDate(c.opened_at)}</dd>
-                  </div>
-                </dl>
+                <MobileListCardDetails
+                  rows={[
+                    { label: "Committente", value: c.principals?.business_name ?? "—" },
+                    { label: "Cliente", value: c.clients ? clientDisplayName(c.clients) : "—" },
+                    {
+                      label: "Controparte",
+                      value: c.counterparties ? counterpartyDisplayName(c.counterparties) : "—",
+                    },
+                    {
+                      label: "Fatturazione",
+                      value:
+                        summary.toInvoice > 0
+                          ? `${summary.toInvoice} da fatturare · ${formatCurrency(summary.toInvoiceAmount)}`
+                          : summary.invoiced > 0
+                            ? `${summary.invoiced} fatturate`
+                            : "—",
+                    },
+                    { label: "Aperta il", value: formatDate(c.opened_at) },
+                  ]}
+                />
               </Link>
             );
           })

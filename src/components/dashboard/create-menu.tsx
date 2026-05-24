@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { CREATE_ACTIONS } from "@/components/dashboard/types";
+import { CREATE_ACTIONS } from "@/components/create-actions";
 
 export function CreateMenu() {
   return (

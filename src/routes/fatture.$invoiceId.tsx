@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
+import { PageState } from "@/components/page-state";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -393,7 +394,7 @@ function InvoiceDetailPage() {
   if (isLoading || !data) {
     return (
       <AppLayout>
-        <PageHeader title="Fattura" description="Caricamento…" />
+        <PageState variant="loading" title="Caricamento fattura…" />
       </AppLayout>
     );
   }

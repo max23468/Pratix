@@ -2,12 +2,18 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { FileDown, FileText, Plus, Search } from "lucide-react";
+import { FileDown, FileText, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppLayout } from "@/components/app-layout";
 import { ListToolbar } from "@/components/list-toolbar";
+import {
+  MobileListCardDetails,
+  MobileListCardHeader,
+  mobileListCardLinkClassName,
+} from "@/components/mobile-list-card";
 import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { PageHeader } from "@/components/page-header";
+import { SearchInput } from "@/components/search-input";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import { SummaryTile } from "@/components/summary-tile";
 import { Button } from "@/components/ui/button";
@@ -452,23 +458,20 @@ function InvoicesIndex() {
       <Card>
         <CardContent className="space-y-4 pt-6">
           <ListToolbar className="mb-0 gap-3 sm:flex-row sm:items-center">
-            <div className="relative flex-1">
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Cerca per numero o committente"
-                value={search}
-                onChange={(event) =>
-                  updateSearch({
-                    q: event.target.value,
-                    status,
-                    year,
-                    from: periodStart,
-                    to: periodEnd,
-                  })
-                }
-                className="pl-9"
-              />
-            </div>
+            <SearchInput
+              placeholder="Cerca per numero o committente"
+              value={search}
+              onChange={(value) =>
+                updateSearch({
+                  q: value,
+                  status,
+                  year,
+                  from: periodStart,
+                  to: periodEnd,
+                })
+              }
+              className="max-w-none"
+            />
             <Select
               value={status}
               onValueChange={(value) =>
@@ -621,54 +624,38 @@ function InvoicesIndex() {
                     key={i.id}
                     to="/fatture/$invoiceId"
                     params={{ invoiceId: routeRef(i) }}
-                    className="block rounded-md border border-border bg-card p-4 shadow-soft transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className={mobileListCardLinkClassName}
                   >
-                    <div className="flex min-w-0 items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-foreground">
-                          Fattura {i.number}/{i.year}
-                        </p>
-                        <p className="mt-1 truncate text-xs text-muted-foreground">{billedName}</p>
-                      </div>
-                      <Badge
-                        variant={
-                          isOverdue ? "destructive" : invoiceStatusVariant[i.status] || "outline"
-                        }
-                        className="shrink-0"
-                      >
-                        {isOverdue ? "Scaduta" : invoiceStatusLabels[i.status] || i.status}
-                      </Badge>
-                    </div>
-                    <dl className="mt-3 grid gap-2 text-xs text-muted-foreground">
-                      <div className="flex min-w-0 justify-between gap-3">
-                        <dt>Data</dt>
-                        <dd className="text-right">{formatDate(i.issue_date)}</dd>
-                      </div>
-                      <div className="flex min-w-0 justify-between gap-3">
-                        <dt>Periodo</dt>
-                        <dd className="text-right">{invoicePeriodLabel(i.billing_run)}</dd>
-                      </div>
-                      <div className="flex min-w-0 justify-between gap-3">
-                        <dt>Scadenza</dt>
-                        <dd
-                          className={
-                            isOverdue ? "text-right font-medium text-destructive" : "text-right"
+                    <MobileListCardHeader
+                      title={`Fattura ${i.number}/${i.year}`}
+                      subtitle={billedName}
+                      badge={
+                        <Badge
+                          variant={
+                            isOverdue ? "destructive" : invoiceStatusVariant[i.status] || "outline"
                           }
                         >
-                          {formatDate(i.due_date)}
-                        </dd>
-                      </div>
-                      <div className="flex min-w-0 justify-between gap-3">
-                        <dt>Totale</dt>
-                        <dd className="text-right">{formatCurrency(Number(i.total_amount))}</dd>
-                      </div>
-                      <div className="flex min-w-0 justify-between gap-3">
-                        <dt>Netto</dt>
-                        <dd className="text-right font-medium text-foreground">
-                          {formatCurrency(Number(i.net_to_pay))}
-                        </dd>
-                      </div>
-                    </dl>
+                          {isOverdue ? "Scaduta" : invoiceStatusLabels[i.status] || i.status}
+                        </Badge>
+                      }
+                    />
+                    <MobileListCardDetails
+                      rows={[
+                        { label: "Data", value: formatDate(i.issue_date) },
+                        { label: "Periodo", value: invoicePeriodLabel(i.billing_run) },
+                        {
+                          label: "Scadenza",
+                          value: formatDate(i.due_date),
+                          valueClassName: isOverdue ? "font-medium text-destructive" : undefined,
+                        },
+                        { label: "Totale", value: formatCurrency(Number(i.total_amount)) },
+                        {
+                          label: "Netto",
+                          value: formatCurrency(Number(i.net_to_pay)),
+                          valueClassName: "font-medium text-foreground",
+                        },
+                      ]}
+                    />
                   </Link>
                 );
               })

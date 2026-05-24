@@ -14,6 +14,7 @@ import {
   UserRoundSearch,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import { CREATE_ACTIONS, type CreateActionId } from "@/components/create-actions";
 import { Button } from "@/components/ui/button";
 import {
   CommandDialog,
@@ -86,11 +87,7 @@ type QuickAction = {
   title: string;
   subtitle: string;
   action:
-    | "new-case"
-    | "new-principal"
-    | "new-client"
-    | "new-counterparty"
-    | "new-invoice"
+    | CreateActionId
     | "activities"
     | "overdue-invoices"
     | "missing-attachments"
@@ -99,41 +96,13 @@ type QuickAction = {
 };
 
 const QUICK_ACTIONS: QuickAction[] = [
-  {
-    id: "new-case",
-    title: "Nuova pratica",
-    subtitle: "Apri il form pratica",
-    action: "new-case",
-    icon: Briefcase,
-  },
-  {
-    id: "new-principal",
-    title: "Nuovo committente",
-    subtitle: "Aggiungi chi affida l'incarico",
-    action: "new-principal",
-    icon: Building2,
-  },
-  {
-    id: "new-client",
-    title: "Nuovo cliente",
-    subtitle: "Aggiungi anagrafica cliente",
-    action: "new-client",
-    icon: User,
-  },
-  {
-    id: "new-counterparty",
-    title: "Nuova controparte",
-    subtitle: "Crea persona, società o gruppo",
-    action: "new-counterparty",
-    icon: UserRoundSearch,
-  },
-  {
-    id: "new-invoice",
-    title: "Nuova fattura",
-    subtitle: "Prepara una fattura",
-    action: "new-invoice",
-    icon: Receipt,
-  },
+  ...CREATE_ACTIONS.map((action) => ({
+    id: action.id,
+    title: action.title,
+    subtitle: action.description,
+    action: action.id,
+    icon: action.icon,
+  })),
   {
     id: "activities",
     title: "Attività",
@@ -359,11 +328,11 @@ export function GlobalSearch() {
 
   const runQuickAction = (action: QuickAction["action"]) => {
     setOpen(false);
-    if (action === "new-case") navigate({ to: "/pratiche/nuova" });
-    if (action === "new-principal") navigate({ to: "/committenti/nuovo" });
-    if (action === "new-client") navigate({ to: "/clienti/nuovo" });
-    if (action === "new-counterparty") navigate({ to: "/controparti/nuova" });
-    if (action === "new-invoice") navigate({ to: "/fatture/nuova" });
+    const createAction = CREATE_ACTIONS.find((item) => item.id === action);
+    if (createAction) {
+      navigate({ to: createAction.to });
+      return;
+    }
     if (action === "activities") navigate({ to: "/attivita" });
     if (action === "overdue-invoices") navigate({ to: "/fatture", search: { status: "expired" } });
     if (action === "missing-attachments") {

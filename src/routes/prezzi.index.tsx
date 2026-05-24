@@ -1,20 +1,27 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
+import { ListToolbar } from "@/components/list-toolbar";
+import {
+  MobileListCardDetails,
+  MobileListCardHeader,
+  mobileListCardLinkClassName,
+} from "@/components/mobile-list-card";
 import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { PageHeader } from "@/components/page-header";
+import { SearchInput } from "@/components/search-input";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { TableEmptyState } from "@/components/table-empty-state";
 import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { priceBookStatusLabels, priceBookStatusVariant } from "@/lib/labels";
 import { routeRef } from "@/lib/public-route-code";
+import { normalizeTextSearch, parseTextSearch } from "@/lib/search-params";
 import {
   handleClickableTableRowClick,
   handleClickableTableRowKeyDown,
@@ -29,6 +36,7 @@ import {
 } from "@/lib/table-sorting";
 
 type PrezziSearch = {
+  q?: string;
   sort?: PrezziSortKey;
   dir?: "asc" | "desc";
 };
@@ -62,6 +70,7 @@ const prezziDefaultSort: TableSort<PrezziSortKey> = { key: "year", direction: "d
 
 export const Route = createFileRoute("/prezzi/")({
   validateSearch: (search: Record<string, unknown>): PrezziSearch => ({
+    q: parseTextSearch(search.q),
     sort: parseTableSortKey(search.sort, prezziSortKeys),
     dir: parseTableSortDirection(search.dir),
   }),
@@ -88,10 +97,22 @@ export const Route = createFileRoute("/prezzi/")({
 
 function PrezziList() {
   const navigate = Route.useNavigate();
-  const search = Route.useSearch();
-  const [q, setQ] = useState("");
+  const routeSearch = Route.useSearch();
+  const q = routeSearch.q ?? "";
   const urlSort =
-    search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
+    routeSearch.sort && routeSearch.dir
+      ? { key: routeSearch.sort, direction: routeSearch.dir }
+      : undefined;
+
+  const updateSearch = (next: PrezziSearch) =>
+    navigate({
+      search: {
+        q: normalizeTextSearch(next.q ?? q),
+        sort: next.sort ?? routeSearch.sort,
+        dir: next.dir ?? routeSearch.dir,
+      },
+      replace: true,
+    });
 
   const { data: priceBooks = [], isLoading } = useQuery({
     queryKey: ["price-books"],
@@ -200,8 +221,7 @@ function PrezziList() {
     columns: prezziColumns,
     defaultSort: prezziDefaultSort,
     urlSort,
-    onSortChange: (next) =>
-      navigate({ search: { sort: next.key, dir: next.direction }, replace: true }),
+    onSortChange: (next) => updateSearch({ q, sort: next.key, dir: next.direction }),
   });
 
   const filtered = useMemo(() => {
@@ -246,17 +266,13 @@ function PrezziList() {
         }
       />
 
-      <div className="mb-4 flex items-center gap-2">
-        <div className="relative max-w-sm flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Cerca per committente, anno o stato…"
-            value={q}
-            onChange={(event) => setQ(event.target.value)}
-            className="pl-9"
-          />
-        </div>
-      </div>
+      <ListToolbar>
+        <SearchInput
+          placeholder="Cerca per committente, anno o stato…"
+          value={q}
+          onChange={(value) => updateSearch({ q: value })}
+        />
+      </ListToolbar>
 
       <div className="mb-4 md:hidden">
         <MobileSortSelect columns={prezziColumns} sort={sort} onSort={setSort} />
@@ -292,35 +308,30 @@ function PrezziList() {
                 key={book.id}
                 to="/prezzi/$priceBookId"
                 params={{ priceBookId: routeRef(book) }}
-                className="block rounded-md border border-border bg-card p-4 shadow-soft transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className={mobileListCardLinkClassName}
               >
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">{principalName}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">Anno {book.year}</p>
-                  </div>
-                  <Badge variant={priceBookStatusVariant[book.status]} className="shrink-0">
-                    {priceBookStatusLabels[book.status]}
-                  </Badge>
-                </div>
-                <dl className="mt-3 grid gap-2 text-xs text-muted-foreground">
-                  <div className="flex min-w-0 justify-between gap-3">
-                    <dt>Regole</dt>
-                    <dd className="min-w-0 truncate text-right">{rulesLabel(book)}</dd>
-                  </div>
-                  <div className="flex min-w-0 justify-between gap-3">
-                    <dt>Voci</dt>
-                    <dd className="min-w-0 truncate text-right">
-                      {counts.fees} compensi, {counts.expenses} rimborsi
-                    </dd>
-                  </div>
-                  <div className="flex min-w-0 justify-between gap-3">
-                    <dt>Validità</dt>
-                    <dd className="min-w-0 truncate text-right">
-                      {book.valid_from} → {book.valid_to ?? "senza fine"}
-                    </dd>
-                  </div>
-                </dl>
+                <MobileListCardHeader
+                  title={principalName}
+                  subtitle={`Anno ${book.year}`}
+                  badge={
+                    <Badge variant={priceBookStatusVariant[book.status]}>
+                      {priceBookStatusLabels[book.status]}
+                    </Badge>
+                  }
+                />
+                <MobileListCardDetails
+                  rows={[
+                    { label: "Regole", value: rulesLabel(book) },
+                    {
+                      label: "Voci",
+                      value: `${counts.fees} compensi, ${counts.expenses} rimborsi`,
+                    },
+                    {
+                      label: "Validità",
+                      value: `${book.valid_from} → ${book.valid_to ?? "senza fine"}`,
+                    },
+                  ]}
+                />
               </Link>
             );
           })

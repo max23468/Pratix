@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
+import { PageState } from "@/components/page-state";
 import { PriceBookForm } from "@/components/price-book-form";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -72,19 +73,23 @@ function PriceBookDetail() {
   });
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Caricamento…</p>;
+    return <PageState variant="loading" title="Caricamento prezzi…" />;
   }
 
   if (!data?.priceBook) {
     return (
-      <>
-        <PageHeader title="Prezzi non trovati" />
-        <Link to="/prezzi">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="mr-1 size-4" /> Torna ai prezzi
+      <PageState
+        variant="not-found"
+        title="Prezzi non trovati"
+        description="Il set prezzi non esiste o non è più disponibile."
+        action={
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/prezzi">
+              <ArrowLeft className="mr-1 size-4" /> Torna ai prezzi
+            </Link>
           </Button>
-        </Link>
-      </>
+        }
+      />
     );
   }
 

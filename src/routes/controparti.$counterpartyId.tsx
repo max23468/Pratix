@@ -4,6 +4,7 @@ import { ArrowLeft, Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { CounterpartyForm } from "@/components/counterparty-form";
 import { PageHeader } from "@/components/page-header";
+import { PageState } from "@/components/page-state";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { counterpartyDisplayName } from "@/lib/labels";
@@ -54,19 +55,23 @@ function CounterpartyDetail() {
   });
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Caricamento…</p>;
+    return <PageState variant="loading" title="Caricamento controparte…" />;
   }
 
   if (!data?.counterparty) {
     return (
-      <>
-        <PageHeader title="Controparte non trovata" />
-        <Link to="/controparti">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="mr-1 size-4" /> Torna alle controparti
+      <PageState
+        variant="not-found"
+        title="Controparte non trovata"
+        description="La controparte non esiste o non è più disponibile."
+        action={
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/controparti">
+              <ArrowLeft className="mr-1 size-4" /> Torna alle controparti
+            </Link>
           </Button>
-        </Link>
-      </>
+        }
+      />
     );
   }
 

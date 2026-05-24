@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Pencil, Plus, Search } from "lucide-react";
+import { Pencil, Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { ListToolbar } from "@/components/list-toolbar";
 import { PageHeader } from "@/components/page-header";
@@ -10,13 +10,18 @@ import {
   CaseActivityDialog,
   type CaseActivityDialogActivity,
 } from "@/components/case-activities";
+import {
+  MobileListCard,
+  MobileListCardDetails,
+  MobileListCardHeader,
+} from "@/components/mobile-list-card";
 import { MobileSortSelect } from "@/components/mobile-sort-select";
+import { SearchInput } from "@/components/search-input";
 import { SortableTableHead } from "@/components/sortable-table-head";
 import { SummaryTile } from "@/components/summary-tile";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { TableEmptyState } from "@/components/table-empty-state";
 import {
   Select,
@@ -281,17 +286,12 @@ function ActivitiesList() {
       </div>
 
       <ListToolbar>
-        <div className="relative max-w-md flex-1">
-          <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            placeholder="Cerca per pratica, voce, committente, cliente…"
-            value={q}
-            onChange={(event) =>
-              updateSearch({ q: event.target.value, status, kind, attachments, review })
-            }
-            className="pl-9"
-          />
-        </div>
+        <SearchInput
+          placeholder="Cerca per pratica, voce, committente, cliente…"
+          value={q}
+          onChange={(value) => updateSearch({ q: value, status, kind, attachments, review })}
+          className="max-w-md"
+        />
         <Select
           value={status}
           onValueChange={(value) => updateSearch({ q, status: value, kind, attachments, review })}
@@ -403,49 +403,36 @@ function ActivitiesList() {
               : "Modifica voce";
             const displayStatus = caseActivityDisplayStatus(activity);
             return (
-              <Card key={activity.id} className="p-4">
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-xs text-muted-foreground">
-                      {formatDate(activity.activity_date)}
-                    </p>
-                    <p className="mt-1 truncate text-sm font-medium text-foreground">
-                      {activity.description}
-                    </p>
-                    {activity.needs_review ? (
-                      <div className="mt-2">
-                        <ActivityReviewBadge needsReview={activity.needs_review} />
-                      </div>
-                    ) : null}
-                    <p className="mt-1 truncate text-xs text-muted-foreground">
-                      {priceItemKindLabels[activity.kind]} · {activity.snapshot_price_name}
-                    </p>
+              <MobileListCard key={activity.id}>
+                <MobileListCardHeader
+                  eyebrow={formatDate(activity.activity_date)}
+                  title={activity.description}
+                  subtitle={`${priceItemKindLabels[activity.kind]} · ${activity.snapshot_price_name}`}
+                  badge={
+                    <Badge variant={caseActivityDisplayStatusVariant[displayStatus] ?? "outline"}>
+                      {caseActivityDisplayStatusLabels[displayStatus] ?? displayStatus}
+                    </Badge>
+                  }
+                />
+                {activity.needs_review ? (
+                  <div className="mt-2">
+                    <ActivityReviewBadge needsReview={activity.needs_review} />
                   </div>
-                  <Badge
-                    variant={caseActivityDisplayStatusVariant[displayStatus] ?? "outline"}
-                    className="shrink-0"
-                  >
-                    {caseActivityDisplayStatusLabels[displayStatus] ?? displayStatus}
-                  </Badge>
-                </div>
-                <dl className="mt-3 grid gap-2 text-xs text-muted-foreground">
-                  <div className="flex min-w-0 justify-between gap-3">
-                    <dt>Pratica</dt>
-                    <dd className="min-w-0 truncate text-right">
-                      {activity.cases ? activityCaseLabel(activity.cases) : "—"}
-                    </dd>
-                  </div>
-                  <div className="flex min-w-0 justify-between gap-3">
-                    <dt>Quantità</dt>
-                    <dd className="text-right">{activity.quantity}</dd>
-                  </div>
-                  <div className="flex min-w-0 justify-between gap-3">
-                    <dt>Totale</dt>
-                    <dd className="text-right font-medium text-foreground">
-                      {formatCurrency(Number(activity.amount))}
-                    </dd>
-                  </div>
-                </dl>
+                ) : null}
+                <MobileListCardDetails
+                  rows={[
+                    {
+                      label: "Pratica",
+                      value: activity.cases ? activityCaseLabel(activity.cases) : "—",
+                    },
+                    { label: "Quantità", value: activity.quantity },
+                    {
+                      label: "Totale",
+                      value: formatCurrency(Number(activity.amount)),
+                      valueClassName: "font-medium text-foreground",
+                    },
+                  ]}
+                />
                 <div className="mt-4 flex flex-wrap gap-2">
                   {caseRef && (
                     <Button variant="outline" size="sm" asChild>
@@ -471,7 +458,7 @@ function ActivitiesList() {
                     }
                   />
                 </div>
-              </Card>
+              </MobileListCard>
             );
           })
         )}

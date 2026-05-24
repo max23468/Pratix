@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
+import { PageState } from "@/components/page-state";
 import { Button } from "@/components/ui/button";
 import { ClientForm } from "@/components/client-form";
 import { supabase } from "@/integrations/supabase/client";
@@ -44,18 +45,22 @@ function ClientDetail() {
   });
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Caricamento…</p>;
+    return <PageState variant="loading" title="Caricamento cliente…" />;
   }
   if (!data) {
     return (
-      <>
-        <PageHeader title="Cliente non trovato" />
-        <Link to="/clienti">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="mr-1 size-4" /> Torna ai clienti
+      <PageState
+        variant="not-found"
+        title="Cliente non trovato"
+        description="Il cliente non esiste o non è più disponibile."
+        action={
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/clienti">
+              <ArrowLeft className="mr-1 size-4" /> Torna ai clienti
+            </Link>
           </Button>
-        </Link>
-      </>
+        }
+      />
     );
   }
 

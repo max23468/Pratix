@@ -6,6 +6,18 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Correzioni
+
+- **UI autenticata**: uniformate toolbar, ricerca, card mobile, stati di
+  caricamento/non trovato e metriche operative fra liste, dettagli, Dashboard e
+  Controllo duplicati.
+
+### Sotto il cofano
+
+- **Design system**: introdotti componenti condivisi per ricerca, stati pagina,
+  card mobile, metriche e azioni di creazione, riducendo duplicazioni fra le
+  route operative.
+
 ## [1.11.17] — 2026-05-25
 
 ### Sotto il cofano

@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
+import { PageState } from "@/components/page-state";
 import { PrincipalForm } from "@/components/principal-form";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -43,19 +44,23 @@ function PrincipalDetail() {
   });
 
   if (isLoading) {
-    return <p className="text-sm text-muted-foreground">Caricamento…</p>;
+    return <PageState variant="loading" title="Caricamento committente…" />;
   }
 
   if (!data) {
     return (
-      <>
-        <PageHeader title="Committente non trovato" />
-        <Link to="/committenti">
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="mr-1 size-4" /> Torna ai committenti
+      <PageState
+        variant="not-found"
+        title="Committente non trovato"
+        description="Il committente non esiste o non è più disponibile."
+        action={
+          <Button variant="outline" size="sm" asChild>
+            <Link to="/committenti">
+              <ArrowLeft className="mr-1 size-4" /> Torna ai committenti
+            </Link>
           </Button>
-        </Link>
-      </>
+        }
+      />
     );
   }
 
