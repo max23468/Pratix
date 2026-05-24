@@ -58,6 +58,30 @@ Fuori perimetro salvo decisione esplicita:
 
 ## Prossimo lavoro di prodotto
 
-La roadmap 2.0 punta a metodo operativo, controllo qualità, notifiche in-app, import rendiconti Excel e micro-feature mirate come Piano operativo della Pratica, Centro documenti Pratica e Bozze assistite.
+La roadmap 2.0 punta a metodo operativo, controllo qualità, notifiche in-app e
+micro-feature mirate come Piano operativo della Pratica, Centro documenti
+Pratica, Agenda operativa leggera e Dashboard 2.0.
 
-Prima di implementare nuovo codice 2.0, definire il primo incremento minimo e le regole dell'import rendiconti: campi obbligatori, default, duplicati e comportamento su dati incerti.
+Il Centro documenti Pratica è entrato nel core 2.0 come archivio operativo
+leggero della singola Pratica: tab `Documenti` secondaria, lista unica di file
+diretti e allegati Attività, categorie obbligatorie, note opzionali e filtri per
+categoria/origine. Restano fuori fatturazione, rendiconti, stati documento,
+segnali qualità e ricerca testuale.
+
+Il primo incremento 2.0 approvato è il Controllo qualità operativo. I segnali
+vanno salvati in tabella, con stati `aperto`, `risolto`, `ignorato` e
+`rimandato`, gravità `da correggere`, `da verificare` o `suggerimento`, titolo
+breve, motivo, azione proposta, azione primaria e collegamento a Pratica,
+Cliente, Controparte, Attività o Fattura. La generazione avviene con cron
+giornaliero e ricalcolo manuale; i segnali risolti restano nello storico ma non
+nella vista normale.
+
+Prima di implementare nuovo codice 2.0, preparare il piano tecnico del Controllo
+qualità operativo: schema dati, RLS, server functions, generatore segnali, cron,
+ricalcolo manuale e superfici UI minime.
+
+Nota: i rendiconti Excel restano un output del prodotto; l'import rendiconti Excel non è più una feature 2.0 da sviluppare. Sui volumi limitati viene gestito manualmente con assistenza esterna all'app.
+
+Nota: Bozze assistite è fuori dal perimetro 2.0 perché superflua ora; resta
+parcheggiata come idea futura, da rivalutare solo dopo aver validato il metodo
+operativo centrale.

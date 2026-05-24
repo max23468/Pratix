@@ -8,19 +8,22 @@ Pratix è già una repo matura: questo file non sostituisce i piani esistenti, m
 
 - Time tracking per Pratica: fuori dal perimetro recupero crediti attuale.
 - Email e notifiche esterne: fuori dal primo perimetro 2.0; rivalutare solo dopo centro notifiche in-app.
+- Import rendiconti Excel come feature prodotto: eliminato dal perimetro 2.0; sui volumi limitati resta gestione manuale assistita fuori dall'app.
+- Bozze assistite: fuori dal perimetro 2.0 perché superflue ora; rivalutare solo dopo aver validato metodo guidato, segnali qualità, notifiche e Piano operativo della Pratica.
 - Dominio custom: opzionale, non necessario nel percorso gratuito attuale.
 - Funzionalità da studio associato, CRM generalista, suite contabile completa o piattaforma enterprise: fuori perimetro salvo nuova decisione esplicita e ADR.
 
 ## Pratix 2.0 da dettagliare
 
-- Controllo qualità operativo: motore di segnali con gravità, motivo, azione proposta e stato.
+- Controllo qualità operativo: primo incremento 2.0 approvato, con segnali
+  salvati in tabella, stati `aperto`/`risolto`/`ignorato`/`rimandato`, gravità,
+  azione proposta, cron giornaliero, ricalcolo manuale e 5 segnali iniziali.
 - Sistema notifiche operative in-app, derivato da dati già presenti e senza provider esterni.
-- Import rendiconti Excel assistito con staging, controllo duplicati e conferma esplicita prima della scrittura.
-- Regole import: campi obbligatori, default sensati, comportamento su Pratica nuova/esistente e importi incerti.
 - Piano operativo della Pratica: checklist e stati guidati dal workflow recupero crediti.
 - Agenda operativa leggera collegata a Fatture, Attività, importi da verificare e pratiche ferme.
-- Centro documenti Pratica: da valutare senza confonderlo con allegati economici o output già generati.
-- Bozze assistite: supporto mirato a solleciti, note pratica, riepiloghi e descrizioni Attività.
+- Centro documenti Pratica: core 2.0 approvato come archivio operativo leggero
+  della Pratica, senza fatturazione, stati documento, segnali qualità o ricerca
+  testuale.
 - Dashboard 2.0 prescrittiva su cosa fare oggi.
 
 ## Debiti tecnici e operativi

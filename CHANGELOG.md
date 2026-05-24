@@ -6,6 +6,19 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Non versionato
+
+- **Roadmap 2.0**: eliminato l'import rendiconti Excel come feature prodotto
+  futura; sui volumi limitati resta gestione manuale assistita fuori dall'app.
+- **Roadmap 2.0**: promosso il Centro documenti Pratica nel core come archivio
+  operativo leggero, senza fatturazione, stati documento, segnali qualità o
+  ricerca testuale.
+- **Roadmap 2.0**: spostate le Bozze assistite fuori dal perimetro 2.0 perché
+  superflue nella prossima fase.
+- **Roadmap 2.0**: definito il Controllo qualità operativo come primo incremento
+  2.0, con segnali salvati, stati, gravità, generazione e primi 5 controlli
+  iniziali.
+
 ## [1.11.18] — 2026-05-25
 
 ### Correzioni
