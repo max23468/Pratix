@@ -9,9 +9,10 @@ Leggi nell'ordine:
 1. [`README.md`](./README.md) — panoramica e mappa
 2. [`AGENTS.md`](./AGENTS.md) — regole operative obbligatorie
 3. [`BRAND.md`](./BRAND.md) — identità di marca
-4. [`ROADMAP.md`](./ROADMAP.md) — cosa è in lavorazione
-5. [`docs/guides/`](./docs/guides/) — guide tematiche
-6. [`docs/decisions/`](./docs/decisions/) — perché abbiamo scelto cosa
+4. [`docs/ROADMAP.md`](./docs/ROADMAP.md) — cosa è in lavorazione
+5. [`docs/INDEX.md`](./docs/INDEX.md) — indice della documentazione
+6. [`docs/guides/`](./docs/guides/) — guide tematiche
+7. [`docs/decisions/`](./docs/decisions/) — perché abbiamo scelto cosa
 
 ## Setup locale
 
@@ -91,7 +92,7 @@ Per modifiche al backend o alla pubblicazione consulta anche
 
 Se la tua modifica cambia comportamento utente, comandi, configurazione o decisioni di prodotto:
 
-- aggiorna [`ROADMAP.md`](./ROADMAP.md) (stato della voce),
+- aggiorna [`docs/ROADMAP.md`](./docs/ROADMAP.md) (stato della voce),
 - aggiungi una entry in [`CHANGELOG.md`](./CHANGELOG.md) sotto `[Non rilasciato]`,
 - se è una decisione architetturale, crea un nuovo ADR in [`docs/decisions/`](./docs/decisions/) seguendo il template,
 - se cambia una regola di brand o tono, aggiorna `BRAND.md` e i mirror in `docs/memory/`.

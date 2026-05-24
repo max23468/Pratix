@@ -5,16 +5,16 @@
 
 ## Fonte canonica
 
-La roadmap completa, con aree, stati, priorità e prossime mosse, vive in [`../../ROADMAP.md`](../../ROADMAP.md).
+La roadmap completa, con aree, stati, priorità e prossime mosse, vive in [`../ROADMAP.md`](../ROADMAP.md).
 
-Quando c'è un dubbio o una differenza fra i due file, fa fede `ROADMAP.md`.
+Quando c'è un dubbio o una differenza fra i due file, fa fede `docs/ROADMAP.md`.
 
 ## Regola di sincronizzazione
 
-Ogni decisione di prodotto, brand o tecnica condivisa in chat deve confluire in `ROADMAP.md`.
+Ogni decisione di prodotto, brand o tecnica condivisa in chat deve confluire in `docs/ROADMAP.md`.
 
 ## Quando aggiornare
 
-- Una voce cambia stato → aggiornala in `ROADMAP.md` e, se rilevante, in `CHANGELOG.md`.
-- Emerge una nuova area di lavoro → aggiungi una sezione in `ROADMAP.md`.
+- Una voce cambia stato → aggiornala in `docs/ROADMAP.md` e, se rilevante, in `CHANGELOG.md`.
+- Emerge una nuova area di lavoro → aggiungi una sezione in `docs/ROADMAP.md`.
 - Una decisione architetturale è "presa per sempre" → crea un ADR in [`../decisions/`](../decisions/).

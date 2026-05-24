@@ -452,7 +452,7 @@ validare in Fase 7 o prima del merge/deploy con credenziali test controllate.
 Aggiornare:
 
 1. `CHANGELOG.md` sotto `[Non rilasciato]`, sezione `Sotto il cofano`;
-2. `ROADMAP.md`, marcando questa voce come completata;
+2. `docs/ROADMAP.md`, marcando questa voce come completata;
 3. eventuali guide solo se cambia una procedura stabile.
 
 Versioning:
@@ -476,7 +476,7 @@ Pubblicazione:
 Esito Fase 7 locale (2026-05-09):
 
 1. release PATCH `0.12.5` preparata con `npm run release -- --bump patch`;
-2. `ROADMAP.md` aggiornata marcando l'update latest come completato;
+2. `docs/ROADMAP.md` aggiornata marcando l'update latest come completato;
 3. risolti i due thread actionable della `Codex feedback inbox`:
    - script npm core resi cross-platform con wrapper Node per Vite;
    - blocchi `Non versionato` esclusi dalla lista pubblica `/novita`;

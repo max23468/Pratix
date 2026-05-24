@@ -27,17 +27,17 @@ Le variabili d'ambiente (`.env`) non vanno committate. In produzione vivono su V
 
 ## Mappa della documentazione
 
-| File                                   | Cosa contiene                                                 |
-| -------------------------------------- | ------------------------------------------------------------- |
-| [`README.md`](./README.md)             | Questo file: panoramica e indice                              |
-| [`AGENTS.md`](./AGENTS.md)             | Regole operative per chi (umani o agenti) modifica il codice  |
-| [`BRAND.md`](./BRAND.md)               | Guidelines di marca complete                                  |
-| [`ROADMAP.md`](./ROADMAP.md)           | Stato del prodotto per area, con legenda ✅🟡⬜💤             |
-| [`CHANGELOG.md`](./CHANGELOG.md)       | Storia delle modifiche significative                          |
-| [`SECURITY.md`](./SECURITY.md)         | Come segnalare vulnerabilità                                  |
-| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Come contribuire al progetto                                  |
-| [`LICENSE`](./LICENSE)                 | Licenza d'uso                                                 |
-| [`docs/`](./docs/)                     | Guide tematiche, memoria di progetto, decision log, glossario |
+| File                                   | Cosa contiene                                                |
+| -------------------------------------- | ------------------------------------------------------------ |
+| [`README.md`](./README.md)             | Questo file: panoramica e indice                             |
+| [`AGENTS.md`](./AGENTS.md)             | Regole operative per chi (umani o agenti) modifica il codice |
+| [`BRAND.md`](./BRAND.md)               | Guidelines di marca complete                                 |
+| [`docs/ROADMAP.md`](./docs/ROADMAP.md) | Stato del prodotto per area, con legenda ✅🟡⬜💤            |
+| [`CHANGELOG.md`](./CHANGELOG.md)       | Storia delle modifiche significative                         |
+| [`SECURITY.md`](./SECURITY.md)         | Come segnalare vulnerabilità                                 |
+| [`CONTRIBUTING.md`](./CONTRIBUTING.md) | Come contribuire al progetto                                 |
+| [`LICENSE`](./LICENSE)                 | Licenza d'uso                                                |
+| [`docs/INDEX.md`](./docs/INDEX.md)     | Indice canonico della documentazione                         |
 
 ## Infrastruttura
 
@@ -47,6 +47,9 @@ di proprietà del progetto come backend e Vercel per pubblicazione e preview.
 ## Documentazione approfondita
 
 - 📖 [Guide tematiche](./docs/guides/) — architettura, database, fatturazione, tema, tono di voce, deploy, release e smoke test
+- 🧰 [Toolchain](./docs/TOOLCHAIN.md) — runtime, comandi, verifiche e provider
+- 🧭 [Roadmap](./docs/ROADMAP.md) e [backlog](./docs/BACKLOG.md) — stato, priorità e idee parcheggiate
+- 📌 [Contesto operativo](./docs/CONTEXT.md) — handoff rapido e vincoli da ricordare
 - 🧠 [Memoria di progetto](./docs/memory/) — regole sempre attive (specchio leggibile di `mem://`)
 - 🧭 [Decision log (ADR)](./docs/decisions/) — perché abbiamo scelto cosa
 - 📚 [Glossario di dominio](./docs/glossario.md) — termini legali e fiscali italiani
@@ -64,7 +67,7 @@ Dettagli in [`docs/guides/architettura.md`](./docs/guides/architettura.md).
 
 ## Stato del progetto
 
-In sviluppo attivo. Per lo stato puntuale di ogni area vedi [`ROADMAP.md`](./ROADMAP.md).
+In sviluppo attivo. Per lo stato puntuale di ogni area vedi [`docs/ROADMAP.md`](./docs/ROADMAP.md).
 
 ## Licenza
 
