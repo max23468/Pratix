@@ -19,6 +19,14 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
   2.0, con segnali salvati, stati, gravità, generazione e primi 5 controlli
   iniziali.
 
+## [1.12.0] — 2026-05-25
+
+### Novità
+
+- **Controllo duplicati**: estesa la scansione ad Attività sospette, Soggetti
+  interni delle Controparti composte e duplicati tra tipi diversi, con verifica
+  manuale senza merge automatico.
+
 ## [1.11.18] — 2026-05-25
 
 ### Correzioni
@@ -1229,6 +1237,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.12.0]: #1120--2026-05-25
 [1.11.18]: #11118--2026-05-25
 [1.11.17]: #11117--2026-05-25
 [1.11.16]: #11116--2026-05-24
