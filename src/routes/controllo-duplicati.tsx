@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Check, Clock, ExternalLink, GitMerge, RefreshCcw } from "lucide-react";
+import { Check, ChevronDown, Clock, ExternalLink, GitMerge, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
@@ -10,6 +10,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SummaryCard } from "@/components/duplicates/summary-card";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -20,10 +28,12 @@ import {
 } from "@/components/ui/dialog";
 import {
   canMergeDuplicateEntity,
+  DUPLICATE_SNOOZE_OPTIONS,
   displayDuplicateEntity,
   type DuplicateCandidate,
   type DuplicateEntityType,
   type DuplicateRecord,
+  type DuplicateSnoozeInterval,
 } from "@/lib/duplicate-matching";
 import { getAuthHeaders, readServerResult } from "@/lib/server-functions";
 import {
@@ -96,6 +106,7 @@ function DuplicateControlPage() {
     mutationFn: async (input: {
       candidate: DuplicateCandidate;
       action: "snooze" | "dismiss" | "merge";
+      snoozeInterval?: DuplicateSnoozeInterval;
       keepRecordId?: string | null;
     }) =>
       readServerResult(
@@ -106,6 +117,7 @@ function DuplicateControlPage() {
             leftRecordId: input.candidate.left.id,
             rightRecordId: input.candidate.right.id,
             action: input.action,
+            snoozeInterval: input.snoozeInterval ?? null,
             keepRecordId: input.keepRecordId ?? null,
           },
           headers: await getAuthHeaders(),
@@ -113,7 +125,9 @@ function DuplicateControlPage() {
       ),
     onSuccess: (_, variables) => {
       const messages = {
-        snooze: "Controllo rimandato",
+        snooze: `Controllo rimandato per ${snoozeOptionLabel(
+          variables.snoozeInterval ?? "24h",
+        ).toLowerCase()}`,
         dismiss: "Coppia segnata come non duplicata",
         merge: "Record uniti",
       };
@@ -219,7 +233,8 @@ function DuplicateControlPage() {
                 );
               },
               onDismiss: () => resolveMutation.mutate({ candidate, action: "dismiss" }),
-              onSnooze: () => resolveMutation.mutate({ candidate, action: "snooze" }),
+              onSnooze: (snoozeInterval) =>
+                resolveMutation.mutate({ candidate, action: "snooze", snoozeInterval }),
               disabled: resolveMutation.isPending,
             }),
           )
@@ -256,17 +271,16 @@ function DuplicateControlPage() {
             <DialogFooter className="gap-2">
               {selected.status !== "dismissed" && selected.status !== "merged" && (
                 <>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() =>
-                      resolveMutation.mutate({ candidate: selected, action: "snooze" })
-                    }
+                  <SnoozeMenu
                     disabled={resolveMutation.isPending}
-                  >
-                    <Clock className="mr-1 size-4" />
-                    Rimanda
-                  </Button>
+                    onSnooze={(snoozeInterval) =>
+                      resolveMutation.mutate({
+                        candidate: selected,
+                        action: "snooze",
+                        snoozeInterval,
+                      })
+                    }
+                  />
                   <Button
                     type="button"
                     variant="outline"
@@ -316,9 +330,11 @@ function renderDuplicateCandidateCard({
   candidate: DuplicateCandidate;
   onOpen: () => void;
   onDismiss: () => void;
-  onSnooze: () => void;
+  onSnooze: (snoozeInterval: DuplicateSnoozeInterval) => void;
   disabled: boolean;
 }) {
+  const snoozedUntilLabel = formatSnoozedUntil(candidate.snoozedUntil);
+
   return (
     <Card key={key}>
       <CardContent className="flex flex-col gap-4 p-4 md:flex-row md:items-center md:justify-between">
@@ -336,6 +352,11 @@ function renderDuplicateCandidateCard({
             {candidate.left.label} / {candidate.right.label}
           </div>
           <div className="text-sm text-muted-foreground">{candidate.reasons.join(" · ")}</div>
+          {candidate.status === "snoozed" && snoozedUntilLabel && (
+            <div className="text-sm text-muted-foreground">
+              Torna da verificare il {snoozedUntilLabel}
+            </div>
+          )}
         </div>
         <div className="flex flex-wrap gap-2">
           <Button type="button" variant="outline" onClick={onOpen}>
@@ -343,9 +364,7 @@ function renderDuplicateCandidateCard({
           </Button>
           {candidate.status !== "dismissed" && candidate.status !== "merged" && (
             <>
-              <Button type="button" variant="outline" onClick={onSnooze} disabled={disabled}>
-                Rimanda
-              </Button>
+              <SnoozeMenu disabled={disabled} onSnooze={onSnooze} />
               <Button type="button" variant="outline" onClick={onDismiss} disabled={disabled}>
                 Non duplicato
               </Button>
@@ -355,6 +374,55 @@ function renderDuplicateCandidateCard({
       </CardContent>
     </Card>
   );
+}
+
+function SnoozeMenu({
+  disabled,
+  onSnooze,
+}: {
+  disabled: boolean;
+  onSnooze: (snoozeInterval: DuplicateSnoozeInterval) => void;
+}) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button type="button" variant="outline" disabled={disabled}>
+          <Clock className="mr-1 size-4" />
+          Rimanda
+          <ChevronDown className="ml-1 size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuLabel>Promemoria</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {DUPLICATE_SNOOZE_OPTIONS.map((option) => (
+          <DropdownMenuItem key={option.value} onSelect={() => onSnooze(option.value)}>
+            {option.label}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function snoozeOptionLabel(value: DuplicateSnoozeInterval) {
+  return (
+    DUPLICATE_SNOOZE_OPTIONS.find((option) => option.value === value)?.label ??
+    DUPLICATE_SNOOZE_OPTIONS[1].label
+  );
+}
+
+function formatSnoozedUntil(value: string | null | undefined) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat("it-IT", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
 }
 
 function renderRecordPanel({

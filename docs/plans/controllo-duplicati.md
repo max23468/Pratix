@@ -61,6 +61,14 @@ permette di rimandarle o segnarle come non duplicati, ma non propone un merge
 automatico perché la ripetizione può essere legittima o richiedere una scelta
 manuale fuori dal modello dati attuale.
 
+Aggiornamento approvato il 2026-05-25:
+
+- `Rimanda` è un promemoria temporizzato, non un semplice stato;
+- intervalli disponibili: 1 ora, 24 ore, 1 settimana, 1 mese;
+- fino alla scadenza il sospetto resta nella vista `Rimandati`;
+- dopo la scadenza la scansione lo riporta automaticamente tra i sospetti da
+  verificare.
+
 Fuori scope dalla prima versione e dall'estensione:
 
 - Fatture duplicate;

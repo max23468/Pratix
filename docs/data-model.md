@@ -320,9 +320,15 @@ un merge automatico dei dati sorgente.
 `status` distingue:
 
 - `open`: sospetto aperto;
-- `snoozed`: controllo rimandato;
+- `snoozed`: controllo rimandato fino a `snoozed_until`;
 - `dismissed`: coppia segnata come non duplicata;
 - `merged`: coppia risolta con unione prudente.
+
+`snoozed_until` contiene la scadenza del promemoria interno. Finché la data è
+nel futuro, la coppia resta nella vista `Rimandati`; quando la scadenza è
+superata, la scansione la tratta di nuovo come `open` e la riporta tra i
+sospetti da verificare. I vecchi rimandi senza scadenza restano rimandati fino a
+nuova decisione dell'utente.
 
 Il vincolo `(user_id, entity_type, left_record_id, right_record_id)` impedisce
 di salvare due decisioni sulla stessa coppia. Gli ID della coppia sono ordinati

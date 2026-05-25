@@ -1133,6 +1133,7 @@ CREATE TABLE public.duplicate_reviews (
   snapshot         jsonb NOT NULL DEFAULT '{}'::jsonb,
   note             text,
   detected_at      timestamptz NOT NULL DEFAULT now(),
+  snoozed_until    timestamptz,
   resolved_at      timestamptz,
   created_at       timestamptz NOT NULL DEFAULT now(),
   updated_at       timestamptz NOT NULL DEFAULT now(),
@@ -1159,6 +1160,9 @@ CREATE TABLE public.duplicate_reviews (
 CREATE INDEX idx_duplicate_reviews_user ON public.duplicate_reviews (user_id);
 CREATE INDEX idx_duplicate_reviews_status ON public.duplicate_reviews (status);
 CREATE INDEX idx_duplicate_reviews_entity ON public.duplicate_reviews (entity_type);
+CREATE INDEX idx_duplicate_reviews_snoozed_until
+  ON public.duplicate_reviews (snoozed_until)
+  WHERE status = 'snoozed';
 
 
 -- ============================================================================

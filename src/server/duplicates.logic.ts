@@ -125,6 +125,7 @@ export type DuplicateReviewRow = {
   merged_record_id?: string | null;
   detected_at?: string | null;
   resolved_at?: string | null;
+  snoozed_until?: string | null;
   snapshot?: {
     left?: DuplicateRecord;
     right?: DuplicateRecord;
@@ -139,6 +140,7 @@ export type DuplicateScanInput = {
   activities?: ActivityDuplicateRow[];
   counterpartySubjects?: CounterpartySubjectDuplicateRow[];
   reviews: DuplicateReviewRow[];
+  now?: Date | string;
 };
 
 const TOOL_THRESHOLD = 0.62;
@@ -148,6 +150,7 @@ const SUBJECT_THRESHOLD = 0.74;
 const CROSS_TYPE_THRESHOLD = 0.88;
 
 export function scanDuplicateCandidates(input: DuplicateScanInput) {
+  const now = input.now ? new Date(input.now) : new Date();
   const reviewsByPair = new Map(
     input.reviews.map((review) => [
       duplicatePairKey(review.entity_type, review.left_record_id, review.right_record_id),
@@ -166,7 +169,7 @@ export function scanDuplicateCandidates(input: DuplicateScanInput) {
   ];
 
   const openCandidates = generated
-    .map((candidate) => attachReview(candidate, reviewsByPair))
+    .map((candidate) => attachReview(candidate, reviewsByPair, now))
     .filter((candidate) => candidate.status !== "dismissed" && candidate.status !== "merged")
     .sort(sortDuplicateCandidates);
 
@@ -270,6 +273,7 @@ export function reviewInsertFromCandidate(userId: string, candidate: DuplicateCa
       left: leftRecord,
       right: rightRecord,
     },
+    snoozed_until: candidate.snoozedUntil ?? null,
   };
 }
 
@@ -668,18 +672,29 @@ function scoreCrossEntityPair(a: CrossEntityDuplicateRow, b: CrossEntityDuplicat
 function attachReview(
   candidate: DuplicateCandidate,
   reviewsByPair: Map<string, DuplicateReviewRow>,
+  now: Date,
 ) {
   const review = reviewsByPair.get(
     duplicatePairKey(candidate.entityType, candidate.left.id, candidate.right.id),
   );
   if (!review) return candidate;
+  const snoozeExpired = isSnoozeExpired(review.snoozed_until, now);
+  const status = snoozeExpired ? "open" : review.status;
   return {
     ...candidate,
     reviewId: review.id,
-    status: review.status,
+    status,
     detectedAt: review.detected_at ?? null,
     resolvedAt: review.resolved_at ?? null,
+    snoozedUntil: status === "snoozed" ? (review.snoozed_until ?? null) : null,
   };
+}
+
+function isSnoozeExpired(snoozedUntil: string | null | undefined, now: Date) {
+  if (!snoozedUntil) return false;
+  const until = new Date(snoozedUntil);
+  if (Number.isNaN(until.getTime())) return false;
+  return until.getTime() <= now.getTime();
 }
 
 function reviewToCandidate(review: DuplicateReviewRow) {
@@ -696,6 +711,7 @@ function reviewToCandidate(review: DuplicateReviewRow) {
     reviewId: review.id,
     detectedAt: review.detected_at ?? null,
     resolvedAt: review.resolved_at ?? null,
+    snoozedUntil: review.snoozed_until ?? null,
   });
 }
 

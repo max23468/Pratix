@@ -3,10 +3,12 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   canMergeDuplicateEntity,
+  DUPLICATE_SNOOZE_OPTIONS,
   duplicatePairKey,
   type DuplicateCandidate,
   type DuplicateEntityType,
   type DuplicateReviewStatus,
+  type DuplicateSnoozeInterval,
 } from "@/lib/duplicate-matching";
 import {
   reviewInsertFromCandidate,
@@ -56,6 +58,7 @@ type ResolveDuplicateInput = {
   leftRecordId: string;
   rightRecordId: string;
   action: "snooze" | "dismiss" | "merge";
+  snoozeInterval?: DuplicateSnoozeInterval | null;
   keepRecordId?: string | null;
 };
 
@@ -137,6 +140,8 @@ export const resolveDuplicateCandidateFn = createServerFn({ method: "POST" })
     const status = statusForAction(data.action);
     let keptRecordId: string | null = null;
     let mergedRecordId: string | null = null;
+    const snoozedUntil =
+      data.action === "snooze" ? calculateSnoozedUntil(data.snoozeInterval ?? "24h") : null;
 
     if (data.action === "merge") {
       if (!data.keepRecordId) throw new Error("Scegli il record da mantenere");
@@ -166,6 +171,7 @@ export const resolveDuplicateCandidateFn = createServerFn({ method: "POST" })
         status,
         kept_record_id: keptRecordId,
         merged_record_id: mergedRecordId,
+        snoozed_until: snoozedUntil,
         resolved_at: status === "snoozed" ? null : new Date().toISOString(),
       })
       .eq("user_id", context.userId)
@@ -797,6 +803,13 @@ function validateResolveDuplicateInput(input: ResolveDuplicateInput) {
   if (!["snooze", "dismiss", "merge"].includes(input.action)) {
     throw new Error("Azione duplicato non valida");
   }
+  if (
+    input.action === "snooze" &&
+    input.snoozeInterval &&
+    !DUPLICATE_SNOOZE_OPTIONS.some((option) => option.value === input.snoozeInterval)
+  ) {
+    throw new Error("Intervallo promemoria non valido");
+  }
   if (input.action === "merge" && !canMergeDuplicateEntity(input.entityType)) {
     throw new Error("Questo tipo di sospetto non supporta l'unione automatica");
   }
@@ -808,4 +821,13 @@ function statusForAction(action: ResolveDuplicateInput["action"]): DuplicateRevi
   if (action === "dismiss") return "dismissed";
   if (action === "merge") return "merged";
   return "snoozed";
+}
+
+function calculateSnoozedUntil(interval: DuplicateSnoozeInterval) {
+  const date = new Date();
+  if (interval === "1h") date.setHours(date.getHours() + 1);
+  if (interval === "24h") date.setDate(date.getDate() + 1);
+  if (interval === "1w") date.setDate(date.getDate() + 7);
+  if (interval === "1m") date.setMonth(date.getMonth() + 1);
+  return date.toISOString();
 }

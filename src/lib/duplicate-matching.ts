@@ -16,6 +16,15 @@ export type DuplicateConfidence = "high" | "medium" | "low";
 
 export type DuplicateReviewStatus = "open" | "snoozed" | "dismissed" | "merged";
 
+export const DUPLICATE_SNOOZE_OPTIONS = [
+  { value: "1h", label: "1 ora" },
+  { value: "24h", label: "24 ore" },
+  { value: "1w", label: "1 settimana" },
+  { value: "1m", label: "1 mese" },
+] as const;
+
+export type DuplicateSnoozeInterval = (typeof DUPLICATE_SNOOZE_OPTIONS)[number]["value"];
+
 export type DuplicateRecord = {
   id: string;
   publicCode?: string | null;
@@ -37,6 +46,7 @@ export type DuplicateCandidate = {
   status: DuplicateReviewStatus;
   detectedAt?: string | null;
   resolvedAt?: string | null;
+  snoozedUntil?: string | null;
 };
 
 type NameParts = {
@@ -194,6 +204,7 @@ export function buildCandidate(input: {
   reviewId?: string | null;
   detectedAt?: string | null;
   resolvedAt?: string | null;
+  snoozedUntil?: string | null;
 }): DuplicateCandidate {
   const score = clampScore(input.score);
   return {
@@ -213,6 +224,7 @@ export function buildCandidate(input: {
     reviewId: input.reviewId ?? null,
     detectedAt: input.detectedAt ?? null,
     resolvedAt: input.resolvedAt ?? null,
+    snoozedUntil: input.snoozedUntil ?? null,
   };
 }
 

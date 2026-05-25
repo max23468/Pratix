@@ -506,6 +506,65 @@ describe("duplicates logic", () => {
     });
   });
 
+  it("riporta tra i sospetti aperti i promemoria rimandati scaduti", () => {
+    const baseInput = {
+      principals: [
+        { id: "a", public_code: "CM-00001", business_name: "ACME S.R.L." },
+        { id: "b", public_code: "CM-00002", business_name: "Acme srl" },
+      ],
+      clients: [],
+      counterparties: [],
+      cases: [],
+    };
+
+    const future = scanDuplicateCandidates({
+      ...baseInput,
+      now: "2026-05-25T10:00:00.000Z",
+      reviews: [
+        {
+          id: "review-snoozed",
+          entity_type: "principal",
+          left_record_id: "a",
+          right_record_id: "b",
+          score: 0.97,
+          confidence: "high",
+          reasons: ["Ragione sociale quasi identica"],
+          status: "snoozed",
+          snoozed_until: "2026-05-25T11:00:00.000Z",
+        },
+      ],
+    });
+
+    expect(future.openCandidates[0]).toMatchObject({
+      status: "snoozed",
+      snoozedUntil: "2026-05-25T11:00:00.000Z",
+    });
+
+    const expired = scanDuplicateCandidates({
+      ...baseInput,
+      now: "2026-05-25T12:00:00.000Z",
+      reviews: [
+        {
+          id: "review-snoozed",
+          entity_type: "principal",
+          left_record_id: "a",
+          right_record_id: "b",
+          score: 0.97,
+          confidence: "high",
+          reasons: ["Ragione sociale quasi identica"],
+          status: "snoozed",
+          snoozed_until: "2026-05-25T11:00:00.000Z",
+        },
+      ],
+    });
+
+    expect(expired.openCandidates[0]).toMatchObject({
+      reviewId: "review-snoozed",
+      status: "open",
+      snoozedUntil: null,
+    });
+  });
+
   it("serializza decisioni e label operative per la persistenza", () => {
     const candidate = scanDuplicateCandidates({
       principals: [
