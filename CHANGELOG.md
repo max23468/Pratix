@@ -19,6 +19,14 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
   2.0, con segnali salvati, stati, gravità, generazione e primi 5 controlli
   iniziali.
 
+## [1.13.0] — 2026-05-25
+
+### Novità
+
+- **Controllo duplicati**: il comando Rimanda diventa un promemoria
+  temporizzato con intervalli di 1 ora, 24 ore, 1 settimana o 1 mese; allo
+  scadere, il sospetto torna automaticamente tra quelli da verificare.
+
 ## [1.12.0] — 2026-05-25
 
 ### Novità
@@ -1237,6 +1245,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.13.0]: #1130--2026-05-25
 [1.12.0]: #1120--2026-05-25
 [1.11.18]: #11118--2026-05-25
 [1.11.17]: #11117--2026-05-25
