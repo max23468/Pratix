@@ -1,6 +1,6 @@
 # Backlog Pratix
 
-Il backlog raccoglie idee, debiti e ipotesi non ancora promosse nella [roadmap](ROADMAP.md). Una voce qui non è scope approvato.
+Il backlog raccoglie idee, debiti e ipotesi non ancora promosse nella [roadmap](ROADMAP.md). Una voce nel backlog non è scope approvato.
 
 Pratix è già una repo matura: questo file non sostituisce i piani esistenti, ma rende più facile distinguere ciò che è prossimo da ciò che resta parcheggiato.
 

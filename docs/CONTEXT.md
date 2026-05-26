@@ -7,7 +7,7 @@
 - Stack: React/TanStack Start, Vercel, Supabase, Tailwind v4, shadcn/Radix.
 - Versione corrente: vedi `src/lib/version.ts`.
 - Roadmap canonica: `docs/ROADMAP.md`.
-- Memoria mirror: `docs/memory/`.
+- Memoria mirror: `docs/memory/MEMORY_MIRROR.md` e file collegati.
 
 ## Perimetro
 
@@ -29,13 +29,13 @@ Fuori perimetro salvo decisione esplicita:
 4. `docs/ROADMAP.md`
 5. `docs/BACKLOG.md`
 6. `docs/TOOLCHAIN.md`
-7. `docs/memory/README.md`
+7. `docs/memory/MEMORY_MIRROR.md`
 8. `docs/glossario.md`
 9. `docs/guides/versioning-e-release.md`
 10. `docs/guides/deploy.md`
 11. `docs/guides/architettura.md`
 12. `docs/data-model.md`
-13. `docs/decisions/`
+13. `docs/DECISIONS.md`, `docs/DECISIONS_PENDING.md` e `docs/decisions/`
 
 ## Vincoli da ricordare
 
@@ -55,6 +55,9 @@ Fuori perimetro salvo decisione esplicita:
 - Per docs interne non esposte all'app, non serve bump SemVer.
 - Prima di PR ready o merge controllare Codex feedback inbox.
 - Dopo merge controllare branch locali e worktree temporanei.
+- Per modifiche docs-only/governance-only usare verifiche proporzionate:
+  review documentale, coerenza link e `git diff --check`, senza smoke, deploy
+  o release.
 
 ## Prossimo lavoro di prodotto
 
