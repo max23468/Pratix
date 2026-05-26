@@ -7,14 +7,15 @@ Cartella che raccoglie tutta la documentazione approfondita del progetto.
 ```
 docs/
 ├── INDEX.md            ← indice canonico
-├── README.md           ← rinvio temporaneo all'indice
 ├── CONTEXT.md          ← handoff operativo
 ├── ROADMAP.md          ← roadmap canonica
 ├── BACKLOG.md          ← idee, debiti e ipotesi non promosse
 ├── TOOLCHAIN.md        ← runtime, comandi e verifiche
+├── DECISIONS.md        ← indice decisionale stabile
+├── DECISIONS_PENDING.md← decisioni strutturali non ancora approvate
 ├── glossario.md        ← termini legali e fiscali italiani
 ├── memory/             ← memoria di progetto in markdown (specchio di mem://)
-│   ├── README.md
+│   ├── MEMORY_MIRROR.md
 │   ├── core.md
 │   ├── brand.md
 │   └── roadmap.md
@@ -34,7 +35,6 @@ docs/
 │   ├── uscita-lovable.md
 │   └── versioning-e-release.md
 └── decisions/          ← Architecture Decision Records
-    ├── README.md
     ├── template.md
     └── 0001…0016-*.md
 ```
@@ -60,7 +60,8 @@ docs/
 | Eseguire smoke test accessibilità/UI                   | [`guides/smoke-a11y.md`](./guides/smoke-a11y.md)                                 |
 | Lavorare sulle migrazioni Supabase                     | [`guides/migrations.md`](./guides/migrations.md)                                 |
 | Diagnosticare warning React ricorrenti                 | [`guides/react-doctor.md`](./guides/react-doctor.md)                             |
-| Sapere perché abbiamo scelto X                         | [`decisions/`](./decisions/)                                                     |
+| Sapere perché abbiamo scelto X                         | [`DECISIONS.md`](./DECISIONS.md)                                                 |
+| Vedere decisioni non ancora approvate                  | [`DECISIONS_PENDING.md`](./DECISIONS_PENDING.md)                                 |
 | Capire un termine di dominio                           | [`glossario.md`](./glossario.md)                                                 |
 | Vedere le regole sempre attive                         | [`memory/core.md`](./memory/core.md)                                             |
 
@@ -68,4 +69,6 @@ docs/
 
 I file nella root del repo (`README.md`, `AGENTS.md`, `BRAND.md`, `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`, `LICENSE`) restano al primo livello perché sono punti d'ingresso convenzionali per chi atterra sul repository. La roadmap canonica e la documentazione di governo vivono in `docs/`.
 
-`ROADMAP.md` e `docs/README.md` restano come rinvii temporanei per compatibilità con link storici.
+La repo mantiene basename Markdown univoci: non creare nuovi `README.md` o
+`ROADMAP.md` in sottocartelle quando esiste già un documento canonico con lo
+stesso basename.
