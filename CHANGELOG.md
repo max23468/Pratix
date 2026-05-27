@@ -8,6 +8,10 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ### Non versionato
 
+- **Hardening ambiente**: rimosso `.env` dal tracciamento Git e introdotto
+  `.env.example` con placeholder per variabili Supabase, mantenendo le chiavi
+  reali solo in locale o nei provider.
+
 - **Roadmap 2.0**: eliminato l'import rendiconti Excel come feature prodotto
   futura; sui volumi limitati resta gestione manuale assistita fuori dall'app.
 - **Roadmap 2.0**: promosso il Centro documenti Pratica nel core come archivio
