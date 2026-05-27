@@ -251,3 +251,69 @@ fase non richiede un piano progettuale separato.
    `Documenti`.
 
 > Quando completiamo una voce, aggiorniamo lo stato qui e nella memoria di progetto.
+
+## Stato hardening operativo (2026-05-27)
+
+### Stato e rischio
+
+- Rischio iniziale: alto (prima sintesi piano).
+- Stato attuale: **in corso, bloccante per le prossime aperture** per non avanzare ulteriormente su repo con integrazioni sensibili finché non chiudi P0/P1.
+- Non-incluso per questa fase: **rotazione segreti** (esclusa dal piano corrente).
+
+### Piano tecnico (P0/P1/P2) — Pratix
+
+#### P0 (immediato: obbligatorio prima di altre attivazioni)
+
+- Confermare `git` history pulita da `.env` reali e da tracce di secreti in file non già gestiti da provider.
+- Verificare che non esistano segreti hardcoded in codice, template `.env.example`, README o docs operativi; registrare eventuali eccezioni in backlog se non bloccano subito.
+- Attivare `secret scanning` e gate pre-merge per evitare regressioni di configurazione.
+- Stabilire check minimale in CI/branch protection prima di aprire nuove feature/nuovi repository: nessun `segreto` inline, nessun `.env` tracciato.
+
+#### P1
+
+- Bloccare pattern critici nei template `.env.example` e in documentazione:
+  - placeholder che somigliano a token/chiavi;
+  - istruzioni operative che richiedono incolla manuale in testi condivisi;
+  - riferimenti incompleti a provider key nei runbook.
+- Aggiungere guardrail CI e pre-commit per:
+  - presenza `.env` reale nel commit;
+  - stringhe a rischio nei payload di log;
+  - controlli base su workflow con `${{ secrets.* }}` correttamente referenziati.
+- Mantenere separata la parte legacy Lovable come contesto storico e marcare la dipendenza come "migrata".
+
+#### P2
+
+- Audit periodici su:
+  - accessi amministrativi e service roles;
+  - usage token runtime;
+  - policy RLS e nuovi endpoint sensibili.
+- Inserire una verifica trimestrale di rischio operativo nel ciclo roadmap.
+
+### Verifiche eseguite (5/27)
+
+- Repository su branch dedicata `codex/hardening-operativo-2026-05-27`.
+- `git status --short --branch` pulito su branch operativo.
+- `git ls-files` mostra `.env.example`; nessun `.env` reale tracciato.
+- I riferimenti a segreti in codice/config sono gestiti come variabili ambiente provider (`secrets`) e non hardcoded.
+- `AGENTS.md`, `docs/ROADMAP.md`, `docs/CONTEXT.md` includono regole operative su pubblicazione, release e sicurezza.
+- Stack operativo in revisione: GitHub + Vercel + Supabase + TanStack Start (non in Vercel functionless/altre piattaforme).
+
+### Superfici operative da tenere nel controllo hardening
+
+- Integrazioni con Supabase/Vercel con server-side keys e cron protected (`CRON_SECRET`).
+- Operazioni di backup, release e publish con flow definito e checkato.
+- Surface auth e workflow di qualità dati/recupero crediti in crescita operativa.
+- Riferimento legacy da rimuovere entro prossimo ciclo: tratti residui di workflow Lovable non più coerenti con l’operatività moderna.
+
+### Rischi residui espliciti
+
+- Rischi residui di perimetro operativo lato workflow (qualità segnali, notifiche, cron) più che lato exposure credenziali.
+- Evoluzioni 2.0 (notifiche/in-app, centro documenti) che espandono stato e policy accesso.
+- Il piano resta bloccante finché P0 e P1 non risultano completi.
+
+### Prossimo passo hardening repo
+
+- Blocco di controllo operativo:
+  - **P0/P1 su Pratix** prima di nuovi deploy/features su repo con rischio operativo superiore (in ordine di rischio stabilito).
+  - metriche minimo-obiettivo: `0 secret scan hits`, `0 .env tracked`, `0 credenziali in log`.
+  - Allineare gli avanzamenti in `docs/HEALTH.md` Atlas e poi chiudere il punto `Pratix` solo dopo verifica su `main`.
