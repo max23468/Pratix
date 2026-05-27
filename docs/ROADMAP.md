@@ -127,6 +127,7 @@ Legenda stato: ✅ fatto · 🟡 in corso · ⬜ da fare · 💤 idea / parchegg
 | ✅    | Eliminazione account                         | Conferma esplicita, rimozione oggetti Storage noti/sotto prefix utente e cancellazione Auth server-side                                                                       |
 | ✅    | Esportazione dati personali                  | JSON completo e archivio CSV per tabelle personali/applicative                                                                                                                |
 | ✅    | Audit RLS su tutte le tabelle                | Contratto automatico su `supabase/schema.sql`: RLS + policy owner-scoped e RPC import filtrata per utente                                                                     |
+| ✅    | Gestione `.env` non tracciata                | `.env` rimosso dal versioning Git e introdotto `.env.example` con placeholder per l'override locale e nei provider runtime                                                    |
 
 ## 6. SEO, pubblicazione, dominio
 

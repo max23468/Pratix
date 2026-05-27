@@ -17,6 +17,7 @@ dist-ssr
 .playwright-cli/
 *.local
 .env.*
+.env
 !.env.example
 .env.migration
 
