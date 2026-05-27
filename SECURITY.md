@@ -45,3 +45,45 @@ Sono fuori scope:
 - Scan di sicurezza Supabase eseguiti regolarmente.
 
 Vedi anche [`docs/guides/database.md`](./docs/guides/database.md) per il dettaglio sulle policy RLS.
+
+## Hardening tecnico-operativo (2026-05-27)
+
+### Rischio
+
+- Rischio iniziale: **alto (bloccante)**.
+- Stato in questa ondata: **P0 da chiudere subito**, con P1/P2 dopo.
+- Rotazione segreti: **esclusa** in questa fase (espressamente non parte del piano).
+
+### Piano tecnico (P0/P1/P2)
+
+#### P0 (immediato)
+
+- Rimuovere subito qualsiasi file `.env` tracciato in repository e verificare la storia Git (`git log`/`git show`) per eventuali esposizioni pregresse.
+- Confermare che chiavi server-side, token provider e segreti di runtime non compaiano in commit, template o documentazione condivisa.
+- Attivare guardrail pre-merge/CI per scan automatici:
+  - secret scanning;
+  - blocco file `.env` e pattern segreti.
+
+#### P1
+
+- Bloccare pattern sensibili in `.env.example`, guide operative e snippet di onboarding.
+- Rafforzare guardrail CI/pre-commit per log e payload sensibili:
+  - rimuovere pattern PII/segreti dai log;
+  - evitare commit di configurazioni operative residue.
+- Tenere i piani RLS e accessi Supabase sotto revisione con check dedicato.
+
+#### P2
+
+- Audit periodici su:
+  - accessi amministrativi;
+  - utilizzo token runtime;
+  - policy RLS e regressioni autorizzative.
+- Inserire revisione di rischio nel ciclo operativo.
+
+### Piano operativo e di governo
+
+- Per Pratix: **non aprire nuovi interventi funzionali** prima della chiusura completa di P0 e P1.
+- Obiettivo operativo:
+  - `0` hit in secret scan;
+  - `0` file `.env` tracciati;
+  - `0` credenziali in log.
