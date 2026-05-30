@@ -659,6 +659,51 @@ describe("interazioni form anagrafiche", () => {
     );
   });
 
+  it("mantiene i toggle Prezzi modificati dopo un refetch dei committenti", async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    render(
+      <QueryClientProvider client={client}>
+        <PriceBookForm
+          initial={{
+            principal_id: "principal-1",
+            year: 2026,
+            status: "draft",
+            fees_enabled: true,
+            expense_reimbursements_enabled: true,
+            valid_from: "2026-01-01",
+            valid_to: "2026-12-31",
+            notes: null,
+          }}
+          onSaved={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      </QueryClientProvider>,
+    );
+
+    const feesSwitch = await screen.findByRole("switch", { name: "Compensi" });
+    await waitFor(() => expect(feesSwitch.getAttribute("aria-checked")).toBe("true"));
+
+    await userEvent.click(feesSwitch);
+    expect(feesSwitch.getAttribute("aria-checked")).toBe("false");
+
+    client.setQueryData(
+      ["principals", "price-book-form"],
+      [
+        {
+          id: "principal-1",
+          business_name: "Banca Test",
+          fees_enabled: true,
+          expense_reimbursements_enabled: true,
+          archived_at: null,
+        },
+      ],
+    );
+
+    await waitFor(() => expect(feesSwitch.getAttribute("aria-checked")).toBe("false"));
+  });
+
   it("aggiorna Prezzi sincronizzando voci esistenti e nuove", async () => {
     const onSaved = vi.fn();
     renderWithClient(

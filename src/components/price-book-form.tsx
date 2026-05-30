@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -98,6 +98,7 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
   const [items, setItems] = useState<PriceItemDraft[]>(
     initialItems.length > 0 ? initialItems : createTemplateItems(),
   );
+  const defaultsAppliedForPrincipalRef = useRef<string | null>(null);
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
   const saveLock = useSubmitLock();
 
@@ -141,6 +142,8 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
 
   useEffect(() => {
     if (isEdit || !selectedPrincipal) return;
+    if (defaultsAppliedForPrincipalRef.current === selectedPrincipal.id) return;
+    defaultsAppliedForPrincipalRef.current = selectedPrincipal.id;
     setForm((current) => ({
       ...current,
       fees_enabled: selectedPrincipal.fees_enabled,
