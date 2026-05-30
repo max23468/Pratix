@@ -9,8 +9,8 @@ Obiettivo: mantenere modifiche coerenti, sicure, testate e facilmente revisionab
 ## Priorità delle istruzioni
 
 1. Istruzioni di sistema/developer ricevute nella sessione corrente.
-2. Questo file `AGENTS.md`.
-3. Eventuali `AGENTS.md` più profondi nella cartella toccata.
+2. Eventuali `AGENTS.md` più profondi nella cartella toccata, che prevalgono sulle regole root per il loro scope.
+3. Questo file `AGENTS.md`.
 4. Memoria di progetto (`mem://index.md` per gli agenti, `docs/memory/` come mirror leggibile per chi legge il repo).
 5. Documentazione di progetto in `docs/` (indice, contesto, roadmap, backlog, toolchain, guide, ADR, glossario).
 6. Convenzioni dedotte da codice, test e configurazioni vicine.
@@ -212,6 +212,10 @@ Pratix tiene molta documentazione "viva": va aggiornata insieme alle modifiche.
 - **`BRAND.md`** — quando cambia un elemento di brand (palette, tipografia, logo, tono).
 - **`docs/glossario.md`** — quando si introduce o vieta un termine.
 
+Non creare documenti doppi con stesso scopo o basename. Durante migrazioni,
+rinomini o merge documentali preserva i contenuti utili, aggiorna i link e
+dichiara nel riepilogo ciò che viene rimosso perché superato.
+
 #### Mappa rapida: tipo di modifica → file da toccare
 
 | Tipo di modifica                                       | File da aggiornare (oltre al codice)                                                                                     |
@@ -248,6 +252,9 @@ Pratix usa **SemVer convenzionale** adattato a SaaS hostato (vedi [`docs/decisio
 - **Regola obbligatoria per ogni cambio progetto**: ogni volta che modifichi codice, documentazione, configurazione, schema DB, brand, processo o deploy, valuta sempre l'impatto sul versioning prima di chiudere il lavoro.
 - **Gate di chiusura fase**: prima di dichiarare conclusa una modifica, fase, migrazione, cutover o lavoro già pubblicato/deployato, controlla `CHANGELOG.md`. Se il blocco `[Non rilasciato]` contiene solo `Non versionato`, non eseguire release e non bumpare. Se contiene `Novità`, `Correzioni` o `Sotto il cofano`, non chiudere senza `npm run release` oppure senza dichiarare esplicitamente che il rilascio resta il prossimo step operativo.
 - **Default post-migrazione**: per migrazioni, cutover, correzioni infra o bonifiche sotto il cofano completate senza nuove feature utente, usa PATCH salvo istruzione diversa o impatto utente maggiore.
+- Release Please non è adottato in Pratix: non delegare changelog, versioning o
+  release a bot automatici come fonte primaria senza decisione esplicita del
+  progetto.
 - Procedura completa: [`docs/guides/versioning-e-release.md`](./docs/guides/versioning-e-release.md).
 
 ## Commit e PR
