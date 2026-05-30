@@ -11,6 +11,7 @@ docs/
 ├── ROADMAP.md          ← roadmap canonica
 ├── BACKLOG.md          ← idee, debiti e ipotesi non promosse
 ├── TOOLCHAIN.md        ← runtime, comandi e verifiche
+├── doppler-setup.md    ← integrazione Doppler e verifica segreti CI
 ├── DECISIONS.md        ← indice decisionale stabile
 ├── DECISIONS_PENDING.md← decisioni strutturali non ancora approvate
 ├── glossario.md        ← termini legali e fiscali italiani
@@ -47,6 +48,7 @@ docs/
 | Vedere stato e priorità                                | [`ROADMAP.md`](./ROADMAP.md)                                                     |
 | Consultare idee, debiti e ipotesi parcheggiate         | [`BACKLOG.md`](./BACKLOG.md)                                                     |
 | Controllare runtime, comandi e verifiche               | [`TOOLCHAIN.md`](./TOOLCHAIN.md)                                                 |
+| Verificare integrazione Doppler e segreti CI           | [`doppler-setup.md`](./doppler-setup.md)                                         |
 | Capire stack, struttura cartelle, routing              | [`guides/architettura.md`](./guides/architettura.md)                             |
 | Lavorare su tabelle, RLS, migrazioni                   | [`guides/database.md`](./guides/database.md)                                     |
 | Consultare stato migrazione e dismissione Lovable      | [`guides/uscita-lovable.md`](./guides/uscita-lovable.md)                         |
