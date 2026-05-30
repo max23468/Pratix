@@ -29,6 +29,8 @@ import { routeRef } from "@/lib/public-route-code";
 import { buildActivityAttachmentStoragePath, PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
 import { useSubmitLock } from "@/lib/submit-lock";
 
+const guidedCreationSteps = ["Soggetti", "Pratica", "Attività", "Riepilogo"];
+
 export function GuidedCreationWizard({ onCreated }: { onCreated: (caseId: string) => void }) {
   const { user } = useAuth();
   const qc = useQueryClient();
@@ -257,8 +259,6 @@ export function GuidedCreationWizard({ onCreated }: { onCreated: (caseId: string
     onSettled: confirmLock.release,
   });
 
-  const steps = ["Soggetti", "Pratica", "Attività", "Riepilogo"];
-
   return (
     <form
       onSubmit={(event) => {
@@ -273,7 +273,7 @@ export function GuidedCreationWizard({ onCreated }: { onCreated: (caseId: string
       className="space-y-4"
     >
       <div className="grid gap-2 md:grid-cols-4">
-        {steps.map((label, index) => (
+        {guidedCreationSteps.map((label, index) => (
           <button
             key={label}
             type="button"

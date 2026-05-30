@@ -10,11 +10,9 @@ import {
   CaseActivityDialog,
   type CaseActivityDialogActivity,
 } from "@/components/case-activities";
-import {
-  MobileListCard,
-  MobileListCardDetails,
-  MobileListCardHeader,
-} from "@/components/mobile-list-card";
+import { MobileListCard } from "@/components/mobile-list-card";
+import { MobileListCardDetails } from "@/components/mobile-list-card-details";
+import { MobileListCardHeader } from "@/components/mobile-list-card-header";
 import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { SearchInput } from "@/components/search-input";
 import { SortableTableHead } from "@/components/sortable-table-head";

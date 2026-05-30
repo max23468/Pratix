@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { useCallback, useMemo, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -279,13 +279,12 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
     },
   });
 
-  useEffect(() => {
-    if (isEdit || form.practice_number || !nextPracticeNumber) return;
+  if (!isEdit && !form.practice_number && nextPracticeNumber) {
     setForm((current) => ({
       ...current,
       practice_number: nextPracticeNumber,
     }));
-  }, [form.practice_number, isEdit, nextPracticeNumber]);
+  }
 
   const { data: clients = [], isFetched: clientsFetched } = useQuery({
     queryKey: ["clients", "case-form"],
@@ -326,18 +325,15 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
       .sort(compareClients);
   }, [allClients, form.client_id, form.principal_id, principalClientIds]);
 
-  useEffect(() => {
-    if (!clientsFetched || !principalClientIdsFetched) return;
-    if (!form.principal_id || !form.client_id) return;
-    if (availableClients.some((client) => client.id === form.client_id)) return;
+  if (
+    clientsFetched &&
+    principalClientIdsFetched &&
+    form.principal_id &&
+    form.client_id &&
+    !availableClients.some((client) => client.id === form.client_id)
+  ) {
     setForm((current) => ({ ...current, client_id: null }));
-  }, [
-    availableClients,
-    clientsFetched,
-    form.client_id,
-    form.principal_id,
-    principalClientIdsFetched,
-  ]);
+  }
 
   const createQuickPrincipalMutation = useMutation({
     mutationFn: async () => {

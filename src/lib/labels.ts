@@ -93,7 +93,7 @@ export const caseActivityDisplayStatusLabels: Record<string, string> = {
   draft_invoice: "In bozza",
 };
 
-export const caseActivityStatusVariant: Record<
+const caseActivityStatusVariant: Record<
   string,
   "default" | "secondary" | "destructive" | "outline"
 > = {

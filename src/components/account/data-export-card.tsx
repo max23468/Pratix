@@ -13,39 +13,39 @@ import {
   type PersonalDataTable,
 } from "@/lib/personal-data-export";
 
+async function fetchTableRows(table: PersonalDataTable) {
+  const pageSize = 1000;
+  const rows: unknown[] = [];
+
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await supabase
+      .from(table)
+      .select("*")
+      .order("id", { ascending: true })
+      .range(from, from + pageSize - 1);
+    if (error) throw error;
+
+    const page = (data ?? []) as unknown[];
+    rows.push(...page);
+    if (page.length < pageSize) return rows;
+  }
+}
+
+async function buildPayload(): Promise<PersonalDataPayload> {
+  const entries = await Promise.all(
+    PERSONAL_DATA_TABLES.map(async (table) => {
+      return [table, await fetchTableRows(table)] as const;
+    }),
+  );
+
+  return {
+    exportedAt: new Date().toISOString(),
+    product: "Pratix",
+    tables: Object.fromEntries(entries),
+  };
+}
+
 export function DataExportCard() {
-  const fetchTableRows = async (table: PersonalDataTable) => {
-    const pageSize = 1000;
-    const rows: unknown[] = [];
-
-    for (let from = 0; ; from += pageSize) {
-      const { data, error } = await supabase
-        .from(table)
-        .select("*")
-        .order("id", { ascending: true })
-        .range(from, from + pageSize - 1);
-      if (error) throw error;
-
-      const page = (data ?? []) as unknown[];
-      rows.push(...page);
-      if (page.length < pageSize) return rows;
-    }
-  };
-
-  const buildPayload = async (): Promise<PersonalDataPayload> => {
-    const entries = await Promise.all(
-      PERSONAL_DATA_TABLES.map(async (table) => {
-        return [table, await fetchTableRows(table)] as const;
-      }),
-    );
-
-    return {
-      exportedAt: new Date().toISOString(),
-      product: "Pratix",
-      tables: Object.fromEntries(entries),
-    };
-  };
-
   const exportMutation = useMutation({
     mutationFn: async (format: "json" | "csv") => {
       const payload = await buildPayload();

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -269,19 +269,15 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
         ].join("|")
       : null;
 
-  useEffect(() => {
-    if (!profile || !profileDefaultsKey || appliedProfileDefaultsKey === profileDefaultsKey) {
-      return;
-    }
+  if (profile && profileDefaultsKey && appliedProfileDefaultsKey !== profileDefaultsKey) {
     setCassaRate(Number(profile.cassa_rate ?? 4));
     setVatRate(Number(profile.vat_rate ?? 22));
     setWithholdingRate(Number(profile.withholding_rate ?? 20));
     setApplyWithholding(profile.tax_regime !== "forfettario");
     setAppliedProfileDefaultsKey(profileDefaultsKey);
-  }, [appliedProfileDefaultsKey, profile, profileDefaultsKey]);
+  }
 
-  useEffect(() => {
-    if (!draftData || loadedDraftId === draftData.invoice.id) return;
+  if (draftData && loadedDraftId !== draftData.invoice.id) {
     setPrincipalId(draftData.invoice.principal_id ?? "");
     setPeriodStart(draftData.billingRun.period_start);
     setPeriodEnd(draftData.billingRun.period_end);
@@ -305,7 +301,7 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
       Object.fromEntries(draftData.items.map((item) => [item.activity_id, item.status] as const)),
     );
     setLoadedDraftId(draftData.invoice.id);
-  }, [draftData, loadedDraftId]);
+  }
 
   const { data: activities = EMPTY_ACTIVITIES, isLoading: activitiesLoading } = useQuery({
     queryKey: [

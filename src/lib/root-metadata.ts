@@ -2,7 +2,7 @@ import { APP_VERSION } from "@/lib/version";
 
 export const DEFAULT_DESCRIPTION =
   "Pratix è il gestionale per avvocati freelance che seguono pratiche di recupero crediti: committenti, clienti, controparti, attività e fatturazione.";
-export const SITE_URL = "https://pratix.vercel.app";
+const SITE_URL = "https://pratix.vercel.app";
 export const OG_IMAGE_URL = `${SITE_URL}/og-image.jpg`;
 export const STRUCTURED_DATA = {
   "@context": "https://schema.org",

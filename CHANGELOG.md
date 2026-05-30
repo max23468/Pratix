@@ -6,6 +6,17 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.13.3] — 2026-05-31
+
+### Sotto il cofano
+
+- **React Doctor**: portato `react-doctor@latest` a `100/100` con 0 errori e
+  0 warning, correggendo stato derivato nei form, JSX ricreato nei dettagli
+  pratica, export inutilizzati e componenti mobile concentrati nello stesso
+  file.
+
+## [Non versionato] — 2026-05-31
+
 ### Non versionato
 
 - **Hardening ambiente**: rimosso `.env` dal tracciamento Git e introdotto
@@ -1264,6 +1275,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.13.3]: #1133--2026-05-31
 [1.13.2]: #1132--2026-05-31
 [1.13.1]: #1131--2026-05-30
 [1.13.0]: #1130--2026-05-25
