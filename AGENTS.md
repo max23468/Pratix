@@ -9,8 +9,8 @@ Obiettivo: mantenere modifiche coerenti, sicure, testate e facilmente revisionab
 ## Priorità delle istruzioni
 
 1. Istruzioni di sistema/developer ricevute nella sessione corrente.
-2. Questo file `AGENTS.md`.
-3. Eventuali `AGENTS.md` più profondi nella cartella toccata, che prevalgono sulle regole root per il loro scope.
+2. Eventuali `AGENTS.md` più profondi nella cartella toccata, che prevalgono sulle regole root per il loro scope.
+3. Questo file `AGENTS.md`.
 4. Memoria di progetto (`mem://index.md` per gli agenti, `docs/memory/` come mirror leggibile per chi legge il repo).
 5. Documentazione di progetto in `docs/` (indice, contesto, roadmap, backlog, toolchain, guide, ADR, glossario).
 6. Convenzioni dedotte da codice, test e configurazioni vicine.
