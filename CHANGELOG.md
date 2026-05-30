@@ -23,6 +23,14 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
   2.0, con segnali salvati, stati, gravità, generazione e primi 5 controlli
   iniziali.
 
+## [1.13.1] — 2026-05-30
+
+### Correzioni
+
+- **Form operativi**: ripristinata la sincronizzazione di Pratiche, Fatture e
+  Prezzi fuori dal render React, evitando blocchi nelle interazioni di
+  salvataggio e creazione rapida.
+
 ## [1.13.0] — 2026-05-25
 
 ### Novità
@@ -1249,6 +1257,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.13.1]: #1131--2026-05-30
 [1.13.0]: #1130--2026-05-25
 [1.12.0]: #1120--2026-05-25
 [1.11.18]: #11118--2026-05-25

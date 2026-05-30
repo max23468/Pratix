@@ -1,4 +1,4 @@
-import { useId, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useId, useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Plus, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -136,6 +136,17 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
       return { book, items: previousItems ?? [] };
     },
   });
+
+  const selectedPrincipal = principals.find((principal) => principal.id === form.principal_id);
+
+  useEffect(() => {
+    if (isEdit || !selectedPrincipal) return;
+    setForm((current) => ({
+      ...current,
+      fees_enabled: selectedPrincipal.fees_enabled,
+      expense_reimbursements_enabled: selectedPrincipal.expense_reimbursements_enabled,
+    }));
+  }, [isEdit, selectedPrincipal]);
 
   const itemUsage = useMemo(() => {
     return items.reduce<Record<string, number>>((acc, item) => {
