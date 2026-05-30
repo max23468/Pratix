@@ -42,7 +42,7 @@ jobs:
           fi
 
       - name: Fetch secrets from Doppler
-        if: ${{ secrets.DOPPLER_TOKEN != '' && vars.DOPPLER_PROJECT != '' && vars.DOPPLER_CONFIG != '' }}
+        if: ${{ env.DOPPLER_TOKEN_PRESENT != '' && vars.DOPPLER_PROJECT != '' && vars.DOPPLER_CONFIG != '' }}
         uses: dopplerhq/secrets-fetch-action@v2.0.0
         with:
           doppler-token: ${{ secrets.DOPPLER_TOKEN }}
