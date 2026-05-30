@@ -23,6 +23,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
   2.0, con segnali salvati, stati, gravità, generazione e primi 5 controlli
   iniziali.
 
+## [1.13.2] — 2026-05-31
+
+### Correzioni
+
+- **Prezzi**: i toggle Compensi e Rimborsi spese restano sulle scelte manuali
+  durante la creazione anche se i dati dei committenti vengono ricaricati.
+
 ## [1.13.1] — 2026-05-30
 
 ### Correzioni
@@ -1257,6 +1264,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.13.2]: #1132--2026-05-31
 [1.13.1]: #1131--2026-05-30
 [1.13.0]: #1130--2026-05-25
 [1.12.0]: #1120--2026-05-25
