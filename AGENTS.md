@@ -10,9 +10,11 @@ Obiettivo: mantenere modifiche coerenti, sicure, testate e facilmente revisionab
 
 1. Istruzioni di sistema/developer ricevute nella sessione corrente.
 2. Questo file `AGENTS.md`.
-3. Memoria di progetto (`mem://index.md` per gli agenti, `docs/memory/` come mirror leggibile per chi legge il repo).
-4. Documentazione di progetto in `docs/` (guide, ADR, glossario).
-5. Assunzioni dell'agente.
+3. Eventuali `AGENTS.md` più profondi nella cartella toccata.
+4. Memoria di progetto (`mem://index.md` per gli agenti, `docs/memory/` come mirror leggibile per chi legge il repo).
+5. Documentazione di progetto in `docs/` (indice, contesto, roadmap, backlog, toolchain, guide, ADR, glossario).
+6. Convenzioni dedotte da codice, test e configurazioni vicine.
+7. Assunzioni dell'agente, solo per dettagli marginali e dichiarate quando incidono sulla chiusura.
 
 In caso di conflitto, seguire sempre il livello più alto.
 
@@ -117,6 +119,7 @@ GitHub è la fonte primaria del codice. Vercel builda e pubblica dal repository.
 - Una push sul branch collegato genera preview/production deployment su Vercel secondo la configurazione del progetto.
 - Dopo merge, pubblicazione o chiusura di una PR, elimina anche il branch dedicato nel checkout locale se non serve più. Prima prova `git branch -d <branch>`; se Git rifiuta perché il branch non è antenato diretto ma la patch è già assorbita, verifica che `git log --cherry-pick --right-only --oneline main...<branch>` non mostri commit unici e solo allora usa `git branch -D <branch>`. Se il branch remoto o locale resta aperto per un motivo, dichiaralo nel riepilogo operativo.
 - Quando un lavoro ha usato worktree dedicati, la pulizia non è completa finché `git worktree list` mostra solo i worktree che devono restare. Prima di dichiarare "pubblicato" o "pulito", controlla ogni worktree temporaneo con `git -C <path> status -sb` e rimuovilo con `git worktree remove <path>` se non contiene modifiche da preservare. Se `git worktree remove` fallisce perché la directory contiene solo artefatti ignorati o generati (`node_modules`, `.output`, `.env` locali), ispeziona rapidamente il contenuto e poi rimuovi la directory residua; non lasciare cartelle di worktree salvate senza dichiararne il motivo.
+- Per lavori non banali usa branch `codex/<tema>` e PR verso `main`; il commit diretto su `main` resta solo per micro docs-only a basso rischio quando non tocca runtime, release, deploy, segreti o decisioni ambigue.
 - Stato runtime (dati DB, secret, file Storage) **non** vive su GitHub: solo codice, schema e migrations. Vedi [`docs/guides/database.md`](./docs/guides/database.md).
 
 ## Prima di intervenire
@@ -238,6 +241,7 @@ Pratix usa **SemVer convenzionale** adattato a SaaS hostato (vedi [`docs/decisio
 - **Nessuna release**: quarta categoria obbligatoria per bozze, note locali, test-only, commenti, formattazione isolata, piani, ADR, regole agenti e docs interne non operative; non produce una nuova versione. Se viene annotata nel changelog, usa `### Non versionato`.
 - **Rilasciare** = eseguire `npm run release` (oppure `npm run release -- --bump patch|minor|major`), verificare il diff generato e promuovere il deployment Vercel. Il comando aggiorna `src/lib/version.ts`, rinomina `[Non rilasciato]` → `[X.Y.Z] — YYYY-MM-DD`, crea il nuovo blocco `[Non rilasciato]` e aggiorna i link del changelog.
 - **Pubblicare / tutto pubblicato** = merge su `main` + deployment production Vercel completato e verificato + branch dedicato chiuso/eliminato se esiste. Una PR aperta, un push sul branch o una preview Vercel non bastano. Quando il proprietario chiede "pubblica", "pubblica tutto" o "è tutto pubblicato?", completa questi passaggi oppure dichiara esattamente cosa manca.
+- Release e deploy vanno valutati insieme quando entrambi sono applicabili: non chiudere una release senza dichiarare lo stato del deploy, e non chiudere un deploy senza dichiarare se la release è necessaria o `N/A`.
 - Dopo il merge usa `npm run publish:finish -- --pr <numero-pr> --routes /,/novita` quando applicabile: aggiorna `main`, verifica produzione via Vercel API se `VERCEL_TOKEN` o il token nel Portachiavi macOS `pratix.vercel.token` è disponibile, fa probe HTTP sulle route indicate e pulisce branch/worktree dedicati solo se sicuro. Non passare `--routes` vuoto: deve contenere almeno una route effettiva.
 - **Pubblicare non significa sempre rilasciare**: se il diff contiene solo piani, ADR, guide interne, PDF di pianificazione o regole di processo non esposte nell'app, pubblica su GitHub/main senza bump SemVer e senza modificare `src/lib/version.ts`.
 - Per modifiche solo documentali non esposte all'app (`AGENTS.md`, `README.md`, `docs/**` interne), il deploy Vercel automatico non deve bloccare la chiusura: basta verificare PR/check pertinenti. Per documenti o release esposti nella UI (`CHANGELOG.md`, `src/lib/version.ts`, testi pubblici, landing, privacy/termini), verifica almeno che il deployment production sia `READY` e che la pagina interessata risponda.
@@ -275,4 +279,5 @@ Una modifica è pronta se:
 - include verifiche eseguite o limiti noti quando rilevanti;
 - aggiorna `docs/ROADMAP.md`, `CHANGELOG.md`, ADR, `docs/` e memoria solo quando serve davvero;
 - se il lavoro è stato mergeato/pubblicato, non lascia branch dedicati locali o remoti inutilizzati né worktree temporanei/directory residue; se restano, il motivo è esplicitato;
+- publish, release e deploy sono stati completati oppure dichiarati non applicabili con motivo;
 - non lascia file temporanei, dati sensibili o modifiche non correlate.
