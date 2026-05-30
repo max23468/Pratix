@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { AlertTriangle, LoaderCircle, SearchX } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type PageStateVariant = "loading" | "not-found" | "error" | "empty";
@@ -45,19 +44,5 @@ export function PageState({
       {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
       {action && <div className="mt-4 flex flex-wrap justify-center gap-2">{action}</div>}
     </div>
-  );
-}
-
-export function PageStateAction({
-  children,
-  onClick,
-}: {
-  children: ReactNode;
-  onClick?: () => void;
-}) {
-  return (
-    <Button type="button" size="sm" variant="outline" onClick={onClick}>
-      {children}
-    </Button>
   );
 }

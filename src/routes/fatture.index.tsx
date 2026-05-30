@@ -6,11 +6,9 @@ import { FileDown, FileText, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppLayout } from "@/components/app-layout";
 import { ListToolbar } from "@/components/list-toolbar";
-import {
-  MobileListCardDetails,
-  MobileListCardHeader,
-  mobileListCardLinkClassName,
-} from "@/components/mobile-list-card";
+import { mobileListCardLinkClassName } from "@/components/mobile-list-card";
+import { MobileListCardDetails } from "@/components/mobile-list-card-details";
+import { MobileListCardHeader } from "@/components/mobile-list-card-header";
 import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { PageHeader } from "@/components/page-header";
 import { SearchInput } from "@/components/search-input";

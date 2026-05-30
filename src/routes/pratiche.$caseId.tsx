@@ -1,4 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
@@ -9,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CaseForm } from "@/components/case-form";
 import { CaseActivitiesTab } from "@/components/case-activities";
-import { CaseOperationsPanel } from "@/components/case-operations-panel";
+import { CaseOperationsPanel, type CaseOperationsCase } from "@/components/case-operations-panel";
 import { CreditTransfersTab } from "@/components/practices/credit-transfers-tab";
 import { HistoryTab } from "@/components/practices/case-history-tab";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,6 +22,21 @@ import {
   practiceDisplayName,
 } from "@/lib/labels";
 import { publicCodeLookup } from "@/lib/public-route-code";
+
+const caseDetailHeaderActions = (
+  <>
+    <Link to="/pratiche/nuova">
+      <Button size="sm">
+        <Plus className="mr-1 size-4" /> Nuova pratica
+      </Button>
+    </Link>
+    <Link to="/pratiche">
+      <Button size="sm" variant="outline">
+        <ArrowLeft className="mr-1 size-4" /> Torna alle pratiche
+      </Button>
+    </Link>
+  </>
+);
 
 export const Route = createFileRoute("/pratiche/$caseId")({
   head: () => ({
@@ -40,7 +56,6 @@ export const Route = createFileRoute("/pratiche/$caseId")({
 
 function CaseDetail() {
   const { caseId } = Route.useParams();
-  const navigate = useNavigate();
 
   const { data: caseRow, isLoading } = useQuery({
     queryKey: ["case", caseId],
@@ -57,7 +72,6 @@ function CaseDetail() {
       return data;
     },
   });
-
   if (isLoading) {
     return <PageState variant="loading" title="Caricamento pratica…" />;
   }
@@ -78,47 +92,49 @@ function CaseDetail() {
     );
   }
 
+  return <CaseDetailContent caseRow={caseRow} />;
+}
+
+function CaseDetailContent({ caseRow }: { caseRow: CaseOperationsCase }) {
+  const navigate = useNavigate();
   const clientName = caseRow.clients ? clientDisplayName(caseRow.clients) : "—";
   const principalName = caseRow.principals?.business_name ?? "—";
   const counterpartyName = caseRow.counterparties
     ? counterpartyDisplayName(caseRow.counterparties)
     : "—";
+  const titleAccessory = useMemo(
+    () => (
+      <Badge variant={caseStatusVariant[caseRow.status] ?? "outline"}>
+        {caseStatusLabels[caseRow.status] ?? caseRow.status}
+      </Badge>
+    ),
+    [caseRow.status],
+  );
+  const afterDashboardSlot = useMemo(() => <CaseActivitiesTab caseRow={caseRow} />, [caseRow]);
+  const detailsSlot = useMemo(
+    () => (
+      <CaseForm
+        initial={caseRow}
+        onSaved={() => navigate({ to: "/pratiche" })}
+        onCancel={() => navigate({ to: "/pratiche" })}
+      />
+    ),
+    [caseRow, navigate],
+  );
+
   return (
     <>
       <PageHeader
         title={practiceDisplayName(caseRow)}
-        titleAccessory={
-          <Badge variant={caseStatusVariant[caseRow.status] ?? "outline"}>
-            {caseStatusLabels[caseRow.status] ?? caseRow.status}
-          </Badge>
-        }
+        titleAccessory={titleAccessory}
         description={`${principalName} · ${clientName} · ${counterpartyName}`}
-        actions={
-          <>
-            <Link to="/pratiche/nuova">
-              <Button size="sm">
-                <Plus className="mr-1 size-4" /> Nuova pratica
-              </Button>
-            </Link>
-            <Link to="/pratiche">
-              <Button size="sm" variant="outline">
-                <ArrowLeft className="mr-1 size-4" /> Torna alle pratiche
-              </Button>
-            </Link>
-          </>
-        }
+        actions={caseDetailHeaderActions}
       />
 
       <CaseOperationsPanel
         caseRow={caseRow}
-        afterDashboardSlot={<CaseActivitiesTab caseRow={caseRow} />}
-        detailsSlot={
-          <CaseForm
-            initial={caseRow}
-            onSaved={() => navigate({ to: "/pratiche" })}
-            onCancel={() => navigate({ to: "/pratiche" })}
-          />
-        }
+        afterDashboardSlot={afterDashboardSlot}
+        detailsSlot={detailsSlot}
       />
 
       <Tabs defaultValue="transfers" className="mt-6">
