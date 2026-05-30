@@ -1,9 +1,11 @@
 # Integrazione Doppler
 
 ## Obiettivo
+
 Questo progetto è pronto per l'iniezione dei segreti da Doppler in CI/ambiente runtime.
 
 ## Configurazione GitHub richiesta
+
 1. Crea in Doppler un Project con nome uguale al valore in `DOPPLER_PROJECT`.
 2. Crea in quel project la Config da usare in CI (consigliata: `production`) e assegna i segreti nel modo abituale.
 3. Crea un Service Token **read-only** per GitHub Actions (`token type: service token`), scope al config corretto.
@@ -13,14 +15,17 @@ Questo progetto è pronto per l'iniezione dei segreti da Doppler in CI/ambiente 
    - Variable: `DOPPLER_CONFIG`
 
 ## Stato attuale repo
+
 - `DOPPLER_PROJECT` impostato a: `Pratix`
 - `DOPPLER_CONFIG` impostato a: `production`
 
 ## Workflow pronto
+
 È stato aggiunto `.github/workflows/doppler-check.yml`.
 
 ### Come usarlo
-- Apri la pagina *Actions* della repo e lancia manualmente `doppler-check`.
+
+- Apri la pagina _Actions_ della repo e lancia manualmente `doppler-check`.
 - Se `DOPPLER_TOKEN`, `DOPPLER_PROJECT` e `DOPPLER_CONFIG` sono corretti, il workflow prova il fetch dei segreti Doppler.
 
 ## Comandi GitHub (facoltativi)
