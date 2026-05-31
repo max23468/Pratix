@@ -265,6 +265,13 @@ Pratix usa **SemVer convenzionale** adattato a SaaS hostato (vedi [`docs/decisio
 - Non aggiungere workflow GitHub Actions, policy di deploy o flussi di release non presenti senza richiesta esplicita. Il rilascio operativo avviene tramite Vercel.
 - Nelle PR usa il template in `.github/PULL_REQUEST_TEMPLATE.md`. Riporta in modo concreto cosa è cambiato, dove, eventuali rischi residui e verifiche rilevanti. Evita footer rituali se non aggiungono valore.
 
+## Risposta finale
+
+Chiudi ogni intervento con un riepilogo concreto: cosa è cambiato, file
+principali quando utili, verifiche eseguite o non eseguite con motivo, stato
+publish, release e deploy, branch/worktree residui, rischi residui e prossimo
+passo operativo se serve.
+
 ## Linee guida per la review
 
 - Controlla che il routing in `src/routes` non sia rotto.
