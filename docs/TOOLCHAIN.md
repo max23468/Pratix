@@ -63,7 +63,7 @@ npm run smoke:a11y:quick
 npm run smoke:a11y:auth
 ```
 
-`npm run quality:react-doctor` usa `npx react-doctor@latest` per seguire l'ultima diagnostica disponibile, mantenendo i flag Pratix per progetto TanStack Start.
+`npm run quality:react-doctor` usa `npx --yes react-doctor@latest` per seguire l'ultima diagnostica disponibile senza prompt interattivi, mantenendo i flag Pratix per progetto TanStack Start.
 
 Supabase:
 

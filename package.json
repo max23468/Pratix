@@ -13,7 +13,7 @@
     "build": "node scripts/vite-with-tailwind-compat.mjs build",
     "build:dev": "node scripts/vite-with-tailwind-compat.mjs build --mode development",
     "ci:local": "npm run build && npm test && npm run lint && npm audit --audit-level=moderate",
-    "quality:react-doctor": "npx react-doctor@latest --full --offline --fail-on error --project tanstack_start_ts .",
+    "quality:react-doctor": "npx --yes react-doctor@latest --full --offline --fail-on error --project tanstack_start_ts .",
     "smoke:a11y": "node scripts/smoke-a11y.mjs --start-server",
     "smoke:a11y:quick": "node scripts/smoke-a11y.mjs --start-server --quick",
     "smoke:a11y:auth": "node scripts/smoke-a11y-auth.mjs",
