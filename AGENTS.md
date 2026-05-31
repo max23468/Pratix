@@ -202,6 +202,12 @@ Vincoli di terminologia (vedi [`docs/glossario.md`](./docs/glossario.md)):
 
 Pratix tiene molta documentazione "viva": va aggiornata insieme alle modifiche.
 
+La root resta per ingresso e convenzioni trasversali (`README.md`,
+`AGENTS.md`, `BRAND.md`, `CHANGELOG.md`, `SECURITY.md`, `CONTRIBUTING.md`,
+`LICENSE`). La governance, le guide, il contesto, roadmap, backlog, ADR,
+glossario, memoria e piani vivono in `docs/`; l'indice canonico è
+`docs/INDEX.md`.
+
 ### Cosa aggiornare e quando
 
 - **`docs/ROADMAP.md`** — _ogni_ decisione di prodotto, brand o tecnica condivisa in chat deve confluire qui. Aggiorna lo stato (✅ 🟡 ⬜ 💤) quando una voce cambia.
