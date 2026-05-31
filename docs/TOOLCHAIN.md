@@ -115,3 +115,4 @@ La pubblicazione completa resta PR/merge su `main`, Vercel production verificata
 - Vercel conserva secret runtime e pubblica produzione/preview.
 - Supabase gestisce database, auth, RLS, Storage e provider secret.
 - Non committare `.env`, token, dump, backup, export reali o dati personali.
+- Per provider, API, prezzi, limiti, policy o fonti fiscali/normative variabili, usare fonti ufficiali correnti e dichiarare quando un dato è fatto verificato, inferenza o decisione interna.

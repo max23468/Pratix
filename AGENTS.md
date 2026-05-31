@@ -110,6 +110,7 @@ Helper "server-only" (accesso DB, secret) vivono in `src/server/*.server.ts` e s
 - Le chiavi pubbliche Supabase (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`) sono pubblicabili per design, ma si gestiscono comunque tramite env Vercel e file locali non tracciati.
 - Prima di scrivere codice che usa una chiave, verifica che sia prevista nel piano env e chiedi all'utente di inserirla nel provider corretto se manca.
 - Mai stampare segreti in log, errori o risposte chat. Per verificarne la presenza usa `test -n "$VAR"`, mai `echo $VAR`.
+- Per Supabase, Vercel, API terze, prezzi, limiti, policy o fonti fiscali/normative variabili, verifica fonti ufficiali correnti prima di fissare decisioni operative o prodotto. Distingui sempre fatto verificato, inferenza e scelta interna.
 
 ## GitHub, Vercel e Supabase
 
