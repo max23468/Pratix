@@ -81,6 +81,16 @@ Pratix usa corsie di pubblicazione:
 - standard: changelog, testi pubblici, microcopy esposta o piccola UI locale;
 - completa: routing, componenti condivisi, auth, database, dipendenze, release, automazioni o UI sostanziale.
 
+Mappa rapida:
+
+| Tipo modifica                                                                                       | Corsia   | Verifiche minime                                                                 |
+| --------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------- |
+| Sola analisi                                                                                        | veloce   | Nessun test applicativo; dichiarare fonti e limiti                               |
+| Docs interne/governance                                                                             | veloce   | Rilettura, coerenza, `git diff --check`, `npm run format:changed:check` se utile |
+| Changelog, testi pubblici, microcopy                                                                | standard | Check specifico, verifica pagina/HTTP mirata quando esposto                      |
+| Test-only o runtime piccolo                                                                         | standard | Test mirati; lint/build solo se tocca TypeScript, routing o contratti            |
+| Runtime condiviso, auth, database, provider/API, deploy/config, release/versioning o UI sostanziale | completa | `npm run prepush:guard` o equivalenti, smoke/a11y quando praticabile             |
+
 La pubblicazione completa resta PR/merge su `main`, Vercel production verificata quando serve e cleanup branch/worktree. Cambia solo la profondità dei gate tecnici.
 
 ## CI e GitHub
