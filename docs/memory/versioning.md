@@ -97,7 +97,9 @@ Mostra `Pratix v{APP_VERSION} · build {BUILD_DATE}` + link "Cosa è cambiato" �
 
 ## Esclusioni esplicite
 
-No notifiche push/email, no GitHub Releases, no changelog pubblico, no popup invasivi.
+No notifiche push/email, no changelog pubblico, no popup invasivi. Le release
+prodotto reali richiedono tag Git `vX.Y.Z` e GitHub Release; non crearli per
+voci `Non versionato` o docs-only.
 
 ## Riferimenti
 

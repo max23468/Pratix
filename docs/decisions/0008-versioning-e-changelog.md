@@ -102,8 +102,10 @@ rilasciata devono restare **Non versionato**. In questi casi non si modifica
 
 ## Esclusioni esplicite
 
-- **No tag git automatici**, no GitHub Releases, no pipeline di rilascio.
-  Pratix vive su Lovable: il "rilascio" è premere Publish.
+- **No tag git automatici**, no pipeline di rilascio automatica.
+  Le release prodotto reali devono però creare tag Git `vX.Y.Z` e GitHub
+  Release derivata dal changelog; Pratix resta un SaaS hostato e il deploy
+  operativo continua a passare da Vercel.
 - **No notifiche push/email** per le novità. Solo il pallino in
   campanella.
 - **No public roadmap/changelog**: la pagina Novità resta autenticata.
