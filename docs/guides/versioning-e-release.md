@@ -25,8 +25,9 @@ Per rilasciare la versione `X.Y.Z`:
 1. Controlla che `CHANGELOG.md` abbia le voci corrette sotto `## [Non rilasciato]`.
 2. Esegui `npm run release`.
 3. Controlla il diff generato (`CHANGELOG.md` + `src/lib/version.ts`).
-4. Promuovi il deployment di produzione su Vercel.
-5. Verifica secondo la corsia corretta: almeno `/impostazioni` per la versione, `/novita` se cambia il changelog, smoke completo solo quando il diff lo giustifica.
+4. Dopo merge su `main`, crea tag Git `vX.Y.Z` e GitHub Release con note derivate dalla sezione rilasciata di `CHANGELOG.md`.
+5. Promuovi il deployment di produzione su Vercel.
+6. Verifica secondo la corsia corretta: almeno `/impostazioni` per la versione, `/novita` se cambia il changelog, smoke completo solo quando il diff lo giustifica.
 
 ## Definizione di pubblicazione completa
 

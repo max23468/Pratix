@@ -54,8 +54,9 @@ verificare il diff e promuovere il deployment Vercel.
 - **Restare manuali** — Scartata: il processo era semplice, ma abbastanza
   ripetitivo da generare facilmente disallineamenti.
 - **GitHub Releases/tag automatici** — Scartata: Pratix è un SaaS hostato su
-  Vercel, non un pacchetto distribuito. Il rilascio operativo resta la
-  promozione del deployment.
+  Vercel, non un pacchetto distribuito. La creazione resta manuale e
+  intenzionale, ma ogni release prodotto reale deve avere tag Git `vX.Y.Z` e
+  GitHub Release prima della chiusura.
 - **Bump automatico in CI** — Scartata: introdurrebbe mutazioni remote sul repo
   e più complessità di quanta serva al progetto.
 
