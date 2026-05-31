@@ -18,8 +18,8 @@ docs/
 ├── memory/             ← memoria di progetto in markdown (specchio di mem://)
 │   ├── MEMORY_MIRROR.md
 │   ├── core.md
-│   ├── brand.md
-│   └── roadmap.md
+│   ├── pratix-brand-memory.md
+│   └── pratix-roadmap-memory.md
 ├── migration/          ← inventari e note tecniche di migrazione sanitizzati
 │   ├── lovable-inventory.md
 │   └── lovable-reference-audit.md
@@ -42,30 +42,31 @@ docs/
 
 ## Quando consultare cosa
 
-| Vuoi…                                                  | Vai a…                                                                           |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| Riprendere rapidamente il contesto operativo           | [`CONTEXT.md`](./CONTEXT.md)                                                     |
-| Vedere stato e priorità                                | [`ROADMAP.md`](./ROADMAP.md)                                                     |
-| Consultare idee, debiti e ipotesi parcheggiate         | [`BACKLOG.md`](./BACKLOG.md)                                                     |
-| Controllare runtime, comandi e verifiche               | [`TOOLCHAIN.md`](./TOOLCHAIN.md)                                                 |
-| Verificare integrazione Doppler e segreti CI           | [`doppler-setup.md`](./doppler-setup.md)                                         |
-| Capire stack, struttura cartelle, routing              | [`guides/architettura.md`](./guides/architettura.md)                             |
-| Lavorare su tabelle, RLS, migrazioni                   | [`guides/database.md`](./guides/database.md)                                     |
-| Consultare stato migrazione e dismissione Lovable      | [`guides/uscita-lovable.md`](./guides/uscita-lovable.md)                         |
-| Consultare l'inventario tecnico sanitizzato            | [`migration/lovable-inventory.md`](./migration/lovable-inventory.md)             |
-| Verificare quali riferimenti storici a Lovable restano | [`migration/lovable-reference-audit.md`](./migration/lovable-reference-audit.md) |
-| Capire FatturaPA, calcoli IVA, regime forfettario      | [`guides/fatturazione.md`](./guides/fatturazione.md)                             |
-| Cambiare colori, tema, componenti                      | [`guides/tema-e-design.md`](./guides/tema-e-design.md)                           |
-| Scrivere microcopy o label                             | [`guides/tono-di-voce.md`](./guides/tono-di-voce.md)                             |
-| Pubblicare o configurare il dominio                    | [`guides/deploy.md`](./guides/deploy.md)                                         |
-| Gestire release e changelog                            | [`guides/versioning-e-release.md`](./guides/versioning-e-release.md)             |
-| Eseguire smoke test accessibilità/UI                   | [`guides/smoke-a11y.md`](./guides/smoke-a11y.md)                                 |
-| Lavorare sulle migrazioni Supabase                     | [`guides/migrations.md`](./guides/migrations.md)                                 |
-| Diagnosticare warning React ricorrenti                 | [`guides/react-doctor.md`](./guides/react-doctor.md)                             |
-| Sapere perché abbiamo scelto X                         | [`DECISIONS.md`](./DECISIONS.md)                                                 |
-| Vedere decisioni non ancora approvate                  | [`DECISIONS_PENDING.md`](./DECISIONS_PENDING.md)                                 |
-| Capire un termine di dominio                           | [`glossario.md`](./glossario.md)                                                 |
-| Vedere le regole sempre attive                         | [`memory/core.md`](./memory/core.md)                                             |
+| Vuoi…                                                  | Vai a…                                                                                                                                     |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| Riprendere rapidamente il contesto operativo           | [`CONTEXT.md`](./CONTEXT.md)                                                                                                               |
+| Vedere stato e priorità                                | [`ROADMAP.md`](./ROADMAP.md)                                                                                                               |
+| Consultare idee, debiti e ipotesi parcheggiate         | [`BACKLOG.md`](./BACKLOG.md)                                                                                                               |
+| Controllare runtime, comandi e verifiche               | [`TOOLCHAIN.md`](./TOOLCHAIN.md)                                                                                                           |
+| Verificare integrazione Doppler e segreti CI           | [`doppler-setup.md`](./doppler-setup.md)                                                                                                   |
+| Capire stack, struttura cartelle, routing              | [`guides/architettura.md`](./guides/architettura.md)                                                                                       |
+| Lavorare su tabelle, RLS, migrazioni                   | [`guides/database.md`](./guides/database.md)                                                                                               |
+| Consultare stato migrazione e dismissione Lovable      | [`guides/uscita-lovable.md`](./guides/uscita-lovable.md)                                                                                   |
+| Consultare l'inventario tecnico sanitizzato            | [`migration/lovable-inventory.md`](./migration/lovable-inventory.md)                                                                       |
+| Verificare quali riferimenti storici a Lovable restano | [`migration/lovable-reference-audit.md`](./migration/lovable-reference-audit.md)                                                           |
+| Capire FatturaPA, calcoli IVA, regime forfettario      | [`guides/fatturazione.md`](./guides/fatturazione.md)                                                                                       |
+| Cambiare colori, tema, componenti                      | [`guides/tema-e-design.md`](./guides/tema-e-design.md)                                                                                     |
+| Scrivere microcopy o label                             | [`guides/tono-di-voce.md`](./guides/tono-di-voce.md)                                                                                       |
+| Pubblicare o configurare il dominio                    | [`guides/deploy.md`](./guides/deploy.md)                                                                                                   |
+| Gestire release e changelog                            | [`guides/versioning-e-release.md`](./guides/versioning-e-release.md)                                                                       |
+| Eseguire smoke test accessibilità/UI                   | [`guides/smoke-a11y.md`](./guides/smoke-a11y.md)                                                                                           |
+| Lavorare sulle migrazioni Supabase                     | [`guides/migrations.md`](./guides/migrations.md)                                                                                           |
+| Diagnosticare warning React ricorrenti                 | [`guides/react-doctor.md`](./guides/react-doctor.md)                                                                                       |
+| Sapere perché abbiamo scelto X                         | [`DECISIONS.md`](./DECISIONS.md)                                                                                                           |
+| Vedere decisioni non ancora approvate                  | [`DECISIONS_PENDING.md`](./DECISIONS_PENDING.md)                                                                                           |
+| Capire un termine di dominio                           | [`glossario.md`](./glossario.md)                                                                                                           |
+| Vedere le regole sempre attive                         | [`memory/core.md`](./memory/core.md)                                                                                                       |
+| Consultare memoria brand e roadmap                     | [`memory/pratix-brand-memory.md`](./memory/pratix-brand-memory.md), [`memory/pratix-roadmap-memory.md`](./memory/pratix-roadmap-memory.md) |
 
 ## Documentazione fuori da `docs/`
 
