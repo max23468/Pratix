@@ -13,18 +13,19 @@ Pratix è già una repo matura: questo file non sostituisce i piani esistenti, m
 - Dominio custom: opzionale, non necessario nel percorso gratuito attuale.
 - Funzionalità da studio associato, CRM generalista, suite contabile completa o piattaforma enterprise: fuori perimetro salvo nuova decisione esplicita e ADR.
 
-## Pratix 2.0 da dettagliare
+## Evoluzioni 2.0 non ancora promosse
 
-- Controllo qualità operativo: primo incremento 2.0 approvato, con segnali
-  salvati in tabella, stati `aperto`/`risolto`/`ignorato`/`rimandato`, gravità,
-  azione proposta, cron giornaliero, ricalcolo manuale e 5 segnali iniziali.
-- Sistema notifiche operative in-app, derivato da dati già presenti e senza provider esterni.
-- Piano operativo della Pratica: checklist e stati guidati dal workflow recupero crediti.
-- Agenda operativa leggera collegata a Fatture, Attività, importi da verificare e pratiche ferme.
-- Centro documenti Pratica: core 2.0 approvato come archivio operativo leggero
-  della Pratica, senza fatturazione, stati documento, segnali qualità o ricerca
-  testuale.
+- Sistema notifiche operative in-app, derivato da dati già presenti e senza
+  provider esterni.
+- Piano operativo della Pratica: checklist e stati guidati dal workflow
+  recupero crediti.
+- Agenda operativa leggera collegata a Fatture, Attività, importi da verificare
+  e pratiche ferme.
 - Dashboard 2.0 prescrittiva su cosa fare oggi.
+
+Il Controllo qualità operativo e il Centro documenti Pratica sono già promossi
+in roadmap; i dettagli tecnici vanno sviluppati nei rispettivi piani quando
+diventano lavoro attivo.
 
 ## Debiti tecnici e operativi
 
