@@ -103,16 +103,16 @@ l'utente vede, produce o si aspetta dai propri dati. Domanda guida: "dopo il
 deploy, un utente potrebbe ottenere un risultato diverso o dover cambiare il
 proprio modo di lavorare?"
 
-Ogni release major esegue anche il gate React Doctor prima di aggiornare
+Ogni release major/minor esegue anche il gate React Doctor prima di aggiornare
 `CHANGELOG.md` e `src/lib/version.ts`. Il controllo usa:
 
 ```sh
 npm run quality:react-doctor
 ```
 
-Il gate è pensato come controllo speciale da major release, non come check
-periodico o pre-push ordinario. Al momento blocca solo diagnostiche di livello
-`error`; la soglia di punteggio e la baseline delle regole ignorate sono
+Il gate è pensato come controllo speciale per release che cambiano `X` o `Y`,
+non come check periodico o pre-push ordinario. Al momento blocca solo
+diagnostiche di livello `error`; la soglia di punteggio e la baseline delle regole ignorate sono
 descritte nella guida [React Doctor](./react-doctor.md).
 
 - Rimosso un campo dalla fattura (anche solo dal layout PDF).

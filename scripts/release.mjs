@@ -161,17 +161,17 @@ function bumpVersion(currentVersion, bump) {
   fail(`Bump non valido: ${bump}`);
 }
 
-function isMajorRelease(currentVersion, nextVersion, bump) {
-  if (bump === "major") return true;
+function needsReactDoctorForRelease(currentVersion, nextVersion, bump) {
+  if (bump === "major" || bump === "minor") return true;
 
-  const [currentMajor] = parseVersion(currentVersion);
-  const [nextMajor, nextMinor, nextPatch] = parseVersion(nextVersion);
+  const [currentMajor, currentMinor] = parseVersion(currentVersion);
+  const [nextMajor, nextMinor] = parseVersion(nextVersion);
 
-  return nextMajor > currentMajor && nextMinor === 0 && nextPatch === 0;
+  return nextMajor !== currentMajor || nextMinor !== currentMinor;
 }
 
-function runReactDoctorForMajorRelease() {
-  console.log("Release major rilevata: eseguo React Doctor prima di aggiornare i file.");
+function runReactDoctorForRelease() {
+  console.log("Release major/minor rilevata: eseguo React Doctor prima di aggiornare i file.");
 
   const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
   const result = spawnSync(npmCommand, ["run", "quality:react-doctor"], {
@@ -184,7 +184,7 @@ function runReactDoctorForMajorRelease() {
   }
 
   if (result.status !== 0) {
-    fail("React Doctor ha rilevato problemi bloccanti per una release major.");
+    fail("React Doctor ha rilevato problemi bloccanti per una release major/minor.");
   }
 }
 
@@ -484,8 +484,8 @@ if (options.dryRun) {
   console.log(`Versione corrente: ${current.version} (${current.buildDate})`);
   console.log(`Strategia: ${strategy}`);
   console.log(`Analisi blocco [Non rilasciato]: ${analyzeUnreleased(unreleased.body)}`);
-  if (isMajorRelease(current.version, nextVersion, bump)) {
-    console.log("Gate major: React Doctor verrebbe eseguito prima di aggiornare i file.");
+  if (needsReactDoctorForRelease(current.version, nextVersion, bump)) {
+    console.log("Gate major/minor: React Doctor verrebbe eseguito prima di aggiornare i file.");
   }
   console.log("File che verrebbero aggiornati:");
   console.log("- CHANGELOG.md");
@@ -493,8 +493,8 @@ if (options.dryRun) {
   process.exit(0);
 }
 
-if (isMajorRelease(current.version, nextVersion, bump)) {
-  runReactDoctorForMajorRelease();
+if (needsReactDoctorForRelease(current.version, nextVersion, bump)) {
+  runReactDoctorForRelease();
 }
 
 writeFileSync(changelogPath, nextChangelog);
