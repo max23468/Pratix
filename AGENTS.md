@@ -136,6 +136,18 @@ GitHub è la fonte primaria del codice. Vercel builda e pubblica dal repository.
 - Non sovrascrivere o revertire modifiche non tue: ignorale se sono estranee al task, oppure lavora attorno a esse.
 - Se la richiesta è ambigua su scope, comportamento atteso, rischio o tradeoff, chiedi chiarimento prima di procedere. Procedi con un'assunzione dichiarata solo per dettagli marginali che non cambiano il risultato sostanziale.
 
+## Skill operative
+
+Usa le skill Superpowers pertinenti per lavori non banali: pianificazione,
+debugging sistematico, worktree, esecuzione di piani, review e verifica finale.
+Le skill non sostituiscono queste regole, la sicurezza Pratix, le policy
+Vercel/Supabase o le fonti primarie del progetto.
+
+Usa o proponi `grill-me` quando devi stressare un piano prima di implementarlo:
+architetture, refactor trasversali, integrazioni, provider, deploy, sicurezza,
+roadmap prodotto o scope ambiguo. Non renderla obbligatoria per refusi,
+micro-docs, cleanup o modifiche meccaniche a basso rischio.
+
 ## Lingua e testi del prodotto
 
 - Usa l'italiano come lingua predefinita con il proprietario del progetto.
