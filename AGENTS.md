@@ -29,6 +29,9 @@ Stack:
 - **Deploy**: Vercel, con produzione su `https://pratix.vercel.app`.
 - **UI**: Tailwind v4 (token in `src/styles.css`, mai hex inline), shadcn/Radix in `src/components/ui`, icone `lucide-react`.
 - **Lingua**: italiano, `lang="it"`.
+- **Fase operativa**: produzione SaaS con release; i gate minimi dipendono dal
+  rischio del diff, ma publish, release e deploy vanno sempre valutati secondo
+  le policy correnti.
 
 Per dettagli: [`docs/guides/architettura.md`](./docs/guides/architettura.md), [`docs/data-model.md`](./docs/data-model.md), [`BRAND.md`](./BRAND.md).
 
@@ -299,6 +302,8 @@ Una modifica è pronta se:
 - non rompe routing, build o UI responsive nelle aree toccate;
 - rispetta RLS e principi di sicurezza se ha toccato il DB;
 - include verifiche eseguite o limiti noti quando rilevanti;
+- la `Codex feedback inbox` è stata controllata quando il flusso prevede PR,
+  merge, publish, deploy o release;
 - aggiorna `docs/ROADMAP.md`, `CHANGELOG.md`, ADR, `docs/` e memoria solo quando serve davvero;
 - se il lavoro è stato mergeato/pubblicato, non lascia branch dedicati locali o remoti inutilizzati né worktree temporanei/directory residue; se restano, il motivo è esplicitato;
 - publish, release e deploy sono stati completati oppure dichiarati non applicabili con motivo;
