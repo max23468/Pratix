@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Sotto il cofano
+
+- **Cron giornaliero**: aggiunto un keep-alive Supabase best-effort nel cron
+  Vercel, con log dedicati per verificare che il progetto riceva attività
+  database reale.
+
 ## [1.13.3] — 2026-05-31
 
 ### Sotto il cofano

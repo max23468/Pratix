@@ -99,7 +99,7 @@ Configurare in Vercel Project Settings → Environment Variables:
 - `VITE_ENABLE_PASSKEYS` — opzionale; impostare a `true` solo quando Supabase Auth/WebAuthn è abilitato sul progetto hosted.
 - `SUPABASE_URL` — server, Production e Preview.
 - `SUPABASE_PUBLISHABLE_KEY` — server, Production e Preview.
-- `SUPABASE_SERVICE_ROLE_KEY` — server-only, Production e Preview solo se serve.
+- `SUPABASE_SERVICE_ROLE_KEY` — server-only, Production; necessaria per il keep-alive Supabase del cron giornaliero.
 - `CRON_SECRET` — server-only, Production; Vercel lo usa come bearer token per il cron giornaliero.
 
 `SUPABASE_SERVICE_ROLE_KEY` è server-only: non va mai esposta al client.
@@ -168,8 +168,9 @@ JSON strutturato con almeno:
 - nessun dato personale, nome cliente, importo, contenuto fattura o secret.
 
 L'endpoint `/api/cron/daily` segue già questo formato con eventi
-`cron_secret_missing`, `cron_unauthorized` e `cron_completed`. Quando aggiungi
-nuovi endpoint pubblici o cron, parti dallo stesso pattern.
+`cron_secret_missing`, `cron_unauthorized`, `supabase_keepalive_completed`,
+`supabase_keepalive_failed` e `cron_completed`. Quando aggiungi nuovi endpoint
+pubblici o cron, parti dallo stesso pattern.
 
 Se una diagnosi richiede log più ricchi, aggiungi campi tecnici a bassa
 sensibilità (`status`, `count`, `feature`, `environment`) e rimuovili quando
@@ -189,12 +190,20 @@ Production; senza questa variabile il cron risponde `503` e non esegue nulla.
 
 Il comportamento di protezione atteso è un `401` con log Vercel
 `cron_unauthorized` quando l'endpoint viene chiamato senza secret. Il successo
-schedulato produce invece `cron_completed`; controllarlo dopo il primo run
-successivo al deployment.
+schedulato produce invece `supabase_keepalive_completed` e `cron_completed`;
+controllarli dopo il primo run successivo al deployment.
 
-Il cron oggi è un controllo leggero del runtime. Quando verranno introdotte
-notifiche o manutenzioni ricorrenti, aggiungere la logica nello stesso endpoint
-o creare un secondo cron solo se resta dentro i limiti gratuiti.
+Il cron esegue anche una query `head` minima su `profiles` tramite client
+server-side Supabase. Serve a generare attività reale sul progetto Supabase e a
+rilevare errori di connessione, senza leggere dati utente né aggiungere tabelle.
+È un keep-alive best-effort per il piano gratuito: non sostituisce la garanzia
+ufficiale del piano Pro contro la pausa per inattività.
+
+Se il segnale giornaliero Vercel non fosse sufficiente, il fallback operativo è
+ispirato a SyncBay: una schedule Supabase Cron con `pg_cron`/`pg_net` che invoca
+lo stesso endpoint protetto e legge il secret da Supabase Vault. Questo passo va
+applicato manualmente con SQL linked, senza committare secret o valori Vault nel
+repo, e va documentato dopo la verifica del run remoto.
 
 ## Supabase Auth
 
