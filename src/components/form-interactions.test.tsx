@@ -901,4 +901,193 @@ describe("interazioni form anagrafiche", () => {
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Prezzi creati"));
     expect(query.insert).toHaveBeenCalledTimes(2);
   });
+
+  it("rimuove voci Prezzi persistite non usate prima del salvataggio", async () => {
+    renderWithClient(
+      <PriceBookForm
+        initial={{
+          id: "price-book-1",
+          principal_id: "principal-1",
+          year: 2026,
+          status: "active",
+          fees_enabled: true,
+          expense_reimbursements_enabled: true,
+          valid_from: "2026-01-01",
+          valid_to: "2026-12-31",
+          notes: null,
+        }}
+        initialItems={[
+          {
+            id: "item-delete",
+            kind: "fee",
+            code: "DEL",
+            name: "Da eliminare",
+            invoice_description: null,
+            unit_price: 10,
+            is_enabled: true,
+            requires_hearing_dates: false,
+            sort_order: 10,
+          },
+          {
+            id: "item-keep",
+            kind: "fee",
+            code: "KEEP",
+            name: "Da mantenere",
+            invoice_description: null,
+            unit_price: 20,
+            is_enabled: true,
+            requires_hearing_dates: false,
+            sort_order: 20,
+          },
+        ]}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    const row = screen.getByDisplayValue("DEL").closest("tr");
+    expect(row).not.toBeNull();
+    const buttons = row?.querySelectorAll("button") ?? [];
+    await userEvent.click(buttons[buttons.length - 1] as HTMLButtonElement);
+
+    expect(screen.queryByDisplayValue("DEL")).toBeNull();
+
+    await userEvent.click(screen.getByRole("button", { name: "Salva" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Prezzi aggiornati"));
+    expect(query.delete).toHaveBeenCalled();
+    expect(query.in).toHaveBeenCalledWith("id", ["item-delete"]);
+  });
+
+  it("ricarica il template comune Prezzi su richiesta", async () => {
+    renderWithClient(
+      <PriceBookForm
+        initial={{
+          principal_id: "principal-1",
+          year: 2026,
+          status: "draft",
+          fees_enabled: true,
+          expense_reimbursements_enabled: true,
+          valid_from: "2026-01-01",
+          valid_to: "2026-12-31",
+          notes: null,
+        }}
+        initialItems={[
+          {
+            kind: "fee",
+            code: "CUSTOM",
+            name: "Voce custom",
+            invoice_description: null,
+            unit_price: 50,
+            is_enabled: true,
+            requires_hearing_dates: false,
+            sort_order: 10,
+          },
+        ]}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByDisplayValue("CUSTOM")).toBeTruthy();
+
+    await userEvent.click(screen.getByRole("button", { name: /Template comune 2025\/2026/i }));
+
+    await waitFor(() =>
+      expect(toast.success).toHaveBeenCalledWith("Template comune 2025/2026 caricato"),
+    );
+    expect(screen.getByDisplayValue("COMP_DI_CARTACEO")).toBeTruthy();
+    expect(screen.queryByDisplayValue("CUSTOM")).toBeNull();
+  });
+
+  it("valida Prezzi con anno fuori range e codici duplicati", async () => {
+    renderWithClient(
+      <PriceBookForm
+        initial={{
+          principal_id: "principal-1",
+          year: 1999,
+          status: "draft",
+          fees_enabled: true,
+          expense_reimbursements_enabled: true,
+          valid_from: "1999-01-01",
+          valid_to: "1999-12-31",
+          notes: null,
+        }}
+        initialItems={[
+          {
+            kind: "fee",
+            code: "DUP",
+            name: "Voce uno",
+            invoice_description: null,
+            unit_price: 10,
+            is_enabled: true,
+            requires_hearing_dates: false,
+            sort_order: 10,
+          },
+          {
+            kind: "fee",
+            code: "DUP",
+            name: "Voce due",
+            invoice_description: null,
+            unit_price: 20,
+            is_enabled: true,
+            requires_hearing_dates: false,
+            sort_order: 20,
+          },
+        ]}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    fireEvent.submit(screen.getByRole("button", { name: "Salva" }).closest("form")!);
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Inserisci un anno valido"));
+
+    cleanup();
+    vi.clearAllMocks();
+    single.mockResolvedValue({ data: { id: "saved-id", archived_at: null }, error: null });
+    maybeSingle.mockResolvedValue({ data: null, error: null });
+
+    renderWithClient(
+      <PriceBookForm
+        initial={{
+          principal_id: "principal-1",
+          year: 2026,
+          status: "draft",
+          fees_enabled: true,
+          expense_reimbursements_enabled: true,
+          valid_from: "2026-01-01",
+          valid_to: "2026-12-31",
+          notes: null,
+        }}
+        initialItems={[
+          {
+            kind: "fee",
+            code: "DUP",
+            name: "Voce uno",
+            invoice_description: null,
+            unit_price: 10,
+            is_enabled: true,
+            requires_hearing_dates: false,
+            sort_order: 10,
+          },
+          {
+            kind: "fee",
+            code: "DUP",
+            name: "Voce due",
+            invoice_description: null,
+            unit_price: 20,
+            is_enabled: true,
+            requires_hearing_dates: false,
+            sort_order: 20,
+          },
+        ]}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    fireEvent.submit(screen.getByRole("button", { name: "Salva" }).closest("form")!);
+    await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Codice duplicato: DUP"));
+  });
 });
