@@ -3,10 +3,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import type { ReactNode } from "react";
+import type { AnchorHTMLAttributes, ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { toast, supabase, query, single } = vi.hoisted(() => {
+const { findDuplicates, toast, supabase, query, single } = vi.hoisted(() => {
+  const findDuplicates = vi.fn();
   const single = vi.fn();
   const queryData = (table: string) => {
     if (table === "principals") {
@@ -58,6 +59,7 @@ const { toast, supabase, query, single } = vi.hoisted(() => {
   const query = {
     select: vi.fn(() => query),
     insert: vi.fn(() => query),
+    upsert: vi.fn(() => query),
     update: vi.fn(() => query),
     delete: vi.fn(() => query),
     eq: vi.fn(() => query),
@@ -77,6 +79,10 @@ const { toast, supabase, query, single } = vi.hoisted(() => {
       }),
       insert: vi.fn((...args: unknown[]) => {
         query.insert(...args);
+        return builder;
+      }),
+      upsert: vi.fn((...args: unknown[]) => {
+        query.upsert(...args);
         return builder;
       }),
       update: vi.fn((...args: unknown[]) => {
@@ -108,12 +114,18 @@ const { toast, supabase, query, single } = vi.hoisted(() => {
     return builder;
   };
   return {
+    findDuplicates,
     toast: { success: vi.fn(), error: vi.fn() },
     query,
     single,
     supabase: {
       from: vi.fn((table: string) => builderFor(table)),
       rpc: vi.fn(() => Promise.resolve({ data: 157, error: null })),
+      auth: {
+        getSession: vi.fn(async () => ({
+          data: { session: { access_token: "token-test" } },
+        })),
+      },
     },
   };
 });
@@ -160,6 +172,30 @@ vi.mock("@/lib/auth-context", () => ({
   }),
 }));
 
+vi.mock("@tanstack/react-router", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tanstack/react-router")>();
+  return {
+    ...actual,
+    Link: ({
+      children,
+      to,
+      ...props
+    }: AnchorHTMLAttributes<HTMLAnchorElement> & { to: string }) => (
+      <a href={to} {...props}>
+        {children}
+      </a>
+    ),
+  };
+});
+
+vi.mock("@tanstack/react-start", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@tanstack/react-start")>();
+  return {
+    ...actual,
+    useServerFn: () => findDuplicates,
+  };
+});
+
 vi.mock("@/components/ui/select", () => ({
   Select: ({
     value,
@@ -190,6 +226,7 @@ vi.mock("@/components/ui/select", () => ({
 }));
 
 import { CaseForm } from "./case-form";
+import { buildCandidate } from "@/lib/duplicate-matching";
 
 function Wrapper({ children }: { children: ReactNode }) {
   const client = new QueryClient({
@@ -204,6 +241,8 @@ describe("CaseForm", () => {
     activeBlocker = null;
     unsavedState.dirty = false;
     unsavedState.skipNextBlock = false;
+    findDuplicates.mockReset();
+    findDuplicates.mockResolvedValue([]);
     single.mockReset();
     single.mockResolvedValue({ data: { id: "case-1" }, error: null });
   });
@@ -523,5 +562,167 @@ describe("CaseForm", () => {
     await waitFor(() =>
       expect(toast.error).toHaveBeenCalledWith("Inserisci un numero pratica numerico positivo"),
     );
+  });
+
+  it("mostra duplicati sulla pratica e permette di usare subito quella esistente", async () => {
+    const onSaved = vi.fn();
+    findDuplicates.mockResolvedValueOnce([
+      buildCandidate({
+        entityType: "case",
+        left: {
+          id: "case-existing",
+          publicCode: "PRA-77",
+          label: "Pratica 77",
+          subtitle: "Banca Test · Ada Rossi",
+        },
+        right: {
+          id: "draft-case",
+          label: "Nuova pratica",
+        },
+        score: 0.93,
+        reasons: ["Numero pratica uguale", "Stesso committente"],
+      }),
+    ]);
+
+    render(<CaseForm onSaved={onSaved} onCancel={vi.fn()} />, { wrapper: Wrapper });
+
+    await screen.findByText("Banca Test");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[0], "principal-1");
+    await screen.findByText("Ada Rossi");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "client-1");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[2], "counterparty-1");
+    await userEvent.click(screen.getByRole("button", { name: "Salva" }));
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "Controlla i potenziali duplicati prima di creare la pratica",
+      ),
+    );
+    expect(query.insert).not.toHaveBeenCalledWith(
+      expect.objectContaining({ principal_id: "principal-1" }),
+    );
+    expect(screen.getByText(/Potrebbe già esistere/)).toBeTruthy();
+
+    await userEvent.click(screen.getByRole("button", { name: "Usa esistente" }));
+
+    expect(onSaved).toHaveBeenCalledWith("PRA-77");
+    expect(findDuplicates).toHaveBeenCalledTimes(1);
+  });
+
+  it("permette di creare comunque la pratica dopo il warning duplicati", async () => {
+    findDuplicates.mockResolvedValueOnce([
+      buildCandidate({
+        entityType: "case",
+        left: {
+          id: "case-existing",
+          label: "Pratica 157",
+        },
+        right: {
+          id: "draft-case",
+          label: "Nuova pratica",
+        },
+        score: 0.9,
+        reasons: ["Numero pratica uguale"],
+      }),
+    ]);
+
+    render(<CaseForm onSaved={vi.fn()} onCancel={vi.fn()} />, { wrapper: Wrapper });
+
+    await screen.findByText("Banca Test");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[0], "principal-1");
+    await screen.findByText("Ada Rossi");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[1], "client-1");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[2], "counterparty-1");
+    await userEvent.click(screen.getByRole("button", { name: "Salva" }));
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "Controlla i potenziali duplicati prima di creare la pratica",
+      ),
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Crea comunque" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Pratica creata"));
+    expect(findDuplicates).toHaveBeenCalledTimes(1);
+    expect(query.insert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        principal_id: "principal-1",
+        client_id: "client-1",
+        counterparty_id: "counterparty-1",
+        practice_number: 157,
+      }),
+    );
+  });
+
+  it("collega un cliente esistente quando la creazione rapida trova un duplicato", async () => {
+    findDuplicates.mockResolvedValueOnce([
+      buildCandidate({
+        entityType: "client",
+        left: {
+          id: "client-existing",
+          label: "Alfa S.r.l.",
+        },
+        right: {
+          id: "draft-client",
+          label: "Alfa S.r.l.",
+        },
+        score: 0.88,
+        reasons: ["Ragione sociale molto simile"],
+      }),
+    ]);
+
+    render(<CaseForm onSaved={vi.fn()} onCancel={vi.fn()} />, { wrapper: Wrapper });
+
+    await screen.findByText("Banca Test");
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[0], "principal-1");
+
+    await userEvent.click(screen.getAllByRole("button", { name: /Nuovo/ })[1]);
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[2], "company");
+    fireEvent.change(screen.getByLabelText("Ragione sociale"), {
+      target: { value: " Alfa S.r.l. " },
+    });
+    await userEvent.click(screen.getByRole("button", { name: "Crea" }));
+
+    await waitFor(() =>
+      expect(toast.error).toHaveBeenCalledWith(
+        "Controlla i potenziali duplicati prima di creare il cliente",
+      ),
+    );
+    expect(screen.getAllByText("Alfa S.r.l.").length).toBeGreaterThan(0);
+
+    await userEvent.click(screen.getByRole("button", { name: "Usa esistente" }));
+
+    await waitFor(() =>
+      expect(query.upsert).toHaveBeenCalledWith(
+        expect.objectContaining({
+          user_id: "user-test",
+          principal_id: "principal-1",
+          client_id: "client-existing",
+          active_from: expect.any(String),
+        }),
+        expect.objectContaining({
+          onConflict: "user_id,principal_id,client_id",
+        }),
+      ),
+    );
+    expect((screen.getAllByRole("combobox")[1] as HTMLSelectElement).value).toBe("client-existing");
+  });
+
+  it("ripristina un soggetto vuoto quando rimuovi l'unico elemento di una controparte composta", async () => {
+    render(<CaseForm onSaved={vi.fn()} onCancel={vi.fn()} />, { wrapper: Wrapper });
+
+    await screen.findByText("Banca Test");
+    await userEvent.click(screen.getByRole("button", { name: /Nuova/ }));
+    await userEvent.selectOptions(screen.getAllByRole("combobox")[3], "group");
+
+    fireEvent.change(screen.getByLabelText("Cognome"), { target: { value: "Rossi" } });
+    fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Mario" } });
+
+    await userEvent.click(screen.getByRole("button", { name: /Rimuovi/ }));
+
+    expect(screen.getByText("Soggetto 1")).toBeTruthy();
+    expect((screen.getByLabelText("Cognome") as HTMLInputElement).value).toBe("");
+    expect((screen.getByLabelText("Nome") as HTMLInputElement).value).toBe("");
   });
 });

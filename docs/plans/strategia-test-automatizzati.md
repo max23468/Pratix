@@ -1,6 +1,6 @@
 # Piano — Strategia test automatizzati progressiva
 
-- **Stato**: in corso; smoke autenticato e smoke WebKit ripetibile completati, target ideale operativo da ristabilire sul perimetro Atlas 2026-06-03
+- **Stato**: in corso; smoke autenticato e smoke WebKit ripetibile completati, target ideale operativo Atlas ripristinato sul perimetro operativo al 2026-06-03
 - **Data**: 2026-06-03
 - **Ambito**: introdurre test automatici proporzionati ai rischi reali di Pratix
 - **Tipo modifica attesa**: non versionato finché aggiunge solo copertura e processo
@@ -317,10 +317,38 @@ branches, `70%` functions):
    fattura e rendiconti Excel.
 4. ✅ Introdurre uno smoke WebKit mirato e leggero per accessibilità/responsive,
    senza trasformarlo in una suite e2e fragile.
-5. Coprire i rami residui a ROI alto in `case-form.tsx`, soprattutto warning
-   duplicati e quick creation con percorsi di fallback.
-6. Consolidare `price-book-form.tsx` sulle funzioni ancora scoperte
-   dell'editor voci, così da spingere branch e statements oltre il target.
-7. Attaccare i bucket ancora a zero o quasi zero che pesano sul target
-   functions globale (`components/account/**`, `components/changelog/**` e
-   `components/duplicates/summary-card.tsx`) con test piccoli e non fragili.
+5. ✅ Coprire i rami residui a ROI alto in `case-form.tsx`, soprattutto warning
+   duplicati, quick creation con fallback e rimozione dei soggetti composti.
+6. ✅ Consolidare `price-book-form.tsx` sulle funzioni scoperte dell'editor
+   voci, inclusi reset template, validazione anno/codici e cancellazione di
+   righe persistite non più usate.
+7. ✅ Attaccare bucket ad alto rendimento su `components/account/**`,
+   `components/changelog/**`, `lib/table-sorting.ts` e normalizzazione Creazione
+   guidata con test piccoli e non fragili.
+
+## Incremento 2026-06-03 — chiusura target Atlas su form, account e hook
+
+Questo incremento porta la suite a 279 test distribuiti su 70 file,
+aggiungendo:
+
+- rami residui di `case-form.tsx` su warning duplicati, scelta del record
+  esistente, conferma "crea comunque", quick creation committente e rimozione
+  dell'ultimo soggetto nella controparte composta;
+- rami residui di `price-book-form.tsx` su reset template comune, validazione
+  anno fuori range, codici duplicati e cancellazione di righe persistite;
+- test dedicati per render/helper changelog, hook `usePersistentTableSort`,
+  normalizzazione Creazione guidata e superfici account ad alto rendimento già
+  toccate dal perimetro operativo.
+
+Coverage operativa misurata con `npm run test:coverage`:
+
+- baseline pre-incremento sul merge base `22247b4`: Statements `72,82%`,
+  Branches `60,67%`, Functions `68,56%`, Lines `77,77%`;
+- post-incremento: Statements `77,38%`, Branches `65,88%`, Functions `73,50%`,
+  Lines `82,43%`.
+
+Il target operativo Atlas (`75%` lines/statements, `65%` branches, `70%`
+functions) è raggiunto su tutte le metriche. Restano bucket a zero nella UI
+presentazionale e nella Creazione guidata completa, ma non bloccano più il
+target operativo e vanno trattati come miglioramenti successivi, non come gap
+di uscita.
