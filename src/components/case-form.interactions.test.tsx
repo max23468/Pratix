@@ -119,22 +119,39 @@ const { toast, supabase, query, single } = vi.hoisted(() => {
 });
 
 let activeBlocker: { blockerFn: () => boolean | Promise<boolean> } | null = null;
+const unsavedState = vi.hoisted(() => ({
+  dirty: false,
+  skipNextBlock: false,
+}));
 
 vi.mock("sonner", () => ({ toast }));
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase }));
 
-vi.mock("@tanstack/react-router", () => ({
-  useRouter: () => ({
-    history: {
-      block: (blocker: { blockerFn: () => boolean | Promise<boolean> }) => {
-        activeBlocker = blocker;
-        return () => {
-          activeBlocker = null;
-        };
+vi.mock("@/components/unsaved-changes-guard", () => ({
+  useUnsavedChangesGuard: () => {
+    activeBlocker = {
+      blockerFn: () => {
+        if (unsavedState.skipNextBlock) {
+          unsavedState.skipNextBlock = false;
+          return false;
+        }
+        return unsavedState.dirty;
       },
-    },
-  }),
+    };
+
+    return {
+      finishSave: () => {
+        unsavedState.dirty = false;
+        unsavedState.skipNextBlock = true;
+      },
+      formRef: { current: null },
+      guardDialog: null,
+      markDirty: () => {
+        unsavedState.dirty = true;
+      },
+    };
+  },
 }));
 
 vi.mock("@/lib/auth-context", () => ({
@@ -185,6 +202,8 @@ describe("CaseForm", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     activeBlocker = null;
+    unsavedState.dirty = false;
+    unsavedState.skipNextBlock = false;
     single.mockReset();
     single.mockResolvedValue({ data: { id: "case-1" }, error: null });
   });
@@ -254,20 +273,24 @@ describe("CaseForm", () => {
     await screen.findByText("Banca Test");
 
     await userEvent.click(screen.getAllByRole("button", { name: /Nuovo/ })[0]);
-    await userEvent.type(screen.getByLabelText("Nome committente"), " Nuovo Mandante ");
+    fireEvent.change(screen.getByLabelText("Nome committente"), {
+      target: { value: " Nuovo Mandante " },
+    });
     await userEvent.click(screen.getByRole("button", { name: "Crea" }));
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Committente creato"));
 
     await userEvent.click(screen.getAllByRole("button", { name: /Nuovo/ })[1]);
     await userEvent.selectOptions(screen.getAllByRole("combobox")[2], "individual");
-    await userEvent.type(screen.getByLabelText("Nome"), " Ada ");
-    await userEvent.type(screen.getByLabelText("Cognome"), " Verdi ");
+    fireEvent.change(screen.getByLabelText("Nome"), { target: { value: " Ada " } });
+    fireEvent.change(screen.getByLabelText("Cognome"), { target: { value: " Verdi " } });
     await userEvent.click(screen.getByRole("button", { name: "Crea" }));
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Cliente creato"));
 
     await userEvent.click(screen.getByRole("button", { name: /Nuova/ }));
     await userEvent.selectOptions(screen.getAllByRole("combobox")[3], "company");
-    await userEvent.type(screen.getByLabelText("Ragione sociale"), " Beta Debitrice ");
+    fireEvent.change(screen.getByLabelText("Ragione sociale"), {
+      target: { value: " Beta Debitrice " },
+    });
     await userEvent.click(screen.getByRole("button", { name: "Crea" }));
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Controparte creata"));
     await waitFor(() =>
@@ -332,12 +355,14 @@ describe("CaseForm", () => {
 
     await userEvent.click(screen.getByRole("button", { name: /Nuova/ }));
     await userEvent.selectOptions(screen.getAllByRole("combobox")[3], "group");
-    await userEvent.type(screen.getByLabelText("Nome controparte composta"), " Debitori gruppo ");
+    fireEvent.change(screen.getByLabelText("Nome controparte composta"), {
+      target: { value: " Debitori gruppo " },
+    });
 
     expect(screen.getByText("Soggetti della controparte")).toBeTruthy();
-    await userEvent.type(screen.getByLabelText("Cognome"), " Rossi ");
-    await userEvent.type(screen.getByLabelText("Nome"), " Mario ");
-    await userEvent.type(screen.getAllByLabelText("Note")[0], " Garante ");
+    fireEvent.change(screen.getByLabelText("Cognome"), { target: { value: " Rossi " } });
+    fireEvent.change(screen.getByLabelText("Nome"), { target: { value: " Mario " } });
+    fireEvent.change(screen.getAllByLabelText("Note")[0], { target: { value: " Garante " } });
 
     await userEvent.click(screen.getByRole("button", { name: /Soggetto/ }));
     const subjectKindSelects = screen.getAllByRole("combobox").filter((element) => {
@@ -349,7 +374,9 @@ describe("CaseForm", () => {
       );
     });
     await userEvent.selectOptions(subjectKindSelects[subjectKindSelects.length - 1], "company");
-    await userEvent.type(screen.getByLabelText("Ragione sociale"), " Gamma S.r.l. ");
+    fireEvent.change(screen.getByLabelText("Ragione sociale"), {
+      target: { value: " Gamma S.r.l. " },
+    });
 
     await userEvent.click(screen.getByRole("button", { name: "Crea" }));
 
