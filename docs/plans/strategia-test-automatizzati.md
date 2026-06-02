@@ -1,7 +1,7 @@
 # Piano — Strategia test automatizzati progressiva
 
-- **Stato**: target ideale operativo raggiunto; smoke autenticato e smoke WebKit ripetibile completati
-- **Data**: 2026-05-09
+- **Stato**: in corso; smoke autenticato e smoke WebKit ripetibile completati, target ideale operativo da ristabilire sul perimetro Atlas 2026-06-03
+- **Data**: 2026-06-03
 - **Ambito**: introdurre test automatici proporzionati ai rischi reali di Pratix
 - **Tipo modifica attesa**: non versionato finché aggiunge solo copertura e processo
 
@@ -271,6 +271,43 @@ Il comando usa l'account test Supabase quando la service role key viene fornita
 tramite variabile d'ambiente locale. La chiave resta fuori dal repo e serve solo
 a generare un magic link temporaneo per la sessione WebKit.
 
+## Incremento 2026-06-03 — Atlas coverage su duplicati e Prezzi
+
+Questo incremento porta la suite a 249 test distribuiti su 65 file, aggiungendo:
+
+- 10 test mirati su `src/server/duplicates.functions.ts` per dataset di scan,
+  summary, validazioni, merge `principal`/`client`/`counterparty`/`case` e
+  propagazione errori DB;
+- 2 test mirati su `PriceBookForm` dentro
+  `src/components/form-interactions.test.tsx` per copia anno precedente,
+  riallineamento `valid_from`/`valid_to` al cambio anno e blocco eliminazione di
+  una voce già usata;
+- un fix minimo confinato in `mergeCases`, che ora propaga l'errore reale della
+  query sulla pratica da mantenere invece di mascherarlo come "Pratica da
+  mantenere non trovata".
+
+Coverage operativa misurata con `env PATH=... npm run test:coverage`:
+
+- baseline pre-incremento (commit `723e707`): Statements `66,16%`, Branches
+  `55,68%`, Functions `62,21%`, Lines `70,55%`;
+- post-incremento: Statements `70,18%`, Branches `59,01%`, Functions `65,68%`,
+  Lines `74,88%`.
+
+Coverage del file prioritario `src/server/duplicates.functions.ts`:
+
+- baseline pre-incremento: Statements `2,33%`, Branches `0%`, Functions `0%`,
+  Lines `2,85%`;
+- post-incremento: Statements `84,72%`, Branches `64,39%`, Functions `100%`,
+  Lines `96,59%`.
+
+Gap residuo rispetto al target operativo Atlas (`75%` lines/statements, `65%`
+branches, `70%` functions):
+
+- Lines: `-0,12 pt`;
+- Statements: `-4,82 pt`;
+- Branches: `-5,99 pt`;
+- Functions: `-4,32 pt`.
+
 ## Prossimi incrementi
 
 1. ✅ Confermare l'account test Supabase e usarlo per smoke autenticati.
@@ -280,3 +317,10 @@ a generare un magic link temporaneo per la sessione WebKit.
    fattura e rendiconti Excel.
 4. ✅ Introdurre uno smoke WebKit mirato e leggero per accessibilità/responsive,
    senza trasformarlo in una suite e2e fragile.
+5. Coprire i rami residui a ROI alto in `case-form.tsx`, soprattutto warning
+   duplicati e quick creation con percorsi di fallback.
+6. Consolidare `price-book-form.tsx` sulle funzioni ancora scoperte
+   dell'editor voci, così da spingere branch e statements oltre il target.
+7. Attaccare i bucket ancora a zero o quasi zero che pesano sul target
+   functions globale (`components/account/**`, `components/changelog/**` e
+   `components/duplicates/summary-card.tsx`) con test piccoli e non fragili.

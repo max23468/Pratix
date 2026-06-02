@@ -704,6 +704,97 @@ describe("interazioni form anagrafiche", () => {
     await waitFor(() => expect(feesSwitch.getAttribute("aria-checked")).toBe("false"));
   });
 
+  it("copia l'anno precedente e riallinea le date quando cambia anno", async () => {
+    maybeSingle.mockResolvedValue({
+      data: {
+        id: "price-book-2025",
+        fees_enabled: false,
+        expense_reimbursements_enabled: true,
+        notes: " Note importate ",
+      },
+      error: null,
+    });
+
+    renderWithClient(
+      <PriceBookForm
+        initial={{
+          principal_id: "principal-1",
+          year: 2026,
+          status: "draft",
+          fees_enabled: true,
+          expense_reimbursements_enabled: true,
+          valid_from: "2026-01-01",
+          valid_to: "2026-12-31",
+          notes: "",
+        }}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    const copyButton = await screen.findByRole("button", { name: /Copia anno precedente/i });
+    await waitFor(() => expect(copyButton.hasAttribute("disabled")).toBe(false));
+    await userEvent.click(copyButton);
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Prezzi 2025 copiati"));
+    expect((screen.getByLabelText("Note") as HTMLTextAreaElement).value).toBe(" Note importate ");
+    expect(screen.getByRole("switch", { name: "Compensi" }).getAttribute("aria-checked")).toBe(
+      "false",
+    );
+
+    const yearInput = screen.getByLabelText("Anno") as HTMLInputElement;
+    await userEvent.clear(yearInput);
+    await userEvent.type(yearInput, "2027");
+
+    expect((screen.getByLabelText("Valido dal") as HTMLInputElement).value).toBe("2027-01-01");
+    expect((screen.getByLabelText("Valido al") as HTMLInputElement).value).toBe("2027-12-31");
+  });
+
+  it("non elimina una voce Prezzi già usata in una pratica", async () => {
+    renderWithClient(
+      <PriceBookForm
+        initial={{
+          principal_id: "principal-1",
+          year: 2026,
+          status: "draft",
+          fees_enabled: true,
+          expense_reimbursements_enabled: true,
+          valid_from: "2026-01-01",
+          valid_to: "2026-12-31",
+          notes: null,
+        }}
+        initialItems={[
+          {
+            id: "item-used",
+            kind: "fee",
+            code: "DIFF",
+            name: "Diffida",
+            invoice_description: "Diffida",
+            unit_price: 120,
+            is_enabled: true,
+            requires_hearing_dates: false,
+            sort_order: 10,
+            usedCount: 2,
+          },
+        ]}
+        onSaved={vi.fn()}
+        onCancel={vi.fn()}
+      />,
+    );
+
+    const row = screen.getByText("Usata 2 volte").closest("tr");
+    expect(row).not.toBeNull();
+    const buttons = row?.querySelectorAll("button") ?? [];
+    const deleteButton = buttons[buttons.length - 1] as HTMLButtonElement;
+
+    await userEvent.click(deleteButton);
+
+    expect(toast.error).toHaveBeenCalledWith(
+      "La voce è già usata in una pratica e non può essere eliminata",
+    );
+    expect(screen.getByText("Usata 2 volte")).toBeTruthy();
+  });
+
   it("aggiorna Prezzi sincronizzando voci esistenti e nuove", async () => {
     const onSaved = vi.fn();
     renderWithClient(
