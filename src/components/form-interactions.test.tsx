@@ -577,7 +577,7 @@ describe("interazioni form anagrafiche", () => {
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Codice duplicato: DUP"));
   });
 
-  it("valida Prezzi con anno fuori range, regole disabilitate e importo negativo", async () => {
+  it("valida Prezzi con anno fuori range", async () => {
     renderWithClient(
       <PriceBookForm
         initial={{
@@ -597,6 +597,9 @@ describe("interazioni form anagrafiche", () => {
 
     fireEvent.submit(screen.getByRole("button", { name: "Salva" }).closest("form")!);
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith("Inserisci un anno valido"));
+  });
+
+  it("valida Prezzi con compensi e rimborsi entrambi disabilitati", async () => {
     cleanup();
     vi.clearAllMocks();
 
@@ -622,6 +625,9 @@ describe("interazioni form anagrafiche", () => {
     await waitFor(() =>
       expect(toast.error).toHaveBeenCalledWith("Abilita almeno compensi o rimborsi spese"),
     );
+  });
+
+  it("valida Prezzi con importo negativo", async () => {
     cleanup();
     vi.clearAllMocks();
 
