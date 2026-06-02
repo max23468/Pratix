@@ -535,7 +535,7 @@ async function moveCounterpartySubjects(
 
 async function mergeCases(client: unknown, userId: string, keptId: string, mergedId: string) {
   const db = asDb(client);
-  const { data: keptCase } = await db
+  const { data: keptCase, error } = await db
     .from<{
       public_code: string | null;
       practice_number: number;
@@ -547,6 +547,7 @@ async function mergeCases(client: unknown, userId: string, keptId: string, merge
     .eq("user_id", userId)
     .eq("id", keptId)
     .maybeSingle();
+  if (error) throw error;
   if (!keptCase) throw new Error("Pratica da mantenere non trovata");
 
   await updateTable(
