@@ -283,6 +283,11 @@ Pratix usa **SemVer convenzionale** adattato a SaaS hostato (vedi [`docs/decisio
 ## Commit e PR
 
 - Quando crei commit, mantienili atomici e usa **Conventional Commit** coerenti con l'impatto reale (`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`, `style:`).
+- Quando Codex apre una PR, non usare il nome branch `codex/<tema>` come titolo:
+  passa sempre un titolo PR Conventional Commit esplicito, per esempio
+  `gh pr create --title "docs: update Pratix governance"`, oppure correggi subito
+  una PR già aperta con `gh pr edit --title "docs: ..."` prima di dichiararla
+  pronta o pubblicata.
 - Prima di aprire una PR o dichiarare pronta la pubblicazione, controlla la issue GitHub `Codex feedback inbox`, marcata dalla label `codex-feedback-inbox`: se contiene thread actionable, pianifica e completa la loro risoluzione (o dichiara esplicitamente perché restano fuori scope) prima di procedere. Lo storico dei commenti Codex va controllato dalla stessa issue, non da file di stato committati nel repo.
 - Prima di dichiarare chiuso un lavoro pubblicato o mergeato, controlla `git branch -vv` e `git worktree list`: pulisci i branch locali con upstream `gone` o già assorbiti nel branch base e rimuovi i worktree temporanei non più necessari. Non lasciare branch `codex/*` stale o directory worktree residue se il loro lavoro è stato mergeato, salvo motivo esplicito.
 - Non aggiungere workflow GitHub Actions, policy di deploy o flussi di release non presenti senza richiesta esplicita. Il rilascio operativo avviene tramite Vercel.
