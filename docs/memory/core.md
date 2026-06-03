@@ -70,6 +70,12 @@ Se il worktree contiene modifiche non collegate alla richiesta, non mescolare fi
 
 Quando un lavoro su PR/branch dedicato viene mergeato, pubblicato o chiuso, pulire anche il checkout locale: controllare `git branch -vv` e `git worktree list`, eliminare i branch con upstream `gone` o già assorbiti e non lasciare branch `codex/*` stale né worktree temporanei residui. Usare prima `git branch -d <branch>`; se Git rifiuta perché il branch non è antenato diretto ma `git log --cherry-pick --right-only --oneline main...<branch>` non mostra commit unici, è ammesso `git branch -D <branch>`. Per ogni worktree temporaneo controllare `git -C <path> status -sb` e rimuoverlo con `git worktree remove <path>`; se restano solo artefatti ignorati/generati dopo lo sgancio, ispezionare la directory e rimuoverla. Ogni branch remoto, branch locale o directory worktree lasciata aperta deve avere un motivo esplicito nel riepilogo.
 
+Quando Codex apre una PR, il nome branch `codex/<tema>` non è un titolo PR
+valido: passare sempre un titolo PR Conventional Commit esplicito, per esempio
+`gh pr create --title "docs: update Pratix governance"`, oppure correggere
+subito una PR già aperta con `gh pr edit --title "docs: ..."` prima di
+dichiararla pronta o pubblicata.
+
 Pratix resta un gestionale leggero per avvocati freelance, ora focalizzato prevalentemente sul recupero crediti. Nuove funzionalità devono rafforzare committenti, clienti, controparti, pratiche, attività fatturabili, compensi/onorari, prezzi per committente, rimborsi spese Art. 15, rendiconti Excel, fatture, sicurezza dati, qualità operativa o affidabilità del SaaS. Evita espansioni verso studi associati, CRM generalista, suite contabile completa, piattaforme enterprise, bot Telegram o VPS-first senza decisione esplicita e ADR.
 
 Per Supabase, Vercel, API terze, prezzi, limiti, policy o fonti fiscali/normative variabili, verifica fonti ufficiali correnti prima di fissare decisioni operative o prodotto. Distingui sempre fatto verificato, inferenza e scelta interna.
