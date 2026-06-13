@@ -120,7 +120,7 @@ export const getDuplicateSummaryFn = createServerFn({ method: "POST" })
 
 export const findDuplicateCandidatesFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(validateFindDuplicateDraftInput)
+  .validator(validateFindDuplicateDraftInput)
   .handler(async ({ data, context }) => {
     const scanData = await loadDuplicateScanData(context.supabase, context.userId);
     return scanDuplicateDraft({
@@ -135,7 +135,7 @@ export const findDuplicateCandidatesFn = createServerFn({ method: "POST" })
 
 export const resolveDuplicateCandidateFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(validateResolveDuplicateInput)
+  .validator(validateResolveDuplicateInput)
   .handler(async ({ data, context }) => {
     const status = statusForAction(data.action);
     let keptRecordId: string | null = null;

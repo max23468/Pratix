@@ -140,7 +140,7 @@ async function saveBillingExports({
 
 export const createBillingInvoiceFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(validateCreateBillingInvoiceInput)
+  .validator(validateCreateBillingInvoiceInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const selectedIds = selectedActivityIds(data.selections);
@@ -300,7 +300,7 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
 
 export const updateDraftBillingInvoiceFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(validateUpdateDraftBillingInvoiceInput)
+  .validator(validateUpdateDraftBillingInvoiceInput)
   .handler(async ({ data, context }) => {
     const { supabase, userId } = context;
     const selectedIds = selectedActivityIds(data.selections);
@@ -517,7 +517,7 @@ function validateSetInvoiceIssueStateInput(input: Partial<SetInvoiceIssueStateIn
 
 export const setInvoiceIssueStateFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(validateSetInvoiceIssueStateInput)
+  .validator(validateSetInvoiceIssueStateInput)
   .handler(async ({ data, context }) => {
     const { data: invoiceId, error } = await context.supabase.rpc("set_invoice_issue_state", {
       p_invoice_id: data.invoiceId,
@@ -536,7 +536,7 @@ export const setInvoiceIssueStateFn = createServerFn({ method: "POST" })
 
 export const generateBillingExportFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { invoiceId: string; kind: BillingExportKind }) => {
+  .validator((input: { invoiceId: string; kind: BillingExportKind }) => {
     if (!input?.invoiceId || typeof input.invoiceId !== "string") {
       throw new Error("invoiceId mancante");
     }
@@ -634,7 +634,7 @@ export const generateBillingExportFn = createServerFn({ method: "POST" })
 /** Genera l'XML FatturaPA 1.2.2 per una fattura esistente. */
 export const generateInvoiceXmlFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { invoiceId: string }) => {
+  .validator((input: { invoiceId: string }) => {
     if (!input?.invoiceId || typeof input.invoiceId !== "string") {
       throw new Error("invoiceId mancante");
     }
