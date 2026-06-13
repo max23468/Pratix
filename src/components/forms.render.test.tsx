@@ -18,6 +18,13 @@ vi.mock("@tanstack/react-router", () => ({
 
 vi.mock("@tanstack/react-start", () => ({
   useServerFn: () => vi.fn(),
+  createMiddleware: () => ({
+    server: () => ({}),
+  }),
+}));
+
+vi.mock("@/server/price-books.functions", () => ({
+  savePriceBookFn: {},
 }));
 
 vi.mock("@/server/invoices.functions", () => ({

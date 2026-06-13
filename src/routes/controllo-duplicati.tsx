@@ -92,7 +92,12 @@ function DuplicateControlPage() {
   const [selected, setSelected] = useState<DuplicateCandidate | null>(null);
   const [mergeKeepId, setMergeKeepId] = useState<string | null>(null);
 
-  const query = useQuery({
+  const {
+    data: duplicateScan,
+    isFetching: isDuplicateScanFetching,
+    isLoading: isDuplicateScanLoading,
+    refetch: refetchDuplicateScan,
+  } = useQuery({
     queryKey: ["duplicate-candidates"],
     queryFn: async () =>
       readServerResult<ScanResult>(
@@ -144,25 +149,25 @@ function DuplicateControlPage() {
   });
 
   const candidates = useMemo(() => {
-    const open = (query.data?.openCandidates ?? []).filter(
+    const open = (duplicateScan?.openCandidates ?? []).filter(
       (candidate) => candidate.status === "open",
     );
-    const snoozed = (query.data?.openCandidates ?? []).filter(
+    const snoozed = (duplicateScan?.openCandidates ?? []).filter(
       (candidate) => candidate.status === "snoozed",
     );
-    const resolved = query.data?.resolvedCandidates ?? [];
+    const resolved = duplicateScan?.resolvedCandidates ?? [];
     if (filter === "resolved") return resolved;
     if (filter === "snoozed") return snoozed;
     const source = open;
     if (filter === "all") return source;
     return source.filter((candidate) => candidate.entityType === filter);
-  }, [filter, query.data]);
+  }, [duplicateScan, filter]);
 
   const openCount =
-    query.data?.openCandidates.filter((candidate) => candidate.status === "open").length ?? 0;
+    duplicateScan?.openCandidates.filter((candidate) => candidate.status === "open").length ?? 0;
   const snoozedCount =
-    query.data?.openCandidates.filter((candidate) => candidate.status === "snoozed").length ?? 0;
-  const resolvedCount = query.data?.resolvedCandidates.length ?? 0;
+    duplicateScan?.openCandidates.filter((candidate) => candidate.status === "snoozed").length ?? 0;
+  const resolvedCount = duplicateScan?.resolvedCandidates.length ?? 0;
 
   return (
     <div className="space-y-6">
@@ -173,11 +178,11 @@ function DuplicateControlPage() {
           <Button
             type="button"
             variant="outline"
-            onClick={() => query.refetch()}
-            disabled={query.isFetching}
+            onClick={() => refetchDuplicateScan()}
+            disabled={isDuplicateScanFetching}
           >
             <RefreshCcw className="mr-2 size-4" />
-            {query.isFetching ? "Controllo…" : "Ricontrolla"}
+            {isDuplicateScanFetching ? "Controllo…" : "Ricontrolla"}
           </Button>
         }
       />
@@ -209,7 +214,7 @@ function DuplicateControlPage() {
       </div>
 
       <div className="space-y-3">
-        {query.isLoading ? (
+        {isDuplicateScanLoading ? (
           <Card>
             <CardContent className="py-8 text-sm text-muted-foreground">
               Controllo duplicati in corso…

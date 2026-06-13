@@ -1,5 +1,6 @@
 import { useId, useMemo, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { Plus, RotateCcw, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { priceBookStatusLabels, priceItemKindLabels } from "@/lib/labels";
 import { routeRef } from "@/lib/public-route-code";
+import { getAuthHeaders, readServerResult } from "@/lib/server-functions";
 import { useSubmitLock } from "@/lib/submit-lock";
 import {
   createTemplateItems,
@@ -38,6 +40,7 @@ import {
   type PriceBookStatus,
   type PriceItemKind,
 } from "@/lib/price-templates";
+import { savePriceBookFn } from "@/server/price-books.functions";
 
 type PriceBookRow = {
   id?: string;
@@ -90,6 +93,7 @@ const emptyItems: PriceItemDraft[] = [];
 export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onCancel }: Props) {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const savePriceBook = useServerFn(savePriceBookFn);
   const isEdit = Boolean(initial?.id);
   const [form, setForm] = useState<PriceBookRow>({
     ...emptyBook(initial?.year ?? currentYear),
@@ -241,31 +245,23 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
       validateForm(form, items);
 
       const normalizedItems = normalizeItems(items);
-      const priceBookPayload = {
-        user_id: user.id,
-        principal_id: form.principal_id,
-        year: Number(form.year),
-        status: form.status,
-        fees_enabled: form.fees_enabled,
-        expense_reimbursements_enabled: form.expense_reimbursements_enabled,
-        valid_from: form.valid_from,
-        valid_to: form.valid_to || null,
-        notes: form.notes?.trim() || null,
-      };
-
-      const priceBookId =
-        isEdit && initial?.id
-          ? await updatePriceBook(initial.id, priceBookPayload)
-          : await createPriceBook(priceBookPayload);
-
-      await syncPriceItems({
-        priceBookId: priceBookId.id,
-        userId: user.id,
-        initialItems,
-        items: normalizedItems,
-      });
-
-      return priceBookId;
+      return readServerResult(
+        await savePriceBook({
+          data: {
+            id: isEdit ? initial?.id : null,
+            principal_id: form.principal_id,
+            year: Number(form.year),
+            status: form.status,
+            fees_enabled: form.fees_enabled,
+            expense_reimbursements_enabled: form.expense_reimbursements_enabled,
+            valid_from: form.valid_from,
+            valid_to: form.valid_to || null,
+            notes: form.notes?.trim() || null,
+            items: normalizedItems,
+          },
+          headers: await getAuthHeaders(),
+        }),
+      );
     },
     onSuccess: (priceBook) => {
       toast.success(isEdit ? "Prezzi aggiornati" : "Prezzi creati");
@@ -660,107 +656,4 @@ function normalizeItems(items: PriceItemDraft[]) {
     requires_hearing_dates: item.kind === "fee" ? item.requires_hearing_dates : false,
     sort_order: index * 10 + 10,
   }));
-}
-
-async function createPriceBook(payload: {
-  user_id: string;
-  principal_id: string;
-  year: number;
-  status: PriceBookStatus;
-  fees_enabled: boolean;
-  expense_reimbursements_enabled: boolean;
-  valid_from: string;
-  valid_to: string | null;
-  notes: string | null;
-}) {
-  const { data, error } = await supabase
-    .from("price_books")
-    .insert(payload)
-    .select("id, public_code")
-    .single();
-  if (error) throw error;
-  return data as { id: string; public_code: string | null };
-}
-
-async function updatePriceBook(
-  id: string,
-  payload: {
-    user_id: string;
-    principal_id: string;
-    year: number;
-    status: PriceBookStatus;
-    fees_enabled: boolean;
-    expense_reimbursements_enabled: boolean;
-    valid_from: string;
-    valid_to: string | null;
-    notes: string | null;
-  },
-) {
-  const { data, error } = await supabase
-    .from("price_books")
-    .update(payload)
-    .eq("id", id)
-    .select("id, public_code")
-    .single();
-  if (error) throw error;
-  return data as { id: string; public_code: string | null };
-}
-
-async function syncPriceItems({
-  priceBookId,
-  userId,
-  initialItems,
-  items,
-}: {
-  priceBookId: string;
-  userId: string;
-  initialItems: PriceItemDraft[];
-  items: PriceItemDraft[];
-}) {
-  const currentIds = new Set(items.map((item) => item.id).filter(Boolean));
-  const deleteIds = initialItems
-    .filter((item) => item.id && !currentIds.has(item.id) && !item.usedCount)
-    .map((item) => item.id as string);
-
-  if (deleteIds.length > 0) {
-    const { error } = await supabase.from("price_items").delete().in("id", deleteIds);
-    if (error) throw error;
-  }
-
-  const updates = items.filter((item) => item.id);
-  for (const item of updates) {
-    const { error } = await supabase
-      .from("price_items")
-      .update({
-        kind: item.kind,
-        code: item.code,
-        name: item.name,
-        invoice_description: item.invoice_description,
-        unit_price: item.unit_price,
-        is_enabled: item.is_enabled,
-        requires_hearing_dates: item.requires_hearing_dates,
-        sort_order: item.sort_order,
-      })
-      .eq("id", item.id as string);
-    if (error) throw error;
-  }
-
-  const inserts = items.filter((item) => !item.id);
-  if (inserts.length === 0) return;
-
-  const { error } = await supabase.from("price_items").insert(
-    inserts.map((item) => ({
-      user_id: userId,
-      price_book_id: priceBookId,
-      kind: item.kind,
-      code: item.code,
-      name: item.name,
-      invoice_description: item.invoice_description,
-      unit_price: item.unit_price,
-      is_enabled: item.is_enabled,
-      requires_hearing_dates: item.requires_hearing_dates,
-      sort_order: item.sort_order,
-    })),
-  );
-  if (error) throw error;
 }

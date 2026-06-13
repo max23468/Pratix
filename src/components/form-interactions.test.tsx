@@ -11,13 +11,14 @@ import { CounterpartyForm } from "./counterparty-form";
 import { PriceBookForm } from "./price-book-form";
 import { PrincipalForm } from "./principal-form";
 
-const { toast, supabase, query, single, maybeSingle } = vi.hoisted(() => {
+const { toast, supabase, query, single, maybeSingle, savePriceBook } = vi.hoisted(() => {
   const toast = {
     success: vi.fn(),
     error: vi.fn(),
   };
   const single = vi.fn();
   const maybeSingle = vi.fn();
+  const savePriceBook = vi.fn();
   const queryData = (table: string) => {
     if (table === "clients") {
       return {
@@ -124,12 +125,37 @@ const { toast, supabase, query, single, maybeSingle } = vi.hoisted(() => {
   const supabase = {
     from: vi.fn((table: string) => builderFor(table)),
   };
-  return { toast, supabase, query, single, maybeSingle };
+  return { toast, supabase, query, single, maybeSingle, savePriceBook };
 });
 
 vi.mock("sonner", () => ({ toast }));
 
 vi.mock("@/integrations/supabase/client", () => ({ supabase }));
+
+vi.mock("@tanstack/react-start", () => ({
+  useServerFn: () => savePriceBook,
+  createMiddleware: () => ({
+    server: () => ({}),
+  }),
+  createServerFn: () => {
+    const chain = {
+      middleware: () => chain,
+      validator: () => chain,
+      handler: () => ({}),
+    };
+    return chain;
+  },
+}));
+
+vi.mock("@/server/price-books.functions", () => ({
+  savePriceBookFn: {},
+}));
+
+vi.mock("@/lib/server-functions", () => ({
+  getAuthHeaders: vi.fn(async () => ({ Authorization: "Bearer test-token" })),
+  readServerResult: vi.fn(async (result) => result),
+  canUseAuthHeaders: vi.fn(() => false),
+}));
 
 vi.mock("@/lib/auth-context", () => ({
   useAuth: () => ({
@@ -154,6 +180,7 @@ describe("interazioni form anagrafiche", () => {
     };
     single.mockResolvedValue({ data: { id: "saved-id", archived_at: null }, error: null });
     maybeSingle.mockResolvedValue({ data: null, error: null });
+    savePriceBook.mockResolvedValue({ id: "saved-id", public_code: null });
   });
 
   afterEach(() => {
@@ -847,20 +874,28 @@ describe("interazioni form anagrafiche", () => {
     await userEvent.click(screen.getByRole("button", { name: "Salva" }));
 
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Prezzi aggiornati"));
-    expect(query.update).toHaveBeenCalledWith(
-      expect.objectContaining({
+    expect(savePriceBook).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        id: "price-book-1",
         principal_id: "principal-1",
         notes: "Note prezzi",
+        items: [
+          expect.objectContaining({
+            id: "item-1",
+            code: "DIFF",
+            name: "Diffida",
+            invoice_description: "Diffida",
+          }),
+          expect.objectContaining({
+            code: "CU",
+            name: "Contributo unificato",
+            invoice_description: "Contributo unificato",
+            requires_hearing_dates: false,
+          }),
+        ],
       }),
-    );
-    expect(query.insert).toHaveBeenCalledWith([
-      expect.objectContaining({
-        code: "CU",
-        name: "Contributo unificato",
-        invoice_description: "Contributo unificato",
-        requires_hearing_dates: false,
-      }),
-    ]);
+      headers: { Authorization: "Bearer test-token" },
+    });
     expect(onSaved).toHaveBeenCalledWith("saved-id");
   });
 
@@ -899,7 +934,7 @@ describe("interazioni form anagrafiche", () => {
     fireEvent.submit(form);
 
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Prezzi creati"));
-    expect(query.insert).toHaveBeenCalledTimes(2);
+    expect(savePriceBook).toHaveBeenCalledTimes(1);
   });
 
   it("rimuove voci Prezzi persistite non usate prima del salvataggio", async () => {
@@ -955,8 +990,13 @@ describe("interazioni form anagrafiche", () => {
     await userEvent.click(screen.getByRole("button", { name: "Salva" }));
 
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Prezzi aggiornati"));
-    expect(query.delete).toHaveBeenCalled();
-    expect(query.in).toHaveBeenCalledWith("id", ["item-delete"]);
+    expect(savePriceBook).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          items: [expect.objectContaining({ id: "item-keep" })],
+        }),
+      }),
+    );
   });
 
   it("ricarica il template comune Prezzi su richiesta", async () => {

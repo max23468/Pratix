@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, ArrowRight, CheckCircle2, FileInput } from "lucide-react";
 import { toast } from "sonner";
 import { ActivitiesStep } from "./activities-step";
@@ -26,14 +27,22 @@ import type { Json } from "@/integrations/supabase/types";
 import { useAuth } from "@/lib/auth-context";
 import { compareClients, compareCounterparties } from "@/lib/labels";
 import { routeRef } from "@/lib/public-route-code";
+import { getAuthHeaders, readServerResult } from "@/lib/server-functions";
 import { buildActivityAttachmentStoragePath, PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
 import { useSubmitLock } from "@/lib/submit-lock";
+import {
+  recordGuidedCreationActivityAttachmentFn,
+  type RecordGuidedCreationActivityAttachmentInput,
+} from "@/server/guided-creation.functions";
 
 const guidedCreationSteps = ["Soggetti", "Pratica", "Attività", "Riepilogo"];
 
 export function GuidedCreationWizard({ onCreated }: { onCreated: (caseId: string) => void }) {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const recordGuidedCreationActivityAttachment = useServerFn(
+    recordGuidedCreationActivityAttachmentFn,
+  );
   const [step, setStep] = useState(0);
   const [draft, setDraft] = useState<GuidedCreationDraft>(() => initialDraft());
   const [staged, setStaged] = useState<StagedGuidedCreation | null>(null);
@@ -234,6 +243,13 @@ export function GuidedCreationWizard({ onCreated }: { onCreated: (caseId: string
         user.id,
         prepared.normalized.activities,
         draft.activities,
+        async (data) =>
+          readServerResult(
+            await recordGuidedCreationActivityAttachment({
+              data,
+              headers: await getAuthHeaders(),
+            }),
+          ),
       );
       return { caseId, attachmentErrors };
     },
@@ -394,6 +410,7 @@ async function uploadGuidedCreationActivityAttachments(
   userId: string,
   normalizedActivities: NormalizedGuidedCreation["activities"],
   draftActivities: ActivityDraft[],
+  recordAttachment: (data: RecordGuidedCreationActivityAttachmentInput) => Promise<unknown>,
 ) {
   const errors: string[] = [];
   const activitiesById = new Map(normalizedActivities.map((activity) => [activity.id, activity]));
@@ -414,19 +431,17 @@ async function uploadGuidedCreationActivityAttachments(
         .upload(storagePath, file, { contentType: file.type || undefined, upsert: false });
       if (uploadError) throw uploadError;
 
-      const { error: attachmentError } = await supabase.from("activity_attachments").insert({
-        user_id: userId,
-        activity_id: normalizedActivity.id,
-        storage_path: storagePath,
-        original_file_name: file.name,
-        display_name: draftActivity.attachmentName.trim() || file.name,
-        document_type: draftActivity.attachmentType.trim() || null,
-        mime_type: file.type || null,
-        size_bytes: file.size,
-        preview_available: file.type.startsWith("image/") || file.type === "application/pdf",
+      await recordAttachment({
+        activityId: normalizedActivity.id,
+        storagePath,
+        originalFileName: file.name,
+        displayName: draftActivity.attachmentName.trim() || file.name,
+        documentType: draftActivity.attachmentType.trim() || null,
+        mimeType: file.type || null,
+        sizeBytes: file.size,
+        previewAvailable: file.type.startsWith("image/") || file.type === "application/pdf",
         notes: draftActivity.attachmentNotes.trim() || null,
       });
-      if (attachmentError) throw attachmentError;
     } catch (error) {
       errors.push(error instanceof Error ? error.message : "Errore allegato");
     }

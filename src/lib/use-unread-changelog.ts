@@ -13,16 +13,16 @@ import { hasUnreadChangelog } from "@/lib/changelog";
 export function useUnreadChangelog() {
   const { session } = useAuth();
   const queryClient = useQueryClient();
-  const userId = session?.user.id;
+  const profileId = session?.user.id;
 
   const { data: lastSeen, isLoading } = useQuery({
-    enabled: !!userId,
-    queryKey: ["changelog-last-seen", userId],
+    enabled: !!profileId,
+    queryKey: ["changelog-last-seen", profileId],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("profiles")
         .select("last_seen_changelog_version")
-        .eq("id", userId!)
+        .eq("id", profileId!)
         .maybeSingle();
       if (error) throw error;
       return data?.last_seen_changelog_version ?? null;
@@ -31,15 +31,15 @@ export function useUnreadChangelog() {
 
   const { mutate: markAsRead } = useMutation({
     mutationFn: async () => {
-      if (!userId) return;
+      if (!profileId) return;
       const { error } = await supabase
         .from("profiles")
         .update({ last_seen_changelog_version: APP_VERSION })
-        .eq("id", userId);
+        .eq("id", profileId);
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["changelog-last-seen", userId] });
+      queryClient.invalidateQueries({ queryKey: ["changelog-last-seen", profileId] });
     },
   });
 

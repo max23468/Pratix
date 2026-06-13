@@ -215,7 +215,7 @@ function DashboardContent() {
     },
   });
 
-  const duplicateSummary = useQuery({
+  const { data: duplicateSummary, isLoading: isDuplicateSummaryLoading } = useQuery({
     enabled: !!userId,
     queryKey: ["dashboard-duplicate-summary", userId],
     refetchOnMount: "always",
@@ -302,7 +302,7 @@ function DashboardContent() {
 
       <WorkQueueCard items={data?.workQueue ?? []} isLoading={isLoading} />
 
-      <DuplicateSummaryBox summary={duplicateSummary.data} isLoading={duplicateSummary.isLoading} />
+      <DuplicateSummaryBox summary={duplicateSummary} isLoading={isDuplicateSummaryLoading} />
 
       <div className="mt-6 grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,0.8fr)]">
         <Card className="min-w-0">
