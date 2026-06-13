@@ -6,6 +6,14 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.13.7] — 2026-06-13
+
+### Sotto il cofano
+
+- **Routing**: aggiornati TanStack Router e TanStack Start sulle ultime versioni
+  patch compatibili con la configurazione Vercel corrente, adeguando le server
+  function all'API `validator()`.
+
 ## [1.13.6] — 2026-06-13
 
 ### Sotto il cofano
@@ -1300,6 +1308,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.13.7]: #1137--2026-06-13
 [1.13.6]: #1136--2026-06-13
 [1.13.5]: #1135--2026-06-13
 [1.13.4]: #1134--2026-06-13

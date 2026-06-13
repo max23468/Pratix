@@ -90,7 +90,7 @@ function ownerColumnFor(table: AccountDataDeleteTable) {
 
 export const deleteAccountFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator(validateDeleteAccountInput)
+  .validator(validateDeleteAccountInput)
   .handler(async ({ context }) => {
     const userId = context.userId;
     const prefix = accountStoragePrefix(userId);
