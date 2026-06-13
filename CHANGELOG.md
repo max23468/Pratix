@@ -6,6 +6,14 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.13.9] — 2026-06-13
+
+### Sotto il cofano
+
+- **React Doctor**: aggiornato il gate a `react-doctor@latest` compatibile con i
+  flag correnti e riportato il controllo a `100/100`, spostando le scritture
+  owner dei prezzi e degli allegati guidati su server function.
+
 ## [1.13.8] — 2026-06-13
 
 ### Sotto il cofano
@@ -1315,6 +1323,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.13.9]: #1139--2026-06-13
 [1.13.8]: #1138--2026-06-13
 [1.13.7]: #1137--2026-06-13
 [1.13.6]: #1136--2026-06-13
