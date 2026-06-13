@@ -743,8 +743,7 @@ function isRetryableGitHubAuthResponse(text) {
   // sull'endpoint GraphQL ("Requires authentication") o su REST ("Bad
   // credentials"). Sono blip momentanei: vanno ritentati, non trattati come fatali.
   return (
-    normalizedText.includes("bad credentials") ||
-    normalizedText.includes("requires authentication")
+    normalizedText.includes("bad credentials") || normalizedText.includes("requires authentication")
   );
 }
 

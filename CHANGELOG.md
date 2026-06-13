@@ -6,7 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.13.4] — 2026-06-13
+
 ### Sotto il cofano
+
+- **Dipendenze UI**: aggiornati Radix, React, Tailwind, React Query, Lucide,
+  Prettier e i tipi React/Node sulle ultime versioni compatibili con Node 24.
 
 - **Cron giornaliero**: aggiunto un keep-alive Supabase best-effort nel cron
   Vercel, con log dedicati per verificare che il progetto riceva attività
@@ -1281,6 +1286,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.13.4]: #1134--2026-06-13
 [1.13.3]: #1133--2026-05-31
 [1.13.2]: #1132--2026-05-31
 [1.13.1]: #1131--2026-05-30
