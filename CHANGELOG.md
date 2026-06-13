@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.13.5] — 2026-06-13
+
+### Sotto il cofano
+
+- **Supabase**: aggiornati client JavaScript e CLI sulle ultime versioni
+  compatibili con Node 24.
+
 ## [1.13.4] — 2026-06-13
 
 ### Sotto il cofano
@@ -1286,6 +1293,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.13.5]: #1135--2026-06-13
 [1.13.4]: #1134--2026-06-13
 [1.13.3]: #1133--2026-05-31
 [1.13.2]: #1132--2026-05-31
