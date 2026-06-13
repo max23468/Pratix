@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.13.8] — 2026-06-13
+
+### Sotto il cofano
+
+- **Build**: aggiornato Nitro alla beta più recente compatibile con la
+  configurazione Vercel corrente.
+
 ## [1.13.7] — 2026-06-13
 
 ### Sotto il cofano
@@ -1308,6 +1315,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.13.8]: #1138--2026-06-13
 [1.13.7]: #1137--2026-06-13
 [1.13.6]: #1136--2026-06-13
 [1.13.5]: #1135--2026-06-13
