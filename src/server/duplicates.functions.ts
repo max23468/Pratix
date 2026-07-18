@@ -209,9 +209,9 @@ async function loadDuplicateScanData(client: unknown, userId: string) {
       .select("id, public_code, kind, first_name, last_name, business_name, notes")
       .eq("user_id", userId),
     db
-      .from<
-        Array<{ client_id: string; principals: { business_name: string } | null }>
-      >("principal_clients")
+      .from<Array<{ client_id: string; principals: { business_name: string } | null }>>(
+        "principal_clients",
+      )
       .select("client_id, principals(business_name)")
       .eq("user_id", userId),
     db

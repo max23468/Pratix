@@ -9,93 +9,43 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TerminiRouteImport } from './routes/termini'
-import { Route as ReimpostaPasswordRouteImport } from './routes/reimposta-password'
-import { Route as RegisterRouteImport } from './routes/register'
-import { Route as RecuperaPasswordRouteImport } from './routes/recupera-password'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as NovitaRouteImport } from './routes/novita'
-import { Route as LoginRouteImport } from './routes/login'
-import { Route as ImpostazioniRouteImport } from './routes/impostazioni'
-import { Route as DashboardRouteImport } from './routes/dashboard'
-import { Route as CreazioneGuidataRouteImport } from './routes/creazione-guidata'
-import { Route as ControlloDuplicatiRouteImport } from './routes/controllo-duplicati'
-import { Route as AccountRouteImport } from './routes/account'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as PrezziIndexRouteImport } from './routes/prezzi.index'
-import { Route as PraticheIndexRouteImport } from './routes/pratiche.index'
-import { Route as FattureIndexRouteImport } from './routes/fatture.index'
-import { Route as ContropartiIndexRouteImport } from './routes/controparti.index'
-import { Route as CommittentiIndexRouteImport } from './routes/committenti.index'
-import { Route as ClientiIndexRouteImport } from './routes/clienti.index'
+import { Route as AccountRouteImport } from './routes/account'
+import { Route as ControlloDuplicatiRouteImport } from './routes/controllo-duplicati'
+import { Route as CreazioneGuidataRouteImport } from './routes/creazione-guidata'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as ImpostazioniRouteImport } from './routes/impostazioni'
+import { Route as LoginRouteImport } from './routes/login'
+import { Route as NovitaRouteImport } from './routes/novita'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as RecuperaPasswordRouteImport } from './routes/recupera-password'
+import { Route as RegisterRouteImport } from './routes/register'
+import { Route as ReimpostaPasswordRouteImport } from './routes/reimposta-password'
+import { Route as TerminiRouteImport } from './routes/termini'
 import { Route as AttivitaIndexRouteImport } from './routes/attivita.index'
-import { Route as PrezziNuovoRouteImport } from './routes/prezzi.nuovo'
-import { Route as PrezziPriceBookIdRouteImport } from './routes/prezzi.$priceBookId'
-import { Route as PraticheNuovaRouteImport } from './routes/pratiche.nuova'
-import { Route as PraticheCaseIdRouteImport } from './routes/pratiche.$caseId'
-import { Route as FattureNuovaRouteImport } from './routes/fatture.nuova'
-import { Route as FattureInvoiceIdRouteImport } from './routes/fatture.$invoiceId'
-import { Route as ContropartiNuovaRouteImport } from './routes/controparti.nuova'
-import { Route as ContropartiCounterpartyIdRouteImport } from './routes/controparti.$counterpartyId'
-import { Route as CommittentiNuovoRouteImport } from './routes/committenti.nuovo'
-import { Route as CommittentiPrincipalIdRouteImport } from './routes/committenti.$principalId'
-import { Route as ClientiNuovoRouteImport } from './routes/clienti.nuovo'
+import { Route as ClientiIndexRouteImport } from './routes/clienti.index'
 import { Route as ClientiClientIdRouteImport } from './routes/clienti.$clientId'
+import { Route as ClientiNuovoRouteImport } from './routes/clienti.nuovo'
+import { Route as CommittentiIndexRouteImport } from './routes/committenti.index'
+import { Route as CommittentiPrincipalIdRouteImport } from './routes/committenti.$principalId'
+import { Route as CommittentiNuovoRouteImport } from './routes/committenti.nuovo'
+import { Route as ContropartiIndexRouteImport } from './routes/controparti.index'
+import { Route as ContropartiCounterpartyIdRouteImport } from './routes/controparti.$counterpartyId'
+import { Route as ContropartiNuovaRouteImport } from './routes/controparti.nuova'
+import { Route as FattureIndexRouteImport } from './routes/fatture.index'
+import { Route as FattureInvoiceIdRouteImport } from './routes/fatture.$invoiceId'
+import { Route as FattureNuovaRouteImport } from './routes/fatture.nuova'
+import { Route as PraticheIndexRouteImport } from './routes/pratiche.index'
+import { Route as PraticheCaseIdRouteImport } from './routes/pratiche.$caseId'
+import { Route as PraticheNuovaRouteImport } from './routes/pratiche.nuova'
+import { Route as PrezziIndexRouteImport } from './routes/prezzi.index'
+import { Route as PrezziPriceBookIdRouteImport } from './routes/prezzi.$priceBookId'
+import { Route as PrezziNuovoRouteImport } from './routes/prezzi.nuovo'
 import { Route as ApiCronDailyRouteImport } from './routes/api.cron.daily'
 
-const TerminiRoute = TerminiRouteImport.update({
-  id: '/termini',
-  path: '/termini',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReimpostaPasswordRoute = ReimpostaPasswordRouteImport.update({
-  id: '/reimposta-password',
-  path: '/reimposta-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecuperaPasswordRoute = RecuperaPasswordRouteImport.update({
-  id: '/recupera-password',
-  path: '/recupera-password',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NovitaRoute = NovitaRouteImport.update({
-  id: '/novita',
-  path: '/novita',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ImpostazioniRoute = ImpostazioniRouteImport.update({
-  id: '/impostazioni',
-  path: '/impostazioni',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DashboardRoute = DashboardRouteImport.update({
-  id: '/dashboard',
-  path: '/dashboard',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CreazioneGuidataRoute = CreazioneGuidataRouteImport.update({
-  id: '/creazione-guidata',
-  path: '/creazione-guidata',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ControlloDuplicatiRoute = ControlloDuplicatiRouteImport.update({
-  id: '/controllo-duplicati',
-  path: '/controllo-duplicati',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AccountRoute = AccountRouteImport.update({
@@ -103,39 +53,59 @@ const AccountRoute = AccountRouteImport.update({
   path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ControlloDuplicatiRoute = ControlloDuplicatiRouteImport.update({
+  id: '/controllo-duplicati',
+  path: '/controllo-duplicati',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PrezziIndexRoute = PrezziIndexRouteImport.update({
-  id: '/prezzi/',
-  path: '/prezzi/',
+const CreazioneGuidataRoute = CreazioneGuidataRouteImport.update({
+  id: '/creazione-guidata',
+  path: '/creazione-guidata',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PraticheIndexRoute = PraticheIndexRouteImport.update({
-  id: '/pratiche/',
-  path: '/pratiche/',
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FattureIndexRoute = FattureIndexRouteImport.update({
-  id: '/fatture/',
-  path: '/fatture/',
+const ImpostazioniRoute = ImpostazioniRouteImport.update({
+  id: '/impostazioni',
+  path: '/impostazioni',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ContropartiIndexRoute = ContropartiIndexRouteImport.update({
-  id: '/controparti/',
-  path: '/controparti/',
+const LoginRoute = LoginRouteImport.update({
+  id: '/login',
+  path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CommittentiIndexRoute = CommittentiIndexRouteImport.update({
-  id: '/committenti/',
-  path: '/committenti/',
+const NovitaRoute = NovitaRouteImport.update({
+  id: '/novita',
+  path: '/novita',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ClientiIndexRoute = ClientiIndexRouteImport.update({
-  id: '/clienti/',
-  path: '/clienti/',
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecuperaPasswordRoute = RecuperaPasswordRouteImport.update({
+  id: '/recupera-password',
+  path: '/recupera-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RegisterRoute = RegisterRouteImport.update({
+  id: '/register',
+  path: '/register',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReimpostaPasswordRoute = ReimpostaPasswordRouteImport.update({
+  id: '/reimposta-password',
+  path: '/reimposta-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TerminiRoute = TerminiRouteImport.update({
+  id: '/termini',
+  path: '/termini',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AttivitaIndexRoute = AttivitaIndexRouteImport.update({
@@ -143,39 +113,39 @@ const AttivitaIndexRoute = AttivitaIndexRouteImport.update({
   path: '/attivita/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PrezziNuovoRoute = PrezziNuovoRouteImport.update({
-  id: '/prezzi/nuovo',
-  path: '/prezzi/nuovo',
+const ClientiIndexRoute = ClientiIndexRouteImport.update({
+  id: '/clienti/',
+  path: '/clienti/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PrezziPriceBookIdRoute = PrezziPriceBookIdRouteImport.update({
-  id: '/prezzi/$priceBookId',
-  path: '/prezzi/$priceBookId',
+const ClientiClientIdRoute = ClientiClientIdRouteImport.update({
+  id: '/clienti/$clientId',
+  path: '/clienti/$clientId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PraticheNuovaRoute = PraticheNuovaRouteImport.update({
-  id: '/pratiche/nuova',
-  path: '/pratiche/nuova',
+const ClientiNuovoRoute = ClientiNuovoRouteImport.update({
+  id: '/clienti/nuovo',
+  path: '/clienti/nuovo',
   getParentRoute: () => rootRouteImport,
 } as any)
-const PraticheCaseIdRoute = PraticheCaseIdRouteImport.update({
-  id: '/pratiche/$caseId',
-  path: '/pratiche/$caseId',
+const CommittentiIndexRoute = CommittentiIndexRouteImport.update({
+  id: '/committenti/',
+  path: '/committenti/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FattureNuovaRoute = FattureNuovaRouteImport.update({
-  id: '/fatture/nuova',
-  path: '/fatture/nuova',
+const CommittentiPrincipalIdRoute = CommittentiPrincipalIdRouteImport.update({
+  id: '/committenti/$principalId',
+  path: '/committenti/$principalId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const FattureInvoiceIdRoute = FattureInvoiceIdRouteImport.update({
-  id: '/fatture/$invoiceId',
-  path: '/fatture/$invoiceId',
+const CommittentiNuovoRoute = CommittentiNuovoRouteImport.update({
+  id: '/committenti/nuovo',
+  path: '/committenti/nuovo',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ContropartiNuovaRoute = ContropartiNuovaRouteImport.update({
-  id: '/controparti/nuova',
-  path: '/controparti/nuova',
+const ContropartiIndexRoute = ContropartiIndexRouteImport.update({
+  id: '/controparti/',
+  path: '/controparti/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContropartiCounterpartyIdRoute =
@@ -184,24 +154,54 @@ const ContropartiCounterpartyIdRoute =
     path: '/controparti/$counterpartyId',
     getParentRoute: () => rootRouteImport,
   } as any)
-const CommittentiNuovoRoute = CommittentiNuovoRouteImport.update({
-  id: '/committenti/nuovo',
-  path: '/committenti/nuovo',
+const ContropartiNuovaRoute = ContropartiNuovaRouteImport.update({
+  id: '/controparti/nuova',
+  path: '/controparti/nuova',
   getParentRoute: () => rootRouteImport,
 } as any)
-const CommittentiPrincipalIdRoute = CommittentiPrincipalIdRouteImport.update({
-  id: '/committenti/$principalId',
-  path: '/committenti/$principalId',
+const FattureIndexRoute = FattureIndexRouteImport.update({
+  id: '/fatture/',
+  path: '/fatture/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ClientiNuovoRoute = ClientiNuovoRouteImport.update({
-  id: '/clienti/nuovo',
-  path: '/clienti/nuovo',
+const FattureInvoiceIdRoute = FattureInvoiceIdRouteImport.update({
+  id: '/fatture/$invoiceId',
+  path: '/fatture/$invoiceId',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ClientiClientIdRoute = ClientiClientIdRouteImport.update({
-  id: '/clienti/$clientId',
-  path: '/clienti/$clientId',
+const FattureNuovaRoute = FattureNuovaRouteImport.update({
+  id: '/fatture/nuova',
+  path: '/fatture/nuova',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PraticheIndexRoute = PraticheIndexRouteImport.update({
+  id: '/pratiche/',
+  path: '/pratiche/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PraticheCaseIdRoute = PraticheCaseIdRouteImport.update({
+  id: '/pratiche/$caseId',
+  path: '/pratiche/$caseId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PraticheNuovaRoute = PraticheNuovaRouteImport.update({
+  id: '/pratiche/nuova',
+  path: '/pratiche/nuova',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrezziIndexRoute = PrezziIndexRouteImport.update({
+  id: '/prezzi/',
+  path: '/prezzi/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrezziPriceBookIdRoute = PrezziPriceBookIdRouteImport.update({
+  id: '/prezzi/$priceBookId',
+  path: '/prezzi/$priceBookId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrezziNuovoRoute = PrezziNuovoRouteImport.update({
+  id: '/prezzi/nuovo',
+  path: '/prezzi/nuovo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiCronDailyRoute = ApiCronDailyRouteImport.update({
@@ -462,81 +462,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/termini': {
-      id: '/termini'
-      path: '/termini'
-      fullPath: '/termini'
-      preLoaderRoute: typeof TerminiRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reimposta-password': {
-      id: '/reimposta-password'
-      path: '/reimposta-password'
-      fullPath: '/reimposta-password'
-      preLoaderRoute: typeof ReimpostaPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/recupera-password': {
-      id: '/recupera-password'
-      path: '/recupera-password'
-      fullPath: '/recupera-password'
-      preLoaderRoute: typeof RecuperaPasswordRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/novita': {
-      id: '/novita'
-      path: '/novita'
-      fullPath: '/novita'
-      preLoaderRoute: typeof NovitaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/impostazioni': {
-      id: '/impostazioni'
-      path: '/impostazioni'
-      fullPath: '/impostazioni'
-      preLoaderRoute: typeof ImpostazioniRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/dashboard': {
-      id: '/dashboard'
-      path: '/dashboard'
-      fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/creazione-guidata': {
-      id: '/creazione-guidata'
-      path: '/creazione-guidata'
-      fullPath: '/creazione-guidata'
-      preLoaderRoute: typeof CreazioneGuidataRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/controllo-duplicati': {
-      id: '/controllo-duplicati'
-      path: '/controllo-duplicati'
-      fullPath: '/controllo-duplicati'
-      preLoaderRoute: typeof ControlloDuplicatiRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/account': {
@@ -546,53 +476,81 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AccountRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/controllo-duplicati': {
+      id: '/controllo-duplicati'
+      path: '/controllo-duplicati'
+      fullPath: '/controllo-duplicati'
+      preLoaderRoute: typeof ControlloDuplicatiRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/prezzi/': {
-      id: '/prezzi/'
-      path: '/prezzi'
-      fullPath: '/prezzi/'
-      preLoaderRoute: typeof PrezziIndexRouteImport
+    '/creazione-guidata': {
+      id: '/creazione-guidata'
+      path: '/creazione-guidata'
+      fullPath: '/creazione-guidata'
+      preLoaderRoute: typeof CreazioneGuidataRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/pratiche/': {
-      id: '/pratiche/'
-      path: '/pratiche'
-      fullPath: '/pratiche/'
-      preLoaderRoute: typeof PraticheIndexRouteImport
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/fatture/': {
-      id: '/fatture/'
-      path: '/fatture'
-      fullPath: '/fatture/'
-      preLoaderRoute: typeof FattureIndexRouteImport
+    '/impostazioni': {
+      id: '/impostazioni'
+      path: '/impostazioni'
+      fullPath: '/impostazioni'
+      preLoaderRoute: typeof ImpostazioniRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/controparti/': {
-      id: '/controparti/'
-      path: '/controparti'
-      fullPath: '/controparti/'
-      preLoaderRoute: typeof ContropartiIndexRouteImport
+    '/login': {
+      id: '/login'
+      path: '/login'
+      fullPath: '/login'
+      preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/committenti/': {
-      id: '/committenti/'
-      path: '/committenti'
-      fullPath: '/committenti/'
-      preLoaderRoute: typeof CommittentiIndexRouteImport
+    '/novita': {
+      id: '/novita'
+      path: '/novita'
+      fullPath: '/novita'
+      preLoaderRoute: typeof NovitaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/clienti/': {
-      id: '/clienti/'
-      path: '/clienti'
-      fullPath: '/clienti/'
-      preLoaderRoute: typeof ClientiIndexRouteImport
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recupera-password': {
+      id: '/recupera-password'
+      path: '/recupera-password'
+      fullPath: '/recupera-password'
+      preLoaderRoute: typeof RecuperaPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/register': {
+      id: '/register'
+      path: '/register'
+      fullPath: '/register'
+      preLoaderRoute: typeof RegisterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reimposta-password': {
+      id: '/reimposta-password'
+      path: '/reimposta-password'
+      fullPath: '/reimposta-password'
+      preLoaderRoute: typeof ReimpostaPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/termini': {
+      id: '/termini'
+      path: '/termini'
+      fullPath: '/termini'
+      preLoaderRoute: typeof TerminiRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/attivita/': {
@@ -602,74 +560,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AttivitaIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/prezzi/nuovo': {
-      id: '/prezzi/nuovo'
-      path: '/prezzi/nuovo'
-      fullPath: '/prezzi/nuovo'
-      preLoaderRoute: typeof PrezziNuovoRouteImport
+    '/clienti/': {
+      id: '/clienti/'
+      path: '/clienti'
+      fullPath: '/clienti/'
+      preLoaderRoute: typeof ClientiIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/prezzi/$priceBookId': {
-      id: '/prezzi/$priceBookId'
-      path: '/prezzi/$priceBookId'
-      fullPath: '/prezzi/$priceBookId'
-      preLoaderRoute: typeof PrezziPriceBookIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pratiche/nuova': {
-      id: '/pratiche/nuova'
-      path: '/pratiche/nuova'
-      fullPath: '/pratiche/nuova'
-      preLoaderRoute: typeof PraticheNuovaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pratiche/$caseId': {
-      id: '/pratiche/$caseId'
-      path: '/pratiche/$caseId'
-      fullPath: '/pratiche/$caseId'
-      preLoaderRoute: typeof PraticheCaseIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/fatture/nuova': {
-      id: '/fatture/nuova'
-      path: '/fatture/nuova'
-      fullPath: '/fatture/nuova'
-      preLoaderRoute: typeof FattureNuovaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/fatture/$invoiceId': {
-      id: '/fatture/$invoiceId'
-      path: '/fatture/$invoiceId'
-      fullPath: '/fatture/$invoiceId'
-      preLoaderRoute: typeof FattureInvoiceIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/controparti/nuova': {
-      id: '/controparti/nuova'
-      path: '/controparti/nuova'
-      fullPath: '/controparti/nuova'
-      preLoaderRoute: typeof ContropartiNuovaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/controparti/$counterpartyId': {
-      id: '/controparti/$counterpartyId'
-      path: '/controparti/$counterpartyId'
-      fullPath: '/controparti/$counterpartyId'
-      preLoaderRoute: typeof ContropartiCounterpartyIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/committenti/nuovo': {
-      id: '/committenti/nuovo'
-      path: '/committenti/nuovo'
-      fullPath: '/committenti/nuovo'
-      preLoaderRoute: typeof CommittentiNuovoRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/committenti/$principalId': {
-      id: '/committenti/$principalId'
-      path: '/committenti/$principalId'
-      fullPath: '/committenti/$principalId'
-      preLoaderRoute: typeof CommittentiPrincipalIdRouteImport
+    '/clienti/$clientId': {
+      id: '/clienti/$clientId'
+      path: '/clienti/$clientId'
+      fullPath: '/clienti/$clientId'
+      preLoaderRoute: typeof ClientiClientIdRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/clienti/nuovo': {
@@ -679,11 +581,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ClientiNuovoRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/clienti/$clientId': {
-      id: '/clienti/$clientId'
-      path: '/clienti/$clientId'
-      fullPath: '/clienti/$clientId'
-      preLoaderRoute: typeof ClientiClientIdRouteImport
+    '/committenti/': {
+      id: '/committenti/'
+      path: '/committenti'
+      fullPath: '/committenti/'
+      preLoaderRoute: typeof CommittentiIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/committenti/$principalId': {
+      id: '/committenti/$principalId'
+      path: '/committenti/$principalId'
+      fullPath: '/committenti/$principalId'
+      preLoaderRoute: typeof CommittentiPrincipalIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/committenti/nuovo': {
+      id: '/committenti/nuovo'
+      path: '/committenti/nuovo'
+      fullPath: '/committenti/nuovo'
+      preLoaderRoute: typeof CommittentiNuovoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/controparti/': {
+      id: '/controparti/'
+      path: '/controparti'
+      fullPath: '/controparti/'
+      preLoaderRoute: typeof ContropartiIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/controparti/$counterpartyId': {
+      id: '/controparti/$counterpartyId'
+      path: '/controparti/$counterpartyId'
+      fullPath: '/controparti/$counterpartyId'
+      preLoaderRoute: typeof ContropartiCounterpartyIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/controparti/nuova': {
+      id: '/controparti/nuova'
+      path: '/controparti/nuova'
+      fullPath: '/controparti/nuova'
+      preLoaderRoute: typeof ContropartiNuovaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fatture/': {
+      id: '/fatture/'
+      path: '/fatture'
+      fullPath: '/fatture/'
+      preLoaderRoute: typeof FattureIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fatture/$invoiceId': {
+      id: '/fatture/$invoiceId'
+      path: '/fatture/$invoiceId'
+      fullPath: '/fatture/$invoiceId'
+      preLoaderRoute: typeof FattureInvoiceIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fatture/nuova': {
+      id: '/fatture/nuova'
+      path: '/fatture/nuova'
+      fullPath: '/fatture/nuova'
+      preLoaderRoute: typeof FattureNuovaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pratiche/': {
+      id: '/pratiche/'
+      path: '/pratiche'
+      fullPath: '/pratiche/'
+      preLoaderRoute: typeof PraticheIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pratiche/$caseId': {
+      id: '/pratiche/$caseId'
+      path: '/pratiche/$caseId'
+      fullPath: '/pratiche/$caseId'
+      preLoaderRoute: typeof PraticheCaseIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pratiche/nuova': {
+      id: '/pratiche/nuova'
+      path: '/pratiche/nuova'
+      fullPath: '/pratiche/nuova'
+      preLoaderRoute: typeof PraticheNuovaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prezzi/': {
+      id: '/prezzi/'
+      path: '/prezzi'
+      fullPath: '/prezzi/'
+      preLoaderRoute: typeof PrezziIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prezzi/$priceBookId': {
+      id: '/prezzi/$priceBookId'
+      path: '/prezzi/$priceBookId'
+      fullPath: '/prezzi/$priceBookId'
+      preLoaderRoute: typeof PrezziPriceBookIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/prezzi/nuovo': {
+      id: '/prezzi/nuovo'
+      path: '/prezzi/nuovo'
+      fullPath: '/prezzi/nuovo'
+      preLoaderRoute: typeof PrezziNuovoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/cron/daily': {
