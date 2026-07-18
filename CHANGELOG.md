@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Sotto il cofano
+
+- **Dipendenze**: aggiornati Radix, Supabase (client e CLI), TanStack, Vite,
+  Vitest, ESLint, Tailwind, Lucide, Prettier e Playwright sulle ultime versioni
+  patch e minori compatibili con Node 24, azzerando le vulnerabilità note
+  segnalate da `npm audit`.
+
 ## [1.13.9] — 2026-06-13
 
 ### Sotto il cofano
