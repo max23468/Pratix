@@ -15,5 +15,5 @@
  *
  * Vedi `docs/guides/versioning-e-release.md` per la procedura completa.
  */
-export const APP_VERSION = "1.13.9";
-export const BUILD_DATE = "2026-06-13";
+export const APP_VERSION = "1.13.10";
+export const BUILD_DATE = "2026-07-19";
