@@ -11,13 +11,13 @@ import { OnboardingDialog } from "./onboarding-dialog";
 
 const { toast, supabase, query } = vi.hoisted(() => {
   const query = {
-    update: vi.fn(() => query),
+    update: vi.fn((..._args: unknown[]) => query),
     eq: vi.fn(() => Promise.resolve({ error: null })),
   };
   return {
     toast: { success: vi.fn(), error: vi.fn() },
     query,
-    supabase: { from: vi.fn(() => query) },
+    supabase: { from: vi.fn((..._args: unknown[]) => query) },
   };
 });
 

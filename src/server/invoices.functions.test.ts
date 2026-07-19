@@ -398,7 +398,12 @@ describe("server functions fatture", () => {
 
     const result = await handlerOf<
       {
-        data: typeof billingInput & { invoiceId: string };
+        // `billingInput.status` è il literal `"draft"`; qui la bozza viene
+        // emessa, quindi lo stato override è parte del contratto testato.
+        data: Omit<typeof billingInput, "status"> & {
+          invoiceId: string;
+          status: "draft" | "issued";
+        };
         context: { supabase: FakeSupabase; userId: string };
       },
       {

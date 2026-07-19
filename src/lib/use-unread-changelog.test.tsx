@@ -9,15 +9,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const { supabase, query, maybeSingle } = vi.hoisted(() => {
   const maybeSingle = vi.fn();
   const query = {
-    select: vi.fn(() => query),
-    update: vi.fn(() => query),
-    eq: vi.fn(() => query),
+    select: vi.fn((..._args: unknown[]) => query),
+    update: vi.fn((..._args: unknown[]) => query),
+    eq: vi.fn((..._args: unknown[]) => query),
     maybeSingle,
   };
   return {
     query,
     maybeSingle,
-    supabase: { from: vi.fn(() => query) },
+    supabase: { from: vi.fn((..._args: unknown[]) => query) },
   };
 });
 
@@ -45,7 +45,7 @@ function Probe() {
     <div>
       <span>{changelog.isLoading ? "caricamento" : changelog.hasUnread ? "nuovo" : "letto"}</span>
       <span>{changelog.currentVersion}</span>
-      <button type="button" onClick={changelog.markAsRead}>
+      <button type="button" onClick={() => changelog.markAsRead()}>
         segna letto
       </button>
     </div>

@@ -68,14 +68,14 @@ const { toast, supabase, query, single, maybeSingle, savePriceBook } = vi.hoiste
     return { data: [], error: null };
   };
   const query = {
-    select: vi.fn(() => query),
-    insert: vi.fn(() => query),
-    update: vi.fn(() => query),
-    delete: vi.fn(() => query),
-    eq: vi.fn(() => query),
-    in: vi.fn(() => query),
-    is: vi.fn(() => query),
-    order: vi.fn(() => query),
+    select: vi.fn((..._args: unknown[]) => query),
+    insert: vi.fn((..._args: unknown[]) => query),
+    update: vi.fn((..._args: unknown[]) => query),
+    delete: vi.fn((..._args: unknown[]) => query),
+    eq: vi.fn((..._args: unknown[]) => query),
+    in: vi.fn((..._args: unknown[]) => query),
+    is: vi.fn((..._args: unknown[]) => query),
+    order: vi.fn((..._args: unknown[]) => query),
     single,
     maybeSingle,
   };
@@ -585,6 +585,8 @@ describe("interazioni form anagrafiche", () => {
             invoice_description: null,
             unit_price: 10,
             requires_hearing_dates: false,
+            is_enabled: true,
+            sort_order: 10,
           },
           {
             kind: "expense_reimbursement",
@@ -593,6 +595,8 @@ describe("interazioni form anagrafiche", () => {
             invoice_description: null,
             unit_price: null,
             requires_hearing_dates: false,
+            is_enabled: true,
+            sort_order: 10,
           },
         ]}
         onSaved={vi.fn()}
@@ -679,6 +683,8 @@ describe("interazioni form anagrafiche", () => {
             invoice_description: null,
             unit_price: -1,
             requires_hearing_dates: false,
+            is_enabled: true,
+            sort_order: 10,
           },
         ]}
         onSaved={vi.fn()}

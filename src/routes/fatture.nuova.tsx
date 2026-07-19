@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button";
 import { InvoiceForm } from "@/components/invoice-form";
 
 export const Route = createFileRoute("/fatture/nuova")({
-  validateSearch: (search: Record<string, unknown>) => ({
-    bozza: typeof search.bozza === "string" ? search.bozza : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): { bozza?: string } =>
+    typeof search.bozza === "string" ? { bozza: search.bozza } : {},
   head: () => ({
     meta: [
       { title: "Nuova fattura · Pratix" },

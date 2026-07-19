@@ -6,6 +6,9 @@ import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { Route } from "./attivita.index";
+import { routeComponent } from "./-route-test-utils";
+
+const RouteComponent = routeComponent(Route);
 
 const { navigate, search, supabase } = vi.hoisted(() => ({
   navigate: vi.fn(),
@@ -136,7 +139,7 @@ const renderRoute = () => {
   client.setQueryData(["activities"], activities);
   return render(
     <QueryClientProvider client={client}>
-      {Route.component ? <Route.component /> : null}
+      <RouteComponent />
     </QueryClientProvider>,
   );
 };
@@ -155,12 +158,14 @@ describe("pagina Attività", () => {
     const editableRow = within(table).getByText("Partecipazione udienza").closest("tr")!;
     const invoicedRow = within(table).getByText("Contributo unificato").closest("tr")!;
 
-    expect(within(editableRow).getAllByRole("button", { name: /Modifica/i })[0].disabled).toBe(
-      false,
-    );
-    expect(within(invoicedRow).getAllByRole("button", { name: /Modifica/i })[0].disabled).toBe(
-      true,
-    );
+    expect(
+      within(editableRow).getAllByRole<HTMLButtonElement>("button", { name: /Modifica/i })[0]
+        .disabled,
+    ).toBe(false);
+    expect(
+      within(invoicedRow).getAllByRole<HTMLButtonElement>("button", { name: /Modifica/i })[0]
+        .disabled,
+    ).toBe(true);
     expect(
       within(editableRow)
         .getByRole("link", { name: /Pratica 42/i })

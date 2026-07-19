@@ -93,6 +93,9 @@ jobs:
             echo "CHANGELOG.md not changed."
           fi
 
+      - name: Typecheck
+        run: npm run typecheck
+
       - name: Build
         run: npm run build
 

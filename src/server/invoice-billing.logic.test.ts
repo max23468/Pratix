@@ -46,7 +46,6 @@ const baseInput = (
 
 const baseTotals = (overrides: Partial<BillingTotals> = {}): BillingTotals => ({
   taxableFees: 1000,
-  taxableExpenses: 0,
   art15Expenses: 118.5,
   generalExpensesAmount: 100,
   cassaBaseAmount: 1100,
@@ -137,9 +136,11 @@ describe("selezioni e attività fatturabili", () => {
       postponed: [{ id: "activity-expense" }],
     });
     expect(firstIncludedClientId([activity()])).toBe("client-1");
-    expect(() => firstIncludedClientId([activity({ client_id: null })])).toThrow(
-      "cliente collegato",
-    );
+    // `client_id` è `string` nel tipo (NOT NULL a schema): il cast è voluto e
+    // serve proprio a verificare che la guardia difensiva regga dati corrotti.
+    expect(() =>
+      firstIncludedClientId([activity({ client_id: null as unknown as string })]),
+    ).toThrow("cliente collegato");
     expect(() =>
       assertIncludedActivitiesBillable([activity({ status: "invoiced", invoice_id: "invoice-1" })]),
     ).toThrow("già fatturate");

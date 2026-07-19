@@ -85,7 +85,10 @@ export function TurnstileChallenge({
   const widgetIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!TURNSTILE_SITE_KEY || !containerRef.current) {
+    // Catturato in locale: il narrowing su un binding importato non sopravvive
+    // alla closure della `.then()` sotto.
+    const siteKey = TURNSTILE_SITE_KEY;
+    if (!siteKey || !containerRef.current) {
       return;
     }
 
@@ -99,7 +102,7 @@ export function TurnstileChallenge({
         }
 
         renderedWidgetId = window.turnstile.render(containerRef.current, {
-          sitekey: TURNSTILE_SITE_KEY,
+          sitekey: siteKey,
           action,
           theme: "auto",
           callback: (token) => onTokenChange(token),

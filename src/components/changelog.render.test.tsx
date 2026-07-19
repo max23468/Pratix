@@ -15,7 +15,9 @@ import {
 } from "./changelog/changelog-utils";
 import { APP_VERSION } from "@/lib/version";
 
-const differentVersion = APP_VERSION === "0.0.1" ? "0.0.2" : "0.0.1";
+// `APP_VERSION` è una costante letterale: senza allargare a `string` il
+// confronto verrebbe segnalato come sempre falso (TS2367).
+const differentVersion = (APP_VERSION as string) === "0.0.1" ? "0.0.2" : "0.0.1";
 
 afterEach(() => {
   cleanup();

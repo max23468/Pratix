@@ -6,6 +6,14 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Sotto il cofano
+
+- **Type safety**: azzerati i 129 errori `tsc` accumulati (tipi allineati allo
+  schema Supabase su fatturazione, attività e prezzi; helper unico per le
+  colonne generate da trigger; deduplicato `downloadFile`; fixture di test
+  allineate). Aggiunto lo script `typecheck` e collegato a `ci:local`,
+  `prepush-guard` e al workflow Quality perché gli errori di tipo non tornino.
+
 ## [1.13.11] — 2026-07-19
 
 ### Sotto il cofano

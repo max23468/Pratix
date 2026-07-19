@@ -13,7 +13,8 @@ export type CaseWorkflowActivity = Pick<
   "status" | "kind" | "amount" | "needs_review"
 > & {
   invoice_id?: string | null;
-  activity_attachments?: unknown[];
+  // Supabase restituisce `null` per le relazioni annidate senza righe.
+  activity_attachments?: unknown[] | null;
 };
 
 export type CaseWorkflowInvoice = Pick<CaseTimelineInvoice, "status" | "due_date" | "total_amount">;

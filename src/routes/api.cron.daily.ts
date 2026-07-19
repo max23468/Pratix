@@ -46,7 +46,11 @@ function logCron(
 }
 
 export async function runSupabaseKeepAlive(
-  client: SupabaseKeepAliveClient = supabaseAdmin,
+  // `SupabaseKeepAliveClient` descrive la superficie minima usata qui e serve a
+  // iniettare un fake nei test. Il client reale è compatibile a runtime ma non
+  // strutturalmente, per la varianza degli overload di `select()`: il cast vale
+  // solo per il valore di default.
+  client: SupabaseKeepAliveClient = supabaseAdmin as unknown as SupabaseKeepAliveClient,
 ): Promise<{ ok: true }> {
   const { error } = await client.from("profiles").select("id", { head: true }).limit(1);
 

@@ -49,6 +49,9 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 
 import { Route } from "./index";
+import { routeComponent } from "./-route-test-utils";
+
+const RouteComponent = routeComponent(Route);
 
 describe("Landing pubblica", () => {
   beforeEach(() => {
@@ -57,7 +60,7 @@ describe("Landing pubblica", () => {
   });
 
   it("mostra subito il contenuto pubblico senza loader di autenticazione", () => {
-    render(<Route.component />);
+    render(<RouteComponent />);
 
     expect(screen.getByRole("heading", { level: 1 }).textContent).toContain("Tutto");
     expect(screen.getByRole("heading", { level: 1 }).textContent).toContain("torna");
@@ -70,7 +73,7 @@ describe("Landing pubblica", () => {
       error: null,
     });
 
-    render(<Route.component />);
+    render(<RouteComponent />);
 
     await waitFor(() => {
       expect(navigateMock).toHaveBeenCalledWith({ to: "/dashboard", replace: true });

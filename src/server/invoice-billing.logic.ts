@@ -41,8 +41,10 @@ export type UpdateDraftBillingInvoiceInput = CreateBillingInvoiceInput & {
 
 export type BillingActivity = {
   id: string;
-  case_id: string | null;
-  client_id: string | null;
+  // `case_activities.case_id` e `client_id` sono NOT NULL a schema: il tipo segue
+  // il DB. `firstIncludedClientId` resta come guardia runtime difensiva.
+  case_id: string;
+  client_id: string;
   activity_date: string;
   kind: "fee" | "expense_reimbursement";
   status: "to_invoice" | "invoiced";
@@ -64,7 +66,8 @@ export type BillingInvoiceLine = {
   practice_number: number | null;
   client_name: string | null;
   counterparty_name: string | null;
-  activity_date: string;
+  // `invoice_lines.activity_date` è nullable a schema.
+  activity_date: string | null;
   kind: InvoiceLineKind;
   description: string;
   quantity: number | string;
@@ -73,9 +76,25 @@ export type BillingInvoiceLine = {
   case_activity_hearings?: Array<{ hearing_date: string; position: number | string }> | null;
 };
 
+/** Riga persistita su `invoice_lines`. Rispecchia la nullabilità dello schema. */
+export type BillingInvoiceLineRow = {
+  user_id: string;
+  invoice_id: string;
+  position: number;
+  case_activity_id: string | null;
+  practice_number: number | null;
+  client_name: string | null;
+  counterparty_name: string | null;
+  activity_date: string;
+  kind: InvoiceLineKind;
+  description: string;
+  quantity: number;
+  unit_price: number;
+  amount: number;
+};
+
 export type BillingTotals = {
   taxableFees: number;
-  taxableExpenses: number;
   art15Expenses: number;
   generalExpensesAmount: number;
   cassaBaseAmount: number;
@@ -123,7 +142,10 @@ export function validateCreateBillingInvoiceInput(input: CreateBillingInvoiceInp
 
 export function validateUpdateDraftBillingInvoiceInput(input: UpdateDraftBillingInvoiceInput) {
   if (!input?.invoiceId) throw new Error("Fattura mancante");
-  return validateCreateBillingInvoiceInput(input);
+  validateCreateBillingInvoiceInput(input);
+  // Restituisce `input` e non il risultato della validazione create: quest'ultima
+  // restringe il tipo a CreateBillingInvoiceInput, perdendo `invoiceId`.
+  return input;
 }
 
 export function selectedActivityIds(selections: BillingSelectionInput[]) {
@@ -319,7 +341,10 @@ export function buildInvoiceLineRows({
   included: BillingActivity[];
   totals: BillingTotals;
 }) {
-  const invoiceLineRows = included.map((activity, index) => ({
+  // Tipo esplicito: le righe sintetiche (spese generali, bollo) non hanno
+  // attività collegata e valorizzano a null i campi anagrafici, che a schema
+  // sono nullable. Senza annotazione l'inferenza li restringerebbe a non-null.
+  const invoiceLineRows: BillingInvoiceLineRow[] = included.map((activity, index) => ({
     user_id: userId,
     invoice_id: invoiceId,
     position: index + 1,
@@ -438,7 +463,7 @@ export function buildBillingExportRowsFromInvoiceLines(
       practiceNumber: line.practice_number,
       clientName: line.client_name ?? "",
       counterpartyName: line.counterparty_name ?? "",
-      activityDate: line.activity_date,
+      activityDate: line.activity_date ?? "",
       description: line.description,
       quantity: Number(line.quantity),
       unitPrice: Number(line.unit_price),

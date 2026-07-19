@@ -9,12 +9,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const { toast, supabase, query, single, storage } = vi.hoisted(() => {
   const single = vi.fn();
   const query = {
-    insert: vi.fn(() => query),
-    update: vi.fn(() => query),
-    delete: vi.fn(() => query),
-    select: vi.fn(() => query),
-    eq: vi.fn(() => query),
-    is: vi.fn(() => Promise.resolve({ error: null })),
+    insert: vi.fn((..._args: unknown[]) => query),
+    update: vi.fn((..._args: unknown[]) => query),
+    delete: vi.fn((..._args: unknown[]) => query),
+    select: vi.fn((..._args: unknown[]) => query),
+    eq: vi.fn((..._args: unknown[]) => query),
+    is: vi.fn((): Promise<{ error: null; count?: number }> => Promise.resolve({ error: null })),
     single,
   };
   const storage = {
@@ -26,7 +26,7 @@ const { toast, supabase, query, single, storage } = vi.hoisted(() => {
     single,
     storage,
     supabase: {
-      from: vi.fn(() => query),
+      from: vi.fn((..._args: unknown[]) => query),
       storage: {
         from: vi.fn(() => storage),
       },
@@ -59,7 +59,7 @@ vi.mock("@/components/ui/dialog", async () => {
         {children}
       </DialogOpenContext.Provider>
     ),
-    DialogTrigger: ({ children }: { children: ReactElement }) => {
+    DialogTrigger: ({ children }: { children: ReactElement<{ onClick?: () => void }> }) => {
       const setOpen = React.useContext(DialogOpenContext);
       return React.cloneElement(children, { onClick: () => setOpen(true) });
     },
@@ -112,7 +112,7 @@ vi.mock("@/components/ui/popover", async () => {
     }) => (
       <PopoverContext.Provider value={{ open, onOpenChange }}>{children}</PopoverContext.Provider>
     ),
-    PopoverTrigger: ({ children }: { children: ReactElement }) => {
+    PopoverTrigger: ({ children }: { children: ReactElement<{ onClick?: () => void }> }) => {
       const { open, onOpenChange } = React.useContext(PopoverContext);
       return React.cloneElement(children, { onClick: () => onOpenChange(!open) });
     },

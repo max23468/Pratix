@@ -57,14 +57,14 @@ const { findDuplicates, toast, supabase, query, single } = vi.hoisted(() => {
     return { data: [], error: null };
   };
   const query = {
-    select: vi.fn(() => query),
-    insert: vi.fn(() => query),
-    upsert: vi.fn(() => query),
-    update: vi.fn(() => query),
-    delete: vi.fn(() => query),
-    eq: vi.fn(() => query),
-    is: vi.fn(() => query),
-    order: vi.fn(() => query),
+    select: vi.fn((..._args: unknown[]) => query),
+    insert: vi.fn((..._args: unknown[]) => query),
+    upsert: vi.fn((..._args: unknown[]) => query),
+    update: vi.fn((..._args: unknown[]) => query),
+    delete: vi.fn((..._args: unknown[]) => query),
+    eq: vi.fn((..._args: unknown[]) => query),
+    is: vi.fn((..._args: unknown[]) => query),
+    order: vi.fn((..._args: unknown[]) => query),
     single,
     then: (
       onfulfilled?: ((value: { data: unknown; error: null }) => unknown) | null,

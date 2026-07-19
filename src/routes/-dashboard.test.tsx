@@ -5,6 +5,9 @@ import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { Route } from "./dashboard";
+import { routeComponent } from "./-route-test-utils";
+
+const RouteComponent = routeComponent(Route);
 
 const { dashboardData } = vi.hoisted(() => ({
   dashboardData: {
@@ -90,7 +93,7 @@ vi.mock("@/server/duplicates.functions", () => ({
 
 describe("Dashboard", () => {
   it("rende cliccabili le otto card operative", () => {
-    render(<Route.component />);
+    render(<RouteComponent />);
 
     const expectedLinks = [
       ["Apri pratiche senza attività", "/pratiche?view=without_activities"],

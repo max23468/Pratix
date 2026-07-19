@@ -16,7 +16,9 @@ export function downloadBytes({
   fileName,
   mimeType,
 }: {
-  bytes: Uint8Array;
+  // `Uint8Array<ArrayBuffer>` e non `Uint8Array`: quest'ultimo ammette
+  // `SharedArrayBuffer`, che non è un `BlobPart` valido.
+  bytes: Uint8Array<ArrayBuffer>;
   fileName: string;
   mimeType: string;
 }) {

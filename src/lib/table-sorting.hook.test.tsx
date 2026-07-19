@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 const { authState, maybeSingle, upsert, supabase } = vi.hoisted(() => {
   const maybeSingle = vi.fn();
   const upsert = vi.fn(async () => ({ error: null }));
-  const authState = {
+  const authState: { session: { user: { id: string } } | null } = {
     session: { user: { id: "user-1" } },
   };
   const selectBuilder = {
@@ -38,20 +38,23 @@ vi.mock("@/lib/auth-context", () => ({
 
 import { type SortableColumn, usePersistentTableSort } from "./table-sorting";
 
+/** Forma di riga comune alle colonne di test. */
+type SortTestRow = { name: string; amount: number };
+
 const columns = [
   {
     key: "name",
     label: "Nome",
-    getValue: (row: { name: string }) => row.name,
+    getValue: (row: SortTestRow) => row.name,
   },
   {
     key: "amount",
     label: "Importo",
     valueType: "number" as const,
     defaultDirection: "desc" as const,
-    getValue: (row: { amount: number }) => row.amount,
+    getValue: (row: SortTestRow) => row.amount,
   },
-] satisfies readonly SortableColumn<{ name: string; amount: number }, "name" | "amount">[];
+] satisfies readonly SortableColumn<SortTestRow, "name" | "amount">[];
 
 function renderWithClient(node: ReactNode) {
   const client = new QueryClient({

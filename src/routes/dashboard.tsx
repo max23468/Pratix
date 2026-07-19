@@ -51,7 +51,8 @@ type DashboardActivityRow = {
   id: string;
   case_id: string;
   kind: "fee" | "expense_reimbursement";
-  amount: number | null;
+  // `case_activities.amount` è NOT NULL DEFAULT 0 a schema.
+  amount: number;
   principal_id: string;
   status: "to_invoice" | "invoiced";
   invoice_id: string | null;
