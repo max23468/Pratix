@@ -6,6 +6,11 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Sotto il cofano
+
+- **Dipendenze**: aggiornato TanStack Start all'ultima patch e portata
+  l'action `setup-node` alla v7 nei workflow di qualità e inbox Codex.
+
 ## [1.13.10] — 2026-07-19
 
 ### Sotto il cofano
