@@ -596,10 +596,20 @@ function getFirstCodexComment(thread) {
   );
 }
 
+function stripTags(line) {
+  let previous;
+  let current = line;
+  do {
+    previous = current;
+    current = current.replace(/<[^>]+>/g, "");
+  } while (current !== previous);
+  return current;
+}
+
 function firstLine(value) {
   return value
     .split("\n")
-    .map((line) => line.replace(/<[^>]+>/g, "").trim())
+    .map((line) => stripTags(line).trim())
     .find(Boolean)
     ?.slice(0, 160);
 }
