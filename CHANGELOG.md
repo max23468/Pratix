@@ -6,6 +6,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.13.12] — 2026-07-19
+
 ### Sotto il cofano
 
 - **Type safety**: azzerati i 129 errori `tsc` accumulati (tipi allineati allo
@@ -1347,6 +1349,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.13.12]: #11312--2026-07-19
 [1.13.11]: #11311--2026-07-19
 [1.13.10]: #11310--2026-07-19
 [1.13.9]: #1139--2026-06-13
