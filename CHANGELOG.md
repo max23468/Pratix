@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Non versionato
+
+- **CI**: aggiunto il workflow `dependabot-automerge` che abilita l'auto-merge
+  (squash) sulle PR Dependabot di tipo patch e minor; le major restano manuali.
+  Completa gli aggiornamenti dipendenze già automatici di Dependabot senza
+  toccare app o runtime.
+
 ## [1.13.12] — 2026-07-19
 
 ### Sotto il cofano
