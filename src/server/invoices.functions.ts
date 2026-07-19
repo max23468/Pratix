@@ -3,6 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
+import { withTriggerGeneratedCode } from "@/integrations/supabase/insert-helpers";
 import { buildBillingWorkbook, type BillingExportKind } from "@/lib/billing-xlsx";
 import { computeInvoice } from "@/lib/invoice-calc";
 import { buildInvoiceXml } from "@/lib/invoice-xml";
@@ -208,15 +209,17 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
     const { data: invoice, error: invoiceError } = await supabase
       .from("invoices")
       .insert(
-        buildInvoiceRow({
-          input: data,
-          userId,
-          billingRunId: billingRun.id,
-          firstIncluded,
-          number,
-          year,
-          totals,
-        }),
+        withTriggerGeneratedCode(
+          buildInvoiceRow({
+            input: data,
+            userId,
+            billingRunId: billingRun.id,
+            firstIncluded,
+            number,
+            year,
+            totals,
+          }),
+        ),
       )
       .select("id, public_code")
       .single();

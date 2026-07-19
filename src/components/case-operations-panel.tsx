@@ -39,6 +39,7 @@ import {
   buildDebtCollectionWorkflow,
   summarizeCaseOperations,
 } from "@/lib/case-workflow";
+import { downloadBytes } from "@/lib/file-downloads";
 import { formatCurrency, formatDate } from "@/lib/format";
 import {
   caseActivityStatusLabels,
@@ -187,7 +188,7 @@ export function CaseOperationsPanel({
 
   const downloadDossier = () => {
     if (dossierDownloadsDisabled) return;
-    downloadFile(buildCaseDossierWorkbook(dossierInput));
+    downloadBytes(buildCaseDossierWorkbook(dossierInput));
   };
 
   const downloadPdfDossier = async () => {
@@ -561,24 +562,4 @@ function buildDossierInput({
         : "-",
     })),
   };
-}
-
-function downloadFile({
-  bytes,
-  fileName,
-  mimeType,
-}: {
-  bytes: Uint8Array;
-  fileName: string;
-  mimeType: string;
-}) {
-  const blob = new Blob([bytes], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
 }

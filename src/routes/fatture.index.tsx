@@ -43,6 +43,7 @@ import {
   invoiceStatusLabels,
   invoiceStatusVariant,
   type ClientDisplayData,
+  type InvoiceStatus,
 } from "@/lib/labels";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { invoicePeriodLabel } from "@/lib/invoice-period";
@@ -69,7 +70,7 @@ type InvoiceListRow = {
   year: number;
   issue_date: string;
   due_date: string | null;
-  status: string;
+  status: InvoiceStatus;
   total_amount: number;
   net_to_pay: number;
   billing_run: { period_start: string; period_end: string } | null;

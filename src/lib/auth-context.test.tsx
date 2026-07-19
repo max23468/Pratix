@@ -97,10 +97,14 @@ describe("AuthProvider", () => {
   });
 
   it("recepisce i cambi sessione dal listener Supabase", async () => {
-    let listener: ((event: string, session: { user: { email: string } } | null) => void) | null =
-      null;
-    supabase.auth.onAuthStateChange.mockImplementation((callback) => {
-      listener = callback;
+    type AuthListener = (event: string, session: { user: { email: string } } | null) => void;
+    // Holder invece di una `let` inizializzata a `null`: l'assegnazione avviene
+    // dentro la closure del mock e il narrowing di flusso ridurrebbe la `let` a
+    // `never` al call site. `onAuthStateChange` è `vi.fn()` non tipizzato, da cui
+    // l'annotazione esplicita del parametro.
+    const listenerRef: { current: AuthListener | null } = { current: null };
+    supabase.auth.onAuthStateChange.mockImplementation((callback: AuthListener) => {
+      listenerRef.current = callback;
       return { data: { subscription: { unsubscribe: vi.fn() } } };
     });
     supabase.auth.getSession.mockResolvedValue({ data: { session: null }, error: null });
@@ -112,7 +116,7 @@ describe("AuthProvider", () => {
     );
 
     await screen.findByText("ospite");
-    listener?.("SIGNED_IN", { user: { email: "nuovo@example.test" } });
+    listenerRef.current?.("SIGNED_IN", { user: { email: "nuovo@example.test" } });
 
     await waitFor(() => expect(screen.getByText("nuovo@example.test")).toBeTruthy());
   });

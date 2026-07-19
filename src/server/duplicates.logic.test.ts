@@ -246,7 +246,7 @@ describe("duplicates logic", () => {
     expect(result.openCandidates[0].reasons).toContain(
       "Soggetto interno simile nella controparte composta",
     );
-    expect(result.openCandidates[0].left.fields.Tipo).toBe("Composta");
+    expect(result.openCandidates[0].left?.fields?.Tipo).toBe("Composta");
   });
 
   it("combina RG, autorità e contesto pratica senza richiedere sempre lo stesso titolo", () => {

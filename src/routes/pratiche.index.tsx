@@ -90,7 +90,8 @@ type PracticeActivityRow = {
   status: "to_invoice" | "invoiced";
   invoice_id: string | null;
   kind: "fee" | "expense_reimbursement";
-  amount: number | null;
+  // `case_activities.amount` è NOT NULL DEFAULT 0 a schema.
+  amount: number;
   activity_attachments?: { id: string }[] | null;
 };
 

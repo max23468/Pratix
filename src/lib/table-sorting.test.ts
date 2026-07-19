@@ -7,18 +7,23 @@ import {
 } from "./table-sorting";
 
 describe("table sorting", () => {
+  // Forma di riga comune alle due colonne: i singoli test passano righe che
+  // valorizzano solo un sottoinsieme dei campi. `SortValue` ammette `undefined`,
+  // quindi `amount` opzionale non altera il comportamento dell'ordinamento.
+  type SortTestRow = { name: string; amount?: number };
+
   const columns = [
     {
       key: "name",
       label: "Nome",
-      getValue: (row: { name: string }) => row.name,
+      getValue: (row: SortTestRow) => row.name,
     },
     {
       key: "amount",
       label: "Importo",
       valueType: "number" as const,
       defaultDirection: "desc" as const,
-      getValue: (row: { amount: number }) => row.amount,
+      getValue: (row: SortTestRow) => row.amount,
     },
   ] as const;
 

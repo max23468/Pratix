@@ -3,7 +3,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   ACCOUNT_DATA_DELETE_TABLE_ORDER,
-  type AccountDataDeleteTable,
   accountStoragePrefix,
   mergeStoragePaths,
   PRATIX_DOCUMENTS_BUCKET,
@@ -78,14 +77,16 @@ async function knownStoragePaths(userId: string) {
 
 async function deleteAccountData(userId: string) {
   for (const table of ACCOUNT_DATA_DELETE_TABLE_ORDER) {
-    const ownerColumn = ownerColumnFor(table);
-    const { error } = await supabaseAdmin.from(table).delete().eq(ownerColumn, userId);
+    // `profiles` è l'unica tabella chiavata su `id` (pari all'id utente auth);
+    // tutte le altre su `user_id`. I due rami restano separati perché
+    // TypeScript non correla il nome della tabella alla colonna owner
+    // all'interno di una singola chiamata generica. Ordine invariato.
+    const { error } =
+      table === "profiles"
+        ? await supabaseAdmin.from(table).delete().eq("id", userId)
+        : await supabaseAdmin.from(table).delete().eq("user_id", userId);
     if (error) throw error;
   }
-}
-
-function ownerColumnFor(table: AccountDataDeleteTable) {
-  return table === "profiles" ? "id" : "user_id";
 }
 
 export const deleteAccountFn = createServerFn({ method: "POST" })

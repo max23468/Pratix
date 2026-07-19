@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
+import { withTriggerGeneratedCode } from "@/integrations/supabase/insert-helpers";
 import { useAuth } from "@/lib/auth-context";
 import type { DuplicateCandidate } from "@/lib/duplicate-matching";
 import { routeRef } from "@/lib/public-route-code";
@@ -392,7 +393,7 @@ async function createClient(payload: {
 }) {
   const { data, error } = await supabase
     .from("clients")
-    .insert(payload)
+    .insert(withTriggerGeneratedCode(payload))
     .select("id, public_code")
     .single();
   if (error) throw error;

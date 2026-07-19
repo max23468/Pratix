@@ -12,8 +12,8 @@ const { authState, navigate, supabase, query, maybeSingle } = vi.hoisted(() => {
   };
   const maybeSingle = vi.fn();
   const query = {
-    select: vi.fn(() => query),
-    eq: vi.fn(() => query),
+    select: vi.fn((..._args: unknown[]) => query),
+    eq: vi.fn((..._args: unknown[]) => query),
     maybeSingle,
   };
   return {
@@ -21,7 +21,7 @@ const { authState, navigate, supabase, query, maybeSingle } = vi.hoisted(() => {
     navigate: vi.fn(),
     query,
     maybeSingle,
-    supabase: { from: vi.fn(() => query) },
+    supabase: { from: vi.fn((..._args: unknown[]) => query) },
   };
 });
 

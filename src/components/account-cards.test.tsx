@@ -35,9 +35,13 @@ const { deleteAccount, downloadBytes, passkeyState, supabase, tableRows, tableEr
         return builder;
       }),
       auth: {
-        getSession: vi.fn(async () => ({
-          data: { session: { access_token: "token-test" } },
-        })),
+        // Tipo di ritorno esplicito: alcuni test rimpiazzano la sessione con
+        // `null` per coprire il caso "sessione assente".
+        getSession: vi.fn(
+          async (): Promise<{ data: { session: { access_token: string } | null } }> => ({
+            data: { session: { access_token: "token-test" } },
+          }),
+        ),
         updateUser: vi.fn(async () => ({ error: null })),
         registerPasskey: vi.fn(async () => ({ error: null })),
         passkey: {

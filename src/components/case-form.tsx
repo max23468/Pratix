@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { CounterpartySelect, PrincipalSelect } from "@/components/debt-collection-selects";
 import { supabase } from "@/integrations/supabase/client";
+import { withTriggerGeneratedCode } from "@/integrations/supabase/insert-helpers";
 import { useAuth } from "@/lib/auth-context";
 import {
   caseStatusLabels,
@@ -368,7 +369,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
 
       const { data, error } = await supabase
         .from("principals")
-        .insert(payload)
+        .insert(withTriggerGeneratedCode(payload))
         .select("id")
         .single();
       if (error) throw error;
@@ -439,7 +440,11 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
         business_name: isIndividual ? null : businessName,
       };
 
-      const { data, error } = await supabase.from("clients").insert(payload).select("id").single();
+      const { data, error } = await supabase
+        .from("clients")
+        .insert(withTriggerGeneratedCode(payload))
+        .select("id")
+        .single();
       if (error) throw error;
 
       const { error: linkError } = await supabase.from("principal_clients").insert({
@@ -575,7 +580,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
 
       const { data, error } = await supabase
         .from("counterparties")
-        .insert(payload)
+        .insert(withTriggerGeneratedCode(payload))
         .select("id")
         .single();
       if (error) throw error;
@@ -705,7 +710,7 @@ export function CaseForm({ initial, defaultClientId, onSaved, onCancel }: Props)
 
       const { data, error } = await supabase
         .from("cases")
-        .insert(payload)
+        .insert(withTriggerGeneratedCode(payload))
         .select("id, public_code")
         .single();
       if (error) throw error;

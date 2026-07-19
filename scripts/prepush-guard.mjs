@@ -83,6 +83,12 @@ function buildPlan(fingerprint) {
         "vitest.coverage-global.config.ts",
       ].includes(file),
   );
+  const hasTypecheckRelevantChanges = files.some(
+    (file) =>
+      /^src\/.*\.(ts|tsx)$/.test(file) ||
+      ["tsconfig.json", "vite.config.ts"].includes(file) ||
+      packageImpact.dependencyFieldsChanged,
+  );
 
   if (hasFormatRelevantChanges) {
     checks.push({
@@ -108,6 +114,10 @@ function buildPlan(fingerprint) {
 
   if (hasTestRelevantChanges) {
     checks.push({ key: "test", command: "npm", args: ["test"], phase: "quality" });
+  }
+
+  if (hasTypecheckRelevantChanges) {
+    checks.push({ key: "typecheck", command: "npm", args: ["run", "typecheck"], phase: "quality" });
   }
 
   if (hasLintRelevantChanges) {

@@ -14,8 +14,8 @@ const { findDuplicates, toast, supabase, query } = vi.hoisted(() => {
     error: vi.fn(),
   };
   const query = {
-    insert: vi.fn(() => query),
-    select: vi.fn(() => query),
+    insert: vi.fn((..._args: unknown[]) => query),
+    select: vi.fn((..._args: unknown[]) => query),
     single: vi.fn(),
   };
   const supabase = {
@@ -24,7 +24,7 @@ const { findDuplicates, toast, supabase, query } = vi.hoisted(() => {
         data: { session: { access_token: "test-token" } },
       })),
     },
-    from: vi.fn(() => query),
+    from: vi.fn((..._args: unknown[]) => query),
   };
   return { findDuplicates, toast, supabase, query };
 });

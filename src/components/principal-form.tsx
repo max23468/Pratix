@@ -12,6 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
+import { withTriggerGeneratedCode } from "@/integrations/supabase/insert-helpers";
 import { useAuth } from "@/lib/auth-context";
 import type { DuplicateCandidate } from "@/lib/duplicate-matching";
 import { routeRef } from "@/lib/public-route-code";
@@ -129,7 +130,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
 
       const { data, error } = await supabase
         .from("principals")
-        .insert(payload)
+        .insert(withTriggerGeneratedCode(payload))
         .select("id, public_code")
         .single();
       if (error) throw error;

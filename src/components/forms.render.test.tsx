@@ -197,6 +197,7 @@ describe("form applicative principali", () => {
             unit_price: 120,
             requires_hearing_dates: false,
             sort_order: 10,
+            is_enabled: true,
           },
           {
             id: "price-item-2",
@@ -207,6 +208,7 @@ describe("form applicative principali", () => {
             unit_price: null,
             requires_hearing_dates: false,
             sort_order: 20,
+            is_enabled: true,
           },
         ]}
         onSaved={noop}

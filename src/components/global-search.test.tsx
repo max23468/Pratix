@@ -10,7 +10,9 @@ const navigateMock = vi.hoisted(() => vi.fn());
 const authState = vi.hoisted(() => ({ user: { id: "user-1" } as { id: string } | null }));
 const supabaseMock = vi.hoisted(() => {
   const tableRows = new Map<string, unknown[]>();
-  const builders: Array<{ table: string; builder: Record<string, unknown> }> = [];
+  // Tipizzato sulla superficie usata nelle asserzioni: `Record<string, unknown>`
+  // cancellerebbe il tipo dei mock e renderebbe `builder.or` non ispezionabile.
+  const builders: Array<{ table: string; builder: { or: ReturnType<typeof vi.fn> } }> = [];
 
   const createBuilder = (table: string) => {
     const builder = {

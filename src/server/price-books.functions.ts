@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Database } from "@/integrations/supabase/types";
+import { withTriggerGeneratedCode } from "@/integrations/supabase/insert-helpers";
 import type { PriceBookStatus, PriceItemKind } from "@/lib/price-templates";
 
 const priceBookStatuses = new Set<PriceBookStatus>(["draft", "active", "archived"]);
@@ -67,11 +68,12 @@ async function savePriceBook(
 async function createPriceBook(
   supabase: PriceBookSupabase,
   userId: string,
-  payload: Omit<Database["public"]["Tables"]["price_books"]["Insert"], "user_id">,
+  // `public_code` è generato dal trigger `assign_public_code`, non dal chiamante.
+  payload: Omit<Database["public"]["Tables"]["price_books"]["Insert"], "user_id" | "public_code">,
 ) {
   const { data, error } = await supabase
     .from("price_books")
-    .insert({ ...payload, user_id: userId })
+    .insert(withTriggerGeneratedCode({ ...payload, user_id: userId }))
     .select("id, public_code")
     .single();
   if (error) throw error;

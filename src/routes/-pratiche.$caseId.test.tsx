@@ -5,6 +5,9 @@ import type { ReactNode } from "react";
 import { describe, expect, it, vi } from "vitest";
 
 import { Route } from "./pratiche.$caseId";
+import { routeComponent } from "./-route-test-utils";
+
+const RouteComponent = routeComponent(Route);
 
 const { caseRow } = vi.hoisted(() => ({
   caseRow: {
@@ -98,7 +101,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 
 describe("Dettaglio pratica", () => {
   it("renderizza l'intestazione della pratica caricata", () => {
-    render(<Route.component />);
+    render(<RouteComponent />);
 
     expect(screen.getByRole("heading", { name: "Pratica 108" })).toBeTruthy();
     expect(screen.getByText("Banca Alfa · Mario Rossi · Beta S.r.l.")).toBeTruthy();
