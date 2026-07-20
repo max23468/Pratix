@@ -22,17 +22,47 @@ Opzioni:
   process.exit(0);
 }
 
-const files = changedFiles().filter(isExistingFile);
+// oxfmt non ha un equivalente di `prettier --ignore-unknown`: filtriamo noi
+// alle estensioni che oxfmt sa formattare, così un file .sql/.sh/.png cambiato
+// non fa fallire il comando.
+const FORMATTABLE = new Set([
+  "js",
+  "jsx",
+  "mjs",
+  "cjs",
+  "ts",
+  "tsx",
+  "mts",
+  "cts",
+  "json",
+  "jsonc",
+  "json5",
+  "yaml",
+  "yml",
+  "toml",
+  "css",
+  "scss",
+  "less",
+  "html",
+  "md",
+  "mdx",
+  "graphql",
+  "gql",
+]);
+
+const files = changedFiles()
+  .filter(isExistingFile)
+  .filter((file) => FORMATTABLE.has(file.split(".").pop()?.toLowerCase() ?? ""));
 
 if (files.length === 0) {
-  console.log("Prettier Pratix: nessun file cambiato da verificare.");
+  console.log("oxfmt Pratix: nessun file cambiato da verificare.");
   process.exit(0);
 }
 
-const prettierArgs = [write ? "--write" : "--check", "--ignore-unknown", ...files];
-console.log(`Prettier Pratix: ${write ? "formatto" : "verifico"} ${files.length} file cambiati.`);
+const oxfmtArgs = [...(write ? [] : ["--check"]), ...files];
+console.log(`oxfmt Pratix: ${write ? "formatto" : "verifico"} ${files.length} file cambiati.`);
 
-const result = spawnSync("npx", ["prettier", ...prettierArgs], {
+const result = spawnSync("npx", ["oxfmt", ...oxfmtArgs], {
   cwd: root,
   env: process.env,
   shell: false,
