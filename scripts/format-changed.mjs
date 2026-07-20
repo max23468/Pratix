@@ -22,7 +22,7 @@ Opzioni:
   process.exit(0);
 }
 
-// oxfmt non ha un equivalente di `prettier --ignore-unknown`: filtriamo noi
+// oxfmt non ha un flag per ignorare le estensioni sconosciute: filtriamo noi
 // alle estensioni che oxfmt sa formattare, così un file .sql/.sh/.png cambiato
 // non fa fallire il comando.
 const FORMATTABLE = new Set([
