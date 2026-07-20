@@ -77,7 +77,7 @@ function buildPlan(fingerprint) {
     (file) =>
       /^(src|scripts|\.github\/scripts)\/.*\.(cjs|js|jsx|mjs|ts|tsx)$/.test(file) ||
       [
-        "eslint.config.js",
+        ".oxlintrc.json",
         "vite.config.ts",
         "vitest.config.ts",
         "vitest.coverage-global.config.ts",

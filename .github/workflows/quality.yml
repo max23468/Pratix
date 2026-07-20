@@ -113,7 +113,7 @@ jobs:
           fi
 
           changed_source_files="$(git diff --name-only --diff-filter=ACMR "${diff_base}...HEAD" \
-            | grep -E '^((src|scripts|supabase)/.*\.(ts|tsx|js|jsx|mjs|cjs)|vite\.config\.ts|vitest\.config\.ts|vitest\.coverage-global\.config\.ts|eslint\.config\.js)$' \
+            | grep -E '^((src|scripts|supabase)/.*\.(ts|tsx|js|jsx|mjs|cjs)|vite\.config\.ts|vitest\.config\.ts|vitest\.coverage-global\.config\.ts|\.oxlintrc\.json)$' \
             || true)"
 
           if [[ -z "$changed_source_files" ]]; then
@@ -121,7 +121,7 @@ jobs:
             exit 0
           fi
 
-          npx eslint $changed_source_files
+          npx oxlint $changed_source_files
 
       - name: Detect dependency changes
         id: dependency-changes
