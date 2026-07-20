@@ -6,6 +6,15 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Non versionato
+
+- **CI**: aggiunto il workflow `dependabot-automerge` che abilita l'auto-merge
+  (squash) sulle PR Dependabot di tipo patch e minor; le major restano manuali.
+  Completa gli aggiornamenti dipendenze già automatici di Dependabot senza
+  toccare app o runtime.
+
+## [1.13.15] — 2026-07-20
+
 ### Sotto il cofano
 
 - **TypeScript**: aggiornato da 6 a **7** (`^7.0.2`), il nuovo compilatore
@@ -14,13 +23,6 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
   (incluso `linux-x64` per Vercel). Nessuna modifica al codice: `tsc --noEmit`,
   build, 279 test, lint e audit passano invariati. `@types/node` resta a 24,
   allineato al runtime Node 24 di Vercel.
-
-### Non versionato
-
-- **CI**: aggiunto il workflow `dependabot-automerge` che abilita l'auto-merge
-  (squash) sulle PR Dependabot di tipo patch e minor; le major restano manuali.
-  Completa gli aggiornamenti dipendenze già automatici di Dependabot senza
-  toccare app o runtime.
 
 ## [1.13.14] — 2026-07-20
 
@@ -1394,6 +1396,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.13.15]: #11315--2026-07-20
 [1.13.14]: #11314--2026-07-20
 [1.13.13]: #11313--2026-07-20
 [1.13.12]: #11312--2026-07-19
