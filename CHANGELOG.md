@@ -6,6 +6,20 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Sotto il cofano
+
+- **Lint**: migrato il linter da ESLint a **oxlint** (config in `.oxlintrc.json`,
+  `npm run lint` = `oxlint`). Riprodotto il ruleset precedente: plugin
+  `typescript` + `react` (react-hooks nativo: `rules-of-hooks` error,
+  `exhaustive-deps` warn), categoria `correctness`, `no-unused-vars` disattivato
+  come prima. Rimossi `eslint`, `@eslint/js`, `typescript-eslint`,
+  `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`, `globals` ed
+  `eslint.config.js`; aggiornati `prepush-guard` e il workflow Quality.
+  **Criticità nota**: oxlint non ha `react-refresh/only-export-components`
+  (controllo solo-warn, già disattivato sulle route), lasciato cadere perché è
+  DX per Fast Refresh e non correttezza. Nessun impatto su app o runtime: il
+  codebase passa `oxlint` pulito senza modifiche al codice prodotto.
+
 ### Non versionato
 
 - **CI**: aggiunto il workflow `dependabot-automerge` che abilita l'auto-merge
