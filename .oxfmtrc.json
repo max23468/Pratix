@@ -1,0 +1,13 @@
+{
+  "printWidth": 100,
+  "semi": true,
+  "singleQuote": false,
+  "trailingComma": "all",
+  "ignorePatterns": [
+    "dist/**",
+    ".output/**",
+    ".vinxi/**",
+    "src/routeTree.gen.ts",
+    "src/integrations/supabase/types.ts"
+  ]
+}

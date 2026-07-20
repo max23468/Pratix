@@ -441,7 +441,7 @@ function isFormatRelevant(file) {
   const normalized = file.replace(/^\(untracked\) /, "");
   return (
     /\.(cjs|css|html|js|jsx|json|md|mdx|mjs|ts|tsx|yaml|yml)$/.test(normalized) ||
-    [".prettierrc", ".prettierignore", "components.json"].includes(normalized)
+    [".oxfmtrc.json", "components.json"].includes(normalized)
   );
 }
 

@@ -6,6 +6,17 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Sotto il cofano
+
+- **Formattazione**: migrata la toolchain da Prettier a **oxfmt** (config in
+  `.oxfmtrc.json`, stesse opzioni: `printWidth 100`, `semi`, doppie virgolette,
+  `trailingComma all`). Rimossi `prettier`, `eslint-plugin-prettier` e
+  `eslint-config-prettier`; la formattazione non passa più da ESLint. Aggiornati
+  `format-changed.mjs`, `prepush-guard` e `publish-prepare`. Nessun impatto su
+  app o runtime: oxfmt passa il 100% dei conformance test JS/TS di Prettier e sul
+  codebase esistente non ha prodotto riformattazioni oltre al riordino delle
+  chiavi di `package.json`.
+
 ### Non versionato
 
 - **CI**: aggiunto il workflow `dependabot-automerge` che abilita l'auto-merge

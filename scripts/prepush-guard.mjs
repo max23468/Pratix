@@ -142,7 +142,7 @@ function buildPlan(fingerprint) {
 function isFormatRelevant(file) {
   return (
     /\.(cjs|css|html|js|jsx|json|md|mdx|mjs|ts|tsx|yaml|yml)$/.test(file) ||
-    [".prettierrc", ".prettierignore", "components.json"].includes(file)
+    [".oxfmtrc.json", "components.json"].includes(file)
   );
 }
 
