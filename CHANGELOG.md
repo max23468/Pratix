@@ -6,6 +6,15 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Sotto il cofano
+
+- **TypeScript**: aggiornato da 6 a **7** (`^7.0.2`), il nuovo compilatore
+  nativo (port Go). Sbloccato dalla rimozione di `typescript-eslint` nella
+  migrazione a oxlint. Il lockfile ora include i binari nativi per-piattaforma
+  (incluso `linux-x64` per Vercel). Nessuna modifica al codice: `tsc --noEmit`,
+  build, 279 test, lint e audit passano invariati. `@types/node` resta a 24,
+  allineato al runtime Node 24 di Vercel.
+
 ### Non versionato
 
 - **CI**: aggiunto il workflow `dependabot-automerge` che abilita l'auto-merge
