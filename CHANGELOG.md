@@ -6,6 +6,15 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Non versionato
+
+- **CI**: aggiunto il workflow `dependabot-automerge` che abilita l'auto-merge
+  (squash) sulle PR Dependabot di tipo patch e minor; le major restano manuali.
+  Completa gli aggiornamenti dipendenze già automatici di Dependabot senza
+  toccare app o runtime.
+
+## [1.13.13] — 2026-07-20
+
 ### Sotto il cofano
 
 - **Formattazione**: migrata la toolchain da Prettier a **oxfmt** (config in
@@ -16,13 +25,6 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
   app o runtime: oxfmt passa il 100% dei conformance test JS/TS di Prettier e sul
   codebase esistente non ha prodotto riformattazioni oltre al riordino delle
   chiavi di `package.json`.
-
-### Non versionato
-
-- **CI**: aggiunto il workflow `dependabot-automerge` che abilita l'auto-merge
-  (squash) sulle PR Dependabot di tipo patch e minor; le major restano manuali.
-  Completa gli aggiornamenti dipendenze già automatici di Dependabot senza
-  toccare app o runtime.
 
 ## [1.13.12] — 2026-07-19
 
@@ -1367,6 +1369,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.13.13]: #11313--2026-07-20
 [1.13.12]: #11312--2026-07-19
 [1.13.11]: #11311--2026-07-19
 [1.13.10]: #11310--2026-07-19
