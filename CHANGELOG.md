@@ -6,6 +6,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.13.16] — 2026-07-21
+
 ### Correzioni
 
 - Le viste a tutto schermo (login, registrazione, pagine pubbliche, errori)
@@ -20,6 +22,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 - Irrobustita la serializzazione dei dati strutturati JSON-LD nella pagina e
   memoizzato il contesto di autenticazione; nessun cambiamento visibile.
+
+## [Non versionato] — 2026-07-21
 
 ### Non versionato
 
@@ -1411,6 +1415,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.13.16]: #11316--2026-07-21
 [1.13.15]: #11315--2026-07-20
 [1.13.14]: #11314--2026-07-20
 [1.13.13]: #11313--2026-07-20
