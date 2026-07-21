@@ -87,19 +87,22 @@ function LoginPage() {
       return;
     }
     setPasskeySubmitting(true);
-    const { error } = await supabase.auth.signInWithPasskey(
-      captchaToken ? { options: { captchaToken } } : undefined,
-    );
-    setPasskeySubmitting(false);
-    if (error) {
-      toast.error("Accesso con passkey non riuscito. Usa il link via email.");
-      return;
+    try {
+      const { error } = await supabase.auth.signInWithPasskey(
+        captchaToken ? { options: { captchaToken } } : undefined,
+      );
+      if (error) {
+        toast.error("Accesso con passkey non riuscito. Usa il link via email.");
+        return;
+      }
+      navigate({ to: "/dashboard" });
+    } finally {
+      setPasskeySubmitting(false);
     }
-    navigate({ to: "/dashboard" });
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-sm">
         <Link to="/" className="mb-8 flex items-center justify-center" aria-label="Pratix">
           <Logo form="lockup" size={30} />

@@ -6,6 +6,21 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Correzioni
+
+- Le viste a tutto schermo (login, registrazione, pagine pubbliche, errori)
+  usano ora l'altezza dinamica del viewport: su mobile non vengono più tagliate
+  sotto la barra del browser di iOS e Android.
+- Le date mostrate (ad esempio quando è stata aggiunta una passkey) usano sempre
+  il fuso orario italiano, evitando piccoli sfasamenti tra server e browser.
+- L'accesso con passkey ripristina sempre lo stato del pulsante, anche in caso
+  di errore imprevisto durante l'autenticazione.
+
+### Sotto il cofano
+
+- Irrobustita la serializzazione dei dati strutturati JSON-LD nella pagina e
+  memoizzato il contesto di autenticazione; nessun cambiamento visibile.
+
 ### Non versionato
 
 - **CI**: aggiunto il workflow `dependabot-automerge` che abilita l'auto-merge

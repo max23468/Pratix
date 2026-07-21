@@ -49,8 +49,12 @@ export function groupItemsByArea(sections: ChangelogSection[]): AreaGroup[] {
   for (const section of sections) {
     for (const item of section.items) {
       const parsed = extractArea(item);
-      if (!groups.has(parsed.area)) groups.set(parsed.area, []);
-      groups.get(parsed.area)!.push(parsed.item);
+      let items = groups.get(parsed.area);
+      if (!items) {
+        items = [];
+        groups.set(parsed.area, items);
+      }
+      items.push(parsed.item);
     }
   }
   return [...groups.entries()].map(([area, items]) => ({ area, items }));

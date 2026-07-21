@@ -76,6 +76,12 @@ export const Route = createRootRoute({
   notFoundComponent: NotFoundComponent,
 });
 
+// Escape "<" (and "&") so a "</script>" or "<" inside the serialized JSON-LD
+// cannot break out of the <script> element. See react.doctor/unsafe-json-in-html.
+function jsonLdSafe(data: unknown): string {
+  return JSON.stringify(data).replace(/</g, "\\u003c").replace(/&/g, "\\u0026");
+}
+
 function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang="it" suppressHydrationWarning>
@@ -83,7 +89,7 @@ function RootShell({ children }: { children: ReactNode }) {
         <HeadContent />
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(STRUCTURED_DATA) }}
+          dangerouslySetInnerHTML={{ __html: jsonLdSafe(STRUCTURED_DATA) }}
         />
         <script dangerouslySetInnerHTML={{ __html: NO_FLASH_SCRIPT }} />
         <script dangerouslySetInnerHTML={{ __html: HOME_AUTH_REDIRECT_SCRIPT }} />

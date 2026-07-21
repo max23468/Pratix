@@ -71,7 +71,7 @@ type ProfileForm = {
   notes: string;
 };
 
-const empty: ProfileForm = {
+const empty = (): ProfileForm => ({
   full_name: "",
   business_name: "",
   vat_number: "",
@@ -97,7 +97,7 @@ const empty: ProfileForm = {
   invoice_year: new Date().getFullYear(),
   invoice_next_number: 1,
   notes: "",
-};
+});
 
 function SettingsPage() {
   const { user } = useAuth();

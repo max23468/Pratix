@@ -7,7 +7,7 @@ export function DefaultErrorComponent({ error, reset }: { error: Error; reset: (
   const feedback = getErrorFeedback(error, pathname);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
         <div className="mx-auto mb-6 flex size-16 items-center justify-center rounded-full bg-destructive/10">
           <TriangleAlert className="size-8 text-destructive" aria-hidden="true" />
