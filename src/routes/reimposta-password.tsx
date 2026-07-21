@@ -23,7 +23,7 @@ export const Route = createFileRoute("/reimposta-password")({
 
 function PasswordlessNoticePage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
+    <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-sm">
         <div className="mb-8 flex items-center justify-center" aria-label="Pratix">
           <Logo form="lockup" size={24} />

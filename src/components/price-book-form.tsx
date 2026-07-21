@@ -68,9 +68,9 @@ type PriceItemDraft = {
   usedCount?: number;
 };
 
-const currentYear = new Date().getFullYear();
+const currentYear = () => new Date().getFullYear();
 
-const emptyBook = (year = currentYear): PriceBookRow => ({
+const emptyBook = (year = currentYear()): PriceBookRow => ({
   principal_id: "",
   year,
   status: "draft",
@@ -96,7 +96,7 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
   const savePriceBook = useServerFn(savePriceBookFn);
   const isEdit = Boolean(initial?.id);
   const [form, setForm] = useState<PriceBookRow>({
-    ...emptyBook(initial?.year ?? currentYear),
+    ...emptyBook(initial?.year ?? currentYear()),
     ...(initial ?? {}),
   });
   const [items, setItems] = useState<PriceItemDraft[]>(

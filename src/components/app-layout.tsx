@@ -37,7 +37,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   if (loading || !session) {
     return (
-      <div className="flex min-h-screen items-center justify-center">
+      <div className="flex min-h-dvh items-center justify-center">
         <div className="text-sm text-muted-foreground">Caricamento…</div>
       </div>
     );
@@ -45,7 +45,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-background">
+      <div className="flex min-h-dvh w-full bg-background">
         <AppSidebar />
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background/80 px-3 backdrop-blur">

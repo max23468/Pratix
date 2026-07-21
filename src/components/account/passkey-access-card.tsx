@@ -101,7 +101,10 @@ export function PasskeyAccessCard({ userId }: { userId: string }) {
                         {passkey.friendly_name || "Passkey"}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Aggiunta il {new Date(passkey.created_at).toLocaleDateString("it-IT")}
+                        Aggiunta il{" "}
+                        {new Date(passkey.created_at).toLocaleDateString("it-IT", {
+                          timeZone: "Europe/Rome",
+                        })}
                       </p>
                     </div>
                     <Button
