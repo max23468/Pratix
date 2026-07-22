@@ -370,9 +370,8 @@ function scoreClientPair(a: ClientDuplicateRow, b: ClientDuplicateRow, draft?: D
     reasons.push("Email coincidente");
   }
 
-  const sharedPrincipal = (a.principalNames ?? []).some((name) =>
-    (b.principalNames ?? []).includes(name),
-  );
+  const principalNames = new Set(b.principalNames ?? []);
+  const sharedPrincipal = (a.principalNames ?? []).some((name) => principalNames.has(name));
   const finalScore = sharedPrincipal ? Math.max(score, score + 0.06) : score;
   if (sharedPrincipal) reasons.push("Stesso committente collegato");
 

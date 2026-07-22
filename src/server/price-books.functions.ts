@@ -31,6 +31,7 @@ export type SavePriceBookInput = {
   valid_to: string | null;
   notes: string | null;
   items: SavePriceBookItemInput[];
+  deleted_item_ids: string[];
 };
 
 type PriceBookResult = { id: string; public_code: string | null };
@@ -61,7 +62,7 @@ async function savePriceBook(
     ? await updatePriceBook(supabase, userId, input.id, priceBookPayload)
     : await createPriceBook(supabase, userId, priceBookPayload);
 
-  await syncPriceItems(supabase, userId, priceBook.id, input.items);
+  await syncPriceItems(supabase, userId, priceBook.id, input.items, input.deleted_item_ids);
   return priceBook;
 }
 
@@ -102,35 +103,28 @@ async function syncPriceItems(
   userId: string,
   priceBookId: string,
   items: SavePriceBookItemInput[],
+  deletedItemIds: string[],
 ) {
-  const [{ data: existingItems, error: existingError }, { data: usageRows, error: usageError }] =
-    await Promise.all([
-      supabase
-        .from("price_items")
-        .select("id")
-        .eq("price_book_id", priceBookId)
-        .eq("user_id", userId),
-      supabase
-        .from("case_activities")
-        .select("price_item_id")
-        .eq("price_book_id", priceBookId)
-        .eq("user_id", userId),
-    ]);
+  const { data: usageRows, error: usageError } = await supabase
+    .from("case_activities")
+    .select("price_item_id")
+    .eq("price_book_id", priceBookId)
+    .eq("user_id", userId);
 
-  if (existingError) throw existingError;
   if (usageError) throw usageError;
 
   const incomingIds = new Set(items.map((item) => item.id).filter(Boolean));
   const usedIds = new Set((usageRows ?? []).map((row) => row.price_item_id).filter(Boolean));
-  const deleteIds = (existingItems ?? [])
-    .map((item) => item.id)
-    .filter((id) => !incomingIds.has(id) && !usedIds.has(id));
+  const deleteIds = [...new Set(deletedItemIds)].filter(
+    (id) => !incomingIds.has(id) && !usedIds.has(id),
+  );
 
   if (deleteIds.length > 0) {
     const { error } = await supabase
       .from("price_items")
       .delete()
       .in("id", deleteIds)
+      .eq("price_book_id", priceBookId)
       .eq("user_id", userId);
     if (error) throw error;
   }
@@ -193,8 +187,12 @@ function validateSavePriceBookInput(input: SavePriceBookInput) {
   }
   if (input.notes != null && typeof input.notes !== "string") throw new Error("Note non valide");
   if (!Array.isArray(input.items)) throw new Error("Voci prezzi non valide");
+  if (!Array.isArray(input.deleted_item_ids)) throw new Error("Voci rimosse non valide");
 
   for (const item of input.items) validatePriceItemInput(item);
+  for (const id of input.deleted_item_ids) {
+    if (typeof id !== "string") throw new Error("Voce rimossa non valida");
+  }
   return input;
 }
 

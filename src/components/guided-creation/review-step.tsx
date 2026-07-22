@@ -109,8 +109,8 @@ export function ReviewStep({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {normalized.activities.map((activity, index) => (
-                    <TableRow key={`${activity.priceItemId}-${index}`}>
+                  {normalized.activities.map((activity) => (
+                    <TableRow key={activity.id}>
                       <TableCell>{formatDate(activity.activityDate)}</TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">

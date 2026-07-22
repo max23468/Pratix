@@ -1,37 +1,93 @@
 {
   "ignore": {
-    "rules": [
-      "react-doctor/advanced-event-handler-refs",
-      "react-doctor/async-await-in-loop",
-      "react-doctor/async-defer-await",
-      "react-doctor/design-no-bold-heading",
-      "react-doctor/design-no-em-dash-in-jsx-text",
-      "react-doctor/js-combine-iterations",
-      "react-doctor/js-flatmap-filter",
-      "react-doctor/js-hoist-intl",
-      "react-doctor/js-min-max-loop",
-      "react-doctor/js-set-map-lookups",
-      "react-doctor/js-tosorted-immutable",
-      "react-doctor/no-array-index-as-key",
-      "react-doctor/no-cascading-set-state",
-      "react-doctor/no-effect-chain",
-      "react-doctor/no-effect-event-handler",
-      "react-doctor/no-giant-component",
-      "react-doctor/no-prevent-default",
-      "react-doctor/no-react19-deprecated-apis",
-      "react-doctor/no-usememo-simple-expression",
-      "react-doctor/only-export-components",
-      "react-doctor/prefer-dynamic-import",
-      "react-doctor/prefer-useReducer",
-      "react-doctor/query-mutation-missing-invalidation",
-      "react-doctor/rendering-hydration-no-flicker",
-      "react-doctor/rerender-lazy-state-init",
-      "react-doctor/rerender-memo-with-default-value",
-      "react-doctor/rerender-state-only-in-handlers",
-      "react-doctor/server-sequential-independent-await",
-      "react-doctor/tanstack-start-no-navigate-in-render",
-      "react/no-danger"
-    ],
-    "files": [".env.local", ".output/**", "src/integrations/supabase/types.ts"]
+    "files": [".env.local", ".output/**", "src/integrations/supabase/types.ts"],
+    "overrides": [
+      {
+        "files": [
+          "src/components/account/email-access-card.tsx",
+          "src/components/guided-creation/guided-creation-wizard.tsx"
+        ],
+        "rules": ["react-doctor/query-mutation-missing-invalidation"]
+      },
+      {
+        "files": [
+          "src/components/case-activities.tsx",
+          "src/components/case-form.tsx",
+          "src/components/case-operations-panel.tsx",
+          "src/components/client-form.tsx",
+          "src/components/counterparty-form.tsx",
+          "src/components/global-search.tsx",
+          "src/components/guided-creation/guided-creation-wizard.tsx",
+          "src/components/invoice-form.tsx",
+          "src/components/price-book-form.tsx",
+          "src/components/principal-form.tsx",
+          "src/routes/attivita.index.tsx",
+          "src/routes/clienti.index.tsx",
+          "src/routes/committenti.index.tsx",
+          "src/routes/controparti.index.tsx",
+          "src/routes/dashboard.tsx",
+          "src/routes/fatture.$invoiceId.tsx",
+          "src/routes/fatture.index.tsx",
+          "src/routes/impostazioni.tsx",
+          "src/routes/pratiche.index.tsx",
+          "src/routes/prezzi.index.tsx"
+        ],
+        "rules": ["react-doctor/no-giant-component"]
+      },
+      {
+        "files": ["src/components/case-activities.tsx"],
+        "rules": ["react-doctor/prefer-useReducer"]
+      },
+      {
+        "files": [
+          "src/components/case-form.tsx",
+          "src/components/counterparty-form.tsx",
+          "src/components/guided-creation/guided-creation-wizard.tsx",
+          "src/components/price-book-form.tsx",
+          "src/lib/billing-xlsx.ts",
+          "src/lib/case-workflow.ts",
+          "src/routes/dashboard.tsx",
+          "src/server/duplicates.functions.ts",
+          "src/server/duplicates.logic.ts",
+          "src/server/invoice-billing.logic.ts",
+          "src/server/price-books.functions.ts"
+        ],
+        "rules": ["react-doctor/js-combine-iterations"]
+      },
+      {
+        "files": ["src/components/guided-creation/guided-creation-wizard.tsx"],
+        "rules": [
+          "react-doctor/async-await-in-loop",
+          "react-doctor/no-prevent-default",
+          "react-doctor/server-sequential-independent-await"
+        ]
+      },
+      {
+        "files": [
+          "src/server/account.functions.ts",
+          "src/server/duplicates.functions.ts",
+          "src/server/invoices.functions.ts",
+          "src/server/price-books.functions.ts"
+        ],
+        "rules": ["react-doctor/async-await-in-loop"]
+      },
+      {
+        "files": ["src/server/invoices.functions.ts"],
+        "rules": ["react-doctor/server-sequential-independent-await"]
+      },
+      {
+        "files": [
+          "src/components/guided-creation/normalization.ts",
+          "src/server/duplicates.logic.ts",
+          "src/server/invoices.functions.ts",
+          "src/server/price-books.functions.ts"
+        ],
+        "rules": ["react-doctor/js-flatmap-filter"]
+      },
+      {
+        "files": ["src/components/ui/badge.tsx", "src/components/ui/button.tsx"],
+        "rules": ["react-doctor/only-export-components"]
+      }
+    ]
   }
 }
