@@ -6,6 +6,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.13.17] — 2026-07-22
+
 ### Correzioni
 
 - Le modifiche al listino non eliminano più voci aggiunte da un altro aggiornamento mentre il modulo era aperto.
@@ -1419,6 +1421,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.13.17]: #11317--2026-07-22
 [1.13.16]: #11316--2026-07-21
 [1.13.15]: #11315--2026-07-20
 [1.13.14]: #11314--2026-07-20
