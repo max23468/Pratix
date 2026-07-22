@@ -1,4 +1,4 @@
-import { useId, useMemo, useState, type FormEvent } from "react";
+import { useId, useMemo, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Plus, RotateCcw, Trash2 } from "lucide-react";
@@ -101,6 +101,9 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
   });
   const [items, setItems] = useState<PriceItemDraft[]>(
     initialItems.length > 0 ? initialItems : createTemplateItems(),
+  );
+  const initialItemIds = useRef(
+    new Set(initialItems.flatMap((item) => (item.id ? [item.id] : []))),
   );
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
   const saveLock = useSubmitLock();
@@ -246,9 +249,7 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
 
       const normalizedItems = normalizeItems(items);
       const currentItemIds = new Set(normalizedItems.flatMap((item) => (item.id ? [item.id] : [])));
-      const deletedItemIds = initialItems.flatMap((item) =>
-        item.id && !currentItemIds.has(item.id) ? [item.id] : [],
-      );
+      const deletedItemIds = [...initialItemIds.current].filter((id) => !currentItemIds.has(id));
       return readServerResult(
         await savePriceBook({
           data: {

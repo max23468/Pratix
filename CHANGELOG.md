@@ -6,6 +6,10 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Correzioni
+
+- Le modifiche al listino non eliminano più voci aggiunte da un altro aggiornamento mentre il modulo era aperto.
+
 ## [1.13.16] — 2026-07-21
 
 ### Correzioni

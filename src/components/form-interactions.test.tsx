@@ -1005,6 +1005,64 @@ describe("interazioni form anagrafiche", () => {
     );
   });
 
+  it("non cancella voci apparse in un refetch durante la modifica", async () => {
+    const client = new QueryClient({
+      defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
+    });
+    const initial = {
+      id: "price-book-1",
+      principal_id: "principal-1",
+      year: 2026,
+      status: "active" as const,
+      fees_enabled: true,
+      expense_reimbursements_enabled: true,
+      valid_from: "2026-01-01",
+      valid_to: "2026-12-31",
+      notes: null,
+    };
+    const firstItem = {
+      id: "item-keep",
+      kind: "fee" as const,
+      code: "KEEP",
+      name: "Da mantenere",
+      invoice_description: null,
+      unit_price: 20,
+      is_enabled: true,
+      requires_hearing_dates: false,
+      sort_order: 10,
+    };
+    const refetchedItem = { ...firstItem, id: "item-added-elsewhere", code: "ADDED" };
+
+    const view = render(
+      <QueryClientProvider client={client}>
+        <PriceBookForm
+          initial={initial}
+          initialItems={[firstItem]}
+          onSaved={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      </QueryClientProvider>,
+    );
+
+    view.rerender(
+      <QueryClientProvider client={client}>
+        <PriceBookForm
+          initial={initial}
+          initialItems={[firstItem, refetchedItem]}
+          onSaved={vi.fn()}
+          onCancel={vi.fn()}
+        />
+      </QueryClientProvider>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "Salva" }));
+
+    await waitFor(() => expect(toast.success).toHaveBeenCalledWith("Prezzi aggiornati"));
+    expect(savePriceBook).toHaveBeenCalledWith(
+      expect.objectContaining({ data: expect.objectContaining({ deleted_item_ids: [] }) }),
+    );
+  });
+
   it("ricarica il template comune Prezzi su richiesta", async () => {
     renderWithClient(
       <PriceBookForm
