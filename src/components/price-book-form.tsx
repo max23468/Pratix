@@ -245,6 +245,10 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
       validateForm(form, items);
 
       const normalizedItems = normalizeItems(items);
+      const currentItemIds = new Set(normalizedItems.flatMap((item) => (item.id ? [item.id] : [])));
+      const deletedItemIds = initialItems.flatMap((item) =>
+        item.id && !currentItemIds.has(item.id) ? [item.id] : [],
+      );
       return readServerResult(
         await savePriceBook({
           data: {
@@ -258,6 +262,7 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
             valid_to: form.valid_to || null,
             notes: form.notes?.trim() || null,
             items: normalizedItems,
+            deleted_item_ids: deletedItemIds,
           },
           headers: await getAuthHeaders(),
         }),

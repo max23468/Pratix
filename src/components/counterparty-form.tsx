@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -61,6 +61,8 @@ type SubjectRow = {
   position: number;
 };
 
+type SubjectDraft = SubjectRow & { clientKey: string };
+
 const emptyCounterparty: CounterpartyRow = {
   kind: "company",
   first_name: "",
@@ -69,7 +71,8 @@ const emptyCounterparty: CounterpartyRow = {
   notes: "",
 };
 
-const emptySubject = (position: number): SubjectRow => ({
+const emptySubject = (position: number): SubjectDraft => ({
+  clientKey: crypto.randomUUID(),
   kind: "individual",
   first_name: "",
   last_name: "",
@@ -99,11 +102,16 @@ export function CounterpartyForm({
     ...emptyCounterparty,
     ...(initial ?? {}),
   });
-  const [subjects, setSubjects] = useState<SubjectRow[]>(
-    initialSubjects.length > 0 ? initialSubjects : [emptySubject(0)],
+  const [subjects, setSubjects] = useState<SubjectDraft[]>(
+    initialSubjects.length > 0
+      ? initialSubjects.map((subject) => ({
+          ...subject,
+          clientKey: subject.id ?? crypto.randomUUID(),
+        }))
+      : [emptySubject(0)],
   );
   const [duplicateCandidates, setDuplicateCandidates] = useState<DuplicateCandidate[]>([]);
-  const [duplicateOverride, setDuplicateOverride] = useState(false);
+  const duplicateOverride = useRef(false);
   const isEdit = Boolean(initial?.id);
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
   const saveLock = useSubmitLock();
@@ -129,7 +137,7 @@ export function CounterpartyForm({
 
   const normalizedSubjects = () =>
     subjects
-      .map((subject, index) => ({ ...subject, position: index }))
+      .map(({ clientKey: _clientKey, ...subject }, index) => ({ ...subject, position: index }))
       .filter((subject) => {
         if (subject.kind === "company") return Boolean(subject.business_name?.trim());
         return Boolean(subject.first_name?.trim() || subject.last_name?.trim());
@@ -195,7 +203,7 @@ export function CounterpartyForm({
 
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
-    if (!isEdit && !duplicateOverride && canUseAuthHeaders()) {
+    if (!isEdit && !duplicateOverride.current && canUseAuthHeaders()) {
       const candidates = await readServerResult<DuplicateCandidate[]>(
         await findDuplicates({
           data: {
@@ -307,7 +315,7 @@ export function CounterpartyForm({
         candidates={duplicateCandidates}
         onUseExisting={(record) => onSaved(record.publicCode || record.id)}
         onCreateAnyway={() => {
-          setDuplicateOverride(true);
+          duplicateOverride.current = true;
           setDuplicateCandidates([]);
           if (!saveLock.acquire()) return;
           saveMutation.mutate();
@@ -334,7 +342,7 @@ export function CounterpartyForm({
           </CardHeader>
           <CardContent className="flex flex-col gap-4">
             {subjects.map((subject, index) => (
-              <div key={subject.id ?? index} className="rounded-md border border-border p-4">
+              <div key={subject.clientKey} className="rounded-md border border-border p-4">
                 <div className="mb-4 flex items-center justify-between gap-2">
                   <p className="text-sm font-medium">Soggetto {index + 1}</p>
                   <Button

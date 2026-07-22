@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -70,7 +70,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
   const [selectedPrincipalIds, setSelectedPrincipalIds] = useState<string[] | null>(null);
   const [principalLinkError, setPrincipalLinkError] = useState<string | null>(null);
   const [duplicateCandidates, setDuplicateCandidates] = useState<DuplicateCandidate[]>([]);
-  const [duplicateOverride, setDuplicateOverride] = useState(false);
+  const duplicateOverride = useRef(false);
   const saveLock = useSubmitLock();
   const findDuplicates = useServerFn(findDuplicateCandidatesFn);
 
@@ -108,6 +108,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
   });
 
   const effectiveSelectedPrincipalIds = selectedPrincipalIds ?? linkedPrincipalIds ?? [];
+  const selectedPrincipalIdSet = new Set(effectiveSelectedPrincipalIds);
 
   const togglePrincipal = (principalId: string, checked: boolean) => {
     if (checked) setPrincipalLinkError(null);
@@ -192,7 +193,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
       return;
     }
     if (!validatePrincipalLinks()) return;
-    if (!isEdit && !duplicateOverride && canUseAuthHeaders()) {
+    if (!isEdit && !duplicateOverride.current && canUseAuthHeaders()) {
       const candidates = await readServerResult<DuplicateCandidate[]>(
         await findDuplicates({
           data: {
@@ -279,7 +280,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
         onUseExisting={(record) => onSaved(record.publicCode || record.id)}
         onCreateAnyway={() => {
           if (!validatePrincipalLinks()) return;
-          setDuplicateOverride(true);
+          duplicateOverride.current = true;
           setDuplicateCandidates([]);
           if (!saveLock.acquire()) return;
           saveMutation.mutate();
@@ -318,7 +319,7 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
                   )}
                 </span>
                 <Checkbox
-                  checked={effectiveSelectedPrincipalIds.includes(principal.id)}
+                  checked={selectedPrincipalIdSet.has(principal.id)}
                   aria-describedby={principalLinkError ? "principal-link-error" : undefined}
                   onCheckedChange={(checked) => togglePrincipal(principal.id, checked === true)}
                 />

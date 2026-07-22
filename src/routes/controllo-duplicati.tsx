@@ -417,17 +417,19 @@ function snoozeOptionLabel(value: DuplicateSnoozeInterval) {
   );
 }
 
+const snoozedUntilFormatter = new Intl.DateTimeFormat("it-IT", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
 function formatSnoozedUntil(value: string | null | undefined) {
   if (!value) return null;
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
-  return new Intl.DateTimeFormat("it-IT", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
+  return snoozedUntilFormatter.format(date);
 }
 
 function renderRecordPanel({

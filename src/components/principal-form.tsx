@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
@@ -75,7 +75,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
   const qc = useQueryClient();
   const [form, setForm] = useState<PrincipalRow>({ ...empty, ...(initial ?? {}) });
   const [duplicateCandidates, setDuplicateCandidates] = useState<DuplicateCandidate[]>([]);
-  const [duplicateOverride, setDuplicateOverride] = useState(false);
+  const duplicateOverride = useRef(false);
   const isEdit = Boolean(initial?.id);
   const isArchived = Boolean(form.archived_at);
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
@@ -179,7 +179,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
       toast.error("Abilita almeno compensi o rimborsi spese");
       return;
     }
-    if (!isEdit && !duplicateOverride && canUseAuthHeaders()) {
+    if (!isEdit && !duplicateOverride.current && canUseAuthHeaders()) {
       const candidates = await readServerResult<DuplicateCandidate[]>(
         await findDuplicates({
           data: {
@@ -249,7 +249,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
         candidates={duplicateCandidates}
         onUseExisting={(record) => onSaved(record.publicCode || record.id)}
         onCreateAnyway={() => {
-          setDuplicateOverride(true);
+          duplicateOverride.current = true;
           setDuplicateCandidates([]);
           if (!saveLock.acquire()) return;
           saveMutation.mutate();

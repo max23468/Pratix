@@ -63,8 +63,8 @@ function NovitaPage() {
       />
 
       <div className="space-y-6">
-        {releaseGroups.stable.map((entry, index) => (
-          <ReleaseCard key={`${entry.version}-${index}`} entry={entry} />
+        {releaseGroups.stable.map((entry) => (
+          <ReleaseCard key={entry.version} entry={entry} />
         ))}
 
         {releaseGroups.prerelease.length > 0 && (
@@ -79,8 +79,8 @@ function NovitaPage() {
               <span className="ml-auto hidden text-xs group-open:inline">nascondi</span>
             </summary>
             <div className="space-y-4 border-t border-border/60 px-4 py-5">
-              {releaseGroups.prerelease.map((entry, index) => (
-                <ReleasePanel key={`${entry.version}-${index}`} entry={entry} />
+              {releaseGroups.prerelease.map((entry) => (
+                <ReleasePanel key={entry.version} entry={entry} />
               ))}
             </div>
           </details>
