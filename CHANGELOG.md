@@ -6,6 +6,20 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Novità
+
+- **Accesso con passkey**: puoi accedere con impronta, volto o PIN del tuo
+  dispositivo. Aggiungi una passkey dall'area Account e usala al posto del link
+  via email, che resta comunque sempre disponibile.
+
+### Sotto il cofano
+
+- Completata la configurazione WebAuthn sul progetto Supabase e allineato
+  `supabase/config.toml`.
+- I messaggi mostrati quando le passkey non sono attive spiegano che valgono
+  solo sul dominio di produzione, invece di indicare un limite del progetto
+  Supabase ormai superato.
+
 ## [1.13.17] — 2026-07-22
 
 ### Correzioni

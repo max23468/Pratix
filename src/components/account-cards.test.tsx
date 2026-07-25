@@ -75,7 +75,7 @@ vi.mock("@/hooks/use-passkey-supported", () => ({
 vi.mock("@/lib/passkeys", () => ({
   PASSKEYS_ENABLED: true,
   passkeysUnavailableMessage: () =>
-    "Le passkey non sono ancora disponibili su questo progetto Supabase. Puoi continuare a usare il link via email.",
+    "Le passkey funzionano solo su pratix.vercel.app. Qui puoi continuare a usare il link via email.",
 }));
 
 vi.mock("@/components/ui/alert-dialog", () => ({

@@ -125,8 +125,11 @@ Impostazioni operative desiderate nel dashboard Supabase:
 - Policy password: non centrale nel percorso corrente, perché login e
   registrazione usano magic link via email. Non abbassare la lunghezza minima
   password per configurare il codice OTP: sono impostazioni diverse.
-- Passkey: abilitate lato client come feature sperimentale Supabase; mantenere
-  magic link come fallback operativo.
+- Passkey: `passkey_enabled = true` sul progetto hosted, RP ID
+  `pratix.vercel.app`, RP display name `Pratix`, RP origin
+  `https://pratix.vercel.app`. Restano una feature sperimentale Supabase:
+  mantenere magic link come fallback operativo. Cambiare l'RP ID invalida tutte
+  le passkey già registrate dagli utenti.
 - Anonymous sign-ins disattivati.
 - Rate limits Auth rivisti e lasciati su valori prudenti per il piano gratuito.
 - Site URL produzione: `https://pratix.vercel.app/`.
@@ -159,10 +162,12 @@ Al 2026-05-16 il percorso free-tier scelto è:
 
 - registrazione aperta;
 - magic link via email come metodo principale;
-- passkey come accesso rapido sperimentale parcheggiato dietro
-  `VITE_ENABLE_PASSKEYS=true`: al 2026-05-16 il progetto hosted risponde
-  `Passkey configuration is not currently available` al tentativo di abilitare
-  `auth.passkey`/`auth.webauthn` via `supabase config push`;
+- passkey come accesso rapido sperimentale: dal 2026-07-25 `auth.passkey` e
+  `auth.webauthn` sono configurati sul progetto hosted (via Management API
+  `PATCH /v1/projects/<ref>/config/auth`) e tracciati in `supabase/config.toml`.
+  Lato client restano dietro `VITE_ENABLE_PASSKEYS=true`, da impostare solo
+  sull'ambiente Production di Vercel: l'RP ID `pratix.vercel.app` esclude
+  preview e localhost, dove il browser rifiuta la ceremony WebAuthn;
 - `/recupera-password` e `/reimposta-password` restano come pagine informative
   no-password per vecchi link o bookmark;
 - MFA non implementata per scelta attuale;

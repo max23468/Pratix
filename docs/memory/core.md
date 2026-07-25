@@ -103,8 +103,9 @@ rilasciata vanno nel changelog come `Non versionato` e non devono modificare
 ## Stack
 
 TanStack Start + Supabase di proprietà + Vercel. Supabase Auth usa il percorso
-passwordless via link email; le passkey restano dietro `VITE_ENABLE_PASSKEYS=true`
-finché WebAuthn non è disponibile sul progetto hosted. Supabase Storage usa il
+passwordless via link email; le passkey sono configurate sul progetto hosted
+(RP ID `pratix.vercel.app`) e restano dietro `VITE_ENABLE_PASSKEYS=true`, da
+attivare solo su Production perché l'RP ID esclude preview e localhost. Supabase Storage usa il
 bucket privato `pratix-documents` con path owner-scoped `<user_id>/<area>/...`.
 Observability resta Vercel-first: Web Analytics, Speed Insights e runtime logs
 strutturati prima di introdurre servizi esterni. Lingua italiana, `lang="it"`.

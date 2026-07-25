@@ -96,7 +96,7 @@ Configurare in Vercel Project Settings → Environment Variables:
 - `VITE_SUPABASE_PUBLISHABLE_KEY` — client e server, Production e Preview.
 - `VITE_SUPABASE_PROJECT_ID` — client e server, Production e Preview.
 - `VITE_TURNSTILE_SITE_KEY` — chiave pubblica Cloudflare Turnstile, Production e Preview quando CAPTCHA Supabase è attivo.
-- `VITE_ENABLE_PASSKEYS` — opzionale; impostare a `true` solo quando Supabase Auth/WebAuthn è abilitato sul progetto hosted.
+- `VITE_ENABLE_PASSKEYS` — impostare a `true` **solo su Production**: le passkey sono legate all'RP ID `pratix.vercel.app` e non funzionano su preview o localhost.
 - `SUPABASE_URL` — server, Production e Preview.
 - `SUPABASE_PUBLISHABLE_KEY` — server, Production e Preview.
 - `SUPABASE_SERVICE_ROLE_KEY` — server-only, Production; necessaria per il keep-alive Supabase del cron giornaliero.
