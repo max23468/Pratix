@@ -6,6 +6,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.0] — 2026-07-25
+
 ### Novità
 
 - **Accesso con passkey**: puoi accedere con impronta, volto o PIN del tuo
@@ -1435,6 +1437,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.0]: #1140--2026-07-25
 [1.13.17]: #11317--2026-07-22
 [1.13.16]: #11316--2026-07-21
 [1.13.15]: #11315--2026-07-20
