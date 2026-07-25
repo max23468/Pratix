@@ -19,6 +19,16 @@ additional_redirect_urls = [
   "https://pratix-*-max2348-matteos-projects-9226d217.vercel.app/**",
 ]
 
+[auth.passkey]
+enabled = true
+
+# Le passkey sono legate all'RP ID: valgono solo su https://pratix.vercel.app.
+# Cambiare rp_id invalida tutte le passkey già registrate dagli utenti.
+[auth.webauthn]
+rp_display_name = "Pratix"
+rp_id = "pratix.vercel.app"
+rp_origins = ["https://pratix.vercel.app"]
+
 [auth.mfa.totp]
 enroll_enabled = true
 verify_enabled = true

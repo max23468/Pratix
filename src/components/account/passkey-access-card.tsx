@@ -82,8 +82,8 @@ export function PasskeyAccessCard({ userId }: { userId: string }) {
               <p className="text-sm text-muted-foreground">Caricamento passkey…</p>
             ) : passkeyListFailed ? (
               <p className="text-sm text-muted-foreground">
-                Passkey non disponibili per questo progetto Supabase. Puoi continuare a usare il
-                link via email.
+                Non è stato possibile caricare le passkey. Puoi continuare a usare il link via
+                email.
               </p>
             ) : passkeys.length === 0 ? (
               <p className="text-sm text-muted-foreground">

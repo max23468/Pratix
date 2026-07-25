@@ -6,6 +6,15 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Sotto il cofano
+
+- **Passkey**: completata la configurazione WebAuthn sul progetto Supabase
+  (dominio `pratix.vercel.app`). L'accesso rapido con passkey resta dietro
+  `VITE_ENABLE_PASSKEYS`, da attivare sull'ambiente Production.
+- I messaggi mostrati quando le passkey non sono attive spiegano che valgono
+  solo sul dominio di produzione, invece di indicare un limite del progetto
+  Supabase ormai superato.
+
 ## [1.13.17] — 2026-07-22
 
 ### Correzioni
