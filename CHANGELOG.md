@@ -6,6 +6,18 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Non versionato
+
+- `npm run publish:finish` confronta il Site URL Auth del progetto Supabase
+  hosted con `supabase/config.toml` e blocca la chiusura se divergono.
+- Rimossi dalla allow-list dei redirect Auth i due ingressi esatti del dominio
+  project-scoped Vercel: è protetto da Vercel Authentication e non è mai una
+  destinazione di redirect valida. I pattern con wildcard per le preview
+  restano invariati.
+- Documentata in `docs/guides/database.md` la causa del disallineamento del
+  Site URL: l'integrazione Supabase installata sul team Vercel lo riscrive a
+  ogni deploy production.
+
 ## [1.14.0] — 2026-07-25
 
 ### Novità

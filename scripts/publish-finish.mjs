@@ -6,6 +6,8 @@ import path from "node:path";
 import process from "node:process";
 
 const VERCEL_TOKEN_KEYCHAIN_SERVICE = "pratix.vercel.token";
+const SUPABASE_TOKEN_KEYCHAIN_SERVICE = "Supabase CLI";
+const SUPABASE_TOKEN_KEYCHAIN_ACCOUNT = "supabase";
 const root = execGit(["rev-parse", "--show-toplevel"], process.cwd());
 const args = parseArgs(process.argv.slice(2));
 
@@ -40,6 +42,9 @@ const probeResults = await probeProductionRoutes(args.routes, args.productionUrl
 for (const result of probeResults) {
   item(result.route, `${result.status} ${result.url}`);
 }
+
+section("Verifica Supabase Auth");
+for (const line of await verifySupabaseSiteUrl()) item(line.label, line.value);
 
 section("Pulizia branch e worktree");
 cleanupLocalBranch(branchToClean);
@@ -132,6 +137,7 @@ Cosa fa:
   - aggiorna main con fetch/prune e pull --ff-only;
   - verifica il deployment production Vercel via API quando VERCEL_TOKEN o il token nel Portachiavi macOS è presente;
   - esegue probe HTTP sulle route indicate;
+  - confronta il Site URL Auth del progetto Supabase hosted con supabase/config.toml;
   - elimina il branch locale dedicato solo con git branch -d;
   - rimuove worktree dedicati solo se puliti.`);
 }
@@ -277,6 +283,93 @@ function readVercelToken() {
     }
   } catch {
     // Fallback silenzioso ai probe HTTP: il token non va mai stampato nei log.
+  }
+
+  return { source: "", token: "" };
+}
+
+async function verifySupabaseSiteUrl() {
+  const expected = readSupabaseConfig();
+  if (!expected.projectId || !expected.siteUrl) {
+    return [
+      {
+        label: "Supabase Auth",
+        value: "saltata: project_id o site_url non leggibili da config.toml",
+      },
+    ];
+  }
+
+  const supabaseToken = readSupabaseToken();
+  if (!supabaseToken.token) {
+    return [
+      {
+        label: "Supabase Auth",
+        value: `saltata: SUPABASE_ACCESS_TOKEN non configurato e token Portachiavi "${SUPABASE_TOKEN_KEYCHAIN_SERVICE}" non trovato`,
+      },
+    ];
+  }
+
+  const response = await fetchWithTimeout(
+    `https://api.supabase.com/v1/projects/${expected.projectId}/config/auth`,
+    { headers: { Authorization: `Bearer ${supabaseToken.token}` } },
+  );
+  if (!response.ok) {
+    fail(`Supabase Management API non disponibile: HTTP ${response.status}.`);
+  }
+
+  const hosted = await response.json();
+  if (hosted.site_url !== expected.siteUrl) {
+    fail(
+      `Site URL divergente: hosted "${hosted.site_url}", supabase/config.toml "${expected.siteUrl}". ` +
+        "Allinea il progetto hosted prima di chiudere la pubblicazione.",
+    );
+  }
+
+  return [
+    { label: "Token Supabase", value: supabaseToken.source },
+    { label: "Site URL", value: hosted.site_url },
+  ];
+}
+
+function readSupabaseConfig() {
+  const configPath = path.join(root, "supabase/config.toml");
+  if (!existsSync(configPath)) return { projectId: "", siteUrl: "" };
+
+  const raw = readFileSync(configPath, "utf8");
+  return {
+    projectId: raw.match(/^project_id\s*=\s*"([^"]+)"/m)?.[1] ?? "",
+    siteUrl: raw.match(/^site_url\s*=\s*"([^"]+)"/m)?.[1] ?? "",
+  };
+}
+
+function readSupabaseToken() {
+  const envToken = process.env.SUPABASE_ACCESS_TOKEN?.trim();
+  if (envToken) return { source: "SUPABASE_ACCESS_TOKEN", token: envToken };
+
+  if (process.platform !== "darwin") return { source: "", token: "" };
+
+  try {
+    const token = execFileSync(
+      "security",
+      [
+        "find-generic-password",
+        "-a",
+        SUPABASE_TOKEN_KEYCHAIN_ACCOUNT,
+        "-s",
+        SUPABASE_TOKEN_KEYCHAIN_SERVICE,
+        "-w",
+      ],
+      {
+        cwd: root,
+        encoding: "utf8",
+        stdio: ["ignore", "pipe", "ignore"],
+      },
+    ).trim();
+    if (token) {
+      return { source: `Portachiavi macOS (${SUPABASE_TOKEN_KEYCHAIN_SERVICE})`, token };
+    }
+  } catch {
+    // Fallback silenzioso: il token non va mai stampato nei log.
   }
 
   return { source: "", token: "" };
