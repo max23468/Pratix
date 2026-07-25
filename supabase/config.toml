@@ -2,13 +2,13 @@ project_id = "lgzdgvkrvfbbyowwstya"
 
 [auth]
 enabled = true
+# Dominio autoritativo: coincide con l'RP ID delle passkey. `npm run publish:finish`
+# confronta questo valore con il progetto hosted e blocca la chiusura se divergono.
 site_url = "https://pratix.vercel.app/"
 additional_redirect_urls = [
   "http://127.0.0.1:3300/dashboard",
   "http://127.0.0.1:3301/dashboard",
   "http://localhost:3000/dashboard",
-  "https://pratix-matteos-projects-9226d217.vercel.app/",
-  "https://pratix-matteos-projects-9226d217.vercel.app/**",
   "https://pratix-*-matteos-projects-9226d217.vercel.app",
   "https://pratix-*-matteos-projects-9226d217.vercel.app/**",
   "https://pratix.vercel.app/dashboard",

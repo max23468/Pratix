@@ -132,10 +132,23 @@ Impostazioni operative desiderate nel dashboard Supabase:
   le passkey già registrate dagli utenti.
 - Anonymous sign-ins disattivati.
 - Rate limits Auth rivisti e lasciati su valori prudenti per il piano gratuito.
-- Site URL produzione: `https://pratix.vercel.app/`.
+- Site URL produzione: `https://pratix.vercel.app/`. È il dominio autoritativo
+  perché coincide con l'RP ID delle passkey: un Site URL diverso manda i magic
+  link su un'origine dove la ceremony WebAuthn fallisce.
+- **Attenzione**: l'integrazione Supabase installata sul team Vercel
+  (`projectSelection: all`) riscrive `site_url` a ogni deploy production,
+  riportandolo al dominio project-scoped
+  `https://pratix-matteos-projects-9226d217.vercel.app/`. Verificato il
+  2026-07-25: un `PATCH` via Management API viene annullato dal primo
+  deployment `READY` successivo. Finché l'integrazione resta collegata a questo
+  progetto, l'allineamento non è stabile e va riapplicato dopo ogni deploy
+  production. `npm run publish:finish` rileva la divergenza e blocca la chiusura.
 - Redirect URL produzione:
   - `https://pratix.vercel.app/dashboard`
   - `https://pratix.vercel.app/reimposta-password`
+- Il dominio project-scoped non è nella allow-list dei redirect: è protetto da
+  Vercel Authentication (302 verso `vercel.com/sso-api`) e non è una
+  destinazione valida. Le preview restano coperte dai pattern con wildcard.
 - Codice OTP email a 6 cifre. Nel Dashboard hosted va configurato come
   **Email OTP length** del provider Email; nella Management API corrisponde a
   `mailer_otp_length`, mentre nel `supabase/config.toml` locale corrisponde a
