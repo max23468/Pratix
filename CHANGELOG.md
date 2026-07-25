@@ -8,10 +8,9 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ### Novità
 
-- **Accesso con passkey**: l'accesso rapido con impronta, volto o PIN del
-  dispositivo è ora attivo su `pratix.vercel.app`. Puoi aggiungere una passkey
-  dall'area Account e usarla al posto del link via email. Il link via email
-  resta sempre disponibile.
+- **Accesso con passkey**: puoi accedere con impronta, volto o PIN del tuo
+  dispositivo. Aggiungi una passkey dall'area Account e usala al posto del link
+  via email, che resta comunque sempre disponibile.
 
 ### Sotto il cofano
 
