@@ -1,6 +1,6 @@
 # Piano — Strategia test automatizzati progressiva
 
-- **Stato**: in corso; smoke autenticato e smoke WebKit ripetibile completati, target ideale operativo Atlas ripristinato sul perimetro operativo al 2026-06-03
+- **Stato**: in corso; smoke autenticato e smoke WebKit ripetibile completati, target ideale operativo ripristinato sul perimetro operativo al 2026-06-03
 - **Data**: 2026-06-03
 - **Ambito**: introdurre test automatici proporzionati ai rischi reali di Pratix
 - **Tipo modifica attesa**: non versionato finché aggiunge solo copertura e processo
@@ -271,7 +271,7 @@ Il comando usa l'account test Supabase quando la service role key viene fornita
 tramite variabile d'ambiente locale. La chiave resta fuori dal repo e serve solo
 a generare un magic link temporaneo per la sessione WebKit.
 
-## Incremento 2026-06-03 — Atlas coverage su duplicati e Prezzi
+## Incremento 2026-06-03 — coverage su duplicati e Prezzi
 
 Questo incremento porta la suite a 249 test distribuiti su 65 file, aggiungendo:
 
@@ -300,7 +300,7 @@ Coverage del file prioritario `src/server/duplicates.functions.ts`:
 - post-incremento: Statements `84,72%`, Branches `64,39%`, Functions `100%`,
   Lines `96,59%`.
 
-Gap residuo rispetto al target operativo Atlas (`75%` lines/statements, `65%`
+Gap residuo rispetto al target operativo (`75%` lines/statements, `65%`
 branches, `70%` functions):
 
 - Lines: `-0,12 pt`;
@@ -326,7 +326,7 @@ branches, `70%` functions):
    `components/changelog/**`, `lib/table-sorting.ts` e normalizzazione Creazione
    guidata con test piccoli e non fragili.
 
-## Incremento 2026-06-03 — chiusura target Atlas su form, account e hook
+## Incremento 2026-06-03 — chiusura target coverage su form, account e hook
 
 Questo incremento porta la suite a 279 test distribuiti su 70 file,
 aggiungendo:
@@ -347,7 +347,7 @@ Coverage operativa misurata con `npm run test:coverage`:
 - post-incremento: Statements `77,38%`, Branches `65,88%`, Functions `73,50%`,
   Lines `82,43%`.
 
-Il target operativo Atlas (`75%` lines/statements, `65%` branches, `70%`
+Il target operativo (`75%` lines/statements, `65%` branches, `70%`
 functions) è raggiunto su tutte le metriche. Restano bucket a zero nella UI
 presentazionale e nella Creazione guidata completa, ma non bloccano più il
 target operativo e vanno trattati come miglioramenti successivi, non come gap
