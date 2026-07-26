@@ -6,6 +6,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.1] — 2026-07-26
+
 ### Sotto il cofano
 
 - Il pre-push ripulisce le variabili Git locali ereditate dall'hook prima di
@@ -1460,6 +1462,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.1]: #1141--2026-07-26
 [1.14.0]: #1140--2026-07-25
 [1.13.17]: #11317--2026-07-22
 [1.13.16]: #11316--2026-07-21
