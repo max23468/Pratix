@@ -6,6 +6,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.3] — 2026-07-26
+
 ### Correzioni
 
 - La chiusura della pubblicazione ora si blocca se il controllo del Site URL
@@ -1476,6 +1478,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.3]: #1143--2026-07-26
 [1.14.2]: #1142--2026-07-26
 [1.14.1]: #1141--2026-07-26
 [1.14.0]: #1140--2026-07-25
