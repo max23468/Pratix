@@ -64,7 +64,9 @@ Fallback intestazione fattura: **"Avvocato"**.
 
 ## Processo
 
-Ogni decisione di prodotto/brand/tecnica condivisa in chat deve confluire in [`docs/ROADMAP.md`](../ROADMAP.md). Aggiornare stato (✅ 🟡 ⬜ 💤) a ogni cambio.
+Aggiornare [`docs/ROADMAP.md`](../ROADMAP.md) solo quando una decisione cambia
+direzione, priorità, fase o backlog; usare ADR, guide o memoria per decisioni
+durevoli e dettagli storici.
 
 Se il worktree contiene modifiche non collegate alla richiesta, non mescolare filoni diversi: per interventi non minuscoli usa un branch/worktree dedicato da base pulita; per interventi piccoli lavora nello stesso checkout solo se i file non si sovrappongono e segnala l'assunzione.
 

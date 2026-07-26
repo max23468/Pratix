@@ -8,6 +8,9 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ### Non versionato
 
+- Snellita la documentazione agentica: `AGENTS.md` mantiene i guardrail di
+  prodotto, sicurezza, verifica e pubblicazione senza duplicare le guide
+  canoniche; `CLAUDE.md` continua a importarla come unica fonte condivisa.
 - `npm run publish:finish` confronta il Site URL Auth del progetto Supabase
   hosted con `supabase/config.toml` e blocca la chiusura se divergono.
 - Rimossi dalla allow-list dei redirect Auth i due ingressi esatti del dominio
