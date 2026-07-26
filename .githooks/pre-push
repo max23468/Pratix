@@ -2,4 +2,5 @@
 
 set -e
 
+unset $(git rev-parse --local-env-vars)
 node scripts/prepush-guard.mjs

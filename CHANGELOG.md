@@ -6,8 +6,21 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.1] — 2026-07-26
+
+### Sotto il cofano
+
+- Il pre-push ripulisce le variabili Git locali ereditate dall'hook prima di
+  calcolare la fingerprint, evitando che un worktree venga interpretato come
+  interamente eliminato.
+
+## [Non versionato] — 2026-07-26
+
 ### Non versionato
 
+- Snellita la documentazione agentica: `AGENTS.md` mantiene i guardrail di
+  prodotto, sicurezza, verifica e pubblicazione senza duplicare le guide
+  canoniche; `CLAUDE.md` continua a importarla come unica fonte condivisa.
 - `npm run publish:finish` confronta il Site URL Auth del progetto Supabase
   hosted con `supabase/config.toml` e blocca la chiusura se divergono.
 - Rimossi dalla allow-list dei redirect Auth i due ingressi esatti del dominio
@@ -1449,6 +1462,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.1]: #1141--2026-07-26
 [1.14.0]: #1140--2026-07-25
 [1.13.17]: #11317--2026-07-22
 [1.13.16]: #11316--2026-07-21
