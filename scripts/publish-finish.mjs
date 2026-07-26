@@ -4,57 +4,69 @@ import { execFileSync, spawnSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
+import { fileURLToPath } from "node:url";
 
 const VERCEL_TOKEN_KEYCHAIN_SERVICE = "pratix.vercel.token";
 const SUPABASE_TOKEN_KEYCHAIN_SERVICE = "Supabase CLI";
 const SUPABASE_TOKEN_KEYCHAIN_ACCOUNT = "supabase";
 const root = execGit(["rev-parse", "--show-toplevel"], process.cwd());
-const args = parseArgs(process.argv.slice(2));
 
-if (args.help) {
-  showHelp();
-  process.exit(0);
+if (path.resolve(process.argv[1] ?? "") === fileURLToPath(import.meta.url)) {
+  try {
+    await main();
+  } catch (error) {
+    fail(error instanceof Error ? error.message : String(error));
+  }
 }
 
-const pr = args.pr ? readPullRequest(args.pr) : null;
-const branchToClean = args.branch || pr?.headRefName || "";
-const mergeSha = args.sha || pr?.mergeCommit?.oid || "";
+async function main() {
+  const args = parseArgs(process.argv.slice(2));
 
-if (pr && pr.state !== "MERGED") {
-  fail(`PR #${args.pr} non mergeata: stato ${pr.state}.`);
+  if (args.help) {
+    showHelp();
+    return;
+  }
+
+  const pr = args.pr ? readPullRequest(args.pr) : null;
+  const branchToClean = args.branch || pr?.headRefName || "";
+  const mergeSha = args.sha || pr?.mergeCommit?.oid || "";
+
+  if (pr && pr.state !== "MERGED") {
+    fail(`PR #${args.pr} non mergeata: stato ${pr.state}.`);
+  }
+
+  section("Aggiornamento main");
+  ensureCleanWorktree();
+  run("git", ["fetch", "--prune"]);
+  checkoutMainIfNeeded();
+  run("git", ["pull", "--ff-only"]);
+
+  if (mergeSha) {
+    ensureMergedSha(mergeSha);
+  }
+
+  section("Verifica produzione");
+  const vercelResult = await verifyVercelProduction({ expectedSha: mergeSha });
+  for (const line of vercelResult.messages) item(line.label, line.value);
+
+  const probeResults = await probeProductionRoutes(args.routes, args.productionUrl);
+  for (const result of probeResults) {
+    item(result.route, `${result.status} ${result.url}`);
+  }
+
+  section("Verifica Supabase Auth");
+  for (const line of await verifySupabaseSiteUrl()) item(line.label, line.value);
+
+  section("Pulizia branch e worktree");
+  cleanupLocalBranch(branchToClean);
+  cleanupBranchWorktrees(branchToClean);
+
+  section("Esito");
+  item("main", execGit(["rev-parse", "--short", "HEAD"], root));
+  if (pr) item("PR", `#${args.pr} ${pr.url}`);
+  if (branchToClean) item("Branch dedicato", branchToClean);
+  item("Produzione", args.productionUrl);
 }
-
-section("Aggiornamento main");
-ensureCleanWorktree();
-run("git", ["fetch", "--prune"]);
-checkoutMainIfNeeded();
-run("git", ["pull", "--ff-only"]);
-
-if (mergeSha) {
-  ensureMergedSha(mergeSha);
-}
-
-section("Verifica produzione");
-const vercelResult = await verifyVercelProduction({ expectedSha: mergeSha });
-for (const line of vercelResult.messages) item(line.label, line.value);
-
-const probeResults = await probeProductionRoutes(args.routes, args.productionUrl);
-for (const result of probeResults) {
-  item(result.route, `${result.status} ${result.url}`);
-}
-
-section("Verifica Supabase Auth");
-for (const line of await verifySupabaseSiteUrl()) item(line.label, line.value);
-
-section("Pulizia branch e worktree");
-cleanupLocalBranch(branchToClean);
-cleanupBranchWorktrees(branchToClean);
-
-section("Esito");
-item("main", execGit(["rev-parse", "--short", "HEAD"], root));
-if (pr) item("PR", `#${args.pr} ${pr.url}`);
-if (branchToClean) item("Branch dedicato", branchToClean);
-item("Produzione", args.productionUrl);
 
 function parseArgs(argv) {
   const parsed = {
@@ -288,8 +300,11 @@ function readVercelToken() {
   return { source: "", token: "" };
 }
 
-async function verifySupabaseSiteUrl() {
-  const expected = readSupabaseConfig();
+export async function verifySupabaseSiteUrl({
+  expected = readSupabaseConfig(),
+  request = fetchWithTimeout,
+  supabaseToken = readSupabaseToken(),
+} = {}) {
   if (!expected.projectId || !expected.siteUrl) {
     return [
       {
@@ -299,27 +314,23 @@ async function verifySupabaseSiteUrl() {
     ];
   }
 
-  const supabaseToken = readSupabaseToken();
   if (!supabaseToken.token) {
-    return [
-      {
-        label: "Supabase Auth",
-        value: `saltata: SUPABASE_ACCESS_TOKEN non configurato e token Portachiavi "${SUPABASE_TOKEN_KEYCHAIN_SERVICE}" non trovato`,
-      },
-    ];
+    throw new Error(
+      `SUPABASE_ACCESS_TOKEN non configurato e token Portachiavi "${SUPABASE_TOKEN_KEYCHAIN_SERVICE}" non trovato.`,
+    );
   }
 
-  const response = await fetchWithTimeout(
+  const response = await request(
     `https://api.supabase.com/v1/projects/${expected.projectId}/config/auth`,
     { headers: { Authorization: `Bearer ${supabaseToken.token}` } },
   );
   if (!response.ok) {
-    fail(`Supabase Management API non disponibile: HTTP ${response.status}.`);
+    throw new Error(`Supabase Management API non disponibile: HTTP ${response.status}.`);
   }
 
   const hosted = await response.json();
   if (hosted.site_url !== expected.siteUrl) {
-    fail(
+    throw new Error(
       `Site URL divergente: hosted "${hosted.site_url}", supabase/config.toml "${expected.siteUrl}". ` +
         "Allinea il progetto hosted prima di chiudere la pubblicazione.",
     );

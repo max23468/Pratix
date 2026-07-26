@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Correzioni
+
+- La chiusura della pubblicazione ora si blocca se il controllo del Site URL
+  Supabase configurato non può autenticarsi, non raggiunge l'API o rileva una
+  divergenza.
+
 ## [1.14.2] — 2026-07-26
 
 ### Sotto il cofano

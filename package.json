@@ -29,7 +29,7 @@
     "prepush:guard": "node scripts/prepush-guard.mjs",
     "preview": "node scripts/vite-with-tailwind-compat.mjs preview",
     "lint": "oxlint",
-    "test": "vitest run --config vitest.config.ts",
+    "test": "vitest run --config vitest.config.ts && node --test scripts/*.test.mjs",
     "test:coverage": "vitest run --coverage --config vitest.config.ts",
     "test:coverage:global": "vitest run --coverage --config vitest.coverage-global.config.ts",
     "format": "oxfmt",
