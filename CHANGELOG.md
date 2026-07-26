@@ -6,6 +6,14 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Sotto il cofano
+
+- Il pre-push ripulisce le variabili Git locali ereditate dall'hook prima di
+  calcolare la fingerprint, evitando che un worktree venga interpretato come
+  interamente eliminato.
+
+## [Non versionato] — 2026-07-26
+
 ### Non versionato
 
 - Snellita la documentazione agentica: `AGENTS.md` mantiene i guardrail di
