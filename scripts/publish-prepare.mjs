@@ -107,7 +107,7 @@ function printReport(report) {
   if (!report.dependencyState.nodeModulesPresent) {
     note("Questo worktree non ha dipendenze installate: prima dei check esegui npm run setup.");
   } else if (report.dependencyState.lockfileNewerThanNodeModules) {
-    note("package-lock.json è più recente di node_modules: valuta npm ci prima dei check.");
+    note("package-lock.json è più recente di node_modules: valuta npm run setup prima dei check.");
   }
 
   section("Diff");

@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.6] — 2026-07-28
+
+### Sotto il cofano
+
+- Anche le reinstallazioni successive continuano a usare npm 12 quando
+  l'installazione globale è ancora npm 11.
+
 ## [1.14.5] — 2026-07-28
 
 ### Sotto il cofano
@@ -1492,6 +1499,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.6]: #1146--2026-07-28
 [1.14.5]: #1145--2026-07-28
 [1.14.4]: #1144--2026-07-28
 [1.14.3]: #1143--2026-07-26
