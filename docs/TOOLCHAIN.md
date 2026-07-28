@@ -21,7 +21,8 @@ Questo documento dichiara runtime, strumenti e verifiche operative di Pratix. Le
 - Lockfile alternativi non ammessi.
 
 Il primo setup, anche partendo dall'npm 11 incluso in alcune installazioni di
-Node 24, aggiorna prima npm e solo dopo installa le dipendenze:
+Node 24, esegue npm 12 senza modificare l'installazione globale e installa le
+dipendenze:
 
 ```sh
 npm run setup

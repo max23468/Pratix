@@ -37,9 +37,9 @@ controlla se nel worktree mancano le dipendenze, classifica il diff, guarda il
 blocco `CHANGELOG.md` `[Non rilasciato]` e propone la sequenza rapida.
 
 Se lavori in un worktree pulito appena creato, esegui `npm run setup`: il
-comando installa npm 12 prima di creare `node_modules` con `npm ci`. La cache
-npm resta condivisa a livello macchina, quindi i run successivi sono
-normalmente più rapidi.
+comando esegue npm 12 senza modificare l'installazione globale e crea
+`node_modules` con un'installazione pulita. La cache npm resta condivisa a
+livello macchina, quindi i run successivi sono normalmente più rapidi.
 
 Vercel usa lo stesso npm tramite l'`installCommand` versionato in
 `vercel.json`, prima della build automatica.
