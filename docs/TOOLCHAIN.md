@@ -14,11 +14,18 @@ Questo documento dichiara runtime, strumenti e verifiche operative di Pratix. Le
 
 ## Node e package manager
 
-- Node richiesto: `24.x`.
-- npm richiesto: `>=11 <12`.
-- Package manager dichiarato: `npm@11.14.1`.
+- Node richiesto: `>=24.15 <25`.
+- npm richiesto: `>=12 <13`.
+- Package manager dichiarato: `npm@12.0.1`.
 - Lockfile autoritativo: `package-lock.json`.
 - Lockfile alternativi non ammessi.
+
+Il primo setup, anche partendo dall'npm 11 incluso in alcune installazioni di
+Node 24, aggiorna prima npm e solo dopo installa le dipendenze:
+
+```sh
+npm run setup
+```
 
 ## File generati da non modificare a mano
 
@@ -29,6 +36,7 @@ Questo documento dichiara runtime, strumenti e verifiche operative di Pratix. Le
 ## Comandi principali
 
 ```sh
+npm run setup
 npm ci
 npm run dev
 npm run build

@@ -6,6 +6,11 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Sotto il cofano
+
+- La toolchain usa npm 12.0.1 in locale, CI e Vercel, con bootstrap esplicito
+  prima dell'installazione delle dipendenze.
+
 ## [1.14.3] — 2026-07-26
 
 ### Correzioni
