@@ -135,14 +135,12 @@ Impostazioni operative desiderate nel dashboard Supabase:
 - Site URL produzione: `https://pratix.vercel.app/`. È il dominio autoritativo
   perché coincide con l'RP ID delle passkey: un Site URL diverso manda i magic
   link su un'origine dove la ceremony WebAuthn fallisce.
-- **Attenzione**: l'integrazione Supabase installata sul team Vercel
-  (`projectSelection: all`) riscrive `site_url` a ogni deploy production,
-  riportandolo al dominio project-scoped
-  `https://pratix-matteos-projects-9226d217.vercel.app/`. Verificato il
-  2026-07-25: un `PATCH` via Management API viene annullato dal primo
-  deployment `READY` successivo. Finché l'integrazione resta collegata a questo
-  progetto, l'allineamento non è stabile e va riapplicato dopo ogni deploy
-  production. `npm run publish:finish` rileva la divergenza e blocca la chiusura.
+- Dal 2026-07-28 l'integrazione Supabase del team Vercel usa
+  `projectSelection: selected` ed esclude Pratix. In precedenza riscriveva
+  `site_url` al dominio project-scoped dopo ogni deploy production. Non
+  riabilitare l'accesso dell'integrazione a Pratix: le variabili Vercel sono già
+  configurate sul progetto e `npm run publish:finish` continua a bloccare la
+  chiusura se il Site URL diverge.
 - Redirect URL produzione:
   - `https://pratix.vercel.app/dashboard`
   - `https://pratix.vercel.app/reimposta-password`
