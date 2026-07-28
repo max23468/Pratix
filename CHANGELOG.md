@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.5] — 2026-07-28
+
+### Sotto il cofano
+
+- Il setup locale usa npm 12 senza richiedere accesso in scrittura
+  all'installazione globale e guida correttamente il primo avvio da npm 11.
+
 ## [1.14.4] — 2026-07-28
 
 ### Sotto il cofano
@@ -1485,6 +1492,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.5]: #1145--2026-07-28
 [1.14.4]: #1144--2026-07-28
 [1.14.3]: #1143--2026-07-26
 [1.14.2]: #1142--2026-07-26

@@ -42,7 +42,7 @@ printReport({
 
 if (args.runChecks) {
   if (!dependencyState.nodeModulesPresent) {
-    fail("node_modules non trovato. Esegui prima npm ci in questo worktree.");
+    fail("node_modules non trovato. Esegui prima npm run setup in questo worktree.");
   }
 
   run("npm", ["run", "prepush:guard"]);
@@ -105,7 +105,7 @@ function printReport(report) {
   item("package-lock.json", report.dependencyState.lockfilePresent ? "presente" : "mancante");
 
   if (!report.dependencyState.nodeModulesPresent) {
-    note("Questo worktree non ha dipendenze installate: prima dei check esegui npm ci.");
+    note("Questo worktree non ha dipendenze installate: prima dei check esegui npm run setup.");
   } else if (report.dependencyState.lockfileNewerThanNodeModules) {
     note("package-lock.json è più recente di node_modules: valuta npm ci prima dei check.");
   }
@@ -154,7 +154,7 @@ function printReport(report) {
   section("Sequenza rapida");
   const sequence = [];
 
-  if (!report.dependencyState.nodeModulesPresent) sequence.push("npm ci");
+  if (!report.dependencyState.nodeModulesPresent) sequence.push("npm run setup");
   if (report.unreleased.body && report.releaseAdvice.bump !== "none")
     sequence.push("npm run release:dry-run");
   sequence.push("npm run publish:prepare -- --run-checks");

@@ -17,7 +17,7 @@ Il target esplicito è il **professionista singolo**: il prodotto evita il lingu
 ## Avvio rapido
 
 ```bash
-npm run setup   # installa npm 12 e le dipendenze
+npm run setup   # usa npm 12 per installare le dipendenze
 npm run dev     # avvia in locale
 npm run build   # build di produzione
 npm run lint    # linter
