@@ -38,7 +38,6 @@ npm run setup
 
 ```sh
 npm run setup
-npm ci
 npm run dev
 npm run build
 npm run lint

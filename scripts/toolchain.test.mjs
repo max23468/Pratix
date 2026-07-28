@@ -5,10 +5,12 @@ import { test } from "node:test";
 const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url)));
 const packageLock = JSON.parse(await readFile(new URL("../package-lock.json", import.meta.url)));
 const npmrc = await readFile(new URL("../.npmrc", import.meta.url), "utf8");
+const publishPrepare = await readFile(new URL("./publish-prepare.mjs", import.meta.url), "utf8");
 const qualityWorkflow = await readFile(
   new URL("../.github/workflows/quality.yml", import.meta.url),
   "utf8",
 );
+const toolchain = await readFile(new URL("../docs/TOOLCHAIN.md", import.meta.url), "utf8");
 const vercel = JSON.parse(await readFile(new URL("../vercel.json", import.meta.url)));
 
 test("npm 12 viene installato prima delle dipendenze", () => {
@@ -22,5 +24,7 @@ test("npm 12 viene installato prima delle dipendenze", () => {
   assert.ok(
     qualityWorkflow.indexOf("npm install --global npm@12.0.1") < qualityWorkflow.indexOf("npm ci"),
   );
+  assert.doesNotMatch(publishPrepare, /valuta npm ci/);
+  assert.doesNotMatch(toolchain, /^npm ci$/m);
   assert.equal(vercel.installCommand, `${bootstrap} install`);
 });
