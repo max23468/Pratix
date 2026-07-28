@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.4] — 2026-07-28
+
+### Sotto il cofano
+
+- La toolchain usa npm 12.0.1 in locale, CI e Vercel, con bootstrap esplicito
+  prima dell'installazione delle dipendenze.
+
 ## [1.14.3] — 2026-07-26
 
 ### Correzioni
@@ -1478,6 +1485,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.4]: #1144--2026-07-28
 [1.14.3]: #1143--2026-07-26
 [1.14.2]: #1142--2026-07-26
 [1.14.1]: #1141--2026-07-26

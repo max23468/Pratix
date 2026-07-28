@@ -20,10 +20,10 @@ Pratix viene pubblicato su **Vercel** dal repository GitHub.
 7. Quando Quality e preview sono verificati, fai merge su `main`.
 8. Vercel pubblica la produzione dal branch `main`.
 
-Il workflow GitHub è volutamente leggero: `npm ci`, `npm run build`, lint solo
-sui file sorgente modificati e `npm audit --audit-level=moderate` solo quando
-cambiano `package.json` o `package-lock.json`. L'avvio manuale esegue sempre
-anche l'audit.
+Il workflow GitHub è volutamente leggero: installa npm 12 prima di `npm ci`,
+quindi esegue `npm run build`, lint solo sui file sorgente modificati e
+`npm audit --audit-level=moderate` solo quando cambiano `package.json` o
+`package-lock.json`. L'avvio manuale esegue sempre anche l'audit.
 
 Il repo resta privato e nel percorso gratuito: non basare il processo su branch
 protection a pagamento. La protezione reale è la disciplina di PR + Quality +
@@ -36,10 +36,13 @@ resta prima della pubblicazione. Il comando non modifica file: legge lo stato Gi
 controlla se nel worktree mancano le dipendenze, classifica il diff, guarda il
 blocco `CHANGELOG.md` `[Non rilasciato]` e propone la sequenza rapida.
 
-Se lavori in un worktree pulito appena creato, `node_modules` può mancare: in
-quel caso esegui `npm ci` una volta nella cartella del worktree. La cache npm
-resta condivisa a livello macchina, quindi i run successivi sono normalmente più
-rapidi.
+Se lavori in un worktree pulito appena creato, esegui `npm run setup`: il
+comando installa npm 12 prima di creare `node_modules` con `npm ci`. La cache
+npm resta condivisa a livello macchina, quindi i run successivi sono
+normalmente più rapidi.
+
+Vercel usa lo stesso npm tramite l'`installCommand` versionato in
+`vercel.json`, prima della build automatica.
 
 Quando vuoi far partire anche il gate locale proporzionato al diff:
 

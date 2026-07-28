@@ -17,7 +17,7 @@ Leggi nell'ordine:
 ## Setup locale
 
 ```bash
-npm ci
+npm run setup
 npm run dev
 ```
 
