@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Correzioni
+
+- Il controllo duplicati in creazione non dipende più dal volume di attività e
+  revisioni archiviate, quindi resta disponibile anche sugli account maturi.
+- Se la creazione di una fattura fallisce, fattura e ciclo di fatturazione
+  parziali vengono rimossi invece di restare come documenti vuoti.
+
 ## [1.14.7] — 2026-07-29
 
 ### Correzioni

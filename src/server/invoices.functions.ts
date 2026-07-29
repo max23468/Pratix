@@ -199,106 +199,127 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
 
     const { number, year } = await reserveNextInvoiceNumber(supabase, userId);
 
-    const { data: billingRun, error: billingRunError } = await supabase
-      .from("billing_runs")
-      .insert(buildBillingRunRow({ input: data, userId, totals }))
-      .select("id")
-      .single();
-    if (billingRunError) throw billingRunError;
+    // ponytail: pulizia compensativa, non una transazione. Copre le righe fattura e
+    // il ciclo di fatturazione creati qui; per atomicità stretta serve una RPC
+    // transazionale che includa anche stato attività e rendiconti su Storage.
+    let createdBillingRunId: string | null = null;
+    let createdInvoiceId: string | null = null;
+    try {
+      const { data: billingRun, error: billingRunError } = await supabase
+        .from("billing_runs")
+        .insert(buildBillingRunRow({ input: data, userId, totals }))
+        .select("id")
+        .single();
+      if (billingRunError) throw billingRunError;
+      createdBillingRunId = billingRun.id;
 
-    const { data: invoice, error: invoiceError } = await supabase
-      .from("invoices")
-      .insert(
-        withTriggerGeneratedCode(
-          buildInvoiceRow({
-            input: data,
-            userId,
-            billingRunId: billingRun.id,
-            firstIncluded,
-            number,
-            year,
-            totals,
-          }),
-        ),
-      )
-      .select("id, public_code")
-      .single();
-    if (invoiceError) throw invoiceError;
-
-    const invoiceLineRows = buildInvoiceLineRows({
-      input: data,
-      userId,
-      invoiceId: invoice.id,
-      included,
-      totals,
-    });
-
-    const { error: linesError } = await supabase.from("invoice_lines").insert(invoiceLineRows);
-    if (linesError) throw linesError;
-
-    const { error: itemsError } = await supabase.from("billing_run_items").insert(
-      buildBillingRunItemRows({
-        activities: activities as BillingActivity[],
-        billingRunId: billingRun.id,
-        selections: selectionById,
-        userId,
-      }),
-    );
-    if (itemsError) throw itemsError;
-
-    if (included.length > 0) {
-      const { error: includedError } = await supabase
-        .from("case_activities")
-        .update(
-          includedActivityUpdateForInvoiceStatus({
-            invoiceId: invoice.id,
-            invoiceStatus: data.status,
-          }),
+      const { data: invoice, error: invoiceError } = await supabase
+        .from("invoices")
+        .insert(
+          withTriggerGeneratedCode(
+            buildInvoiceRow({
+              input: data,
+              userId,
+              billingRunId: billingRun.id,
+              firstIncluded,
+              number,
+              year,
+              totals,
+            }),
+          ),
         )
-        .in(
-          "id",
-          included.map((activity) => activity.id),
-        );
-      if (includedError) throw includedError;
+        .select("id, public_code")
+        .single();
+      if (invoiceError) throw invoiceError;
+      createdInvoiceId = invoice.id;
+
+      const invoiceLineRows = buildInvoiceLineRows({
+        input: data,
+        userId,
+        invoiceId: invoice.id,
+        included,
+        totals,
+      });
+
+      const { error: linesError } = await supabase.from("invoice_lines").insert(invoiceLineRows);
+      if (linesError) throw linesError;
+
+      const { error: itemsError } = await supabase.from("billing_run_items").insert(
+        buildBillingRunItemRows({
+          activities: activities as BillingActivity[],
+          billingRunId: billingRun.id,
+          selections: selectionById,
+          userId,
+        }),
+      );
+      if (itemsError) throw itemsError;
+
+      if (included.length > 0) {
+        const { error: includedError } = await supabase
+          .from("case_activities")
+          .update(
+            includedActivityUpdateForInvoiceStatus({
+              invoiceId: invoice.id,
+              invoiceStatus: data.status,
+            }),
+          )
+          .in(
+            "id",
+            included.map((activity) => activity.id),
+          );
+        if (includedError) throw includedError;
+      }
+
+      for (const activity of postponed) {
+        const update = postponedActivityUpdate(activity, data.periodEnd);
+        const { error: postponedError } = await supabase
+          .from("case_activities")
+          .update({
+            postponed_until: update.postponed_until,
+            postponed_count: update.postponed_count,
+          })
+          .eq("id", update.id);
+        if (postponedError) throw postponedError;
+      }
+
+      const savedExports = await saveBillingExports({
+        supabase,
+        userId,
+        billingRunId: billingRun.id,
+        invoiceId: invoice.id,
+        principalName: principal.business_name,
+        periodStart: data.periodStart,
+        periodEnd: data.periodEnd,
+        included,
+      });
+
+      const { error: runUpdateError } = await supabase
+        .from("billing_runs")
+        .update({ invoice_id: invoice.id })
+        .eq("id", billingRun.id);
+      if (runUpdateError) throw runUpdateError;
+
+      return {
+        invoiceId: invoice.id,
+        invoiceRef: invoice.public_code ?? invoice.id,
+        billingRunId: billingRun.id,
+        number,
+        year,
+        exports: savedExports,
+      };
+    } catch (error) {
+      if (createdInvoiceId) {
+        await supabase.from("invoices").delete().eq("id", createdInvoiceId).eq("user_id", userId);
+      }
+      if (createdBillingRunId) {
+        await supabase
+          .from("billing_runs")
+          .delete()
+          .eq("id", createdBillingRunId)
+          .eq("user_id", userId);
+      }
+      throw error;
     }
-
-    for (const activity of postponed) {
-      const update = postponedActivityUpdate(activity, data.periodEnd);
-      const { error: postponedError } = await supabase
-        .from("case_activities")
-        .update({
-          postponed_until: update.postponed_until,
-          postponed_count: update.postponed_count,
-        })
-        .eq("id", update.id);
-      if (postponedError) throw postponedError;
-    }
-
-    const savedExports = await saveBillingExports({
-      supabase,
-      userId,
-      billingRunId: billingRun.id,
-      invoiceId: invoice.id,
-      principalName: principal.business_name,
-      periodStart: data.periodStart,
-      periodEnd: data.periodEnd,
-      included,
-    });
-
-    const { error: runUpdateError } = await supabase
-      .from("billing_runs")
-      .update({ invoice_id: invoice.id })
-      .eq("id", billingRun.id);
-    if (runUpdateError) throw runUpdateError;
-
-    return {
-      invoiceId: invoice.id,
-      invoiceRef: invoice.public_code ?? invoice.id,
-      billingRunId: billingRun.id,
-      number,
-      year,
-      exports: savedExports,
-    };
   });
 
 export const updateDraftBillingInvoiceFn = createServerFn({ method: "POST" })

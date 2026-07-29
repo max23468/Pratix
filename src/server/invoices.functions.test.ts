@@ -336,6 +336,58 @@ describe("server functions fatture", () => {
     expect(supabase.uploads[0].path).toContain("billing-exports/run-1/");
   });
 
+  it("elimina fattura e ciclo di fatturazione se le righe non superano il vincolo", async () => {
+    const supabase = new FakeSupabase();
+    supabase.queue("principals:select:single", {
+      data: { id: "principal-1", business_name: "Banca Test", default_general_expenses_rate: 10 },
+      error: null,
+    });
+    supabase.queue(
+      "profiles:select:single",
+      { data: { tax_regime: "ordinario", include_stamp_duty: false }, error: null },
+      {
+        data: { invoice_year: 2026, invoice_next_number: 12, invoice_number_prefix: "" },
+        error: null,
+      },
+    );
+    supabase.queue("case_activities:select:many", {
+      data: [
+        billingActivity,
+        { ...billingActivity, id: "activity-expense", kind: "expense_reimbursement" },
+      ],
+      error: null,
+    });
+    supabase.queue("billing_runs:insert:single", { data: { id: "run-1" }, error: null });
+    supabase.queue("invoices:insert:single", {
+      data: { id: "invoice-1", public_code: "FT-00001" },
+      error: null,
+    });
+    supabase.queue("invoice_lines:insert:many", {
+      data: null,
+      error: new Error("duplicate key value violates unique constraint"),
+    });
+
+    await expect(
+      handlerOf<
+        { data: typeof billingInput; context: { supabase: FakeSupabase; userId: string } },
+        unknown
+      >(createBillingInvoiceFn)({
+        data: billingInput,
+        context: { supabase, userId: "user-1" },
+      }),
+    ).rejects.toThrow("duplicate key value");
+
+    expect(supabase.callsFor("invoices", "delete")[0].filters).toEqual([
+      ["id", "invoice-1"],
+      ["user_id", "user-1"],
+    ]);
+    expect(supabase.callsFor("billing_runs", "delete")[0].filters).toEqual([
+      ["id", "run-1"],
+      ["user_id", "user-1"],
+    ]);
+    expect(supabase.uploads).toHaveLength(0);
+  });
+
   it("aggiorna una fattura in bozza senza riservare un nuovo numero", async () => {
     const supabase = new FakeSupabase();
     supabase.queue("invoices:select:single", {
