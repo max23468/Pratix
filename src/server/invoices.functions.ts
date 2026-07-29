@@ -335,8 +335,15 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
         exports: savedExports,
       };
     } catch (error) {
+      // Se Storage rifiuta la rimozione, conserva ciclo di fatturazione e righe
+      // billing_exports: sono l'unico riferimento ai file caricati e senza di
+      // loro il rendiconto resta irraggiungibile e non più eliminabile.
+      let storageCleanupFailed = false;
       if (uploadedExportPaths.length > 0) {
-        await supabase.storage.from(PRATIX_DOCUMENTS_BUCKET).remove(uploadedExportPaths);
+        const { error: removeError } = await supabase.storage
+          .from(PRATIX_DOCUMENTS_BUCKET)
+          .remove(uploadedExportPaths);
+        storageCleanupFailed = Boolean(removeError);
       }
       for (const restore of activityRestores) {
         await supabase
@@ -348,7 +355,7 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
       if (createdInvoiceId) {
         await supabase.from("invoices").delete().eq("id", createdInvoiceId).eq("user_id", userId);
       }
-      if (createdBillingRunId) {
+      if (createdBillingRunId && !storageCleanupFailed) {
         await supabase
           .from("billing_runs")
           .delete()
