@@ -110,6 +110,15 @@ class FakeQueryBuilder {
     return this;
   }
 
+  lt(column: string, value: unknown) {
+    this.filters.push([column, value]);
+    return this;
+  }
+
+  limit() {
+    return this;
+  }
+
   order() {
     return this;
   }
@@ -426,6 +435,67 @@ describe("server functions fatture", () => {
 
     expect(supabase.removals).toHaveLength(1);
     expect(supabase.callsFor("invoices", "delete")).toHaveLength(1);
+    expect(supabase.callsFor("billing_runs", "delete")).toHaveLength(0);
+  });
+
+  it("rimuove i cicli senza fattura rimasti da creazioni fallite precedenti", async () => {
+    const supabase = new FakeSupabase();
+    supabase.queue("billing_runs:select:many", {
+      data: [
+        {
+          id: "run-orfano",
+          billing_exports: [{ storage_path: "user-1/billing-exports/run-orfano/compensi.xlsx" }],
+        },
+      ],
+      error: null,
+    });
+    queueInvoiceCreationFailingAfterUpload(supabase);
+
+    await expect(
+      handlerOf<
+        { data: typeof billingInput; context: { supabase: FakeSupabase; userId: string } },
+        unknown
+      >(createBillingInvoiceFn)({
+        data: billingInput,
+        context: { supabase, userId: "user-1" },
+      }),
+    ).rejects.toThrow("storage non disponibile");
+
+    expect(supabase.removals[0]).toEqual({
+      bucket: "pratix-documents",
+      paths: ["user-1/billing-exports/run-orfano/compensi.xlsx"],
+    });
+    expect(supabase.callsFor("billing_runs", "delete")[0].filters).toEqual([
+      ["id", "run-orfano"],
+      ["user_id", "user-1"],
+    ]);
+  });
+
+  it("lascia il ciclo abbandonato per un nuovo tentativo se Storage rifiuta", async () => {
+    const supabase = new FakeSupabase();
+    supabase.storageRemoveError = new Error("storage remove non riuscita");
+    supabase.queue("billing_runs:select:many", {
+      data: [
+        {
+          id: "run-orfano",
+          billing_exports: [{ storage_path: "user-1/billing-exports/run-orfano/compensi.xlsx" }],
+        },
+      ],
+      error: null,
+    });
+    queueInvoiceCreationFailingAfterUpload(supabase);
+
+    await expect(
+      handlerOf<
+        { data: typeof billingInput; context: { supabase: FakeSupabase; userId: string } },
+        unknown
+      >(createBillingInvoiceFn)({
+        data: billingInput,
+        context: { supabase, userId: "user-1" },
+      }),
+    ).rejects.toThrow("storage non disponibile");
+
+    expect(supabase.removals).toHaveLength(2);
     expect(supabase.callsFor("billing_runs", "delete")).toHaveLength(0);
   });
 
