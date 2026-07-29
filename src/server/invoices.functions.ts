@@ -168,7 +168,7 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
     const { data: activities, error: activitiesError } = await supabase
       .from("case_activities")
       .select(
-        "id, case_id, principal_id, client_id, counterparty_id, activity_date, kind, status, invoice_id, description, quantity, unit_price, amount, postponed_count, cases(practice_number), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name), case_activity_hearings(hearing_date, position)",
+        "id, case_id, principal_id, client_id, counterparty_id, activity_date, kind, status, invoice_id, description, quantity, unit_price, amount, postponed_count, postponed_until, cases(practice_number), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name), case_activity_hearings(hearing_date, position)",
       )
       .eq("user_id", userId)
       .eq("principal_id", data.principalId)
@@ -199,11 +199,15 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
 
     const { number, year } = await reserveNextInvoiceNumber(supabase, userId);
 
-    // ponytail: pulizia compensativa, non una transazione. Copre le righe fattura e
-    // il ciclo di fatturazione creati qui; per atomicità stretta serve una RPC
-    // transazionale che includa anche stato attività e rendiconti su Storage.
+    // ponytail: pulizia compensativa, non una transazione. Ripristina lo stato delle
+    // attività ed elimina fattura e ciclo di fatturazione creati qui; per atomicità
+    // stretta serve una RPC transazionale che copra anche i rendiconti su Storage.
     let createdBillingRunId: string | null = null;
     let createdInvoiceId: string | null = null;
+    const activityRestores: Array<{
+      id: string;
+      payload: Database["public"]["Tables"]["case_activities"]["Update"];
+    }> = [];
     try {
       const { data: billingRun, error: billingRunError } = await supabase
         .from("billing_runs")
@@ -255,6 +259,16 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
       if (itemsError) throw itemsError;
 
       if (included.length > 0) {
+        for (const activity of included) {
+          activityRestores.push({
+            id: activity.id,
+            payload: {
+              status: activity.status,
+              invoice_id: activity.invoice_id,
+              postponed_until: activity.postponed_until ?? null,
+            },
+          });
+        }
         const { error: includedError } = await supabase
           .from("case_activities")
           .update(
@@ -272,6 +286,13 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
 
       for (const activity of postponed) {
         const update = postponedActivityUpdate(activity, data.periodEnd);
+        activityRestores.push({
+          id: activity.id,
+          payload: {
+            postponed_until: activity.postponed_until ?? null,
+            postponed_count: Number(activity.postponed_count ?? 0),
+          },
+        });
         const { error: postponedError } = await supabase
           .from("case_activities")
           .update({
@@ -308,6 +329,13 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
         exports: savedExports,
       };
     } catch (error) {
+      for (const restore of activityRestores) {
+        await supabase
+          .from("case_activities")
+          .update(restore.payload)
+          .eq("id", restore.id)
+          .eq("user_id", userId);
+      }
       if (createdInvoiceId) {
         await supabase.from("invoices").delete().eq("id", createdInvoiceId).eq("user_id", userId);
       }

@@ -216,6 +216,7 @@ const billingActivity = {
   unit_price: 500,
   amount: 1000,
   postponed_count: null,
+  postponed_until: null,
   cases: { practice_number: 42 },
   clients: { kind: "individual", first_name: "Ada", last_name: "Rossi", business_name: null },
   counterparties: {
@@ -336,7 +337,7 @@ describe("server functions fatture", () => {
     expect(supabase.uploads[0].path).toContain("billing-exports/run-1/");
   });
 
-  it("elimina fattura e ciclo di fatturazione se le righe non superano il vincolo", async () => {
+  it("ripristina le attività ed elimina fattura e ciclo se la creazione fallisce", async () => {
     const supabase = new FakeSupabase();
     supabase.queue("principals:select:single", {
       data: { id: "principal-1", business_name: "Banca Test", default_general_expenses_rate: 10 },
@@ -362,9 +363,9 @@ describe("server functions fatture", () => {
       data: { id: "invoice-1", public_code: "FT-00001" },
       error: null,
     });
-    supabase.queue("invoice_lines:insert:many", {
+    supabase.queue("billing_exports:insert:single", {
       data: null,
-      error: new Error("duplicate key value violates unique constraint"),
+      error: new Error("storage non disponibile"),
     });
 
     await expect(
@@ -375,8 +376,15 @@ describe("server functions fatture", () => {
         data: billingInput,
         context: { supabase, userId: "user-1" },
       }),
-    ).rejects.toThrow("duplicate key value");
+    ).rejects.toThrow("storage non disponibile");
 
+    const restores = supabase.callsFor("case_activities", "update").slice(-2);
+    expect(restores[0].payload).toEqual({
+      status: "to_invoice",
+      invoice_id: null,
+      postponed_until: null,
+    });
+    expect(restores[1].payload).toEqual({ postponed_until: null, postponed_count: 0 });
     expect(supabase.callsFor("invoices", "delete")[0].filters).toEqual([
       ["id", "invoice-1"],
       ["user_id", "user-1"],
@@ -385,7 +393,6 @@ describe("server functions fatture", () => {
       ["id", "run-1"],
       ["user_id", "user-1"],
     ]);
-    expect(supabase.uploads).toHaveLength(0);
   });
 
   it("aggiorna una fattura in bozza senza riservare un nuovo numero", async () => {
