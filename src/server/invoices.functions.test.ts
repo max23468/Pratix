@@ -141,6 +141,7 @@ class FakeSupabase {
   readonly rpcCalls: StoredRpcCall[] = [];
   readonly uploads: Array<{ bucket: string; path: string; body: Buffer; options: unknown }> = [];
   readonly removals: Array<{ bucket: string; paths: string[] }> = [];
+  storageRemoveError: Error | null = null;
   private readonly responses = new Map<string, QueryResult[]>();
 
   readonly storage = {
@@ -151,7 +152,7 @@ class FakeSupabase {
       },
       remove: (paths: string[]) => {
         this.removals.push({ bucket, paths });
-        return Promise.resolve({ error: null });
+        return Promise.resolve({ error: this.storageRemoveError });
       },
     }),
   };
@@ -231,6 +232,39 @@ const billingActivity = {
   },
   case_activity_hearings: [{ hearing_date: "2026-05-20", position: 1 }],
 };
+
+/** Creazione fattura che fallisce sul secondo insert dei rendiconti, dopo gli upload. */
+function queueInvoiceCreationFailingAfterUpload(supabase: FakeSupabase) {
+  supabase.queue("principals:select:single", {
+    data: { id: "principal-1", business_name: "Banca Test", default_general_expenses_rate: 10 },
+    error: null,
+  });
+  supabase.queue(
+    "profiles:select:single",
+    { data: { tax_regime: "ordinario", include_stamp_duty: false }, error: null },
+    {
+      data: { invoice_year: 2026, invoice_next_number: 12, invoice_number_prefix: "" },
+      error: null,
+    },
+  );
+  supabase.queue("case_activities:select:many", {
+    data: [
+      billingActivity,
+      { ...billingActivity, id: "activity-expense", kind: "expense_reimbursement" },
+    ],
+    error: null,
+  });
+  supabase.queue("billing_runs:insert:single", { data: { id: "run-1" }, error: null });
+  supabase.queue("invoices:insert:single", {
+    data: { id: "invoice-1", public_code: "FT-00001" },
+    error: null,
+  });
+  supabase.queue(
+    "billing_exports:insert:single",
+    { data: { id: "export-fees", file_name: "compensi-committente.xlsx" }, error: null },
+    { data: null, error: new Error("storage non disponibile") },
+  );
+}
 
 beforeEach(() => {
   capturedServerFns.length = 0;
@@ -343,35 +377,7 @@ describe("server functions fatture", () => {
 
   it("ripristina le attività ed elimina fattura e ciclo se la creazione fallisce", async () => {
     const supabase = new FakeSupabase();
-    supabase.queue("principals:select:single", {
-      data: { id: "principal-1", business_name: "Banca Test", default_general_expenses_rate: 10 },
-      error: null,
-    });
-    supabase.queue(
-      "profiles:select:single",
-      { data: { tax_regime: "ordinario", include_stamp_duty: false }, error: null },
-      {
-        data: { invoice_year: 2026, invoice_next_number: 12, invoice_number_prefix: "" },
-        error: null,
-      },
-    );
-    supabase.queue("case_activities:select:many", {
-      data: [
-        billingActivity,
-        { ...billingActivity, id: "activity-expense", kind: "expense_reimbursement" },
-      ],
-      error: null,
-    });
-    supabase.queue("billing_runs:insert:single", { data: { id: "run-1" }, error: null });
-    supabase.queue("invoices:insert:single", {
-      data: { id: "invoice-1", public_code: "FT-00001" },
-      error: null,
-    });
-    supabase.queue(
-      "billing_exports:insert:single",
-      { data: { id: "export-fees", file_name: "compensi-committente.xlsx" }, error: null },
-      { data: null, error: new Error("storage non disponibile") },
-    );
+    queueInvoiceCreationFailingAfterUpload(supabase);
 
     await expect(
       handlerOf<
@@ -401,6 +407,26 @@ describe("server functions fatture", () => {
       ["id", "run-1"],
       ["user_id", "user-1"],
     ]);
+  });
+
+  it("conserva ciclo e riferimenti ai rendiconti se Storage rifiuta la rimozione", async () => {
+    const supabase = new FakeSupabase();
+    supabase.storageRemoveError = new Error("storage remove non riuscita");
+    queueInvoiceCreationFailingAfterUpload(supabase);
+
+    await expect(
+      handlerOf<
+        { data: typeof billingInput; context: { supabase: FakeSupabase; userId: string } },
+        unknown
+      >(createBillingInvoiceFn)({
+        data: billingInput,
+        context: { supabase, userId: "user-1" },
+      }),
+    ).rejects.toThrow("storage non disponibile");
+
+    expect(supabase.removals).toHaveLength(1);
+    expect(supabase.callsFor("invoices", "delete")).toHaveLength(1);
+    expect(supabase.callsFor("billing_runs", "delete")).toHaveLength(0);
   });
 
   it("aggiorna una fattura in bozza senza riservare un nuovo numero", async () => {

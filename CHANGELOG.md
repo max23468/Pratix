@@ -6,6 +6,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Sotto il cofano
+
+- Se lo storage rifiuta la rimozione dei rendiconti durante la pulizia di una
+  fattura non riuscita, il ciclo di fatturazione e i riferimenti ai file
+  vengono conservati per un nuovo tentativo.
+
 ## [1.14.9] — 2026-07-29
 
 ### Sotto il cofano
