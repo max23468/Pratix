@@ -216,6 +216,7 @@ const billingActivity = {
   unit_price: 500,
   amount: 1000,
   postponed_count: null,
+  postponed_until: null,
   cases: { practice_number: 42 },
   clients: { kind: "individual", first_name: "Ada", last_name: "Rossi", business_name: null },
   counterparties: {
@@ -334,6 +335,64 @@ describe("server functions fatture", () => {
     });
     expect(supabase.uploads).toHaveLength(2);
     expect(supabase.uploads[0].path).toContain("billing-exports/run-1/");
+  });
+
+  it("ripristina le attività ed elimina fattura e ciclo se la creazione fallisce", async () => {
+    const supabase = new FakeSupabase();
+    supabase.queue("principals:select:single", {
+      data: { id: "principal-1", business_name: "Banca Test", default_general_expenses_rate: 10 },
+      error: null,
+    });
+    supabase.queue(
+      "profiles:select:single",
+      { data: { tax_regime: "ordinario", include_stamp_duty: false }, error: null },
+      {
+        data: { invoice_year: 2026, invoice_next_number: 12, invoice_number_prefix: "" },
+        error: null,
+      },
+    );
+    supabase.queue("case_activities:select:many", {
+      data: [
+        billingActivity,
+        { ...billingActivity, id: "activity-expense", kind: "expense_reimbursement" },
+      ],
+      error: null,
+    });
+    supabase.queue("billing_runs:insert:single", { data: { id: "run-1" }, error: null });
+    supabase.queue("invoices:insert:single", {
+      data: { id: "invoice-1", public_code: "FT-00001" },
+      error: null,
+    });
+    supabase.queue("billing_exports:insert:single", {
+      data: null,
+      error: new Error("storage non disponibile"),
+    });
+
+    await expect(
+      handlerOf<
+        { data: typeof billingInput; context: { supabase: FakeSupabase; userId: string } },
+        unknown
+      >(createBillingInvoiceFn)({
+        data: billingInput,
+        context: { supabase, userId: "user-1" },
+      }),
+    ).rejects.toThrow("storage non disponibile");
+
+    const restores = supabase.callsFor("case_activities", "update").slice(-2);
+    expect(restores[0].payload).toEqual({
+      status: "to_invoice",
+      invoice_id: null,
+      postponed_until: null,
+    });
+    expect(restores[1].payload).toEqual({ postponed_until: null, postponed_count: 0 });
+    expect(supabase.callsFor("invoices", "delete")[0].filters).toEqual([
+      ["id", "invoice-1"],
+      ["user_id", "user-1"],
+    ]);
+    expect(supabase.callsFor("billing_runs", "delete")[0].filters).toEqual([
+      ["id", "run-1"],
+      ["user_id", "user-1"],
+    ]);
   });
 
   it("aggiorna una fattura in bozza senza riservare un nuovo numero", async () => {

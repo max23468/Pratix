@@ -55,6 +55,7 @@ export type BillingActivity = {
   unit_price: number | string;
   amount: number | string;
   postponed_count?: number | string | null;
+  postponed_until?: string | null;
   cases?: { practice_number: number | null } | null;
   clients?: BillingPartyDisplay | null;
   counterparties?: BillingPartyDisplay | null;

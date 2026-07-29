@@ -47,6 +47,20 @@ type UntypedSupabase = {
   from: <T = unknown>(table: string) => UntypedQuery<T>;
 };
 
+type DuplicateSubjectLabelRow = {
+  kind: string;
+  first_name: string | null;
+  last_name: string | null;
+  business_name: string | null;
+};
+
+type ActivityScanRow = ActivityDuplicateRow & {
+  cases: { public_code: string | null; practice_number: number } | null;
+  principals: { business_name: string } | null;
+  clients: DuplicateSubjectLabelRow | null;
+  counterparties: DuplicateSubjectLabelRow | null;
+};
+
 type FindDuplicateDraftInput = {
   entityType: DuplicateEntityType;
   draft: Record<string, unknown>;
@@ -125,7 +139,7 @@ export const findDuplicateCandidatesFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(validateFindDuplicateDraftInput)
   .handler(async ({ data, context }) => {
-    const scanData = await loadDuplicateScanData(context.supabase, context.userId);
+    const scanData = await loadDuplicateScanData(context.supabase, context.userId, "draft");
     return scanDuplicateDraft({
       entityType: data.entityType,
       draft: data.draft,
@@ -189,8 +203,19 @@ export const resolveDuplicateCandidateFn = createServerFn({ method: "POST" })
     return review;
   });
 
-async function loadDuplicateScanData(client: unknown, userId: string) {
+/**
+ * `scope: "draft"` carica solo gli insiemi usati dal controllo in fase di
+ * creazione: attività e revisioni non servono e il loro volume non deve
+ * bloccare il salvataggio di committenti, clienti, controparti e pratiche.
+ */
+async function loadDuplicateScanData(
+  client: unknown,
+  userId: string,
+  scope: "full" | "draft" = "full",
+) {
   const db = asDb(client);
+  const emptyResult = <T>() => Promise.resolve({ data: [] as T, error: null });
+  const fullScope = scope === "full";
   const [
     principalsResult,
     clientsResult,
@@ -275,37 +300,22 @@ async function loadDuplicateScanData(client: unknown, userId: string) {
       )
       .eq("user_id", userId)
       .limit(DUPLICATE_SCAN_FETCH_LIMIT),
-    db
-      .from<
-        Array<
-          ActivityDuplicateRow & {
-            cases: { public_code: string | null; practice_number: number } | null;
-            principals: { business_name: string } | null;
-            clients: {
-              kind: string;
-              first_name: string | null;
-              last_name: string | null;
-              business_name: string | null;
-            } | null;
-            counterparties: {
-              kind: string;
-              first_name: string | null;
-              last_name: string | null;
-              business_name: string | null;
-            } | null;
-          }
-        >
-      >("case_activities")
-      .select(
-        "id, case_id, principal_id, client_id, counterparty_id, price_item_id, invoice_id, activity_date, kind, status, snapshot_price_code, snapshot_price_name, description, quantity, unit_price, amount, cases(public_code, practice_number), principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
-      )
-      .eq("user_id", userId)
-      .limit(DUPLICATE_SCAN_FETCH_LIMIT),
-    db
-      .from<DuplicateReviewRow[]>("duplicate_reviews")
-      .select("*")
-      .eq("user_id", userId)
-      .limit(DUPLICATE_SCAN_FETCH_LIMIT),
+    fullScope
+      ? db
+          .from<ActivityScanRow[]>("case_activities")
+          .select(
+            "id, case_id, principal_id, client_id, counterparty_id, price_item_id, invoice_id, activity_date, kind, status, snapshot_price_code, snapshot_price_name, description, quantity, unit_price, amount, cases(public_code, practice_number), principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
+          )
+          .eq("user_id", userId)
+          .limit(DUPLICATE_SCAN_FETCH_LIMIT)
+      : emptyResult<ActivityScanRow[]>(),
+    fullScope
+      ? db
+          .from<DuplicateReviewRow[]>("duplicate_reviews")
+          .select("*")
+          .eq("user_id", userId)
+          .limit(DUPLICATE_SCAN_FETCH_LIMIT)
+      : emptyResult<DuplicateReviewRow[]>(),
   ]);
 
   for (const result of [

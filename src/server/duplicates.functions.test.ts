@@ -599,6 +599,32 @@ describe("duplicates server functions", () => {
     });
   });
 
+  it("non blocca il controllo in creazione quando le attività superano il limite", async () => {
+    const supabase = new FakeSupabase();
+    queueScanData(supabase, {
+      clients: [{ id: "client-1", public_code: "CLI-1", kind: "company", business_name: "Beta" }],
+      activities: Array.from({ length: 501 }, (_, index) => ({ id: `activity-${index}` })),
+      reviews: Array.from({ length: 501 }, (_, index) => ({ id: `review-${index}` })),
+    });
+    duplicateLogicMock.scanDuplicateDraft.mockReturnValue([]);
+
+    await expect(
+      handlerOf<
+        {
+          data: { entityType: "client"; draft: { business_name: string } };
+          context: { supabase: FakeSupabase; userId: string };
+        },
+        unknown
+      >(findDuplicateCandidatesFn)({
+        data: { entityType: "client", draft: { business_name: "Beta Srl" } },
+        context: { supabase, userId: "user-1" },
+      }),
+    ).resolves.toEqual([]);
+
+    expect(supabase.callsFor("case_activities", "select")).toHaveLength(0);
+    expect(supabase.callsFor("duplicate_reviews", "select")).toHaveLength(0);
+  });
+
   it("normalizza la coppia in ordine lessicografico e calcola lo snooze", async () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-06-03T10:00:00.000Z"));
