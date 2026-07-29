@@ -140,6 +140,7 @@ class FakeSupabase {
   readonly calls: StoredCall[] = [];
   readonly rpcCalls: StoredRpcCall[] = [];
   readonly uploads: Array<{ bucket: string; path: string; body: Buffer; options: unknown }> = [];
+  readonly removals: Array<{ bucket: string; paths: string[] }> = [];
   private readonly responses = new Map<string, QueryResult[]>();
 
   readonly storage = {
@@ -148,7 +149,10 @@ class FakeSupabase {
         this.uploads.push({ bucket, path, body, options });
         return Promise.resolve({ error: null });
       },
-      remove: () => Promise.resolve({ error: null }),
+      remove: (paths: string[]) => {
+        this.removals.push({ bucket, paths });
+        return Promise.resolve({ error: null });
+      },
     }),
   };
 
@@ -363,10 +367,11 @@ describe("server functions fatture", () => {
       data: { id: "invoice-1", public_code: "FT-00001" },
       error: null,
     });
-    supabase.queue("billing_exports:insert:single", {
-      data: null,
-      error: new Error("storage non disponibile"),
-    });
+    supabase.queue(
+      "billing_exports:insert:single",
+      { data: { id: "export-fees", file_name: "compensi-committente.xlsx" }, error: null },
+      { data: null, error: new Error("storage non disponibile") },
+    );
 
     await expect(
       handlerOf<
@@ -385,6 +390,9 @@ describe("server functions fatture", () => {
       postponed_until: null,
     });
     expect(restores[1].payload).toEqual({ postponed_until: null, postponed_count: 0 });
+    expect(supabase.removals).toEqual([
+      { bucket: "pratix-documents", paths: supabase.uploads.map((upload) => upload.path) },
+    ]);
     expect(supabase.callsFor("invoices", "delete")[0].filters).toEqual([
       ["id", "invoice-1"],
       ["user_id", "user-1"],

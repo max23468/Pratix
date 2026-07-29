@@ -6,6 +6,11 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Sotto il cofano
+
+- Se la creazione di una fattura fallisce, i rendiconti Excel già caricati
+  vengono rimossi dallo storage insieme alle righe eliminate.
+
 ## [1.14.8] — 2026-07-29
 
 ### Correzioni

@@ -80,6 +80,7 @@ async function saveBillingExports({
   periodStart,
   periodEnd,
   included,
+  uploadedPaths,
 }: {
   supabase: SupabaseClient<Database>;
   userId: string;
@@ -89,6 +90,8 @@ async function saveBillingExports({
   periodStart: string;
   periodEnd: string;
   included: BillingActivity[];
+  /** Raccoglie i path caricati perché il chiamante possa rimuoverli in rollback. */
+  uploadedPaths?: string[];
 }) {
   const exportsToSave = [
     buildBillingWorkbook({
@@ -117,6 +120,7 @@ async function saveBillingExports({
         upsert: true,
       });
     if (uploadError) throw uploadError;
+    uploadedPaths?.push(storagePath);
 
     const { data: billingExport, error: exportError } = await supabase
       .from("billing_exports")
@@ -200,10 +204,11 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
     const { number, year } = await reserveNextInvoiceNumber(supabase, userId);
 
     // ponytail: pulizia compensativa, non una transazione. Ripristina lo stato delle
-    // attività ed elimina fattura e ciclo di fatturazione creati qui; per atomicità
-    // stretta serve una RPC transazionale che copra anche i rendiconti su Storage.
+    // attività, rimuove i rendiconti caricati ed elimina fattura e ciclo creati qui;
+    // per atomicità stretta serve una RPC transazionale.
     let createdBillingRunId: string | null = null;
     let createdInvoiceId: string | null = null;
+    const uploadedExportPaths: string[] = [];
     const activityRestores: Array<{
       id: string;
       payload: Database["public"]["Tables"]["case_activities"]["Update"];
@@ -312,6 +317,7 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
         periodStart: data.periodStart,
         periodEnd: data.periodEnd,
         included,
+        uploadedPaths: uploadedExportPaths,
       });
 
       const { error: runUpdateError } = await supabase
@@ -329,6 +335,9 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
         exports: savedExports,
       };
     } catch (error) {
+      if (uploadedExportPaths.length > 0) {
+        await supabase.storage.from(PRATIX_DOCUMENTS_BUCKET).remove(uploadedExportPaths);
+      }
       for (const restore of activityRestores) {
         await supabase
           .from("case_activities")
