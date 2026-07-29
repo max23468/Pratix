@@ -6,6 +6,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.9] — 2026-07-29
+
 ### Sotto il cofano
 
 - Se la creazione di una fattura fallisce, i rendiconti Excel già caricati
@@ -1527,6 +1529,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.9]: #1149--2026-07-29
 [1.14.8]: #1148--2026-07-29
 [1.14.7]: #1147--2026-07-29
 [1.14.6]: #1146--2026-07-28
