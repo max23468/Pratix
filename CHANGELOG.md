@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Sotto il cofano
+
+- I rendiconti Excel vengono registrati in database prima di essere caricati,
+  così nessun file resta senza riferimento.
+- I cicli di fatturazione rimasti senza fattura da oltre un giorno vengono
+  ripuliti alla creazione fattura successiva, ritentando la rimozione dei file.
+
 ## [1.14.10] — 2026-07-29
 
 ### Sotto il cofano

@@ -36,6 +36,10 @@ import {
   type UpdateDraftBillingInvoiceInput,
 } from "@/server/invoice-billing.logic";
 
+/** Un ciclo senza fattura più vecchio di questa soglia è debris di una creazione fallita. */
+const ABANDONED_BILLING_RUN_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const ABANDONED_BILLING_RUN_SWEEP_LIMIT = 20;
+
 async function reserveNextInvoiceNumber(supabase: SupabaseClient<Database>, userId: string) {
   const currentYear = new Date().getFullYear();
 
@@ -113,15 +117,9 @@ async function saveBillingExports({
   const savedExports = [];
   for (const file of exportsToSave) {
     const storagePath = buildBillingExportStoragePath(userId, billingRunId, file.fileName);
-    const { error: uploadError } = await supabase.storage
-      .from(PRATIX_DOCUMENTS_BUCKET)
-      .upload(storagePath, Buffer.from(file.bytes), {
-        contentType: file.mimeType,
-        upsert: true,
-      });
-    if (uploadError) throw uploadError;
-    uploadedPaths?.push(storagePath);
 
+    // La riga precede l'upload: un riferimento senza oggetto è innocuo, un oggetto
+    // senza riferimento resta invisibile a ogni pulizia successiva.
     const { data: billingExport, error: exportError } = await supabase
       .from("billing_exports")
       .insert({
@@ -137,10 +135,51 @@ async function saveBillingExports({
       .select("id, file_name")
       .single();
     if (exportError) throw exportError;
+
+    uploadedPaths?.push(storagePath);
+    const { error: uploadError } = await supabase.storage
+      .from(PRATIX_DOCUMENTS_BUCKET)
+      .upload(storagePath, Buffer.from(file.bytes), {
+        contentType: file.mimeType,
+        upsert: true,
+      });
+    if (uploadError) throw uploadError;
+
     savedExports.push(billingExport);
   }
 
   return savedExports;
+}
+
+/**
+ * Elimina i cicli di fatturazione rimasti senza fattura da oltre un giorno: sono
+ * residui di creazioni fallite e la loro pulizia Storage va ritentata. Se Storage
+ * rifiuta ancora, il ciclo resta e il tentativo si ripete alla creazione successiva.
+ */
+async function sweepAbandonedBillingRuns(supabase: SupabaseClient<Database>, userId: string) {
+  const cutoff = new Date(Date.now() - ABANDONED_BILLING_RUN_MAX_AGE_MS).toISOString();
+  const { data: runs, error } = await supabase
+    .from("billing_runs")
+    .select("id, billing_exports(storage_path)")
+    .eq("user_id", userId)
+    .is("invoice_id", null)
+    .lt("created_at", cutoff)
+    .limit(ABANDONED_BILLING_RUN_SWEEP_LIMIT);
+  // La pulizia è opportunistica: un suo errore non deve impedire la fatturazione.
+  if (error || !runs?.length) return;
+
+  for (const run of runs) {
+    const paths = (run.billing_exports ?? [])
+      .map((billingExport) => billingExport.storage_path)
+      .filter((path): path is string => Boolean(path));
+    if (paths.length > 0) {
+      const { error: removeError } = await supabase.storage
+        .from(PRATIX_DOCUMENTS_BUCKET)
+        .remove(paths);
+      if (removeError) continue;
+    }
+    await supabase.from("billing_runs").delete().eq("id", run.id).eq("user_id", userId);
+  }
 }
 
 export const createBillingInvoiceFn = createServerFn({ method: "POST" })
@@ -150,6 +189,8 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
     const { supabase, userId } = context;
     const selectedIds = selectedActivityIds(data.selections);
     const selectionById = selectionMap(data.selections);
+
+    await sweepAbandonedBillingRuns(supabase, userId);
 
     const [{ data: principal, error: principalError }, { data: profile, error: profileError }] =
       await Promise.all([
