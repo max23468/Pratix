@@ -6,6 +6,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.8] — 2026-07-29
+
 ### Correzioni
 
 - Il controllo duplicati in creazione non dipende più dal volume di attività e
@@ -1520,6 +1522,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.8]: #1148--2026-07-29
 [1.14.7]: #1147--2026-07-29
 [1.14.6]: #1146--2026-07-28
 [1.14.5]: #1145--2026-07-28
