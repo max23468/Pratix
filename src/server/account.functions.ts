@@ -5,6 +5,7 @@ import {
   ACCOUNT_DATA_DELETE_TABLE_ORDER,
   accountStoragePrefix,
   mergeStoragePaths,
+  ownedStoragePaths,
   PRATIX_DOCUMENTS_BUCKET,
   validateDeleteAccountInput,
 } from "@/server/account-deletion.logic";
@@ -16,20 +17,25 @@ type StorageListItem = {
 };
 
 async function listStoragePaths(prefix: string): Promise<string[]> {
-  const { data, error } = await supabaseAdmin.storage
-    .from(PRATIX_DOCUMENTS_BUCKET)
-    .list(prefix, { limit: 1000 });
-  if (error) throw error;
-
   const paths: string[] = [];
-  for (const item of (data ?? []) as StorageListItem[]) {
-    const path = `${prefix}/${item.name}`;
-    const isFolder = !item.id && !item.metadata;
-    if (isFolder) {
-      paths.push(...(await listStoragePaths(path)));
-      continue;
+  const pageSize = 1000;
+  for (let offset = 0; ; offset += pageSize) {
+    const { data, error } = await supabaseAdmin.storage
+      .from(PRATIX_DOCUMENTS_BUCKET)
+      .list(prefix, { limit: pageSize, offset });
+    if (error) throw error;
+
+    const page = (data ?? []) as StorageListItem[];
+    for (const item of page) {
+      const path = `${prefix}/${item.name}`;
+      const isFolder = !item.id && !item.metadata;
+      if (isFolder) {
+        paths.push(...(await listStoragePaths(path)));
+        continue;
+      }
+      paths.push(path);
     }
-    paths.push(path);
+    if (page.length < pageSize) break;
   }
 
   return paths;
@@ -95,7 +101,8 @@ export const deleteAccountFn = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const userId = context.userId;
     const prefix = accountStoragePrefix(userId);
-    const paths = mergeStoragePaths(
+    const paths = ownedStoragePaths(
+      userId,
       await knownStoragePaths(userId),
       await listStoragePaths(prefix),
     );

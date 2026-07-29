@@ -8,6 +8,7 @@ type StoredCall = {
   action: string;
   filters: Array<[string, unknown]>;
 };
+type StorageListCall = { prefix: string; options: { limit: number; offset: number } };
 
 const { adminState } = vi.hoisted(() => ({
   adminState: { current: null as FakeSupabaseAdmin | null },
@@ -86,7 +87,7 @@ class FakeQueryBuilder {
 class FakeSupabaseAdmin {
   readonly calls: StoredCall[] = [];
   readonly removeCalls: string[][] = [];
-  readonly listCalls: string[] = [];
+  readonly listCalls: StorageListCall[] = [];
   private readonly responses = new Map<string, QueryResult[]>();
   private readonly storageLists = new Map<
     string,
@@ -101,8 +102,8 @@ class FakeSupabaseAdmin {
 
   readonly storage = {
     from: (_bucket: string) => ({
-      list: (prefix: string) => {
-        this.listCalls.push(prefix);
+      list: (prefix: string, options: { limit: number; offset: number }) => {
+        this.listCalls.push({ prefix, options });
         const queued = this.storageLists.get(prefix) ?? [];
         const next = queued.shift() ?? { data: [], error: null };
         this.storageLists.set(prefix, queued);
@@ -189,7 +190,10 @@ describe("deleteAccountFn", () => {
       storageCleanupCompleted: true,
     });
     expect(supabaseAdmin.auth.admin.deleteUser).toHaveBeenCalledWith("user-1");
-    expect(supabaseAdmin.listCalls).toEqual(["user-1", "user-1/attachments"]);
+    expect(supabaseAdmin.listCalls).toEqual([
+      { prefix: "user-1", options: { limit: 1000, offset: 0 } },
+      { prefix: "user-1/attachments", options: { limit: 1000, offset: 0 } },
+    ]);
     expect(supabaseAdmin.removeCalls).toEqual([
       [
         "user-1/attachments/a.pdf",
@@ -233,5 +237,44 @@ describe("deleteAccountFn", () => {
     });
     expect(supabaseAdmin.auth.admin.deleteUser).toHaveBeenCalledWith("user-1");
     expect(supabaseAdmin.removeCalls).toEqual([["user-1/attachments/a.pdf"]]);
+  });
+
+  it("pagina tutti gli oggetti e scarta path noti fuori dal prefix utente", async () => {
+    const supabaseAdmin = adminState.current!;
+    supabaseAdmin.queue("activity_attachments:select", {
+      data: [{ storage_path: "user-2/attachments/victim.pdf" }],
+      error: null,
+    });
+    supabaseAdmin.queue("billing_exports:select", { data: [], error: null });
+    supabaseAdmin.queue("imports:select", { data: [], error: null });
+    supabaseAdmin.queueStorageList(
+      "user-1",
+      {
+        data: Array.from({ length: 1000 }, (_, index) => ({
+          name: `file-${index}.pdf`,
+          id: `file-${index}`,
+          metadata: {},
+        })),
+        error: null,
+      },
+      {
+        data: [{ name: "file-1000.pdf", id: "file-1000", metadata: {} }],
+        error: null,
+      },
+    );
+
+    const result = await handlerOf<
+      { context: { userId: string } },
+      { removedStorageObjects: number; storageCleanupCompleted: boolean }
+    >(deleteAccountFn)({
+      context: { userId: "user-1" },
+    });
+
+    expect(result).toMatchObject({ removedStorageObjects: 1001, storageCleanupCompleted: true });
+    expect(supabaseAdmin.listCalls).toEqual([
+      { prefix: "user-1", options: { limit: 1000, offset: 0 } },
+      { prefix: "user-1", options: { limit: 1000, offset: 1000 } },
+    ]);
+    expect(supabaseAdmin.removeCalls.flat()).not.toContain("user-2/attachments/victim.pdf");
   });
 });

@@ -27,6 +27,9 @@ concurrency:
 jobs:
   codex-pr-comments:
     name: Sync Codex feedback inbox
+    if: >-
+      github.event_name != 'issue_comment' ||
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
     runs-on: ubuntu-latest
     timeout-minutes: 75
 

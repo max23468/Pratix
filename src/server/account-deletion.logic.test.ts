@@ -5,6 +5,7 @@ import {
   ACCOUNT_DATA_DELETE_TABLE_ORDER,
   accountStoragePrefix,
   mergeStoragePaths,
+  ownedStoragePaths,
   validateDeleteAccountInput,
 } from "./account-deletion.logic";
 
@@ -24,6 +25,13 @@ describe("account deletion logic", () => {
         ["", "user-1/activities/b.pdf"],
       ),
     ).toEqual(["user-1/activities/b.pdf", "user-1/invoices/a.pdf"]);
+    expect(
+      ownedStoragePaths("user-1", [
+        "user-1/invoices/a.pdf",
+        "user-10/invoices/b.pdf",
+        "user-1/../user-2/invoices/c.pdf",
+      ]),
+    ).toEqual(["user-1/invoices/a.pdf"]);
   });
 
   it("cancella le righe applicative prima dei parent con FK restrittive", () => {

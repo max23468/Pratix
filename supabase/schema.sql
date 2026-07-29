@@ -762,6 +762,9 @@ CREATE TABLE public.invoice_lines (
 );
 CREATE INDEX idx_invoice_lines_invoice ON public.invoice_lines (invoice_id);
 CREATE INDEX idx_invoice_lines_user    ON public.invoice_lines (user_id);
+CREATE UNIQUE INDEX invoice_lines_case_activity_unique
+  ON public.invoice_lines (case_activity_id)
+  WHERE case_activity_id IS NOT NULL;
 
 CREATE TABLE public.principals (
   id                              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -1184,26 +1187,26 @@ ALTER TABLE public.user_table_preferences
 ALTER TABLE public.cases
   ADD CONSTRAINT cases_user_id_fkey
   FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
-  ADD CONSTRAINT cases_client_id_fkey
-  FOREIGN KEY (client_id) REFERENCES public.clients(id) ON DELETE SET NULL;
+  ADD CONSTRAINT cases_client_owner_fkey
+  FOREIGN KEY (client_id, user_id) REFERENCES public.clients(id, user_id) ON DELETE SET NULL (client_id);
 
 ALTER TABLE public.case_status_history
-  ADD CONSTRAINT case_status_history_case_id_fkey
-  FOREIGN KEY (case_id) REFERENCES public.cases(id) ON DELETE CASCADE,
+  ADD CONSTRAINT case_status_history_case_owner_fkey
+  FOREIGN KEY (case_id, user_id) REFERENCES public.cases(id, user_id) ON DELETE CASCADE,
   ADD CONSTRAINT case_status_history_user_id_fkey
   FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
 ALTER TABLE public.invoices
   ADD CONSTRAINT invoices_user_id_fkey
   FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
-  ADD CONSTRAINT invoices_client_id_fkey
-  FOREIGN KEY (client_id) REFERENCES public.clients(id) ON DELETE RESTRICT,
-  ADD CONSTRAINT invoices_case_id_fkey
-  FOREIGN KEY (case_id) REFERENCES public.cases(id) ON DELETE SET NULL;
+  ADD CONSTRAINT invoices_client_owner_fkey
+  FOREIGN KEY (client_id, user_id) REFERENCES public.clients(id, user_id) ON DELETE RESTRICT,
+  ADD CONSTRAINT invoices_case_owner_fkey
+  FOREIGN KEY (case_id, user_id) REFERENCES public.cases(id, user_id) ON DELETE SET NULL (case_id);
 
 ALTER TABLE public.invoice_lines
-  ADD CONSTRAINT invoice_lines_invoice_id_fkey
-  FOREIGN KEY (invoice_id) REFERENCES public.invoices(id) ON DELETE CASCADE,
+  ADD CONSTRAINT invoice_lines_invoice_owner_fkey
+  FOREIGN KEY (invoice_id, user_id) REFERENCES public.invoices(id, user_id) ON DELETE CASCADE,
   ADD CONSTRAINT invoice_lines_user_id_fkey
   FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 

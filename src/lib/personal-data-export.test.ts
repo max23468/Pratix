@@ -34,6 +34,12 @@ describe("personal data export", () => {
     expect(rowsToCsv([])).toBe("");
   });
 
+  it("neutralizza formule nei campi testuali senza alterare numeri negativi", () => {
+    expect(rowsToCsv([{ formula: "=1+1", spaced: " \t@SUM(A1:A2)", amount: -10 }])).toBe(
+      "amount;formula;spaced\n-10;'=1+1;' \t@SUM(A1:A2)",
+    );
+  });
+
   it("genera JSON e ZIP CSV con manifest", () => {
     const json = buildPersonalDataJson(payload());
     expect(strFromU8(json.bytes)).toContain('"product": "Pratix"');
