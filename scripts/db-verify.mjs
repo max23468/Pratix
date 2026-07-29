@@ -11,7 +11,7 @@ for (const [command, args] of checks) {
   console.log(`\n> ${label}`);
 
   const result = spawnSync(command, args, {
-    env: process.env,
+    env: { ...process.env, SUPABASE_TELEMETRY_DISABLED: "1" },
     stdio: "inherit",
   });
 

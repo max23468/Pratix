@@ -34,12 +34,13 @@ export type PersonalDataPayload = {
 
 const csvEscape = (value: unknown) => {
   if (value === null || value === undefined) return "";
-  const text =
+  let text =
     value instanceof Date
       ? value.toISOString()
       : typeof value === "object"
         ? JSON.stringify(value)
         : String(value);
+  if (typeof value === "string" && /^[\t\r\n ]*[=+\-@]/.test(text)) text = `'${text}`;
   return /[",\n\r;]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 };
 

@@ -6,6 +6,7 @@ type StoredCall = {
   action: string;
   payload?: unknown;
   options?: unknown;
+  limit?: number;
   filters: Array<[string, unknown]>;
 };
 
@@ -60,6 +61,7 @@ class FakeQueryBuilder {
   private action = "select";
   private payload: unknown;
   private options: unknown;
+  private rowLimit: number | undefined;
   private filters: Array<[string, unknown]> = [];
 
   constructor(
@@ -114,7 +116,8 @@ class FakeQueryBuilder {
     return this;
   }
 
-  limit() {
+  limit(count: number) {
+    this.rowLimit = count;
     return this;
   }
 
@@ -139,6 +142,7 @@ class FakeQueryBuilder {
       action: this.action,
       payload: this.payload,
       options: this.options,
+      limit: this.rowLimit,
       filters: [...this.filters],
     });
     return Promise.resolve(this.supabase.next(`${this.table}:${this.action}:${mode}`));
@@ -504,6 +508,26 @@ describe("duplicates server functions", () => {
       snoozedCount: 1,
       resolvedCount: 2,
     });
+    expect(supabase.callsFor("case_activities", "select")[0].limit).toBe(501);
+  });
+
+  it("rifiuta dataset oltre il limite prima del confronto quadratico", async () => {
+    const supabase = new FakeSupabase();
+    queueScanData(supabase, {
+      principals: Array.from({ length: 501 }, (_, index) => ({
+        id: `principal-${index}`,
+        business_name: `Committente ${index}`,
+      })),
+    });
+
+    await expect(
+      handlerOf<{ context: { supabase: FakeSupabase; userId: string } }, { openCount: number }>(
+        getDuplicateSummaryFn,
+      )({
+        context: { supabase, userId: "user-1" },
+      }),
+    ).rejects.toThrow("oltre 500 righe");
+    expect(duplicateLogicMock.scanDuplicateCandidates).not.toHaveBeenCalled();
   });
 
   it("valida il draft input e inoltra a scanDuplicateDraft solo il perimetro necessario", async () => {

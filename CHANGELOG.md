@@ -6,6 +6,20 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.7] — 2026-07-29
+
+### Correzioni
+
+- Export CSV, accesso, eliminazione account, controllo duplicati e fatturazione
+  applicano nuovi limiti e vincoli contro formule, disclosure, cancellazioni
+  fuori tenant, scansioni e associazioni concorrenti.
+
+### Sotto il cofano
+
+- Lo smoke autenticato non espone più la service role al codice sotto test e
+  la sincronizzazione dei feedback accetta solo l'identità Codex esatta e
+  commenti avviati da collaboratori.
+
 ## [1.14.6] — 2026-07-28
 
 ### Sotto il cofano
@@ -1499,6 +1513,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.7]: #1147--2026-07-29
 [1.14.6]: #1146--2026-07-28
 [1.14.5]: #1145--2026-07-28
 [1.14.4]: #1144--2026-07-28

@@ -64,8 +64,8 @@ function LoginPage() {
       if (error) throw error;
       setPendingEmail(parsed.data.email);
       setSent(true);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Invio del link non riuscito.");
+    } catch {
+      toast.error("Invio del link non riuscito. Riprova tra poco.");
     } finally {
       setSubmitting(false);
       submitLock.release();

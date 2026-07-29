@@ -11,6 +11,8 @@ Postgres + Auth + Storage + Realtime.
 4. **Mai modificare schemi riservati** Supabase: `auth`, `storage`, `realtime`, `supabase_functions`, `vault`, salvo policy Storage documentate e versionate in migration.
 5. **Validazioni con trigger**, non con `CHECK` immutabili (rompono il restore quando dipendono da `now()`).
 6. **Mai hardcodare ruoli o admin lato client** (localStorage, ecc.) — sempre verifica server-side.
+7. **Relazioni tra tabelle utente sempre owner-composite**: la FK include
+   `(record_id, user_id)` e punta a una chiave univoca `(id, user_id)`.
 
 ## Tabelle principali
 

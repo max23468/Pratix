@@ -64,6 +64,23 @@ describe("contratti Supabase recupero crediti", () => {
     expect(schema).toContain("GRANT EXECUTE ON FUNCTION public.set_invoice_issue_state");
   });
 
+  it("lega le relazioni operative al proprietario e ogni attività a una sola riga", () => {
+    for (const constraint of [
+      "cases_client_owner_fkey",
+      "case_status_history_case_owner_fkey",
+      "invoices_client_owner_fkey",
+      "invoices_case_owner_fkey",
+      "invoice_lines_invoice_owner_fkey",
+    ]) {
+      expect(schema).toContain(`CONSTRAINT ${constraint}`);
+    }
+    expect(schema).not.toContain("CONSTRAINT cases_client_id_fkey");
+    expect(schema).not.toContain("CONSTRAINT invoices_client_id_fkey");
+    expect(schema).not.toContain("CONSTRAINT invoice_lines_invoice_id_fkey");
+    expect(schema).toContain("CREATE UNIQUE INDEX invoice_lines_case_activity_unique");
+    expect(schema).toContain("WHERE case_activity_id IS NOT NULL");
+  });
+
   it("mantiene storage owner-scoped su primo segmento path", () => {
     const migration = readFileSync(
       "supabase/migrations/20260503103536_add_private_storage_bucket.sql",

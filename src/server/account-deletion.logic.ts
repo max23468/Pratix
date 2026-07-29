@@ -58,4 +58,16 @@ export function mergeStoragePaths(...groups: Array<Array<string | null | undefin
   ).sort();
 }
 
+export function ownedStoragePaths(
+  userId: string,
+  ...groups: Array<Array<string | null | undefined>>
+) {
+  const prefix = `${accountStoragePrefix(userId)}/`;
+  return mergeStoragePaths(...groups).filter(
+    (path) =>
+      path.startsWith(prefix) &&
+      !path.split("/").some((segment) => segment === "." || segment === ".."),
+  );
+}
+
 export { PRATIX_DOCUMENTS_BUCKET };

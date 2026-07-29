@@ -52,6 +52,9 @@ type FindDuplicateDraftInput = {
   draft: Record<string, unknown>;
 };
 
+const MAX_DUPLICATE_SCAN_ROWS = 500;
+const DUPLICATE_SCAN_FETCH_LIMIT = MAX_DUPLICATE_SCAN_ROWS + 1;
+
 type ResolveDuplicateInput = {
   reviewId?: string | null;
   entityType: DuplicateEntityType;
@@ -203,21 +206,25 @@ async function loadDuplicateScanData(client: unknown, userId: string) {
       .select(
         "id, public_code, business_name, tax_code, vat_number, email, pec, phone, address_city, archived_at",
       )
-      .eq("user_id", userId),
+      .eq("user_id", userId)
+      .limit(DUPLICATE_SCAN_FETCH_LIMIT),
     db
       .from<ClientDuplicateRow[]>("clients")
       .select("id, public_code, kind, first_name, last_name, business_name, notes")
-      .eq("user_id", userId),
+      .eq("user_id", userId)
+      .limit(DUPLICATE_SCAN_FETCH_LIMIT),
     db
       .from<Array<{ client_id: string; principals: { business_name: string } | null }>>(
         "principal_clients",
       )
       .select("client_id, principals(business_name)")
-      .eq("user_id", userId),
+      .eq("user_id", userId)
+      .limit(DUPLICATE_SCAN_FETCH_LIMIT),
     db
       .from<CounterpartyDuplicateRow[]>("counterparties")
       .select("id, public_code, kind, first_name, last_name, business_name, notes")
-      .eq("user_id", userId),
+      .eq("user_id", userId)
+      .limit(DUPLICATE_SCAN_FETCH_LIMIT),
     db
       .from<
         Array<{
@@ -241,7 +248,8 @@ async function loadDuplicateScanData(client: unknown, userId: string) {
       .select(
         "id, counterparty_id, kind, first_name, last_name, business_name, notes, position, counterparties(public_code, kind, first_name, last_name, business_name)",
       )
-      .eq("user_id", userId),
+      .eq("user_id", userId)
+      .limit(DUPLICATE_SCAN_FETCH_LIMIT),
     db
       .from<
         Array<
@@ -265,7 +273,8 @@ async function loadDuplicateScanData(client: unknown, userId: string) {
       .select(
         "id, public_code, practice_number, principal_id, client_id, counterparty_id, authority, rg_number, opened_at, status, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
       )
-      .eq("user_id", userId),
+      .eq("user_id", userId)
+      .limit(DUPLICATE_SCAN_FETCH_LIMIT),
     db
       .from<
         Array<
@@ -290,8 +299,13 @@ async function loadDuplicateScanData(client: unknown, userId: string) {
       .select(
         "id, case_id, principal_id, client_id, counterparty_id, price_item_id, invoice_id, activity_date, kind, status, snapshot_price_code, snapshot_price_name, description, quantity, unit_price, amount, cases(public_code, practice_number), principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
       )
-      .eq("user_id", userId),
-    db.from<DuplicateReviewRow[]>("duplicate_reviews").select("*").eq("user_id", userId),
+      .eq("user_id", userId)
+      .limit(DUPLICATE_SCAN_FETCH_LIMIT),
+    db
+      .from<DuplicateReviewRow[]>("duplicate_reviews")
+      .select("*")
+      .eq("user_id", userId)
+      .limit(DUPLICATE_SCAN_FETCH_LIMIT),
   ]);
 
   for (const result of [
@@ -305,6 +319,24 @@ async function loadDuplicateScanData(client: unknown, userId: string) {
     reviewsResult,
   ]) {
     if (result.error) throw result.error;
+  }
+
+  // ponytail: limite per tabella; passare a blocking/index DB se un singolo utente supera 500 righe.
+  if (
+    [
+      principalsResult,
+      clientsResult,
+      principalLinksResult,
+      counterpartiesResult,
+      subjectsResult,
+      casesResult,
+      activitiesResult,
+      reviewsResult,
+    ].some((result) => (result.data?.length ?? 0) > MAX_DUPLICATE_SCAN_ROWS)
+  ) {
+    throw new Error(
+      "Controllo duplicati non disponibile per insiemi oltre 500 righe. Riduci i dati archiviati e riprova.",
+    );
   }
 
   const principalNamesByClient = new Map<string, string[]>();
