@@ -6,6 +6,11 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Correzioni
+
+- La pulizia dei cicli di fatturazione abbandonati non tocca più lo storico
+  delle fatture eliminate.
+
 ## [1.14.11] — 2026-07-29
 
 ### Sotto il cofano

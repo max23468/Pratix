@@ -155,6 +155,9 @@ async function saveBillingExports({
  * Elimina i cicli di fatturazione rimasti senza fattura da oltre un giorno: sono
  * residui di creazioni fallite e la loro pulizia Storage va ritentata. Se Storage
  * rifiuta ancora, il ciclo resta e il tentativo si ripete alla creazione successiva.
+ *
+ * Solo i cicli `finalized`: l'eliminazione di una fattura conserva di proposito il
+ * proprio ciclo come `cancelled`, che è storico e non va toccato.
  */
 async function sweepAbandonedBillingRuns(supabase: SupabaseClient<Database>, userId: string) {
   const cutoff = new Date(Date.now() - ABANDONED_BILLING_RUN_MAX_AGE_MS).toISOString();
@@ -162,6 +165,7 @@ async function sweepAbandonedBillingRuns(supabase: SupabaseClient<Database>, use
     .from("billing_runs")
     .select("id, billing_exports(storage_path)")
     .eq("user_id", userId)
+    .eq("status", "finalized")
     .is("invoice_id", null)
     .lt("created_at", cutoff)
     .limit(ABANDONED_BILLING_RUN_SWEEP_LIMIT);

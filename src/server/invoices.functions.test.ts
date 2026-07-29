@@ -469,6 +469,13 @@ describe("server functions fatture", () => {
       ["id", "run-orfano"],
       ["user_id", "user-1"],
     ]);
+    // I cicli `cancelled` sono storico di fatture eliminate: la ricerca li esclude.
+    expect(supabase.callsFor("billing_runs", "select")[0].filters).toEqual([
+      ["user_id", "user-1"],
+      ["status", "finalized"],
+      ["invoice_id", null],
+      ["created_at", expect.any(String)],
+    ]);
   });
 
   it("lascia il ciclo abbandonato per un nuovo tentativo se Storage rifiuta", async () => {
