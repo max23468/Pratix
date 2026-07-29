@@ -6,6 +6,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.11] — 2026-07-29
+
 ### Sotto il cofano
 
 - I rendiconti Excel vengono registrati in database prima di essere caricati,
@@ -1544,6 +1546,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.11]: #11411--2026-07-29
 [1.14.10]: #11410--2026-07-29
 [1.14.9]: #1149--2026-07-29
 [1.14.8]: #1148--2026-07-29
