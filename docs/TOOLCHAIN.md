@@ -16,7 +16,7 @@ Questo documento dichiara runtime, strumenti e verifiche operative di Pratix. Le
 
 - Node richiesto: `>=24.15 <25`.
 - npm richiesto: `>=12 <13`.
-- Package manager dichiarato: `npm@12.0.1`.
+- Package manager dichiarato: `npm@12.0.2`.
 - Lockfile autoritativo: `package-lock.json`.
 - Lockfile alternativi non ammessi.
 
