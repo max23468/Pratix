@@ -439,10 +439,51 @@ function PraticheList() {
         <MobileSortSelect columns={praticheColumns} sort={sort} onSort={setSort} />
       </div>
 
+      <PracticeResults
+        isLoading={isLoading}
+        rows={sorted}
+        q={q}
+        view={view}
+        activitySummaryByCase={activitySummaryByCase}
+        workflowByCase={workflowByCase}
+        sort={sort}
+        onSort={setSort}
+        onOpen={openCase}
+      />
+    </>
+  );
+}
+
+function PracticeResults({
+  isLoading,
+  rows,
+  q,
+  view,
+  activitySummaryByCase,
+  workflowByCase,
+  sort,
+  onSort,
+  onOpen,
+}: {
+  isLoading: boolean;
+  rows: PracticeListRow[];
+  q: string;
+  view: PraticheView;
+  activitySummaryByCase: Record<
+    string,
+    { toInvoice: number; invoiced: number; toInvoiceAmount: number }
+  >;
+  workflowByCase: Record<string, PracticeWorkflowRow>;
+  sort: TableSort<PraticheSortKey>;
+  onSort: (columnKey: PraticheSortKey) => void;
+  onOpen: (caseId: string) => void;
+}) {
+  return (
+    <>
       <div className="space-y-3 md:hidden">
         {isLoading ? (
           <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>
-        ) : sorted.length === 0 ? (
+        ) : rows.length === 0 ? (
           <Card className="p-4">
             <TableEmptyState
               title={q || view !== "open" ? "Nessuna pratica trovata" : "Nessuna pratica aperta"}
@@ -461,7 +502,7 @@ function PraticheList() {
             />
           </Card>
         ) : (
-          sorted.map((c) => {
+          rows.map((c) => {
             const summary = activitySummaryByCase[c.id] ?? {
               toInvoice: 0,
               invoiced: 0,
@@ -527,33 +568,33 @@ function PraticheList() {
                 columnKey="practice_number"
                 label="Pratica"
                 sort={sort}
-                onSort={setSort}
+                onSort={onSort}
               />
               <SortableTableHead
                 columnKey="principal"
                 label="Committente"
                 sort={sort}
-                onSort={setSort}
+                onSort={onSort}
               />
-              <SortableTableHead columnKey="client" label="Cliente" sort={sort} onSort={setSort} />
+              <SortableTableHead columnKey="client" label="Cliente" sort={sort} onSort={onSort} />
               <SortableTableHead
                 columnKey="counterparty"
                 label="Controparte"
                 sort={sort}
-                onSort={setSort}
+                onSort={onSort}
               />
-              <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={setSort} />
+              <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={onSort} />
               <SortableTableHead
                 columnKey="billing"
                 label="Fatturazione"
                 sort={sort}
-                onSort={setSort}
+                onSort={onSort}
               />
               <SortableTableHead
                 columnKey="opened_at"
                 label="Aperta il"
                 sort={sort}
-                onSort={setSort}
+                onSort={onSort}
               />
             </TableRow>
           </TableHeader>
@@ -564,7 +605,7 @@ function PraticheList() {
                   Caricamento…
                 </TableCell>
               </TableRow>
-            ) : sorted.length === 0 ? (
+            ) : rows.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
                   <TableEmptyState
@@ -587,7 +628,7 @@ function PraticheList() {
                 </TableCell>
               </TableRow>
             ) : (
-              sorted.map((c) => {
+              rows.map((c) => {
                 const summary = activitySummaryByCase[c.id] ?? {
                   toInvoice: 0,
                   invoiced: 0,
@@ -601,10 +642,10 @@ function PraticheList() {
                     tabIndex={0}
                     aria-label={`Apri pratica ${c.practice_number}`}
                     onClick={(event) =>
-                      handleClickableTableRowClick(event, () => openCase(routeRef(c)))
+                      handleClickableTableRowClick(event, () => onOpen(routeRef(c)))
                     }
                     onKeyDown={(event) =>
-                      handleClickableTableRowKeyDown(event, () => openCase(routeRef(c)))
+                      handleClickableTableRowKeyDown(event, () => onOpen(routeRef(c)))
                     }
                   >
                     <TableCell>

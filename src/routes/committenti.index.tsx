@@ -405,52 +405,61 @@ function CommittentiList() {
               </TableRow>
             ) : (
               sorted.map((principal) => (
-                <TableRow
+                <PrincipalTableRow
                   key={principal.id}
-                  className="cursor-pointer"
-                  role="link"
-                  tabIndex={0}
-                  aria-label={`Apri committente ${principal.business_name}`}
-                  onClick={(event) =>
-                    handleClickableTableRowClick(event, () => openPrincipal(routeRef(principal)))
-                  }
-                  onKeyDown={(event) =>
-                    handleClickableTableRowKeyDown(event, () => openPrincipal(routeRef(principal)))
-                  }
-                >
-                  <TableCell>
-                    <Link
-                      to="/committenti/$principalId"
-                      params={{ principalId: routeRef(principal) }}
-                      className="font-medium hover:underline"
-                    >
-                      {principal.business_name}
-                    </Link>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant={principal.archived_at ? "secondary" : "outline"}>
-                      {principal.archived_at ? "Archiviato" : "Attivo"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {economicRulesLabel(principal)}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {principal.vat_number || principal.tax_code || "—"}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {principal.email ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
-                    {principal.address_city ?? "—"}
-                  </TableCell>
-                </TableRow>
+                  principal={principal}
+                  onOpen={() => openPrincipal(routeRef(principal))}
+                />
               ))
             )}
           </TableBody>
         </Table>
       </Card>
     </>
+  );
+}
+
+function PrincipalTableRow({
+  principal,
+  onOpen,
+}: {
+  principal: PrincipalListRow;
+  onOpen: () => void;
+}) {
+  return (
+    <TableRow
+      className="cursor-pointer"
+      role="link"
+      tabIndex={0}
+      aria-label={`Apri committente ${principal.business_name}`}
+      onClick={(event) => handleClickableTableRowClick(event, onOpen)}
+      onKeyDown={(event) => handleClickableTableRowKeyDown(event, onOpen)}
+    >
+      <TableCell>
+        <Link
+          to="/committenti/$principalId"
+          params={{ principalId: routeRef(principal) }}
+          className="font-medium hover:underline"
+        >
+          {principal.business_name}
+        </Link>
+      </TableCell>
+      <TableCell>
+        <Badge variant={principal.archived_at ? "secondary" : "outline"}>
+          {principal.archived_at ? "Archiviato" : "Attivo"}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {economicRulesLabel(principal)}
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {principal.vat_number || principal.tax_code || "—"}
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">{principal.email ?? "—"}</TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {principal.address_city ?? "—"}
+      </TableCell>
+    </TableRow>
   );
 }
 

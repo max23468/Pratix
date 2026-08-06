@@ -431,7 +431,9 @@ const buildTemplateRows = (sheetXml: string, config: TemplateConfig, dataRowCoun
   const addRows = Math.max(0, dataRowCount - templateDataRows(config));
   const outputRows: string[] = [];
 
-  rows.filter((row) => row.row < config.dataStartRow).forEach((row) => outputRows.push(row.xml));
+  for (const row of rows) {
+    if (row.row < config.dataStartRow) outputRows.push(row.xml);
+  }
 
   const lastTemplateDataRow = templateRowsByNumber.get(config.templateDataEndRow);
   if (!lastTemplateDataRow) {
@@ -446,9 +448,11 @@ const buildTemplateRows = (sheetXml: string, config: TemplateConfig, dataRowCoun
     outputRows.push(templateRow);
   }
 
-  rows
-    .filter((row) => row.row > config.templateDataEndRow)
-    .forEach((row) => outputRows.push(shiftRowXml(row.xml, row.row, row.row + addRows)));
+  for (const row of rows) {
+    if (row.row > config.templateDataEndRow) {
+      outputRows.push(shiftRowXml(row.xml, row.row, row.row + addRows));
+    }
+  }
 
   return { addRows, rows: outputRows };
 };
@@ -587,15 +591,14 @@ const updateFeesFormulas = (
     matchedColumn: matchFeeColumn(row).columnIndex,
   }));
   const formulaForColumn = (column: FeeColumn) => {
-    const expressions = rowAmounts
-      .filter((item) => item.matchedColumn === column.columnIndex)
-      .map(({ row, rowNumber }) => {
-        if (Number.isFinite(row.unitPrice)) {
-          return `${cellRef(rowNumber, column.columnIndex)}*${excelNumberLiteral(row.unitPrice)}`;
-        }
-
-        return excelNumberLiteral(row.amount);
-      });
+    const expressions = rowAmounts.flatMap(({ row, rowNumber, matchedColumn }) => {
+      if (matchedColumn !== column.columnIndex) return [];
+      return [
+        Number.isFinite(row.unitPrice)
+          ? `${cellRef(rowNumber, column.columnIndex)}*${excelNumberLiteral(row.unitPrice)}`
+          : excelNumberLiteral(row.amount),
+      ];
+    });
 
     return expressions.length > 0 ? `SUM(${expressions.join("+")})` : "0";
   };

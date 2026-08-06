@@ -117,7 +117,7 @@ La baseline iniziale introduce:
   rendiconti Excel;
 - test unitari su parser changelog, formattazione, label operative di
   Pratiche/Attività, schemi auth e helper server di fatturazione;
-- esecuzione test in `npm run ci:local`;
+- esecuzione test in `npm run check`;
 - esecuzione test nel workflow Quality;
 - esecuzione test nel pre-push guard quando cambiano sorgenti o test.
 

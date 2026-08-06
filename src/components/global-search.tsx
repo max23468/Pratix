@@ -375,26 +375,7 @@ export function GlobalSearch() {
 
   return (
     <>
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="hidden h-8 min-w-40 justify-start gap-2 px-2 text-muted-foreground sm:inline-flex"
-        onClick={() => setOpen(true)}
-      >
-        <Search className="size-4" />
-        <span className="text-xs">Ricerca</span>
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="icon"
-        className="size-11 sm:hidden"
-        onClick={() => setOpen(true)}
-        aria-label="Apri ricerca"
-      >
-        <Search className="size-4" />
-      </Button>
+      <GlobalSearchTriggers onOpen={() => setOpen(true)} />
 
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput
@@ -405,23 +386,7 @@ export function GlobalSearch() {
         <CommandList>
           <CommandEmpty>{isFetching ? "Ricerca in corso…" : "Nessun risultato."}</CommandEmpty>
 
-          <CommandGroup heading="Azioni rapide">
-            {QUICK_ACTIONS.map((item) => (
-              <CommandItem
-                key={item.id}
-                value={`${item.title} ${item.subtitle}`}
-                onSelect={() => runQuickAction(item.action)}
-              >
-                <item.icon className="size-4" strokeWidth={1.7} />
-                <span className="min-w-0">
-                  <span className="block text-sm font-medium">{item.title}</span>
-                  <span className="block truncate text-xs text-muted-foreground">
-                    {item.subtitle}
-                  </span>
-                </span>
-              </CommandItem>
-            ))}
-          </CommandGroup>
+          <QuickActionResults onSelect={runQuickAction} />
 
           {(groupedResults.cases.length > 0 ||
             groupedResults.principals.length > 0 ||
@@ -430,44 +395,107 @@ export function GlobalSearch() {
             groupedResults.activities.length > 0 ||
             groupedResults.invoices.length > 0) && <CommandSeparator />}
 
-          <ResultGroup
-            heading="Pratiche"
-            icon={Briefcase}
-            results={groupedResults.cases}
-            onSelect={openResult}
-          />
-          <ResultGroup
-            heading="Committenti"
-            icon={Building2}
-            results={groupedResults.principals}
-            onSelect={openResult}
-          />
-          <ResultGroup
-            heading="Clienti"
-            icon={User}
-            results={groupedResults.clients}
-            onSelect={openResult}
-          />
-          <ResultGroup
-            heading="Controparti"
-            icon={UserRoundSearch}
-            results={groupedResults.counterparties}
-            onSelect={openResult}
-          />
-          <ResultGroup
-            heading="Attività"
-            icon={ListChecks}
-            results={groupedResults.activities}
-            onSelect={openResult}
-          />
-          <ResultGroup
-            heading="Fatture"
-            icon={FileText}
-            results={groupedResults.invoices}
-            onSelect={openResult}
-          />
+          <SearchResultGroups results={groupedResults} onSelect={openResult} />
         </CommandList>
       </CommandDialog>
+    </>
+  );
+}
+
+function GlobalSearchTriggers({ onOpen }: { onOpen: () => void }) {
+  return (
+    <>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="hidden h-8 min-w-40 justify-start gap-2 px-2 text-muted-foreground sm:inline-flex"
+        onClick={onOpen}
+      >
+        <Search className="size-4" />
+        <span className="text-xs">Ricerca</span>
+      </Button>
+      <Button
+        type="button"
+        variant="ghost"
+        size="icon"
+        className="size-11 sm:hidden"
+        onClick={onOpen}
+        aria-label="Apri ricerca"
+      >
+        <Search className="size-4" />
+      </Button>
+    </>
+  );
+}
+
+function QuickActionResults({ onSelect }: { onSelect: (action: QuickAction["action"]) => void }) {
+  return (
+    <CommandGroup heading="Azioni rapide">
+      {QUICK_ACTIONS.map((item) => (
+        <CommandItem
+          key={item.id}
+          value={`${item.title} ${item.subtitle}`}
+          onSelect={() => onSelect(item.action)}
+        >
+          <item.icon className="size-4" strokeWidth={1.7} />
+          <span className="min-w-0">
+            <span className="block text-sm font-medium">{item.title}</span>
+            <span className="block truncate text-xs text-muted-foreground">{item.subtitle}</span>
+          </span>
+        </CommandItem>
+      ))}
+    </CommandGroup>
+  );
+}
+
+function SearchResultGroups({
+  results,
+  onSelect,
+}: {
+  results: {
+    cases: SearchResult[];
+    principals: SearchResult[];
+    clients: SearchResult[];
+    counterparties: SearchResult[];
+    activities: SearchResult[];
+    invoices: SearchResult[];
+  };
+  onSelect: (result: SearchResult) => void;
+}) {
+  return (
+    <>
+      <ResultGroup
+        heading="Pratiche"
+        icon={Briefcase}
+        results={results.cases}
+        onSelect={onSelect}
+      />
+      <ResultGroup
+        heading="Committenti"
+        icon={Building2}
+        results={results.principals}
+        onSelect={onSelect}
+      />
+      <ResultGroup heading="Clienti" icon={User} results={results.clients} onSelect={onSelect} />
+      <ResultGroup
+        heading="Controparti"
+        icon={UserRoundSearch}
+        results={results.counterparties}
+        onSelect={onSelect}
+      />
+      <ResultGroup
+        heading="Attività"
+        icon={ListChecks}
+        results={results.activities}
+        onSelect={onSelect}
+      />
+      <ResultGroup
+        heading="Fatture"
+        icon={FileText}
+        results={results.invoices}
+        onSelect={onSelect}
+      />
     </>
   );
 }

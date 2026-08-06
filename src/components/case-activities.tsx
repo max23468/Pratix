@@ -1,4 +1,11 @@
-import { useMemo, useState, type FormEvent, type ReactNode } from "react";
+import {
+  useMemo,
+  useReducer,
+  useState,
+  type FormEvent,
+  type ReactNode,
+  type SetStateAction,
+} from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Check,
@@ -11,6 +18,10 @@ import {
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
+import { ActivityAttachmentList } from "@/components/activity-attachment-list";
+import { ActivityReviewBadge } from "@/components/activity-review-badge";
+import { ActivityAttachmentFields } from "@/components/activity-attachment-fields";
+import { CasePicker } from "@/components/case-picker";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -138,6 +149,24 @@ type HearingDateDraft = {
   date: string;
 };
 
+type ActivityFormState = {
+  selectedCaseId: string;
+  activityDate: string;
+  priceItemId: string;
+  description: string;
+  quantity: number;
+  freeAmountInput: string;
+  status: "to_invoice" | "invoiced";
+  needsReview: boolean;
+  notes: string;
+  hearingDates: HearingDateDraft[];
+  file: File | null;
+  attachmentName: string;
+  attachmentType: string;
+  attachmentNotes: string;
+  loadedFormKey: string | null;
+};
+
 export type CaseActivityDialogActivity = ActivityRow;
 
 type CaseOption = CaseActivityContext & {
@@ -189,355 +218,72 @@ const parseDecimalInputValue = (value: string) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-export function CaseActivitiesTab({ caseRow }: { caseRow: CaseActivityContext }) {
-  const qc = useQueryClient();
-  const { data: activities = [], isLoading } = useQuery({
-    queryKey: ["case-activities", caseRow.id],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("case_activities")
-        .select("*, case_activity_hearings(*), activity_attachments(*)")
-        .eq("case_id", caseRow.id)
-        .order("activity_date", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as ActivityRow[];
-    },
-  });
-
-  const remove = useMutation({
-    mutationFn: async (activity: ActivityRow) => {
-      if (activity.invoice_id) throw new Error("La voce è collegata a una fattura");
-      const paths = (activity.activity_attachments ?? []).map(
-        (attachment) => attachment.storage_path,
-      );
-      if (paths.length > 0) {
-        const { error: storageError } = await supabase.storage
-          .from(PRATIX_DOCUMENTS_BUCKET)
-          .remove(paths);
-        if (storageError) throw storageError;
-      }
-      const { error } = await supabase.from("case_activities").delete().eq("id", activity.id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      toast.success("Voce eliminata");
-      qc.invalidateQueries({ queryKey: ["case-activities", caseRow.id] });
-      qc.invalidateQueries({ queryKey: ["activities"] });
-    },
-    onError: (error: Error) => toast.error(error.message),
-  });
-
-  const totals = activities.reduce(
-    (acc, activity) => {
-      if (activity.kind === "fee") acc.fees += Number(activity.amount) || 0;
-      else acc.reimbursements += Number(activity.amount) || 0;
-      if (activity.status === "to_invoice" && !activity.invoice_id) {
-        acc.toInvoice += Number(activity.amount) || 0;
-      }
-      if (activity.needs_review) acc.needsReview += 1;
-      return acc;
-    },
-    { fees: 0, reimbursements: 0, toInvoice: 0, needsReview: 0 },
-  );
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <CardTitle className="text-base">Attività</CardTitle>
-            <CardDescription>Compensi e rimborsi spese collegati alla pratica.</CardDescription>
-          </div>
-          <CaseActivityDialog caseRow={caseRow} />
-        </div>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div className="grid gap-3 md:grid-cols-4">
-          <SummaryTile label="Compensi" value={formatCurrency(totals.fees)} />
-          <SummaryTile label="Rimborsi spese" value={formatCurrency(totals.reimbursements)} />
-          <SummaryTile label="Da fatturare" value={formatCurrency(totals.toInvoice)} tone="gold" />
-          <SummaryTile label="Da verificare" value={String(totals.needsReview)} />
-        </div>
-
-        {isLoading ? (
-          <p className="text-sm text-muted-foreground">Caricamento…</p>
-        ) : activities.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nessuna voce fatturabile registrata.</p>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Data</TableHead>
-                <TableHead>Voce</TableHead>
-                <TableHead>Stato</TableHead>
-                <TableHead className="text-right">Quantità</TableHead>
-                <TableHead className="text-right">Prezzo</TableHead>
-                <TableHead className="text-right">Totale</TableHead>
-                <TableHead>Allegati</TableHead>
-                <TableHead className="w-12" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {activities.map((activity) => {
-                const displayStatus = caseActivityDisplayStatus(activity);
-                return (
-                  <TableRow key={activity.id}>
-                    <TableCell className="text-sm">{formatDate(activity.activity_date)}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <span className="font-medium">{activity.description}</span>
-                        <ActivityReviewBadge needsReview={activity.needs_review} />
-                        <span className="text-xs text-muted-foreground">
-                          {priceItemKindLabels[activity.kind]} · {activity.snapshot_price_name}
-                        </span>
-                        {activity.case_activity_hearings?.length ? (
-                          <span className="text-xs text-muted-foreground">
-                            Udienze:{" "}
-                            {activity.case_activity_hearings
-                              .sort((a, b) => a.position - b.position)
-                              .map((hearing) => formatDate(hearing.hearing_date))
-                              .join(", ")}
-                          </span>
-                        ) : null}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={caseActivityDisplayStatusVariant[displayStatus] ?? "outline"}>
-                        {caseActivityDisplayStatusLabels[displayStatus] ?? displayStatus}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right text-sm">{activity.quantity}</TableCell>
-                    <TableCell className="text-right text-sm">
-                      {formatCurrency(activity.unit_price)}
-                    </TableCell>
-                    <TableCell className="text-right text-sm font-medium">
-                      {formatCurrency(activity.amount)}
-                    </TableCell>
-                    <TableCell>
-                      <AttachmentList attachments={activity.activity_attachments ?? []} />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <CaseActivityDialog
-                          caseRow={caseRow}
-                          activity={activity}
-                          trigger={
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              disabled={Boolean(activity.invoice_id)}
-                              aria-label={`Modifica ${activity.description}`}
-                              title={
-                                activity.invoice_id
-                                  ? "Le voci collegate a una Fattura non si modificano"
-                                  : "Modifica voce"
-                              }
-                            >
-                              <Pencil className="size-4" />
-                            </Button>
-                          }
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          disabled={Boolean(activity.invoice_id) || remove.isPending}
-                          onClick={() => remove.mutate(activity)}
-                          aria-label={`Elimina ${activity.description}`}
-                          title={
-                            activity.invoice_id
-                              ? "Le voci collegate a una Fattura non si eliminano"
-                              : "Elimina voce"
-                          }
-                        >
-                          <Trash2 className="size-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-export function ActivityReviewBadge({ needsReview }: { needsReview?: boolean | null }) {
-  if (!needsReview) return null;
-  return (
-    <Badge variant="secondary" className="w-fit">
-      Da verificare
-    </Badge>
-  );
-}
-
-function AttachmentList({ attachments }: { attachments: ActivityAttachment[] }) {
-  if (attachments.length === 0) {
-    return <span className="text-sm text-muted-foreground">Nessun allegato</span>;
-  }
-
-  return (
-    <div className="flex flex-col gap-1">
-      {attachments.map((attachment) => (
-        <div key={attachment.id} className="flex items-center gap-1">
-          <Paperclip className="size-3.5 text-muted-foreground" />
-          <span className="max-w-36 truncate text-xs">{attachment.display_name}</span>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            onClick={() => openAttachment(attachment, "preview")}
-          >
-            <Eye className="size-3.5" />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            onClick={() => openAttachment(attachment, "download")}
-          >
-            <Download className="size-3.5" />
-          </Button>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function CasePicker({
-  id,
-  options,
-  selectedCaseId,
-  onSelect,
-}: {
-  id: string;
-  options: CaseOption[];
-  selectedCaseId: string;
-  onSelect: (caseId: string) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const selectedOption = options.find((option) => option.id === selectedCaseId);
-  const listId = `${id}-list`;
-
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild>
-        <Button
-          id={id}
-          type="button"
-          variant="outline"
-          role="combobox"
-          aria-controls={listId}
-          aria-expanded={open}
-          aria-label="Seleziona pratica"
-          className="justify-between"
-        >
-          <span
-            className={cn(
-              "min-w-0 flex-1 truncate text-left",
-              !selectedOption && "text-muted-foreground",
-            )}
-          >
-            {selectedOption ? caseOptionDisplayLabel(selectedOption) : "Seleziona pratica"}
-          </span>
-          <ChevronsUpDown className="ml-2 size-4 shrink-0 opacity-50" />
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        className="z-[60] max-h-[min(24rem,var(--radix-popover-content-available-height))] w-[var(--radix-popover-trigger-width)] overflow-hidden p-0"
-      >
-        <Command>
-          <CommandInput placeholder="Cerca pratica…" />
-          <CommandList
-            id={listId}
-            className="max-h-[min(20rem,var(--radix-popover-content-available-height))]"
-          >
-            <CommandEmpty>Nessuna pratica trovata.</CommandEmpty>
-            {options.map((option) => {
-              const label = activityCasePartiesLabel(option);
-              const title = caseOptionDisplayLabel(option);
-              const isSelected = option.id === selectedCaseId;
-
-              return (
-                <CommandItem
-                  key={option.id}
-                  value={caseOptionSearchValue(option)}
-                  onSelect={() => {
-                    onSelect(option.id);
-                    setOpen(false);
-                  }}
-                >
-                  <Check className={cn("size-4", isSelected ? "opacity-100" : "opacity-0")} />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-medium">{title}</span>
-                    <span className="block truncate text-xs text-muted-foreground">{label}</span>
-                  </span>
-                </CommandItem>
-              );
-            })}
-          </CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
-  );
-}
-
-async function openAttachment(attachment: ActivityAttachment, mode: "preview" | "download") {
-  const { data, error } = await supabase.storage
-    .from(PRATIX_DOCUMENTS_BUCKET)
-    .createSignedUrl(
-      attachment.storage_path,
-      60,
-      mode === "download" ? { download: attachment.display_name } : undefined,
-    );
-
-  if (error) {
-    toast.error(error.message);
-    return;
-  }
-  if (data?.signedUrl) window.open(data.signedUrl, "_blank", "noopener,noreferrer");
-}
-
-export function CaseActivityDialog({
-  caseRow,
-  trigger,
-  activity,
-  open: controlledOpen,
-  onOpenChange,
-  onSaved,
-}: {
+type CaseActivityDialogProps = {
   caseRow?: CaseActivityContext;
   trigger?: ReactNode | null;
   activity?: CaseActivityDialogActivity;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   onSaved?: () => void;
-}) {
+};
+
+function useCaseActivityDialog({
+  caseRow,
+  trigger,
+  activity,
+  open: controlledOpen,
+  onOpenChange,
+  onSaved,
+}: CaseActivityDialogProps) {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [internalOpen, setInternalOpen] = useState(false);
-  const [selectedCaseId, setSelectedCaseId] = useState(caseRow?.id ?? "");
-  const [activityDate, setActivityDate] = useState(() => today());
-  const [priceItemId, setPriceItemId] = useState("");
-  const [description, setDescription] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [freeAmountInput, setFreeAmountInput] = useState("0");
-  const [status, setStatus] = useState<"to_invoice" | "invoiced">("to_invoice");
-  const [needsReview, setNeedsReview] = useState(false);
-  const [notes, setNotes] = useState("");
-  const [hearingDates, setHearingDates] = useState<HearingDateDraft[]>([]);
-  const [file, setFile] = useState<File | null>(null);
-  const [attachmentName, setAttachmentName] = useState("");
-  const [attachmentType, setAttachmentType] = useState("");
-  const [attachmentNotes, setAttachmentNotes] = useState("");
-  const [loadedFormKey, setLoadedFormKey] = useState<string | null>(null);
+  const [formState, setFormState] = useReducer(
+    (state: ActivityFormState, update: (state: ActivityFormState) => ActivityFormState) =>
+      update(state),
+    {
+      selectedCaseId: caseRow?.id ?? "",
+      activityDate: today(),
+      priceItemId: "",
+      description: "",
+      quantity: 1,
+      freeAmountInput: "0",
+      status: "to_invoice",
+      needsReview: false,
+      notes: "",
+      hearingDates: [],
+      file: null,
+      attachmentName: "",
+      attachmentType: "",
+      attachmentNotes: "",
+      loadedFormKey: null,
+    },
+  );
+  const setFormField = <K extends keyof ActivityFormState>(
+    key: K,
+    value: SetStateAction<ActivityFormState[K]>,
+  ) =>
+    setFormState((state) => ({
+      ...state,
+      [key]: typeof value === "function" ? value(state[key]) : value,
+    }));
+  const {
+    selectedCaseId,
+    activityDate,
+    priceItemId,
+    description,
+    quantity,
+    freeAmountInput,
+    status,
+    needsReview,
+    notes,
+    hearingDates,
+    file,
+    attachmentName,
+    attachmentType,
+    attachmentNotes,
+    loadedFormKey,
+  } = formState;
   const isEditing = Boolean(activity);
   const open = controlledOpen ?? internalOpen;
   const saveLock = useSubmitLock();
@@ -625,47 +371,49 @@ export function CaseActivityDialog({
 
   if (formKey && loadedFormKey !== formKey) {
     if (!activity) {
-      setSelectedCaseId(caseRow?.id ?? "");
-      setActivityDate(today());
-      setPriceItemId("");
-      setDescription("");
-      setQuantity(1);
-      setFreeAmountInput("0");
-      setStatus("to_invoice");
-      setNeedsReview(false);
-      setNotes("");
-      setHearingDates([]);
-      setFile(null);
-      setAttachmentName("");
-      setAttachmentType("");
-      setAttachmentNotes("");
-      setLoadedFormKey(formKey);
+      setFormField("selectedCaseId", caseRow?.id ?? "");
+      setFormField("activityDate", today());
+      setFormField("priceItemId", "");
+      setFormField("description", "");
+      setFormField("quantity", 1);
+      setFormField("freeAmountInput", "0");
+      setFormField("status", "to_invoice");
+      setFormField("needsReview", false);
+      setFormField("notes", "");
+      setFormField("hearingDates", []);
+      setFormField("file", null);
+      setFormField("attachmentName", "");
+      setFormField("attachmentType", "");
+      setFormField("attachmentNotes", "");
+      setFormField("loadedFormKey", formKey);
     } else {
-      setSelectedCaseId(activity.case_id);
-      setActivityDate(activity.activity_date);
-      setPriceItemId(activity.price_item_id);
-      setDescription(activity.description);
-      setQuantity(Number(activity.quantity) || 1);
-      setFreeAmountInput(
+      setFormField("selectedCaseId", activity.case_id);
+      setFormField("activityDate", activity.activity_date);
+      setFormField("priceItemId", activity.price_item_id);
+      setFormField("description", activity.description);
+      setFormField("quantity", Number(activity.quantity) || 1);
+      setFormField(
+        "freeAmountInput",
         formatDecimalInputValue(
           activity.kind === "expense_reimbursement"
             ? Number(activity.amount) || 0
             : Number(activity.unit_price) || 0,
         ),
       );
-      setStatus(activity.status);
-      setNeedsReview(activity.needs_review);
-      setNotes(activity.notes ?? "");
-      setHearingDates(
+      setFormField("status", activity.status);
+      setFormField("needsReview", activity.needs_review);
+      setFormField("notes", activity.notes ?? "");
+      setFormField(
+        "hearingDates",
         [...(activity.case_activity_hearings ?? [])]
           .sort((a, b) => a.position - b.position)
           .map((hearing) => ({ id: hearing.id, date: hearing.hearing_date })),
       );
-      setFile(null);
-      setAttachmentName("");
-      setAttachmentType("");
-      setAttachmentNotes("");
-      setLoadedFormKey(formKey);
+      setFormField("file", null);
+      setFormField("attachmentName", "");
+      setFormField("attachmentType", "");
+      setFormField("attachmentNotes", "");
+      setFormField("loadedFormKey", formKey);
     }
   }
 
@@ -860,21 +608,21 @@ export function CaseActivityDialog({
   });
 
   const resetForm = () => {
-    setActivityDate(today());
-    setPriceItemId("");
-    setDescription("");
-    setQuantity(1);
-    setFreeAmountInput("0");
-    setStatus("to_invoice");
-    setNeedsReview(false);
-    setNotes("");
-    setHearingDates([]);
-    setFile(null);
-    setAttachmentName("");
-    setAttachmentType("");
-    setAttachmentNotes("");
-    if (!caseRow) setSelectedCaseId("");
-    setLoadedFormKey(null);
+    setFormField("activityDate", today());
+    setFormField("priceItemId", "");
+    setFormField("description", "");
+    setFormField("quantity", 1);
+    setFormField("freeAmountInput", "0");
+    setFormField("status", "to_invoice");
+    setFormField("needsReview", false);
+    setFormField("notes", "");
+    setFormField("hearingDates", []);
+    setFormField("file", null);
+    setFormField("attachmentName", "");
+    setFormField("attachmentType", "");
+    setFormField("attachmentNotes", "");
+    if (!caseRow) setFormField("selectedCaseId", "");
+    setFormField("loadedFormKey", null);
   };
 
   const setDialogOpen = (nextOpen: boolean) => {
@@ -885,7 +633,7 @@ export function CaseActivityDialog({
 
   const setHearingCount = (count: number) => {
     const normalized = Math.max(0, count);
-    setHearingDates((current) => {
+    setFormField("hearingDates", (current) => {
       if (normalized <= current.length) return current.slice(0, normalized);
       return [
         ...current,
@@ -897,12 +645,12 @@ export function CaseActivityDialog({
   };
 
   const selectPriceItem = (value: string) => {
-    setPriceItemId(value);
+    setFormField("priceItemId", value);
     if (isEditing) return;
     const item = availablePriceItems.find((priceItem) => priceItem.id === value);
     if (!item) return;
-    setDescription(item.invoice_description || item.name);
-    setQuantity(item.kind === "fee" && item.requires_hearing_dates ? 0 : 1);
+    setFormField("description", item.invoice_description || item.name);
+    setFormField("quantity", item.kind === "fee" && item.requires_hearing_dates ? 0 : 1);
   };
 
   const handleSubmit = (event: FormEvent) => {
@@ -914,8 +662,84 @@ export function CaseActivityDialog({
   const formatFreeAmountInput = () => {
     const parsed = parseDecimalInputValue(freeAmountInput);
     if (parsed === null) return;
-    setFreeAmountInput(formatDecimalInputValue(parsed));
+    setFormField("freeAmountInput", formatDecimalInputValue(parsed));
   };
+
+  return {
+    open,
+    setDialogOpen,
+    trigger,
+    isEditing,
+    handleSubmit,
+    caseRow,
+    sortedCaseOptions,
+    selectedCaseId,
+    setFormField,
+    activityDate,
+    status,
+    priceBook,
+    activityYear,
+    availablePriceItems,
+    priceItemId,
+    selectPriceItem,
+    description,
+    isExpenseReimbursement,
+    requiresHearingDates,
+    hearingDates,
+    setHearingCount,
+    quantity,
+    selectedItem,
+    effectiveKind,
+    amountInputValue,
+    formatFreeAmountInput,
+    total,
+    needsReview,
+    notes,
+    file,
+    attachmentName,
+    attachmentType,
+    attachmentNotes,
+    save,
+  };
+}
+
+export function CaseActivityDialog(props: CaseActivityDialogProps) {
+  const {
+    open,
+    setDialogOpen,
+    trigger,
+    isEditing,
+    handleSubmit,
+    caseRow,
+    sortedCaseOptions,
+    selectedCaseId,
+    setFormField,
+    activityDate,
+    status,
+    priceBook,
+    activityYear,
+    availablePriceItems,
+    priceItemId,
+    selectPriceItem,
+    description,
+    isExpenseReimbursement,
+    requiresHearingDates,
+    hearingDates,
+    setHearingCount,
+    quantity,
+    selectedItem,
+    effectiveKind,
+    amountInputValue,
+    formatFreeAmountInput,
+    total,
+    needsReview,
+    notes,
+    file,
+    attachmentName,
+    attachmentType,
+    attachmentNotes,
+    save,
+  } = useCaseActivityDialog(props);
 
   return (
     <Dialog open={open} onOpenChange={setDialogOpen}>
@@ -944,8 +768,8 @@ export function CaseActivityDialog({
                 options={sortedCaseOptions}
                 selectedCaseId={selectedCaseId}
                 onSelect={(value) => {
-                  setSelectedCaseId(value);
-                  setPriceItemId("");
+                  setFormField("selectedCaseId", value);
+                  setFormField("priceItemId", "");
                 }}
               />
             </div>
@@ -958,12 +782,15 @@ export function CaseActivityDialog({
                 id="activity_date"
                 type="date"
                 value={activityDate}
-                onChange={(event) => setActivityDate(event.target.value)}
+                onChange={(event) => setFormField("activityDate", event.target.value)}
               />
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="activity_status">Stato</Label>
-              <Select value={status} onValueChange={(value) => setStatus(value as typeof status)}>
+              <Select
+                value={status}
+                onValueChange={(value) => setFormField("status", value as typeof status)}
+              >
                 <SelectTrigger id="activity_status">
                   <SelectValue />
                 </SelectTrigger>
@@ -1007,7 +834,7 @@ export function CaseActivityDialog({
             <Input
               id="activity_description"
               value={description}
-              onChange={(event) => setDescription(event.target.value)}
+              onChange={(event) => setFormField("description", event.target.value)}
             />
           </div>
 
@@ -1035,7 +862,7 @@ export function CaseActivityDialog({
                   min="1"
                   step="1"
                   value={quantity}
-                  onChange={(event) => setQuantity(Number(event.target.value))}
+                  onChange={(event) => setFormField("quantity", Number(event.target.value))}
                   disabled={!isEditing && !selectedItem}
                 />
               </div>
@@ -1053,7 +880,7 @@ export function CaseActivityDialog({
                 value={amountInputValue}
                 placeholder="0,00"
                 disabled={!isEditing && (!selectedItem || selectedItem.kind === "fee")}
-                onChange={(event) => setFreeAmountInput(event.target.value)}
+                onChange={(event) => setFormField("freeAmountInput", event.target.value)}
                 onBlur={formatFreeAmountInput}
               />
             </div>
@@ -1077,7 +904,7 @@ export function CaseActivityDialog({
                     type="date"
                     value={hearingDate.date}
                     onChange={(event) =>
-                      setHearingDates((current) =>
+                      setFormField("hearingDates", (current) =>
                         current.map((currentDate, currentIndex) =>
                           currentIndex === index
                             ? { ...currentDate, date: event.target.value }
@@ -1095,7 +922,7 @@ export function CaseActivityDialog({
             <Checkbox
               id="activity_needs_review"
               checked={needsReview}
-              onCheckedChange={(checked) => setNeedsReview(checked === true)}
+              onCheckedChange={(checked) => setFormField("needsReview", checked === true)}
             />
             <div className="space-y-1">
               <Label htmlFor="activity_needs_review">Importo da verificare</Label>
@@ -1111,61 +938,26 @@ export function CaseActivityDialog({
               id="notes"
               rows={3}
               value={notes}
-              onChange={(event) => setNotes(event.target.value)}
+              onChange={(event) => setFormField("notes", event.target.value)}
               placeholder={
                 needsReview ? "Motivo della verifica, ad esempio tariffa da confermare" : undefined
               }
             />
           </div>
 
-          <div className="rounded-md border border-border p-4">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-2 sm:col-span-2">
-                <Label htmlFor="attachment">Allegato</Label>
-                <Input
-                  id="attachment"
-                  type="file"
-                  onChange={(event) => {
-                    const nextFile = event.target.files?.[0] ?? null;
-                    setFile(nextFile);
-                    if (nextFile && !attachmentName) setAttachmentName(nextFile.name);
-                  }}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="attachment_name">Nome descrittivo</Label>
-                <Input
-                  id="attachment_name"
-                  value={attachmentName}
-                  onChange={(event) => setAttachmentName(event.target.value)}
-                  placeholder="Es. Ricevuta contributo unificato"
-                  disabled={!file}
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="attachment_type">Tipo documento</Label>
-                <Input
-                  id="attachment_type"
-                  value={attachmentType}
-                  onChange={(event) => setAttachmentType(event.target.value)}
-                  placeholder="Es. giustificativo spesa"
-                  disabled={!file}
-                />
-              </div>
-              <div className="flex flex-col gap-2 sm:col-span-2">
-                <Label htmlFor="attachment_notes">Note allegato</Label>
-                <Textarea
-                  id="attachment_notes"
-                  rows={2}
-                  value={attachmentNotes}
-                  onChange={(event) => setAttachmentNotes(event.target.value)}
-                  placeholder="Es. importo anticipato per iscrizione a ruolo"
-                  disabled={!file}
-                />
-              </div>
-            </div>
-          </div>
-
+          <ActivityAttachmentFields
+            file={file}
+            name={attachmentName}
+            type={attachmentType}
+            notes={attachmentNotes}
+            onFileChange={(nextFile) => {
+              setFormField("file", nextFile);
+              if (nextFile && !attachmentName) setFormField("attachmentName", nextFile.name);
+            }}
+            onNameChange={(value) => setFormField("attachmentName", value)}
+            onTypeChange={(value) => setFormField("attachmentType", value)}
+            onNotesChange={(value) => setFormField("attachmentNotes", value)}
+          />
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setDialogOpen(false)}>
               Annulla

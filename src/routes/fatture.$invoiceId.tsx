@@ -99,7 +99,7 @@ export const Route = createFileRoute("/fatture/$invoiceId")({
   component: InvoiceDetailPage,
 });
 
-function InvoiceDetailPage() {
+function useInvoiceDetailPage() {
   const { invoiceId } = Route.useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -390,6 +390,36 @@ function InvoiceDetailPage() {
       setDownloadingExportId(null);
     }
   };
+
+  return {
+    data,
+    isLoading,
+    downloadingExportId,
+    deleteMutation,
+    markPaidMutation,
+    unmarkPaidMutation,
+    markIssuedMutation,
+    unmarkIssuedMutation,
+    downloadXmlMutation,
+    handleDownloadPdf,
+    downloadExport,
+  };
+}
+
+function InvoiceDetailPage() {
+  const {
+    data,
+    isLoading,
+    downloadingExportId,
+    deleteMutation,
+    markPaidMutation,
+    unmarkPaidMutation,
+    markIssuedMutation,
+    unmarkIssuedMutation,
+    downloadXmlMutation,
+    handleDownloadPdf,
+    downloadExport,
+  } = useInvoiceDetailPage();
 
   if (isLoading || !data) {
     return (

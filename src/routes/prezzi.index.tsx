@@ -372,55 +372,66 @@ function PrezziList() {
                 </TableCell>
               </TableRow>
             ) : (
-              sorted.map((book) => {
-                const counts = countsByBook[book.id] ?? { fees: 0, expenses: 0, enabled: 0 };
-                const principalName = principalNameById.get(book.principal_id) ?? "—";
-                return (
-                  <TableRow
-                    key={book.id}
-                    className="cursor-pointer"
-                    role="link"
-                    tabIndex={0}
-                    aria-label={`Apri prezzi ${principalName} ${book.year}`}
-                    onClick={(event) =>
-                      handleClickableTableRowClick(event, () => openPriceBook(routeRef(book)))
-                    }
-                    onKeyDown={(event) =>
-                      handleClickableTableRowKeyDown(event, () => openPriceBook(routeRef(book)))
-                    }
-                  >
-                    <TableCell>
-                      <Link
-                        to="/prezzi/$priceBookId"
-                        params={{ priceBookId: routeRef(book) }}
-                        className="font-medium hover:underline"
-                      >
-                        {principalName}
-                      </Link>
-                    </TableCell>
-                    <TableCell>{book.year}</TableCell>
-                    <TableCell>
-                      <Badge variant={priceBookStatusVariant[book.status]}>
-                        {priceBookStatusLabels[book.status]}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {rulesLabel(book)}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {counts.fees} compensi, {counts.expenses} rimborsi
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {book.valid_from} → {book.valid_to ?? "senza fine"}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
+              sorted.map((book) => (
+                <PriceBookTableRow
+                  key={book.id}
+                  book={book}
+                  counts={countsByBook[book.id] ?? { fees: 0, expenses: 0, enabled: 0 }}
+                  principalName={principalNameById.get(book.principal_id) ?? "—"}
+                  onOpen={() => openPriceBook(routeRef(book))}
+                />
+              ))
             )}
           </TableBody>
         </Table>
       </Card>
     </>
+  );
+}
+
+function PriceBookTableRow({
+  book,
+  counts,
+  principalName,
+  onOpen,
+}: {
+  book: PriceBookListRow;
+  counts: { fees: number; expenses: number; enabled: number };
+  principalName: string;
+  onOpen: () => void;
+}) {
+  return (
+    <TableRow
+      className="cursor-pointer"
+      role="link"
+      tabIndex={0}
+      aria-label={`Apri prezzi ${principalName} ${book.year}`}
+      onClick={(event) => handleClickableTableRowClick(event, onOpen)}
+      onKeyDown={(event) => handleClickableTableRowKeyDown(event, onOpen)}
+    >
+      <TableCell>
+        <Link
+          to="/prezzi/$priceBookId"
+          params={{ priceBookId: routeRef(book) }}
+          className="font-medium hover:underline"
+        >
+          {principalName}
+        </Link>
+      </TableCell>
+      <TableCell>{book.year}</TableCell>
+      <TableCell>
+        <Badge variant={priceBookStatusVariant[book.status]}>
+          {priceBookStatusLabels[book.status]}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">{rulesLabel(book)}</TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {counts.fees} compensi, {counts.expenses} rimborsi
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {book.valid_from} → {book.valid_to ?? "senza fine"}
+      </TableCell>
+    </TableRow>
   );
 }
 

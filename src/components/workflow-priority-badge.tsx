@@ -1,8 +1,7 @@
 import { Flag } from "lucide-react";
-import { Badge, badgeVariants } from "@/components/ui/badge";
+import { Badge } from "@/components/ui/badge";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { buildDebtCollectionWorkflow, formatCaseWorkflowPriorityLabel } from "@/lib/case-workflow";
-import { cn } from "@/lib/utils";
 
 export function WorkflowPriorityBadge({
   workflow,
@@ -17,14 +16,11 @@ export function WorkflowPriorityBadge({
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(badgeVariants({ variant: workflow.priorityVariant }), "cursor-help")}
-          aria-label={`Mostra perché questa pratica ${priorityLabel.toLocaleLowerCase("it-IT")}`}
-        >
-          {priorityLabel}
-        </button>
+      <PopoverTrigger
+        className="cursor-help"
+        aria-label={`Mostra perché questa pratica ${priorityLabel.toLocaleLowerCase("it-IT")}`}
+      >
+        <Badge variant={workflow.priorityVariant}>{priorityLabel}</Badge>
       </PopoverTrigger>
       <PopoverContent align="end" className="flex w-80 max-w-[calc(100vw-2rem)] flex-col gap-3">
         <div className="flex flex-col gap-1">

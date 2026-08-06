@@ -433,9 +433,9 @@ async function persistOpenCandidates(
   userId: string,
   candidates: DuplicateCandidate[],
 ) {
-  const rows = candidates
-    .filter((candidate) => !candidate.reviewId)
-    .map((candidate) => reviewInsertFromCandidate(userId, candidate));
+  const rows = candidates.flatMap((candidate) =>
+    candidate.reviewId ? [] : [reviewInsertFromCandidate(userId, candidate)],
+  );
   if (rows.length === 0) return [];
 
   const { data, error } = await asDb(client)
@@ -565,14 +565,16 @@ async function moveCounterpartySubjects(
   const nextPosition =
     Math.max(-1, ...(keptSubjects ?? []).map((subject) => Number(subject.position))) + 1;
 
-  for (const [index, subject] of (mergedSubjects ?? []).entries()) {
-    const { error } = await db
-      .from("counterparty_subjects")
-      .update({ counterparty_id: keptCounterpartyId, position: nextPosition + index })
-      .eq("user_id", userId)
-      .eq("id", subject.id);
-    if (error) throw error;
-  }
+  await Promise.all(
+    (mergedSubjects ?? []).map(async (subject, index) => {
+      const { error } = await db
+        .from("counterparty_subjects")
+        .update({ counterparty_id: keptCounterpartyId, position: nextPosition + index })
+        .eq("user_id", userId)
+        .eq("id", subject.id);
+      if (error) throw error;
+    }),
+  );
 }
 
 async function mergeCases(client: unknown, userId: string, keptId: string, mergedId: string) {
@@ -592,33 +594,35 @@ async function mergeCases(client: unknown, userId: string, keptId: string, merge
   if (error) throw error;
   if (!keptCase) throw new Error("Pratica da mantenere non trovata");
 
-  await updateTable(
-    db,
-    "case_activities",
-    {
-      case_id: keptId,
-      principal_id: keptCase.principal_id,
-      client_id: keptCase.client_id,
-      counterparty_id: keptCase.counterparty_id,
-    },
-    userId,
-    "case_id",
-    mergedId,
-  );
-  await updateTable(
-    db,
-    "invoices",
-    {
-      case_id: keptId,
-      principal_id: keptCase.principal_id,
-      client_id: keptCase.client_id,
-    },
-    userId,
-    "case_id",
-    mergedId,
-  );
-  await updateTable(db, "case_status_history", { case_id: keptId }, userId, "case_id", mergedId);
-  await updateTable(db, "case_credit_transfers", { case_id: keptId }, userId, "case_id", mergedId);
+  await Promise.all([
+    updateTable(
+      db,
+      "case_activities",
+      {
+        case_id: keptId,
+        principal_id: keptCase.principal_id,
+        client_id: keptCase.client_id,
+        counterparty_id: keptCase.counterparty_id,
+      },
+      userId,
+      "case_id",
+      mergedId,
+    ),
+    updateTable(
+      db,
+      "invoices",
+      {
+        case_id: keptId,
+        principal_id: keptCase.principal_id,
+        client_id: keptCase.client_id,
+      },
+      userId,
+      "case_id",
+      mergedId,
+    ),
+    updateTable(db, "case_status_history", { case_id: keptId }, userId, "case_id", mergedId),
+    updateTable(db, "case_credit_transfers", { case_id: keptId }, userId, "case_id", mergedId),
+  ]);
 
   const target = keptCase?.public_code || keptCase?.practice_number || keptId;
   await db
@@ -656,31 +660,33 @@ async function mergePrincipalClientLinks(
     .eq("principal_id", mergedPrincipalId);
   if (error) throw error;
 
-  for (const link of links ?? []) {
-    const { data: existing, error: existingError } = await db
-      .from<{ id: string }>("principal_clients")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("principal_id", keptPrincipalId)
-      .eq("client_id", link.client_id)
-      .maybeSingle();
-    if (existingError) throw existingError;
-    if (existing) {
-      await db
-        .from("principal_clients")
-        .delete()
+  await Promise.all(
+    (links ?? []).map(async (link) => {
+      const { data: existing, error: existingError } = await db
+        .from<{ id: string }>("principal_clients")
+        .select("id")
         .eq("user_id", userId)
-        .eq("principal_id", mergedPrincipalId)
-        .eq("client_id", link.client_id);
-    } else {
-      await db
-        .from("principal_clients")
-        .update({ principal_id: keptPrincipalId })
-        .eq("user_id", userId)
-        .eq("principal_id", mergedPrincipalId)
-        .eq("client_id", link.client_id);
-    }
-  }
+        .eq("principal_id", keptPrincipalId)
+        .eq("client_id", link.client_id)
+        .maybeSingle();
+      if (existingError) throw existingError;
+      if (existing) {
+        await db
+          .from("principal_clients")
+          .delete()
+          .eq("user_id", userId)
+          .eq("principal_id", mergedPrincipalId)
+          .eq("client_id", link.client_id);
+      } else {
+        await db
+          .from("principal_clients")
+          .update({ principal_id: keptPrincipalId })
+          .eq("user_id", userId)
+          .eq("principal_id", mergedPrincipalId)
+          .eq("client_id", link.client_id);
+      }
+    }),
+  );
 }
 
 async function mergePrincipalClientLinksForClient(
@@ -696,31 +702,33 @@ async function mergePrincipalClientLinksForClient(
     .eq("client_id", mergedClientId);
   if (error) throw error;
 
-  for (const link of links ?? []) {
-    const { data: existing, error: existingError } = await db
-      .from<{ id: string }>("principal_clients")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("principal_id", link.principal_id)
-      .eq("client_id", keptClientId)
-      .maybeSingle();
-    if (existingError) throw existingError;
-    if (existing) {
-      await db
-        .from("principal_clients")
-        .delete()
+  await Promise.all(
+    (links ?? []).map(async (link) => {
+      const { data: existing, error: existingError } = await db
+        .from<{ id: string }>("principal_clients")
+        .select("id")
         .eq("user_id", userId)
         .eq("principal_id", link.principal_id)
-        .eq("client_id", mergedClientId);
-    } else {
-      await db
-        .from("principal_clients")
-        .update({ client_id: keptClientId })
-        .eq("user_id", userId)
-        .eq("principal_id", link.principal_id)
-        .eq("client_id", mergedClientId);
-    }
-  }
+        .eq("client_id", keptClientId)
+        .maybeSingle();
+      if (existingError) throw existingError;
+      if (existing) {
+        await db
+          .from("principal_clients")
+          .delete()
+          .eq("user_id", userId)
+          .eq("principal_id", link.principal_id)
+          .eq("client_id", mergedClientId);
+      } else {
+        await db
+          .from("principal_clients")
+          .update({ client_id: keptClientId })
+          .eq("user_id", userId)
+          .eq("principal_id", link.principal_id)
+          .eq("client_id", mergedClientId);
+      }
+    }),
+  );
 }
 
 async function mergePriceBooks(
@@ -746,9 +754,9 @@ async function mergePriceBooks(
   if (keptError) throw keptError;
 
   const keptYears = new Set((keptBooks ?? []).map((book) => book.year));
-  const movableIds = (mergedBooks ?? [])
-    .filter((book) => !keptYears.has(book.year))
-    .map((book) => book.id);
+  const movableIds = (mergedBooks ?? []).flatMap((book) =>
+    keptYears.has(book.year) ? [] : [book.id],
+  );
   if (movableIds.length === 0) return;
   const { error } = await db
     .from("price_books")

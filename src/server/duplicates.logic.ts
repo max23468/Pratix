@@ -169,8 +169,10 @@ export function scanDuplicateCandidates(input: DuplicateScanInput) {
   ];
 
   const openCandidates = generated
-    .map((candidate) => attachReview(candidate, reviewsByPair, now))
-    .filter((candidate) => candidate.status !== "dismissed" && candidate.status !== "merged")
+    .flatMap((candidate) => {
+      const reviewed = attachReview(candidate, reviewsByPair, now);
+      return reviewed.status === "dismissed" || reviewed.status === "merged" ? [] : [reviewed];
+    })
     .sort(sortDuplicateCandidates);
 
   const generatedKeys = new Set(
@@ -180,18 +182,18 @@ export function scanDuplicateCandidates(input: DuplicateScanInput) {
   );
 
   const resolvedCandidates = input.reviews
-    .filter((review) => review.status === "dismissed" || review.status === "merged")
-    .map(reviewToCandidate)
-    .filter(Boolean)
-    .filter((candidate): candidate is DuplicateCandidate => Boolean(candidate))
-    .filter(
-      (candidate) =>
+    .flatMap((review) => {
+      if (review.status !== "dismissed" && review.status !== "merged") return [];
+      const candidate = reviewToCandidate(review);
+      if (!candidate) return [];
+      const stillResolved =
         !generatedKeys.has(
           duplicatePairKey(candidate.entityType, candidate.left.id, candidate.right.id),
         ) ||
         candidate.status === "dismissed" ||
-        candidate.status === "merged",
-    )
+        candidate.status === "merged";
+      return stillResolved ? [candidate] : [];
+    })
     .sort(sortDuplicateCandidates);
 
   return {
@@ -231,25 +233,30 @@ export function scanDuplicateDraft(input: {
 
   const candidates =
     input.entityType === "principal"
-      ? (input.principals ?? [])
-          .map((row) => scorePrincipalPair(row, input.draft as PrincipalDuplicateRow, draft))
-          .filter(Boolean)
+      ? (input.principals ?? []).flatMap((row) => {
+          const candidate = scorePrincipalPair(row, input.draft as PrincipalDuplicateRow, draft);
+          return candidate ? [candidate] : [];
+        })
       : input.entityType === "client"
-        ? (input.clients ?? [])
-            .map((row) => scoreClientPair(row, input.draft as ClientDuplicateRow, draft))
-            .filter(Boolean)
+        ? (input.clients ?? []).flatMap((row) => {
+            const candidate = scoreClientPair(row, input.draft as ClientDuplicateRow, draft);
+            return candidate ? [candidate] : [];
+          })
         : input.entityType === "counterparty"
-          ? (input.counterparties ?? [])
-              .map((row) =>
-                scoreCounterpartyPair(row, input.draft as CounterpartyDuplicateRow, draft),
-              )
-              .filter(Boolean)
-          : (input.cases ?? [])
-              .map((row) => scoreCasePair(row, input.draft as CaseDuplicateRow, draft))
-              .filter(Boolean);
+          ? (input.counterparties ?? []).flatMap((row) => {
+              const candidate = scoreCounterpartyPair(
+                row,
+                input.draft as CounterpartyDuplicateRow,
+                draft,
+              );
+              return candidate ? [candidate] : [];
+            })
+          : (input.cases ?? []).flatMap((row) => {
+              const candidate = scoreCasePair(row, input.draft as CaseDuplicateRow, draft);
+              return candidate ? [candidate] : [];
+            });
 
   return candidates
-    .filter((candidate): candidate is DuplicateCandidate => Boolean(candidate))
     .filter((candidate) => candidate.score >= FORM_THRESHOLD)
     .sort(sortDuplicateCandidates)
     .slice(0, 5);
@@ -603,15 +610,14 @@ function scoreCrossEntityCandidates(input: DuplicateScanInput) {
   const rows = [
     ...input.principals.map(principalCrossEntityRow),
     ...input.clients.map(clientCrossEntityRow),
-    ...input.counterparties.map(counterpartyCrossEntityRow).filter(isCrossEntityRow),
+    ...input.counterparties.flatMap((row) => {
+      const candidate = counterpartyCrossEntityRow(row);
+      return candidate ? [candidate] : [];
+    }),
     ...(input.counterpartySubjects ?? []).map(subjectCrossEntityRow),
   ];
 
   return pairwise(rows, scoreCrossEntityPair);
-}
-
-function isCrossEntityRow(row: CrossEntityDuplicateRow | null): row is CrossEntityDuplicateRow {
-  return Boolean(row);
 }
 
 function scoreCrossEntityPair(a: CrossEntityDuplicateRow, b: CrossEntityDuplicateRow) {

@@ -387,7 +387,7 @@ npm run format:changed:check
 npm run build
 npm run lint
 npm audit --audit-level=moderate
-npm run ci:local
+npm run check
 ```
 
 Se cambia Supabase o se emergono warning DB:
@@ -418,7 +418,7 @@ Esito Fase 6 (2026-05-09):
    - `npm run build`;
    - `npm run lint`;
    - `npm audit --audit-level=moderate`;
-   - `npm run ci:local`.
+   - `npm run check`.
 2. preview locale avviata con `npm run preview -- --host 127.0.0.1 --port
 4173`;
 3. smoke browser pubblico completato su `/`, `/login`, `/register`,
@@ -484,7 +484,7 @@ Esito Fase 7 locale (2026-05-09):
    `Codex PR comments`;
 5. gate locali completati con esito positivo:
    - `npm run format:changed:check`;
-   - `npm run ci:local`;
+   - `npm run check`;
    - `npx --yes -p node@24 -p npm@11 npm run build`;
    - `npx --yes -p node@24 -p npm@11 npm run lint`;
    - `git diff --check`.

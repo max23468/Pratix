@@ -1,12 +1,9 @@
-import { useId, useMemo, useRef, useState, type FormEvent } from "react";
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, RotateCcw, Trash2 } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import { toast } from "sonner";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -16,17 +13,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
+import { PriceBookConfiguration } from "@/components/price-book-configuration";
+import { PriceItemsEditor } from "@/components/price-items-editor";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { priceBookStatusLabels, priceItemKindLabels } from "@/lib/labels";
@@ -42,7 +32,7 @@ import {
 } from "@/lib/price-templates";
 import { savePriceBookFn } from "@/server/price-books.functions";
 
-type PriceBookRow = {
+export type PriceBookRow = {
   id?: string;
   public_code?: string | null;
   principal_id: string;
@@ -55,7 +45,7 @@ type PriceBookRow = {
   notes: string | null;
 };
 
-type PriceItemDraft = {
+export type PriceItemDraft = {
   id?: string;
   kind: PriceItemKind;
   code: string;
@@ -102,10 +92,9 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
   const [items, setItems] = useState<PriceItemDraft[]>(
     initialItems.length > 0 ? initialItems : createTemplateItems(),
   );
-  const initialItemIds = useRef<Set<string> | null>(null);
-  if (initialItemIds.current === null) {
-    initialItemIds.current = new Set(initialItems.flatMap((item) => (item.id ? [item.id] : [])));
-  }
+  const [initialItemIds] = useState(
+    () => new Set(initialItems.flatMap((item) => (item.id ? [item.id] : []))),
+  );
   const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
   const saveLock = useSubmitLock();
 
@@ -250,9 +239,7 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
 
       const normalizedItems = normalizeItems(items);
       const currentItemIds = new Set(normalizedItems.flatMap((item) => (item.id ? [item.id] : [])));
-      const deletedItemIds = [...(initialItemIds.current ?? [])].filter(
-        (id) => !currentItemIds.has(id),
-      );
+      const deletedItemIds = [...initialItemIds].filter((id) => !currentItemIds.has(id));
       return readServerResult(
         await savePriceBook({
           data: {
@@ -291,156 +278,30 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Configurazione</CardTitle>
-          <CardDescription>
-            I prezzi sono annuali e specifici per committente. Il template 2025 vale anche per il
-            2026.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="grid gap-4 md:grid-cols-4">
-            <div className="flex flex-col gap-2 md:col-span-2">
-              <Label htmlFor="principal_id">Committente</Label>
-              <Select
-                value={form.principal_id}
-                onValueChange={(value) => {
-                  const selectedPrincipal = principals.find((principal) => principal.id === value);
-                  markDirty();
-                  setForm((current) => ({
-                    ...current,
-                    principal_id: value,
-                    fees_enabled: isEdit
-                      ? current.fees_enabled
-                      : (selectedPrincipal?.fees_enabled ?? current.fees_enabled),
-                    expense_reimbursements_enabled: isEdit
-                      ? current.expense_reimbursements_enabled
-                      : (selectedPrincipal?.expense_reimbursements_enabled ??
-                        current.expense_reimbursements_enabled),
-                  }));
-                }}
-                disabled={isEdit}
-              >
-                <SelectTrigger id="principal_id">
-                  <SelectValue placeholder="Seleziona committente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {principals.map((principal) => (
-                    <SelectItem key={principal.id} value={principal.id}>
-                      {principal.business_name}
-                      {principal.archived_at ? " (archiviato)" : ""}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="year">Anno</Label>
-              <Input
-                id="year"
-                type="number"
-                min="2000"
-                max="2100"
-                value={form.year}
-                onChange={(event) => setField("year", Number(event.target.value))}
-                disabled={isEdit}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="status">Stato</Label>
-              <Select
-                value={form.status}
-                onValueChange={(value) => setField("status", value as PriceBookStatus)}
-              >
-                <SelectTrigger id="status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(priceBookStatusLabels).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="fees_enabled">Compensi</Label>
-                <p className="text-xs text-muted-foreground">Abilita le voci imponibili.</p>
-              </div>
-              <Switch
-                id="fees_enabled"
-                checked={form.fees_enabled}
-                onCheckedChange={(checked) => setField("fees_enabled", checked)}
-              />
-            </div>
-            <div className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="expense_reimbursements_enabled">Rimborsi spese</Label>
-                <p className="text-xs text-muted-foreground">Abilita anticipazioni Art. 15.</p>
-              </div>
-              <Switch
-                id="expense_reimbursements_enabled"
-                checked={form.expense_reimbursements_enabled}
-                onCheckedChange={(checked) => setField("expense_reimbursements_enabled", checked)}
-              />
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="valid_from">Valido dal</Label>
-              <Input
-                id="valid_from"
-                type="date"
-                value={form.valid_from}
-                onChange={(event) => setField("valid_from", event.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="valid_to">Valido al</Label>
-              <Input
-                id="valid_to"
-                type="date"
-                value={form.valid_to ?? ""}
-                onChange={(event) => setField("valid_to", event.target.value || null)}
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="notes">Note</Label>
-            <Textarea
-              id="notes"
-              rows={3}
-              value={form.notes ?? ""}
-              onChange={(event) => setField("notes", event.target.value)}
-            />
-          </div>
-
-          {!isEdit && (
-            <div className="flex flex-wrap gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={resetTemplate}>
-                <RotateCcw className="mr-1 size-4" /> Template comune 2025/2026
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={copyPreviousYear}
-                disabled={!previousBook}
-              >
-                <RotateCcw className="mr-1 size-4" /> Copia anno precedente
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <PriceBookConfiguration
+        form={form}
+        principals={principals}
+        isEdit={isEdit}
+        hasPreviousBook={Boolean(previousBook)}
+        onFieldChange={setField}
+        onPrincipalChange={(value) => {
+          const selectedPrincipal = principals.find((principal) => principal.id === value);
+          markDirty();
+          setForm((current) => ({
+            ...current,
+            principal_id: value,
+            fees_enabled: isEdit
+              ? current.fees_enabled
+              : (selectedPrincipal?.fees_enabled ?? current.fees_enabled),
+            expense_reimbursements_enabled: isEdit
+              ? current.expense_reimbursements_enabled
+              : (selectedPrincipal?.expense_reimbursements_enabled ??
+                current.expense_reimbursements_enabled),
+          }));
+        }}
+        onResetTemplate={resetTemplate}
+        onCopyPreviousYear={copyPreviousYear}
+      />
 
       <PriceItemsEditor
         title="Compensi"
@@ -474,166 +335,6 @@ export function PriceBookForm({ initial, initialItems = emptyItems, onSaved, onC
     </form>
   );
 }
-
-function PriceItemsEditor({
-  title,
-  description,
-  kind,
-  items,
-  onAdd,
-  onRemove,
-  onUpdate,
-}: {
-  title: string;
-  description: string;
-  kind: PriceItemKind;
-  items: PriceItemDraft[];
-  onAdd: (kind: PriceItemKind) => void;
-  onRemove: (index: number) => void;
-  onUpdate: <K extends keyof PriceItemDraft>(
-    index: number,
-    key: K,
-    value: PriceItemDraft[K],
-  ) => void;
-}) {
-  const editorId = useId();
-  const sectionItems = items
-    .map((item, index) => ({ item, index }))
-    .filter(({ item }) => item.kind === kind)
-    .sort((a, b) => a.item.sort_order - b.item.sort_order);
-
-  return (
-    <Card>
-      <CardHeader>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <CardTitle className="text-base">{title}</CardTitle>
-            <CardDescription>{description}</CardDescription>
-          </div>
-          <Button type="button" variant="outline" size="sm" onClick={() => onAdd(kind)}>
-            <Plus className="mr-1 size-4" /> Voce
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Codice</TableHead>
-              <TableHead>Voce</TableHead>
-              <TableHead>Prezzo</TableHead>
-              <TableHead>Udienze</TableHead>
-              <TableHead>Stato</TableHead>
-              <TableHead className="w-16" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {sectionItems.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-8 text-center text-sm text-muted-foreground">
-                  Nessuna voce.
-                </TableCell>
-              </TableRow>
-            ) : (
-              sectionItems.map(({ item, index }) => {
-                const enabledSwitchId = `${editorId}-price-item-${item.id ?? `${item.kind}-${index}`}-enabled`;
-
-                return (
-                  <TableRow key={item.id ?? `${item.kind}-${index}`}>
-                    <TableCell>
-                      <Input
-                        value={item.code}
-                        onChange={(event) =>
-                          onUpdate(index, "code", event.target.value.toUpperCase())
-                        }
-                        className="min-w-40"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex min-w-72 flex-col gap-2">
-                        <Input
-                          value={item.name}
-                          onChange={(event) => onUpdate(index, "name", event.target.value)}
-                          placeholder={priceItemKindLabels[item.kind]}
-                        />
-                        <Input
-                          value={item.invoice_description ?? ""}
-                          onChange={(event) =>
-                            onUpdate(index, "invoice_description", event.target.value)
-                          }
-                          placeholder="Es. Redazione diffida stragiudiziale"
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      {item.kind === "fee" ? (
-                        <Input
-                          type="number"
-                          min="0"
-                          step="0.01"
-                          value={item.unit_price ?? 0}
-                          onChange={(event) =>
-                            onUpdate(index, "unit_price", Number(event.target.value))
-                          }
-                          className="min-w-28"
-                        />
-                      ) : (
-                        <span className="text-sm text-muted-foreground">Libero</span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <Checkbox
-                        checked={item.requires_hearing_dates}
-                        onCheckedChange={(checked) =>
-                          onUpdate(index, "requires_hearing_dates", checked === true)
-                        }
-                        disabled={item.kind !== "fee"}
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-2">
-                        <Badge variant={item.is_enabled ? "outline" : "secondary"}>
-                          {item.is_enabled ? "Abilitata" : "Disabilitata"}
-                        </Badge>
-                        {item.usedCount ? (
-                          <span className="text-xs text-muted-foreground">
-                            Usata {item.usedCount} volte
-                          </span>
-                        ) : null}
-                        <label
-                          htmlFor={enabledSwitchId}
-                          className="flex items-center gap-2 text-xs text-muted-foreground"
-                        >
-                          <Switch
-                            id={enabledSwitchId}
-                            checked={item.is_enabled}
-                            onCheckedChange={(checked) => onUpdate(index, "is_enabled", checked)}
-                          />
-                          Visibile
-                        </label>
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => onRemove(index)}
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </CardContent>
-    </Card>
-  );
-}
-
 function validateForm(form: PriceBookRow, items: PriceItemDraft[]) {
   if (!form.principal_id) throw new Error("Seleziona un committente");
   if (!form.year || form.year < 2000 || form.year > 2100)

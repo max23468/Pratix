@@ -6,6 +6,13 @@ import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DuplicateWarningPanel } from "@/components/duplicate-warning-panel";
+import { CounterpartySubjectsEditor } from "@/components/counterparty-subjects-editor";
+import {
+  emptySubject,
+  type SubjectDraft,
+  type SubjectKind,
+  type SubjectRow,
+} from "@/components/counterparty-subjects";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -39,7 +46,6 @@ import { useSubmitLock } from "@/lib/submit-lock";
 import { findDuplicateCandidatesFn } from "@/server/duplicates.functions";
 
 type CounterpartyKind = "individual" | "company" | "group";
-type SubjectKind = "individual" | "company";
 
 type CounterpartyRow = {
   id?: string;
@@ -51,18 +57,6 @@ type CounterpartyRow = {
   notes: string | null;
 };
 
-type SubjectRow = {
-  id?: string;
-  kind: SubjectKind;
-  first_name: string | null;
-  last_name: string | null;
-  business_name: string | null;
-  notes: string | null;
-  position: number;
-};
-
-type SubjectDraft = SubjectRow & { clientKey: string };
-
 const emptyCounterparty: CounterpartyRow = {
   kind: "company",
   first_name: "",
@@ -70,16 +64,6 @@ const emptyCounterparty: CounterpartyRow = {
   business_name: "",
   notes: "",
 };
-
-const emptySubject = (position: number): SubjectDraft => ({
-  clientKey: crypto.randomUUID(),
-  kind: "individual",
-  first_name: "",
-  last_name: "",
-  business_name: "",
-  notes: "",
-  position,
-});
 
 type Props = {
   initial?: Partial<CounterpartyRow> & { id?: string };
@@ -136,12 +120,14 @@ export function CounterpartyForm({
   };
 
   const normalizedSubjects = () =>
-    subjects
-      .map(({ clientKey: _clientKey, ...subject }, index) => ({ ...subject, position: index }))
-      .filter((subject) => {
-        if (subject.kind === "company") return Boolean(subject.business_name?.trim());
-        return Boolean(subject.first_name?.trim() || subject.last_name?.trim());
-      });
+    subjects.flatMap(({ clientKey: _clientKey, ...subject }, position) => {
+      const normalized = { ...subject, position };
+      const hasName =
+        normalized.kind === "company"
+          ? normalized.business_name?.trim()
+          : normalized.first_name?.trim() || normalized.last_name?.trim();
+      return hasName ? [normalized] : [];
+    });
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -323,116 +309,12 @@ export function CounterpartyForm({
       />
 
       {form.kind === "group" && (
-        <Card>
-          <CardHeader>
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <CardTitle className="text-base">Soggetti della controparte</CardTitle>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  markDirty();
-                  setSubjects((current) => [...current, emptySubject(current.length)]);
-                }}
-              >
-                <Plus className="mr-1 size-4" /> Soggetto
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            {subjects.map((subject, index) => (
-              <div key={subject.clientKey} className="rounded-md border border-border p-4">
-                <div className="mb-4 flex items-center justify-between gap-2">
-                  <p className="text-sm font-medium">Soggetto {index + 1}</p>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      markDirty();
-                      setSubjects((current) =>
-                        current.length === 1
-                          ? [emptySubject(0)]
-                          : current.filter((_, currentIndex) => currentIndex !== index),
-                      );
-                    }}
-                  >
-                    <Trash2 className="mr-1 size-4" /> Rimuovi
-                  </Button>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="flex flex-col gap-2">
-                    <Label htmlFor={`subject_kind_${index}`}>Tipo</Label>
-                    <Select
-                      value={subject.kind}
-                      onValueChange={(value) => updateSubject(index, "kind", value as SubjectKind)}
-                    >
-                      <SelectTrigger id={`subject_kind_${index}`}>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(clientKindLabels).map(([key, label]) => (
-                          <SelectItem key={key} value={key}>
-                            {label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  {subject.kind === "company" ? (
-                    <div className="flex flex-col gap-2">
-                      <Label htmlFor={`subject_business_${index}`}>Ragione sociale</Label>
-                      <Input
-                        id={`subject_business_${index}`}
-                        value={subject.business_name ?? ""}
-                        onChange={(event) =>
-                          updateSubject(index, "business_name", event.target.value)
-                        }
-                        placeholder="Es. Debitore S.r.l."
-                      />
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex flex-col gap-2">
-                        <Label htmlFor={`subject_last_${index}`}>Cognome</Label>
-                        <Input
-                          id={`subject_last_${index}`}
-                          value={subject.last_name ?? ""}
-                          onChange={(event) =>
-                            updateSubject(index, "last_name", event.target.value)
-                          }
-                          placeholder="Es. Rossi"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Label htmlFor={`subject_first_${index}`}>Nome</Label>
-                        <Input
-                          id={`subject_first_${index}`}
-                          value={subject.first_name ?? ""}
-                          onChange={(event) =>
-                            updateSubject(index, "first_name", event.target.value)
-                          }
-                          placeholder="Es. Anna"
-                        />
-                      </div>
-                    </>
-                  )}
-                  <div className="flex flex-col gap-2 sm:col-span-2">
-                    <Label htmlFor={`subject_notes_${index}`}>Note</Label>
-                    <Textarea
-                      id={`subject_notes_${index}`}
-                      rows={2}
-                      value={subject.notes ?? ""}
-                      onChange={(event) => updateSubject(index, "notes", event.target.value)}
-                      placeholder="Es. ruolo del soggetto nella controparte"
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+        <CounterpartySubjectsEditor
+          subjects={subjects}
+          setSubjects={setSubjects}
+          markDirty={markDirty}
+          onUpdate={updateSubject}
+        />
       )}
 
       <div className="flex flex-wrap items-center justify-between gap-2">

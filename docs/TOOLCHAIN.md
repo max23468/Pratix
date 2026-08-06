@@ -42,7 +42,7 @@ npm run dev
 npm run build
 npm run lint
 npm test
-npm run ci:local
+npm run check
 npm run prepush:guard
 ```
 
@@ -65,13 +65,13 @@ npm run publish:finish -- --pr <numero-pr> --routes /,/novita
 Qualità UI/React:
 
 ```sh
-npm run quality:react-doctor
+npm run doctor
 npm run smoke:a11y
 npm run smoke:a11y:quick
 npm run smoke:a11y:auth
 ```
 
-`npm run quality:react-doctor` usa `npx --yes react-doctor@latest` per seguire l'ultima diagnostica disponibile senza prompt interattivi, mantenendo i flag Pratix per progetto TanStack Start.
+`npm run doctor` usa la versione esatta dichiarata nelle devDependency e blocca errori e warning.
 
 Supabase:
 

@@ -25,7 +25,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { ActivityReviewBadge } from "@/components/case-activities";
+import { ActivityReviewBadge } from "@/components/activity-review-badge";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
@@ -122,7 +122,7 @@ const billingStatusLabels: Record<BillingItemStatus, string> = {
   excluded: "Escludi",
 };
 
-export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
+function useInvoiceForm(draftInvoiceRef?: string) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const createBillingInvoice = useServerFn(createBillingInvoiceFn);
@@ -477,6 +477,116 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
   const isDraftFormHydrated =
     !isEditingDraft || Boolean(draftData && loadedDraftId === draftData.invoice.id);
 
+  return {
+    draftIsError,
+    draftError,
+    isEditingDraft,
+    draftLoading,
+    isDraftFormHydrated,
+    saveInvoice,
+    includedActivities,
+    formRef,
+    handleSubmit,
+    principalId,
+    setPrincipalId,
+    principals,
+    selectedPrincipal,
+    markDirty,
+    periodMode,
+    setPeriodMode,
+    selectedQuarter,
+    displayedQuarterOptions,
+    applyQuarter,
+    periodStart,
+    setPeriodStart,
+    periodEnd,
+    setPeriodEnd,
+    activitiesLoading,
+    activities,
+    selectionForActivities,
+    setSelection,
+    issueDate,
+    setIssueDate,
+    dueDate,
+    setDueDate,
+    includeGeneralExpenses,
+    setIncludeGeneralExpenses,
+    generalExpensesRate,
+    setGeneralExpensesRate,
+    cassaRate,
+    setCassaRate,
+    vatRate,
+    setVatRate,
+    withholdingRate,
+    setWithholdingRate,
+    applyWithholding,
+    setApplyWithholding,
+    paymentMethod,
+    setPaymentMethod,
+    notes,
+    setNotes,
+    totals,
+    pendingInvoiceStatus,
+    guardDialog,
+    isForfettario,
+  };
+}
+
+export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
+  const {
+    draftIsError,
+    draftError,
+    isEditingDraft,
+    draftLoading,
+    isDraftFormHydrated,
+    saveInvoice,
+    includedActivities,
+    formRef,
+    handleSubmit,
+    principalId,
+    setPrincipalId,
+    principals,
+    selectedPrincipal,
+    markDirty,
+    periodMode,
+    setPeriodMode,
+    selectedQuarter,
+    displayedQuarterOptions,
+    applyQuarter,
+    periodStart,
+    setPeriodStart,
+    periodEnd,
+    setPeriodEnd,
+    activitiesLoading,
+    activities,
+    selectionForActivities,
+    setSelection,
+    issueDate,
+    setIssueDate,
+    dueDate,
+    setDueDate,
+    includeGeneralExpenses,
+    setIncludeGeneralExpenses,
+    generalExpensesRate,
+    setGeneralExpensesRate,
+    cassaRate,
+    setCassaRate,
+    vatRate,
+    setVatRate,
+    withholdingRate,
+    setWithholdingRate,
+    applyWithholding,
+    setApplyWithholding,
+    paymentMethod,
+    setPaymentMethod,
+    notes,
+    setNotes,
+    totals,
+    pendingInvoiceStatus,
+    guardDialog,
+    isForfettario,
+  } = useInvoiceForm(draftInvoiceRef);
+
   if (isEditingDraft && draftIsError) {
     return (
       <Card>
@@ -651,127 +761,15 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
           </CardContent>
         </Card>
 
-        <Card className="min-w-0">
-          <CardHeader>
-            <CardTitle>Attività</CardTitle>
-            <CardDescription>
-              Le voci incluse entrano in fattura; le rinviate ricompariranno dal periodo successivo.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="min-w-0 overflow-x-auto">
-              <Table className="block w-full sm:table">
-                <TableHeader className="hidden sm:table-header-group">
-                  <TableRow>
-                    <TableHead>Stato</TableHead>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Pratica</TableHead>
-                    <TableHead>Cliente</TableHead>
-                    <TableHead>Controparte</TableHead>
-                    <TableHead>Voce</TableHead>
-                    <TableHead className="text-right">Totale</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {activitiesLoading && (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground">
-                        Caricamento…
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {!activitiesLoading && activities.length === 0 && (
-                    <TableRow>
-                      <TableCell colSpan={7} className="text-center text-muted-foreground">
-                        Nessuna attività da fatturare per il periodo selezionato.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {activities.map((activity) => (
-                    <TableRow
-                      key={activity.id}
-                      className="mb-3 block rounded-lg border border-border p-3 last:mb-0 sm:mb-0 sm:table-row sm:rounded-none sm:border-x-0 sm:border-t-0 sm:p-0"
-                    >
-                      <TableCell className="block p-0 pb-3 sm:table-cell sm:p-2">
-                        <Select
-                          value={selectionForActivities[activity.id] ?? "included"}
-                          onValueChange={(value) => {
-                            markDirty();
-                            setSelection((current) => ({
-                              ...current,
-                              [activity.id]: value as BillingItemStatus,
-                            }));
-                          }}
-                        >
-                          <SelectTrigger className="w-full sm:w-32" aria-label="Stato attività">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {Object.entries(billingStatusLabels).map(([value, label]) => (
-                              <SelectItem key={value} value={value}>
-                                {label}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </TableCell>
-                      <TableCell className="flex justify-between gap-3 text-sm sm:table-cell">
-                        <span className="shrink-0 text-muted-foreground sm:hidden">Data</span>
-                        <span className="text-right sm:text-left">
-                          {formatDate(activity.activity_date)}
-                        </span>
-                      </TableCell>
-                      <TableCell className="flex justify-between gap-3 text-sm sm:table-cell">
-                        <span className="shrink-0 text-muted-foreground sm:hidden">Pratica</span>
-                        <span className="min-w-0 break-words text-right sm:text-left">
-                          {activity.cases?.practice_number
-                            ? `N. ${activity.cases.practice_number}`
-                            : "—"}
-                        </span>
-                      </TableCell>
-                      <TableCell className="flex justify-between gap-3 text-sm sm:table-cell">
-                        <span className="shrink-0 text-muted-foreground sm:hidden">Cliente</span>
-                        <span className="min-w-0 break-words text-right sm:text-left">
-                          {activity.clients ? clientDisplayName(activity.clients) : "—"}
-                        </span>
-                      </TableCell>
-                      <TableCell className="flex justify-between gap-3 text-sm sm:table-cell">
-                        <span className="shrink-0 text-muted-foreground sm:hidden">
-                          Controparte
-                        </span>
-                        <span className="min-w-0 break-words text-right sm:text-left">
-                          {activity.counterparties
-                            ? counterpartyDisplayName(activity.counterparties)
-                            : "—"}
-                        </span>
-                      </TableCell>
-                      <TableCell className="block text-sm sm:table-cell">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-muted-foreground sm:hidden">Voce</span>
-                          <span className="break-words">{activity.description}</span>
-                          <ActivityReviewBadge needsReview={activity.needs_review} />
-                          <span className="text-xs text-muted-foreground">
-                            {activity.kind === "fee" ? "Compenso" : "Rimborso spese"} · Q.tà{" "}
-                            {activity.quantity}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell className="flex justify-between gap-3 text-sm font-medium sm:table-cell sm:text-right">
-                        <span className="shrink-0 font-normal text-muted-foreground sm:hidden">
-                          Totale
-                        </span>
-                        <span className="text-right">
-                          {formatCurrency(Number(activity.amount))}
-                        </span>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
-
+        <InvoiceActivitiesCard
+          isLoading={activitiesLoading}
+          activities={activities}
+          selection={selectionForActivities}
+          onSelectionChange={(activityId, status) => {
+            markDirty();
+            setSelection((current) => ({ ...current, [activityId]: status }));
+          }}
+        />
         <Card className="min-w-0">
           <CardHeader>
             <CardTitle>Note</CardTitle>
@@ -789,123 +787,314 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
         </Card>
       </div>
 
-      <div className="min-w-0 space-y-4">
-        <Card className="min-w-0">
-          <CardHeader>
-            <CardTitle>Regole fiscali</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <SwitchRow
-              label="Spese generali"
-              checked={includeGeneralExpenses}
-              onCheckedChange={(value) => {
-                markDirty();
-                setIncludeGeneralExpenses(value);
-              }}
-            />
-            <NumberField
-              id="general_expenses_rate"
-              label="Percentuale spese generali"
-              value={generalExpensesRate}
-              onChange={(value) => {
-                markDirty();
-                setGeneralExpensesRate(value);
-              }}
-              disabled={!includeGeneralExpenses}
-            />
-            <NumberField
-              id="cassa_rate"
-              label="Cassa Forense"
-              value={cassaRate}
-              onChange={(value) => {
-                markDirty();
-                setCassaRate(value);
-              }}
-            />
-            <NumberField
-              id="vat_rate"
-              label="IVA"
-              value={vatRate}
-              onChange={(value) => {
-                markDirty();
-                setVatRate(value);
-              }}
-            />
-            <SwitchRow
-              label="Ritenuta d'acconto"
-              checked={applyWithholding}
-              onCheckedChange={(value) => {
-                markDirty();
-                setApplyWithholding(value);
-              }}
-            />
-            <NumberField
-              id="withholding_rate"
-              label="Aliquota ritenuta"
-              value={withholdingRate}
-              onChange={(value) => {
-                markDirty();
-                setWithholdingRate(value);
-              }}
-              disabled={!applyWithholding}
-            />
-          </CardContent>
-        </Card>
-
-        <Card className="min-w-0">
-          <CardHeader>
-            <CardTitle>Riepilogo</CardTitle>
-            <CardDescription>{includedActivities.length} attività incluse</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <SummaryRow label="Compensi" value={totals.taxableFees} />
-            {totals.generalExpensesAmount > 0 && (
-              <SummaryRow label="Spese generali" value={totals.generalExpensesAmount} />
-            )}
-            <SummaryRow label="Cassa Forense" value={totals.cassaAmount} />
-            {!isForfettario && <SummaryRow label="IVA" value={totals.vatAmount} />}
-            <SummaryRow label="Rimborsi Art. 15" value={totals.art15Expenses} />
-            {totals.stampAmount > 0 && <SummaryRow label="Bollo" value={totals.stampAmount} />}
-            <div className="border-t border-border pt-3">
-              <SummaryRow label="Totale documento" value={totals.totalAmount} strong />
-              <SummaryRow label="Netto a pagare" value={totals.netToPay} strong />
-            </div>
-            <div className="flex items-start gap-2 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground">
-              <FileSpreadsheet className="mt-0.5 size-4 shrink-0" />
-              <span>La fattura genera anche i rendiconti Excel per compensi e rimborsi.</span>
-            </div>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Button
-                type="submit"
-                name="invoiceStatus"
-                value="draft"
-                variant="outline"
-                className="w-full"
-                disabled={submitDisabled}
-              >
-                {pendingInvoiceStatus === "draft" && (
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                )}
-                Salva bozza
-              </Button>
-              <Button
-                type="submit"
-                name="invoiceStatus"
-                value="issued"
-                className="w-full"
-                disabled={submitDisabled}
-              >
-                {pendingInvoiceStatus === "issued" && (
-                  <Loader2 className="mr-2 size-4 animate-spin" />
-                )}
-                {isEditingDraft ? "Segna come emessa" : "Crea fattura"}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <InvoiceSummaryPanel
+        includeGeneralExpenses={includeGeneralExpenses}
+        setIncludeGeneralExpenses={setIncludeGeneralExpenses}
+        generalExpensesRate={generalExpensesRate}
+        setGeneralExpensesRate={setGeneralExpensesRate}
+        cassaRate={cassaRate}
+        setCassaRate={setCassaRate}
+        vatRate={vatRate}
+        setVatRate={setVatRate}
+        applyWithholding={applyWithholding}
+        setApplyWithholding={setApplyWithholding}
+        withholdingRate={withholdingRate}
+        setWithholdingRate={setWithholdingRate}
+        markDirty={markDirty}
+        totals={totals}
+        includedCount={includedActivities.length}
+        isForfettario={isForfettario}
+        submitDisabled={submitDisabled}
+        pendingInvoiceStatus={pendingInvoiceStatus}
+        isEditingDraft={isEditingDraft}
+      />
       {guardDialog}
     </form>
+  );
+}
+
+function InvoiceSummaryPanel({
+  includeGeneralExpenses,
+  setIncludeGeneralExpenses,
+  generalExpensesRate,
+  setGeneralExpensesRate,
+  cassaRate,
+  setCassaRate,
+  vatRate,
+  setVatRate,
+  applyWithholding,
+  setApplyWithholding,
+  withholdingRate,
+  setWithholdingRate,
+  markDirty,
+  totals,
+  includedCount,
+  isForfettario,
+  submitDisabled,
+  pendingInvoiceStatus,
+  isEditingDraft,
+}: {
+  includeGeneralExpenses: boolean;
+  setIncludeGeneralExpenses: (value: boolean) => void;
+  generalExpensesRate: number;
+  setGeneralExpensesRate: (value: number) => void;
+  cassaRate: number;
+  setCassaRate: (value: number) => void;
+  vatRate: number;
+  setVatRate: (value: number) => void;
+  applyWithholding: boolean;
+  setApplyWithholding: (value: boolean) => void;
+  withholdingRate: number;
+  setWithholdingRate: (value: number) => void;
+  markDirty: () => void;
+  totals: ReturnType<typeof computeInvoice>;
+  includedCount: number;
+  isForfettario: boolean;
+  submitDisabled: boolean;
+  pendingInvoiceStatus: "draft" | "issued" | null;
+  isEditingDraft: boolean;
+}) {
+  return (
+    <div className="min-w-0 space-y-4">
+      <Card className="min-w-0">
+        <CardHeader>
+          <CardTitle>Regole fiscali</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <SwitchRow
+            label="Spese generali"
+            checked={includeGeneralExpenses}
+            onCheckedChange={(value) => {
+              markDirty();
+              setIncludeGeneralExpenses(value);
+            }}
+          />
+          <NumberField
+            id="general_expenses_rate"
+            label="Percentuale spese generali"
+            value={generalExpensesRate}
+            onChange={(value) => {
+              markDirty();
+              setGeneralExpensesRate(value);
+            }}
+            disabled={!includeGeneralExpenses}
+          />
+          <NumberField
+            id="cassa_rate"
+            label="Cassa Forense"
+            value={cassaRate}
+            onChange={(value) => {
+              markDirty();
+              setCassaRate(value);
+            }}
+          />
+          <NumberField
+            id="vat_rate"
+            label="IVA"
+            value={vatRate}
+            onChange={(value) => {
+              markDirty();
+              setVatRate(value);
+            }}
+          />
+          <SwitchRow
+            label="Ritenuta d'acconto"
+            checked={applyWithholding}
+            onCheckedChange={(value) => {
+              markDirty();
+              setApplyWithholding(value);
+            }}
+          />
+          <NumberField
+            id="withholding_rate"
+            label="Aliquota ritenuta"
+            value={withholdingRate}
+            onChange={(value) => {
+              markDirty();
+              setWithholdingRate(value);
+            }}
+            disabled={!applyWithholding}
+          />
+        </CardContent>
+      </Card>
+
+      <Card className="min-w-0">
+        <CardHeader>
+          <CardTitle>Riepilogo</CardTitle>
+          <CardDescription>{includedCount} attività incluse</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <SummaryRow label="Compensi" value={totals.taxableFees} />
+          {totals.generalExpensesAmount > 0 && (
+            <SummaryRow label="Spese generali" value={totals.generalExpensesAmount} />
+          )}
+          <SummaryRow label="Cassa Forense" value={totals.cassaAmount} />
+          {!isForfettario && <SummaryRow label="IVA" value={totals.vatAmount} />}
+          <SummaryRow label="Rimborsi Art. 15" value={totals.art15Expenses} />
+          {totals.stampAmount > 0 && <SummaryRow label="Bollo" value={totals.stampAmount} />}
+          <div className="border-t border-border pt-3">
+            <SummaryRow label="Totale documento" value={totals.totalAmount} strong />
+            <SummaryRow label="Netto a pagare" value={totals.netToPay} strong />
+          </div>
+          <div className="flex items-start gap-2 rounded-md border border-border px-3 py-2 text-sm text-muted-foreground">
+            <FileSpreadsheet className="mt-0.5 size-4 shrink-0" />
+            <span>La fattura genera anche i rendiconti Excel per compensi e rimborsi.</span>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button
+              type="submit"
+              name="invoiceStatus"
+              value="draft"
+              variant="outline"
+              className="w-full"
+              disabled={submitDisabled}
+            >
+              {pendingInvoiceStatus === "draft" && <Loader2 className="mr-2 size-4 animate-spin" />}
+              Salva bozza
+            </Button>
+            <Button
+              type="submit"
+              name="invoiceStatus"
+              value="issued"
+              className="w-full"
+              disabled={submitDisabled}
+            >
+              {pendingInvoiceStatus === "issued" && (
+                <Loader2 className="mr-2 size-4 animate-spin" />
+              )}
+              {isEditingDraft ? "Segna come emessa" : "Crea fattura"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function InvoiceActivitiesCard({
+  isLoading,
+  activities,
+  selection,
+  onSelectionChange,
+}: {
+  isLoading: boolean;
+  activities: ActivityRow[];
+  selection: Record<string, BillingItemStatus>;
+  onSelectionChange: (activityId: string, status: BillingItemStatus) => void;
+}) {
+  return (
+    <Card className="min-w-0">
+      <CardHeader>
+        <CardTitle>Attività</CardTitle>
+        <CardDescription>
+          Le voci incluse entrano in fattura; le rinviate ricompariranno dal periodo successivo.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="min-w-0 overflow-x-auto">
+          <Table className="block w-full sm:table">
+            <TableHeader className="hidden sm:table-header-group">
+              <TableRow>
+                <TableHead>Stato</TableHead>
+                <TableHead>Data</TableHead>
+                <TableHead>Pratica</TableHead>
+                <TableHead>Cliente</TableHead>
+                <TableHead>Controparte</TableHead>
+                <TableHead>Voce</TableHead>
+                <TableHead className="text-right">Totale</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    Caricamento…
+                  </TableCell>
+                </TableRow>
+              )}
+              {!isLoading && activities.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                    Nessuna attività da fatturare per il periodo selezionato.
+                  </TableCell>
+                </TableRow>
+              )}
+              {activities.map((activity) => (
+                <TableRow
+                  key={activity.id}
+                  className="mb-3 block rounded-lg border border-border p-3 last:mb-0 sm:mb-0 sm:table-row sm:rounded-none sm:border-x-0 sm:border-t-0 sm:p-0"
+                >
+                  <TableCell className="block p-0 pb-3 sm:table-cell sm:p-2">
+                    <Select
+                      value={selection[activity.id] ?? "included"}
+                      onValueChange={(value) =>
+                        onSelectionChange(activity.id, value as BillingItemStatus)
+                      }
+                    >
+                      <SelectTrigger className="w-full sm:w-32" aria-label="Stato attività">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Object.entries(billingStatusLabels).map(([value, label]) => (
+                          <SelectItem key={value} value={value}>
+                            {label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell className="flex justify-between gap-3 text-sm sm:table-cell">
+                    <span className="shrink-0 text-muted-foreground sm:hidden">Data</span>
+                    <span className="text-right sm:text-left">
+                      {formatDate(activity.activity_date)}
+                    </span>
+                  </TableCell>
+                  <TableCell className="flex justify-between gap-3 text-sm sm:table-cell">
+                    <span className="shrink-0 text-muted-foreground sm:hidden">Pratica</span>
+                    <span className="min-w-0 break-words text-right sm:text-left">
+                      {activity.cases?.practice_number
+                        ? `N. ${activity.cases.practice_number}`
+                        : "—"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="flex justify-between gap-3 text-sm sm:table-cell">
+                    <span className="shrink-0 text-muted-foreground sm:hidden">Cliente</span>
+                    <span className="min-w-0 break-words text-right sm:text-left">
+                      {activity.clients ? clientDisplayName(activity.clients) : "—"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="flex justify-between gap-3 text-sm sm:table-cell">
+                    <span className="shrink-0 text-muted-foreground sm:hidden">Controparte</span>
+                    <span className="min-w-0 break-words text-right sm:text-left">
+                      {activity.counterparties
+                        ? counterpartyDisplayName(activity.counterparties)
+                        : "—"}
+                    </span>
+                  </TableCell>
+                  <TableCell className="block text-sm sm:table-cell">
+                    <div className="flex flex-col gap-1">
+                      <span className="text-muted-foreground sm:hidden">Voce</span>
+                      <span className="break-words">{activity.description}</span>
+                      <ActivityReviewBadge needsReview={activity.needs_review} />
+                      <span className="text-xs text-muted-foreground">
+                        {activity.kind === "fee" ? "Compenso" : "Rimborso spese"} · Q.tà{" "}
+                        {activity.quantity}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="flex justify-between gap-3 text-sm font-medium sm:table-cell sm:text-right">
+                    <span className="shrink-0 font-normal text-muted-foreground sm:hidden">
+                      Totale
+                    </span>
+                    <span className="text-right">{formatCurrency(Number(activity.amount))}</span>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type Dispatch, type SetStateAction } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft, ArrowRight, CheckCircle2, FileInput } from "lucide-react";
@@ -123,23 +123,23 @@ export function GuidedCreationWizard({ onCreated }: { onCreated: (caseId: string
 
   const priceOptions = useMemo(() => {
     const booksById = new Map(priceBooks.map((book) => [book.id, book]));
-    return priceItems
-      .map((item) => {
-        const book = booksById.get(item.price_book_id);
-        if (!book) return null;
-        return {
-          ...item,
-          principal_id: book.principal_id,
-          price_book_year: book.year,
-          price_book_status: book.status,
-          book_fees_enabled: book.fees_enabled,
-          book_expense_reimbursements_enabled: book.expense_reimbursements_enabled,
-        };
-      })
-      .filter((item): item is PriceOption => Boolean(item))
-      .filter((item) =>
-        item.kind === "fee" ? item.book_fees_enabled : item.book_expense_reimbursements_enabled,
-      );
+    return priceItems.flatMap((item) => {
+      const book = booksById.get(item.price_book_id);
+      if (!book) return [];
+      const option: PriceOption = {
+        ...item,
+        principal_id: book.principal_id,
+        price_book_year: book.year,
+        price_book_status: book.status,
+        book_fees_enabled: book.fees_enabled,
+        book_expense_reimbursements_enabled: book.expense_reimbursements_enabled,
+      };
+      const enabled =
+        option.kind === "fee"
+          ? option.book_fees_enabled
+          : option.book_expense_reimbursements_enabled;
+      return enabled ? [option] : [];
+    });
   }, [priceBooks, priceItems]);
 
   const updateDraft = <K extends keyof GuidedCreationDraft>(
@@ -219,7 +219,8 @@ export function GuidedCreationWizard({ onCreated }: { onCreated: (caseId: string
 
       return { importId: importRow.id, rowId: row.id };
     },
-    onSuccess: (row) => {
+    onSuccess: async (row) => {
+      await qc.invalidateQueries({ queryKey: ["imports"] });
       setStaged({
         ...row,
         status: prepared.warnings.length > 0 ? "warning" : "valid",
@@ -238,7 +239,10 @@ export function GuidedCreationWizard({ onCreated }: { onCreated: (caseId: string
       if (!user) throw new Error("Sessione non valida");
       if (!staged) throw new Error("Prepara prima l'anteprima");
       if (staged.status === "imported") throw new Error("Questa pratica è già stata creata.");
-      const caseId = await confirmGuidedCreationRow(staged.rowId);
+      const [caseId, authHeaders] = await Promise.all([
+        confirmGuidedCreationRow(staged.rowId),
+        getAuthHeaders(),
+      ]);
       const attachmentErrors = await uploadGuidedCreationActivityAttachments(
         user.id,
         prepared.normalized.activities,
@@ -247,7 +251,7 @@ export function GuidedCreationWizard({ onCreated }: { onCreated: (caseId: string
           readServerResult(
             await recordGuidedCreationActivityAttachment({
               data,
-              headers: await getAuthHeaders(),
+              headers: authHeaders,
             }),
           ),
       );
@@ -277,8 +281,7 @@ export function GuidedCreationWizard({ onCreated }: { onCreated: (caseId: string
 
   return (
     <form
-      onSubmit={(event) => {
-        event.preventDefault();
+      action={() => {
         if (step < 3) setStep((current) => current + 1);
         else if (!staged) {
           if (prepareLock.acquire()) prepareMutation.mutate();
@@ -288,23 +291,7 @@ export function GuidedCreationWizard({ onCreated }: { onCreated: (caseId: string
       }}
       className="space-y-4"
     >
-      <div className="grid gap-2 md:grid-cols-4">
-        {guidedCreationSteps.map((label, index) => (
-          <button
-            key={label}
-            type="button"
-            className={`rounded-md border border-border px-3 py-2 text-left text-sm ${
-              step === index ? "bg-muted font-medium text-foreground" : "text-muted-foreground"
-            }`}
-            onClick={() => setStep(index)}
-          >
-            <span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-border text-xs">
-              {index + 1}
-            </span>
-            {label}
-          </button>
-        ))}
-      </div>
+      <WizardSteps step={step} setStep={setStep} />
 
       {step === 0 ? (
         <SubjectsStep
@@ -332,48 +319,90 @@ export function GuidedCreationWizard({ onCreated }: { onCreated: (caseId: string
         <ReviewStep prepared={prepared} staged={staged} isPreparing={prepareMutation.isPending} />
       ) : null}
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <Button
-          type="button"
-          variant="outline"
-          disabled={step === 0 || prepareMutation.isPending || confirmMutation.isPending}
-          onClick={() => setStep((current) => Math.max(0, current - 1))}
-        >
-          <ArrowLeft className="mr-1 size-4" /> Indietro
-        </Button>
-        <div className="flex gap-2">
-          {step < 3 ? (
-            <Button type="submit">
-              Avanti <ArrowRight className="ml-1 size-4" />
-            </Button>
-          ) : staged ? (
-            <Button
-              type="submit"
-              disabled={
-                confirmMutation.isPending ||
-                prepared.errors.length > 0 ||
-                staged.status === "imported"
-              }
-            >
-              <CheckCircle2 className="mr-1 size-4" />
-              {staged.status === "imported"
-                ? "Creazione completata"
-                : confirmMutation.isPending
-                  ? "Conferma in corso…"
-                  : "Conferma creazione"}
-            </Button>
-          ) : (
-            <Button
-              type="submit"
-              disabled={prepareMutation.isPending || prepared.errors.length > 0}
-            >
-              <FileInput className="mr-1 size-4" />
-              {prepareMutation.isPending ? "Preparazione…" : "Prepara anteprima"}
-            </Button>
-          )}
-        </div>
-      </div>
+      <WizardNavigation
+        step={step}
+        setStep={setStep}
+        staged={staged}
+        errorCount={prepared.errors.length}
+        isPreparing={prepareMutation.isPending}
+        isConfirming={confirmMutation.isPending}
+      />
     </form>
+  );
+}
+
+function WizardSteps({ step, setStep }: { step: number; setStep: (step: number) => void }) {
+  return (
+    <div className="grid gap-2 md:grid-cols-4">
+      {guidedCreationSteps.map((label, index) => (
+        <button
+          key={label}
+          type="button"
+          className={`rounded-md border border-border px-3 py-2 text-left text-sm ${
+            step === index ? "bg-muted font-medium text-foreground" : "text-muted-foreground"
+          }`}
+          onClick={() => setStep(index)}
+        >
+          <span className="mr-2 inline-flex size-5 items-center justify-center rounded-full border border-border text-xs">
+            {index + 1}
+          </span>
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function WizardNavigation({
+  step,
+  setStep,
+  staged,
+  errorCount,
+  isPreparing,
+  isConfirming,
+}: {
+  step: number;
+  setStep: Dispatch<SetStateAction<number>>;
+  staged: StagedGuidedCreation | null;
+  errorCount: number;
+  isPreparing: boolean;
+  isConfirming: boolean;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <Button
+        type="button"
+        variant="outline"
+        disabled={step === 0 || isPreparing || isConfirming}
+        onClick={() => setStep((current) => Math.max(0, current - 1))}
+      >
+        <ArrowLeft className="mr-1 size-4" /> Indietro
+      </Button>
+      <div className="flex gap-2">
+        {step < 3 ? (
+          <Button type="submit">
+            Avanti <ArrowRight className="ml-1 size-4" />
+          </Button>
+        ) : staged ? (
+          <Button
+            type="submit"
+            disabled={isConfirming || errorCount > 0 || staged.status === "imported"}
+          >
+            <CheckCircle2 className="mr-1 size-4" />
+            {staged.status === "imported"
+              ? "Creazione completata"
+              : isConfirming
+                ? "Conferma in corso…"
+                : "Conferma creazione"}
+          </Button>
+        ) : (
+          <Button type="submit" disabled={isPreparing || errorCount > 0}>
+            <FileInput className="mr-1 size-4" />
+            {isPreparing ? "Preparazione…" : "Prepara anteprima"}
+          </Button>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -412,40 +441,42 @@ async function uploadGuidedCreationActivityAttachments(
   draftActivities: ActivityDraft[],
   recordAttachment: (data: RecordGuidedCreationActivityAttachmentInput) => Promise<unknown>,
 ) {
-  const errors: string[] = [];
   const activitiesById = new Map(normalizedActivities.map((activity) => [activity.id, activity]));
 
-  for (const draftActivity of draftActivities) {
-    const file = draftActivity.attachmentFile;
-    const normalizedActivity = activitiesById.get(draftActivity.activityId);
-    if (!file || !normalizedActivity) continue;
+  const results = await Promise.all(
+    draftActivities.map(async (draftActivity) => {
+      const file = draftActivity.attachmentFile;
+      const normalizedActivity = activitiesById.get(draftActivity.activityId);
+      if (!file || !normalizedActivity) return null;
 
-    try {
-      const storagePath = buildActivityAttachmentStoragePath(
-        userId,
-        normalizedActivity.id,
-        `${Date.now()}-${file.name}`,
-      );
-      const { error: uploadError } = await supabase.storage
-        .from(PRATIX_DOCUMENTS_BUCKET)
-        .upload(storagePath, file, { contentType: file.type || undefined, upsert: false });
-      if (uploadError) throw uploadError;
+      try {
+        const storagePath = buildActivityAttachmentStoragePath(
+          userId,
+          normalizedActivity.id,
+          `${Date.now()}-${file.name}`,
+        );
+        const { error: uploadError } = await supabase.storage
+          .from(PRATIX_DOCUMENTS_BUCKET)
+          .upload(storagePath, file, { contentType: file.type || undefined, upsert: false });
+        if (uploadError) throw uploadError;
 
-      await recordAttachment({
-        activityId: normalizedActivity.id,
-        storagePath,
-        originalFileName: file.name,
-        displayName: draftActivity.attachmentName.trim() || file.name,
-        documentType: draftActivity.attachmentType.trim() || null,
-        mimeType: file.type || null,
-        sizeBytes: file.size,
-        previewAvailable: file.type.startsWith("image/") || file.type === "application/pdf",
-        notes: draftActivity.attachmentNotes.trim() || null,
-      });
-    } catch (error) {
-      errors.push(error instanceof Error ? error.message : "Errore allegato");
-    }
-  }
+        await recordAttachment({
+          activityId: normalizedActivity.id,
+          storagePath,
+          originalFileName: file.name,
+          displayName: draftActivity.attachmentName.trim() || file.name,
+          documentType: draftActivity.attachmentType.trim() || null,
+          mimeType: file.type || null,
+          sizeBytes: file.size,
+          previewAvailable: file.type.startsWith("image/") || file.type === "application/pdf",
+          notes: draftActivity.attachmentNotes.trim() || null,
+        });
+      } catch (error) {
+        return error instanceof Error ? error.message : "Errore allegato";
+      }
+      return null;
+    }),
+  );
 
-  return errors;
+  return results.flatMap((error) => (error ? [error] : []));
 }
