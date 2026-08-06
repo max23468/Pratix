@@ -184,6 +184,9 @@ export function pullRequestNumber(event, input) {
 export const isRetryableGitHubResponse = (status, remaining, retryAfter) =>
   status === 429 || status >= 500 || (status === 403 && (remaining === "0" || retryAfter != null));
 
+export const githubRetryAfterMs = (retryAfter, reset, now = Date.now()) =>
+  Number(retryAfter) * 1000 || Math.max(Number(reset) * 1000 - now, 1000);
+
 async function requestOnce(path, options = {}) {
   const response = await fetch(`https://api.github.com${path}`, {
     ...options,
@@ -201,7 +204,10 @@ async function requestOnce(path, options = {}) {
       response.headers.get("x-ratelimit-remaining"),
       response.headers.get("retry-after"),
     );
-    error.retryAfterMs = Number(response.headers.get("retry-after")) * 1000 || 1000;
+    error.retryAfterMs = githubRetryAfterMs(
+      response.headers.get("retry-after"),
+      response.headers.get("x-ratelimit-reset"),
+    );
     throw error;
   }
   return response.json();

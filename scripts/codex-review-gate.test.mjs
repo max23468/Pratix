@@ -5,6 +5,7 @@ import { test } from "node:test";
 import {
   CODEX_REVIEW_POLLING,
   classifyCodexReview,
+  githubRetryAfterMs,
   hasSuccessfulCodexStatus,
   isRetryableGitHubResponse,
   latestCodexInvocation,
@@ -509,6 +510,12 @@ test("ritenta anche le scritture GitHub transitorie", async () => {
   assert.equal(result, "ok");
   assert.equal(attempts, 3);
   assert.deepEqual(waits, [1000, 1000]);
+});
+
+test("attende il reset della quota GitHub primaria", () => {
+  assert.equal(githubRetryAfterMs("60", null, 1_000), 60_000);
+  assert.equal(githubRetryAfterMs(null, "100", 90_000), 10_000);
+  assert.equal(githubRetryAfterMs(null, null, 90_000), 1000);
 });
 
 test("un rerun riusa soltanto l'ultimo status Codex riuscito dello stesso SHA", () => {
