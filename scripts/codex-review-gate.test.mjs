@@ -190,7 +190,7 @@ test("il verdetto pulito del task agent approva soltanto l'HEAD dichiarato", () 
         {
           user: bot,
           created_at: "2026-08-04T12:00:01Z",
-          body: `Codex Review: Didn't find any major issues.\n\n**Reviewed commit:** \`${headSha.slice(0, 10)}\``,
+          body: `Codex Review: Didn't find any major issues.\n\n**Reviewed commit:** \`${headSha.slice(0, 7)}\``,
         },
       ],
     }).state,
@@ -291,7 +291,7 @@ test("un finding top-level sull'HEAD prevale sul riepilogo pulito", () => {
         {
           user: bot,
           created_at: "2026-08-04T12:00:01Z",
-          body: `**P2** Correggi il gate.\n\n**Reviewed commit:** \`${headSha.slice(0, 10)}\``,
+          body: `**P2** Correggi il gate.\n\n**Reviewed commit:** \`${headSha.slice(0, 7)}\``,
         },
         {
           user: bot,

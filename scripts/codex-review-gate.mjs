@@ -10,7 +10,7 @@ export const CODEX_REVIEW_POLLING = { attempts: 100, intervalMs: 180_000 };
 
 const timestamp = (value) => new Date(value ?? 0).getTime();
 const reviewedCommit = (body = "") =>
-  body.match(/\*\*Reviewed commit:\*\*\s*`([0-9a-f]{10,40})`/i)?.[1];
+  body.match(/\*\*Reviewed commit:\*\*\s*`([0-9a-f]{7,40})`/i)?.[1];
 
 export function classifyCodexReview({
   headSha,
