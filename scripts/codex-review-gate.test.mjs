@@ -5,6 +5,7 @@ import { test } from "node:test";
 import {
   CODEX_REVIEW_POLLING,
   classifyCodexReview,
+  codexAttemptRequestedAt,
   earliestCodexAttemptAt,
   githubRetryAfterMs,
   hasSuccessfulCodexStatus,
@@ -573,6 +574,30 @@ test("l'evento dell'invocazione umana avvia il retry anche nello stesso istante"
       7,
     ).id,
     7,
+  );
+});
+
+test("un commento bot tardivo conserva il boundary del tentativo attivo", () => {
+  assert.equal(
+    codexAttemptRequestedAt(
+      { comment: { user: bot, created_at: "2026-08-04T12:00:09Z" } },
+      false,
+      requestedAt,
+    ),
+    requestedAt,
+  );
+  assert.equal(
+    codexAttemptRequestedAt(
+      {
+        comment: {
+          user: { login: "max23468" },
+          created_at: "2026-08-04T12:00:09Z",
+        },
+      },
+      false,
+      requestedAt,
+    ),
+    "2026-08-04T12:00:09Z",
   );
 });
 

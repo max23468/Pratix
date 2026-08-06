@@ -186,6 +186,13 @@ export const earliestCodexAttemptAt = (statuses, fallback) =>
       undefined,
     ) ?? fallback;
 
+export const codexAttemptRequestedAt = (event, reusesExistingReview, attemptStartedAt) =>
+  reusesExistingReview
+    ? 0
+    : event.comment?.user?.login === CODEX_BOT
+      ? attemptStartedAt
+      : (event.comment?.created_at ?? attemptStartedAt);
+
 export const latestCodexInvocation = (comments, requestedAt, invocationId) =>
   comments
     .filter(
@@ -346,8 +353,7 @@ async function main() {
   }
 
   const freshReview = ["opened", "ready_for_review"].includes(event.action);
-  const signalRequestedAt = event.comment?.created_at;
-  const requestedAt = reusesExistingReview ? 0 : (signalRequestedAt ?? attemptStartedAt);
+  const requestedAt = codexAttemptRequestedAt(event, reusesExistingReview, attemptStartedAt);
   for (let attempt = 0; attempt < CODEX_REVIEW_POLLING.attempts; attempt += 1) {
     let signals;
     try {
