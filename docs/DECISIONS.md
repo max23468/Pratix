@@ -73,3 +73,4 @@ Link a issue, PR, documenti, conversazioni rilevanti.
 | [0013](decisions/0013-focus-recupero-crediti.md)               | Focus recupero crediti                                 | Accettato                          |
 | [0014](decisions/0014-attivita-termine-prodotto.md)            | Attività come termine di prodotto                      | Accettato                          |
 | [0016](decisions/0016-creazione-guidata-manuale.md)            | Creazione guidata manuale                              | Accettato                          |
+| [0017](decisions/0017-codex-review-gate-exact-head.md)         | Gate Codex review exact-HEAD                           | Accettato                          |

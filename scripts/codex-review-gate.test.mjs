@@ -370,7 +370,7 @@ test("un limite Codex chiude il gate senza lasciare il workflow appeso", () => {
         {
           user: bot,
           created_at: "2026-08-04T12:00:01Z",
-          body: "You have reached your Codex usage limits for code reviews.",
+          body: `You have reached your Codex usage limits for code reviews.\n\n**Reviewed commit:** \`${headSha.slice(0, 10)}\``,
         },
       ],
     }).state,
@@ -385,7 +385,7 @@ test("un errore Codex sconosciuto chiude il gate", () => {
         {
           user: bot,
           created_at: "2026-08-04T12:00:01Z",
-          body: "Codex Review: Something went wrong. Try again later.\n\nUnknown error",
+          body: `Codex Review: Something went wrong. Try again later.\n\nUnknown error\n\n**Reviewed commit:** \`${headSha.slice(0, 10)}\``,
         },
       ],
     }).state,
@@ -400,7 +400,7 @@ test("un errore tardivo non chiude una review corrente ancora in corso", () => {
         {
           user: bot,
           created_at: "2026-08-04T12:00:01Z",
-          body: "Codex could not complete the review",
+          body: `Codex could not complete the review\n\n**Reviewed commit:** \`${headSha.slice(0, 10)}\``,
         },
       ],
       progressReactions: [{ user: bot, content: "eyes", created_at: "2026-08-04T12:00:02Z" }],
@@ -416,7 +416,7 @@ test("un errore successivo a eyes chiude il tentativo", () => {
         {
           user: bot,
           created_at: "2026-08-04T12:00:03Z",
-          body: "Codex could not complete the review",
+          body: `Codex could not complete the review\n\n**Reviewed commit:** \`${headSha.slice(0, 10)}\``,
         },
       ],
       progressReactions: [{ user: bot, content: "eyes", created_at: "2026-08-04T12:00:02Z" }],
@@ -517,9 +517,9 @@ test("ritenta anche le scritture GitHub transitorie", async () => {
 });
 
 test("attende il reset della quota GitHub primaria", () => {
-  assert.equal(githubRetryAfterMs("60", null, 1_000), 60_000);
-  assert.equal(githubRetryAfterMs(null, "100", 90_000), 10_000);
-  assert.equal(githubRetryAfterMs(null, null, 90_000), 1000);
+  assert.equal(githubRetryAfterMs("60", null, "4999", 1_000), 60_000);
+  assert.equal(githubRetryAfterMs(null, "100", "0", 90_000), 10_000);
+  assert.equal(githubRetryAfterMs(null, "100", "4999", 90_000), 60_000);
 });
 
 test("un rerun riusa soltanto l'ultimo status Codex riuscito dello stesso SHA", () => {

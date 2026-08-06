@@ -84,6 +84,8 @@ export function classifyCodexReview({
     }
 
     if (
+      commit &&
+      headSha.startsWith(commit) &&
       timestamp(requestedAt) > 0 &&
       timestamp(comment.created_at) >= timestamp(requestedAt) &&
       now - timestamp(requestedAt) >= 30_000 &&
@@ -189,8 +191,9 @@ export const isRetryableGitHubResponse = (status, remaining, retryAfter, message
       retryAfter != null ||
       /secondary rate limit|abuse detection/i.test(message)));
 
-export const githubRetryAfterMs = (retryAfter, reset, now = Date.now()) =>
-  Number(retryAfter) * 1000 || Math.max(Number(reset) * 1000 - now, 1000);
+export const githubRetryAfterMs = (retryAfter, reset, remaining, now = Date.now()) =>
+  Number(retryAfter) * 1000 ||
+  (remaining === "0" ? Math.max(Number(reset) * 1000 - now, 1000) : 60_000);
 
 async function requestOnce(path, options = {}) {
   const response = await fetch(`https://api.github.com${path}`, {
@@ -214,6 +217,7 @@ async function requestOnce(path, options = {}) {
     error.retryAfterMs = githubRetryAfterMs(
       response.headers.get("retry-after"),
       response.headers.get("x-ratelimit-reset"),
+      response.headers.get("x-ratelimit-remaining"),
     );
     throw error;
   }
