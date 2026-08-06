@@ -181,7 +181,6 @@ function useInvoiceForm(draftInvoiceRef?: string) {
     },
   });
 
-  const selectedPrincipal = principals.find((principal) => principal.id === principalId) ?? null;
   const includeStampDuty = Boolean(profile?.include_stamp_duty);
   const displayedQuarterOptions = useMemo(() => {
     if (quarterOptions.some((option) => option.key === selectedQuarter)) return quarterOptions;
@@ -490,7 +489,6 @@ function useInvoiceForm(draftInvoiceRef?: string) {
     principalId,
     setPrincipalId,
     principals,
-    selectedPrincipal,
     markDirty,
     periodMode,
     setPeriodMode,
@@ -546,7 +544,6 @@ export function InvoiceForm({ draftInvoiceRef }: { draftInvoiceRef?: string }) {
     principalId,
     setPrincipalId,
     principals,
-    selectedPrincipal,
     markDirty,
     periodMode,
     setPeriodMode,

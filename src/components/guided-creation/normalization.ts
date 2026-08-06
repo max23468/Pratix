@@ -3,12 +3,11 @@ import type {
   CounterpartyRow,
   GuidedCreationDraft,
   NormalizedGuidedCreation,
-  PreparedGuidedCreation,
   PriceOption,
   PrincipalRow,
   ClientRow,
 } from "./types";
-import { counterpartyDisplayName, counterpartyKindLabels } from "@/lib/labels";
+import { counterpartyKindLabels } from "@/lib/labels";
 
 export function buildNormalizedGuidedCreation(
   draft: GuidedCreationDraft,
@@ -151,90 +150,6 @@ export function buildNormalizedGuidedCreation(
 
   return { normalized, errors, warnings };
 }
-function normalizeText(value: string) {
-  return value
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .toLowerCase()
-    .trim();
-}
-
-function findByName<T>(items: T[], name: string, display: (item: T) => string) {
-  const normalizedName = normalizeText(name);
-  if (!normalizedName) return null;
-  return items.find((item) => normalizeText(display(item)) === normalizedName) ?? null;
-}
-
-function findCounterpartyByName(counterparties: CounterpartyRow[], name: string) {
-  const normalizedName = normalizeText(name);
-  if (!normalizedName) return null;
-
-  return (
-    counterparties.find((counterparty) =>
-      counterpartyImportNames(counterparty).some(
-        (counterpartyName) => normalizeText(counterpartyName) === normalizedName,
-      ),
-    ) ?? null
-  );
-}
-
-function counterpartyImportNames(counterparty: CounterpartyRow) {
-  if (counterparty.kind !== "individual") return [counterpartyDisplayName(counterparty)];
-  return [
-    counterpartyDisplayName(counterparty),
-    [counterparty.first_name, counterparty.last_name].filter(Boolean).join(" "),
-  ];
-}
-
-function parseDateInput(value: string) {
-  const trimmed = value.trim();
-  if (!trimmed) return "";
-  if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) return trimmed;
-
-  const serial = Number(trimmed.replace(",", "."));
-  if (Number.isFinite(serial) && serial > 20000 && serial < 80000) {
-    return new Date((serial - 25569) * 86400 * 1000).toISOString().slice(0, 10);
-  }
-
-  const match = trimmed.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{2,4})$/);
-  if (!match) return "";
-  const [, day, month, year] = match;
-  const fullYear = year.length === 2 ? `20${year}` : year;
-  return `${fullYear}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
-}
-
-function parseHearingDates(value: string) {
-  return value
-    .split(/[;,|]/)
-    .map((date) => parseDateInput(date))
-    .filter(Boolean);
-}
-
-function selectPriceOptionsForPrincipal(
-  priceOptions: PriceOption[],
-  principalId: string,
-  preferredYear: number,
-) {
-  const principalOptions = priceOptions.filter((option) => option.principal_id === principalId);
-  const sameYear = principalOptions.filter((option) => option.price_book_year === preferredYear);
-  return sameYear.length > 0 ? sameYear : principalOptions;
-}
-
-function findPriceOption(priceOptions: PriceOption[], code: string, name: string) {
-  const normalizedCode = normalizeText(code);
-  const normalizedName = normalizeText(name);
-  if (normalizedCode) {
-    const byCode = priceOptions.find((option) => normalizeText(option.code) === normalizedCode);
-    if (byCode) return byCode;
-  }
-  if (!normalizedName) return null;
-  return (
-    priceOptions.find((option) => normalizeText(option.name) === normalizedName) ??
-    priceOptions.find((option) => normalizeText(option.name).includes(normalizedName)) ??
-    null
-  );
-}
-
 function displayDraftClient(draft: GuidedCreationDraft) {
   if (draft.clientKind === "company") return draft.clientBusinessName.trim();
   return [draft.clientFirstName, draft.clientLastName].filter(Boolean).join(" ").trim();

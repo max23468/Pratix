@@ -800,11 +800,6 @@ describe("server functions fatture", () => {
       },
       error: null,
     });
-    supabase.queue("clients:select:single", {
-      data: { kind: "individual", first_name: "Ada", last_name: "Rossi" },
-      error: null,
-    });
-
     const result = await handlerOf<
       { data: { invoiceId: string }; context: { supabase: FakeSupabase; userId: string } },
       { xml: string; filename: string }
@@ -816,5 +811,6 @@ describe("server functions fatture", () => {
     expect(result.filename).toBe("IT12345678901_202612.xml");
     expect(result.xml).toContain("<Denominazione>Banca Test</Denominazione>");
     expect(result.xml).toContain("<CodiceDestinatario>ABC1234</CodiceDestinatario>");
+    expect(supabase.callsFor("clients", "select")).toHaveLength(0);
   });
 });

@@ -2,7 +2,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Plus, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DuplicateWarningPanel } from "@/components/duplicate-warning-panel";
@@ -10,7 +10,6 @@ import { CounterpartySubjectsEditor } from "@/components/counterparty-subjects-e
 import {
   emptySubject,
   type SubjectDraft,
-  type SubjectKind,
   type SubjectRow,
 } from "@/components/counterparty-subjects";
 import { Input } from "@/components/ui/input";
@@ -38,7 +37,7 @@ import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { withTriggerGeneratedCode } from "@/integrations/supabase/insert-helpers";
 import { useAuth } from "@/lib/auth-context";
-import { clientKindLabels, counterpartyKindLabels } from "@/lib/labels";
+import { counterpartyKindLabels } from "@/lib/labels";
 import type { DuplicateCandidate } from "@/lib/duplicate-matching";
 import { routeRef } from "@/lib/public-route-code";
 import { canUseAuthHeaders, getAuthHeaders, readServerResult } from "@/lib/server-functions";

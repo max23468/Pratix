@@ -4,7 +4,6 @@ import {
   canonicalPair,
   canMergeDuplicateEntity,
   displayDuplicateEntity,
-  duplicateEntityPath,
   duplicatePairKey,
   personNameSimilarity,
   textSimilarity,
@@ -971,11 +970,4 @@ export function confidenceLabel(confidence: DuplicateConfidence) {
     low: "Bassa",
   };
   return labels[confidence];
-}
-
-function mergeSummaryLabel(entityType: DuplicateEntityType) {
-  if (!canMergeDuplicateEntity(entityType)) {
-    return `Verifica ${displayDuplicateEntity(entityType).toLowerCase()}`;
-  }
-  return `Unione ${displayDuplicateEntity(entityType).toLowerCase()}`;
 }

@@ -7,33 +7,12 @@ import {
   type SetStateAction,
 } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  Check,
-  ChevronsUpDown,
-  Download,
-  Eye,
-  Paperclip,
-  Pencil,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
-import { ActivityAttachmentList } from "@/components/activity-attachment-list";
-import { ActivityReviewBadge } from "@/components/activity-review-badge";
 import { ActivityAttachmentFields } from "@/components/activity-attachment-fields";
 import { CasePicker } from "@/components/case-picker";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { SummaryTile } from "@/components/summary-tile";
-import {
-  Command,
-  CommandEmpty,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
 import {
   Dialog,
   DialogContent,
@@ -44,7 +23,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -52,31 +30,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
-import { formatCurrency, formatDate } from "@/lib/format";
-import {
-  caseActivityDisplayStatus,
-  caseActivityDisplayStatusLabels,
-  caseActivityDisplayStatusVariant,
-  caseActivityStatusLabels,
-  practiceDisplayName,
-  priceItemKindLabels,
-} from "@/lib/labels";
-import {
-  activityCaseLabel,
-  activityCasePartiesLabel,
-  type CaseActivityContext,
-} from "@/lib/case-activities";
+import { formatCurrency } from "@/lib/format";
+import { caseActivityStatusLabels, priceItemKindLabels } from "@/lib/labels";
+import { activityCaseLabel, type CaseActivityContext } from "@/lib/case-activities";
 import { buildActivityAttachmentStoragePath, PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
 import { useSubmitLock } from "@/lib/submit-lock";
 import { cn } from "@/lib/utils";
@@ -178,13 +137,6 @@ const newLocalId = () => crypto.randomUUID();
 const newHearingDateDraft = (date: string): HearingDateDraft => ({ id: newLocalId(), date });
 
 const caseOptionCollator = new Intl.Collator("it", { numeric: true, sensitivity: "base" });
-
-const caseOptionDisplayLabel = (option: CaseOption) => practiceDisplayName(option);
-
-const caseOptionSearchValue = (option: CaseOption) =>
-  [caseOptionDisplayLabel(option), activityCaseLabel(option), option.principals?.business_name]
-    .filter((value): value is string => Boolean(value))
-    .join(" ");
 
 const compareCaseOptions = (a: CaseOption, b: CaseOption) =>
   a.practice_number - b.practice_number ||

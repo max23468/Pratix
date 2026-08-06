@@ -2,33 +2,16 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { FileDown, FileText, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppLayout } from "@/components/app-layout";
 import { InvoiceListFilters } from "@/components/invoice-list-filters";
 import { InvoiceListResults } from "@/components/invoice-list-results";
-import { ListToolbar } from "@/components/list-toolbar";
-import { mobileListCardLinkClassName } from "@/components/mobile-list-card";
-import { MobileListCardDetails } from "@/components/mobile-list-card-details";
-import { MobileListCardHeader } from "@/components/mobile-list-card-header";
 import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { PageHeader } from "@/components/page-header";
-import { SearchInput } from "@/components/search-input";
-import { SortableTableHead } from "@/components/sortable-table-head";
 import { SummaryTile } from "@/components/summary-tile";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { TableEmptyState } from "@/components/table-empty-state";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import {
@@ -43,18 +26,11 @@ import type { InvoicePdfData } from "@/lib/invoice-pdf";
 import {
   clientDisplayName,
   invoiceStatusLabels,
-  invoiceStatusVariant,
   type ClientDisplayData,
   type InvoiceStatus,
 } from "@/lib/labels";
-import { formatCurrency, formatDate } from "@/lib/format";
-import { invoicePeriodLabel } from "@/lib/invoice-period";
-import { routeRef } from "@/lib/public-route-code";
+import { formatCurrency } from "@/lib/format";
 import { readServerResult } from "@/lib/server-functions";
-import {
-  handleClickableTableRowClick,
-  handleClickableTableRowKeyDown,
-} from "@/lib/table-row-navigation";
 import {
   parseTableSortDirection,
   parseTableSortKey,
