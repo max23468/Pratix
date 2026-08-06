@@ -5,7 +5,7 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { authState, navigate, supabase, query, maybeSingle } = vi.hoisted(() => {
+const { authState, navigate, supabase, maybeSingle } = vi.hoisted(() => {
   const authState = {
     session: null as null | { user: { id: string } },
     loading: false,
@@ -19,7 +19,6 @@ const { authState, navigate, supabase, query, maybeSingle } = vi.hoisted(() => {
   return {
     authState,
     navigate: vi.fn(),
-    query,
     maybeSingle,
     supabase: { from: vi.fn((..._args: unknown[]) => query) },
   };

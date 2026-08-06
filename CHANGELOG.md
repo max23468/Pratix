@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.14] — 2026-08-06
+
+### Sotto il cofano
+
+- Rimossi codice e query inutilizzati e rafforzato il controllo TypeScript per
+  impedirne la reintroduzione.
+
 ## [1.14.13] — 2026-08-05
 
 ### Sotto il cofano
@@ -1560,6 +1567,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.14]: #11414--2026-08-06
 [1.14.13]: #11413--2026-08-05
 [1.14.12]: #11412--2026-07-29
 [1.14.11]: #11411--2026-07-29

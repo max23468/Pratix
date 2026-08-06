@@ -4,7 +4,6 @@ import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { ClientFormActions } from "@/components/client-form-actions";
 import { ClientPrincipalLinks } from "@/components/client-principal-links";
-import { Button } from "@/components/ui/button";
 import { DuplicateWarningPanel } from "@/components/duplicate-warning-panel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";

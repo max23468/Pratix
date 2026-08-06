@@ -28,7 +28,6 @@ import {
   type CaseTimelineActivity as ActivityRow,
   type CaseTimelineHistoryItem as HistoryRow,
   type CaseTimelineInvoice as InvoiceRow,
-  type CaseTimelineItem,
   type CaseTimelineParty,
   type CaseTimelineTransfer as TransferRow,
 } from "@/lib/case-timeline";
@@ -38,7 +37,7 @@ import {
   summarizeCaseOperations,
 } from "@/lib/case-workflow";
 import { downloadBytes } from "@/lib/file-downloads";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import {
   caseActivityStatusLabels,
   caseStatusLabels,

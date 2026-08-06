@@ -31,9 +31,7 @@ import {
   validateUpdateDraftBillingInvoiceInput,
   type BillingActivity,
   type BillingItemStatus,
-  type CreateBillingInvoiceInput,
   type InvoiceXmlPrincipal,
-  type UpdateDraftBillingInvoiceInput,
 } from "@/server/invoice-billing.logic";
 
 /** Un ciclo senza fattura più vecchio di questa soglia è debris di una creazione fallita. */
@@ -775,24 +773,19 @@ export const generateInvoiceXmlFn = createServerFn({ method: "POST" })
     if (pErr) throw pErr;
     if (!invoice) throw new Error("Fattura non trovata");
 
-    const [
-      { data: lines, error: lErr },
-      { data: principal, error: principalErr },
-      { data: client, error: cErr },
-    ] = await Promise.all([
-      supabase
-        .from("invoice_lines")
-        .select("*")
-        .eq("invoice_id", invoice.id)
-        .order("position", { ascending: true }),
-      invoice.principal_id
-        ? supabase.from("principals").select("*").eq("id", invoice.principal_id).single()
-        : Promise.resolve({ data: null, error: null }),
-      supabase.from("clients").select("*").eq("id", invoice.client_id).single(),
-    ]);
+    const [{ data: lines, error: lErr }, { data: principal, error: principalErr }] =
+      await Promise.all([
+        supabase
+          .from("invoice_lines")
+          .select("*")
+          .eq("invoice_id", invoice.id)
+          .order("position", { ascending: true }),
+        invoice.principal_id
+          ? supabase.from("principals").select("*").eq("id", invoice.principal_id).single()
+          : Promise.resolve({ data: null, error: null }),
+      ]);
     if (lErr) throw lErr;
     if (principalErr) throw principalErr;
-    if (cErr && !principal) throw cErr;
     const billedParty = billedPartyForInvoiceXml(principal as InvoiceXmlPrincipal | null);
 
     const result = buildInvoiceXml({

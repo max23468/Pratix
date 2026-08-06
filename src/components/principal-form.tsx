@@ -11,7 +11,6 @@ import { PrincipalEconomicRules } from "@/components/principal-economic-rules";
 import { PrincipalAddress } from "@/components/principal-address";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
