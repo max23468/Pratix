@@ -117,6 +117,14 @@ export function classifyCodexReview({
     }
   }
 
+  for (const commentAt of cleanComments) {
+    completions.push({
+      state: "success",
+      at: commentAt,
+      description: "Codex ha approvato l'ultimo commit",
+    });
+  }
+
   const thumbsUpAt = reactions
     .filter(
       (reaction) =>
@@ -137,13 +145,9 @@ export function classifyCodexReview({
 
   if (thumbsUpAt) {
     if (!requiresReviewedCommit || exactThumbsUpAt) {
-      cleanComments.push(exactThumbsUpAt || thumbsUpAt);
-    }
-    for (const commentAt of cleanComments) {
-      if (thumbsUpAt < commentAt) continue;
       completions.push({
         state: "success",
-        at: Math.max(thumbsUpAt, commentAt),
+        at: exactThumbsUpAt || thumbsUpAt,
         description: "Codex ha approvato l'ultimo commit",
       });
     }
