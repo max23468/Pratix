@@ -95,6 +95,23 @@ test("un finding nel body della review exact-HEAD prevale", () => {
   );
 });
 
+test("una review dismissata non approva l'HEAD", () => {
+  assert.equal(
+    classify({
+      reviews: [
+        {
+          user: bot,
+          commit_id: headSha,
+          state: "DISMISSED",
+          submitted_at: "2026-08-04T12:00:02Z",
+          body: "",
+        },
+      ],
+    }).state,
+    "pending",
+  );
+});
+
 test("la review exact-HEAD approva anche senza riusare un vecchio pollice", () => {
   assert.equal(
     classify({
@@ -515,7 +532,9 @@ test("ignora un'invocazione creata nello stesso secondo del push", () => {
 
 test("il bootstrap accetta soltanto un numero PR", () => {
   assert.equal(pullRequestNumber({ pull_request: { number: 42 } }), "42");
+  assert.equal(pullRequestNumber({ issue: { number: 43, pull_request: {} } }), "43");
   assert.equal(pullRequestNumber({}, "208"), "208");
+  assert.throws(() => pullRequestNumber({ issue: { number: 43 } }), /Numero PR non valido/);
   assert.throws(() => pullRequestNumber({}, "208/merge"), /Numero PR non valido/);
 });
 
@@ -594,6 +613,17 @@ test("il workflow usa eventi, permessi e codice trusted", () => {
     workflow,
     /types:\s*\[opened, synchronize, reopened, ready_for_review, closed, converted_to_draft\]/,
   );
+  assert.match(workflow, /pull_request_review:\s*\n\s*types:\s*\[submitted, edited, dismissed\]/);
+  assert.match(
+    workflow,
+    /pull_request_review_comment:\s*\n\s*types:\s*\[created, edited, deleted\]/,
+  );
+  assert.match(workflow, /issue_comment:\s*\n\s*types:\s*\[created, edited, deleted\]/);
+  assert.match(workflow, /chatgpt-codex-connector\[bot\]/);
+  assert.match(
+    workflow,
+    /github\.event_name != 'issue_comment' \|\| github\.event\.issue\.pull_request/,
+  );
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /type:\s*number/);
   assert.match(workflow, /contents:\s*read/);
@@ -603,7 +633,7 @@ test("il workflow usa eventi, permessi e codice trusted", () => {
   assert.match(workflow, /cancel-in-progress:\s*true/);
   assert.match(
     workflow,
-    /if:\s*github\.event\.action != 'closed' && github\.event\.action != 'converted_to_draft'/,
+    /github\.event\.action != 'closed' && github\.event\.action != 'converted_to_draft'/,
   );
   assert.match(workflow, /timeout-minutes:\s*310/);
   assert.match(workflow, /actions\/checkout@[0-9a-f]{40}/);

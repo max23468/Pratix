@@ -3,6 +3,12 @@ name: Codex review gate
 on:
   pull_request_target:
     types: [opened, synchronize, reopened, ready_for_review, closed, converted_to_draft]
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+  pull_request_review_comment:
+    types: [created, edited, deleted]
+  issue_comment:
+    types: [created, edited, deleted]
   workflow_dispatch:
     inputs:
       pull_request:
@@ -17,13 +23,19 @@ permissions:
   statuses: write
 
 concurrency:
-  group: codex-review-${{ github.event.pull_request.number || inputs.pull_request }}
+  group: codex-review-${{ github.event.pull_request.number || github.event.issue.number || inputs.pull_request }}
   cancel-in-progress: true
 
 jobs:
   gate:
     name: Aggiorna gate Codex
-    if: github.event.action != 'closed' && github.event.action != 'converted_to_draft'
+    if: >-
+      (github.event.action != 'closed' && github.event.action != 'converted_to_draft') &&
+      (github.event_name != 'issue_comment' || github.event.issue.pull_request) &&
+      (github.event_name == 'workflow_dispatch' ||
+       github.event_name == 'pull_request_target' ||
+       github.event.review.user.login == 'chatgpt-codex-connector[bot]' ||
+       github.event.comment.user.login == 'chatgpt-codex-connector[bot]')
     runs-on: ubuntu-latest
     timeout-minutes: 310
     steps:

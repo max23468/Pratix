@@ -112,6 +112,7 @@ export function classifyCodexReview({
     const submittedAt = timestamp(review.submitted_at);
     if (
       review.user?.login === CODEX_BOT &&
+      review.state !== "DISMISSED" &&
       commit &&
       headSha.startsWith(commit) &&
       submittedAt >= timestamp(requestedAt)
@@ -186,7 +187,9 @@ export const latestCodexInvocation = (comments, requestedAt) =>
     .sort((left, right) => timestamp(right.created_at) - timestamp(left.created_at))[0];
 
 export function pullRequestNumber(event, input) {
-  const number = String(event.pull_request?.number ?? input);
+  const number = String(
+    event.pull_request?.number ?? (event.issue?.pull_request ? event.issue.number : input),
+  );
   if (!/^\d+$/.test(number)) throw new Error("Numero PR non valido");
   return number;
 }
@@ -315,7 +318,7 @@ async function main() {
     "pending",
     "In attesa della review Codex sull'ultimo commit",
   );
-  if (pullRequest.draft) return;
+  if (pullRequest.draft || event.action === "dismissed" || event.action === "deleted") return;
 
   if (["opened", "ready_for_review"].includes(event.action)) {
     await new Promise((resolve) => setTimeout(resolve, 30_000));
@@ -324,7 +327,8 @@ async function main() {
   }
 
   const freshReview = ["opened", "ready_for_review"].includes(event.action);
-  const requestedAt = reusesExistingReview ? 0 : pullRequest.updated_at;
+  const signalRequestedAt = event.review?.submitted_at ?? event.comment?.created_at;
+  const requestedAt = reusesExistingReview ? 0 : (signalRequestedAt ?? pullRequest.updated_at);
   for (let attempt = 0; attempt < CODEX_REVIEW_POLLING.attempts; attempt += 1) {
     let signals;
     try {
