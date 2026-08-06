@@ -491,6 +491,10 @@ test("ritenta soltanto errori GitHub recuperabili", () => {
   assert.equal(isRetryableGitHubResponse(502, null), true);
   assert.equal(isRetryableGitHubResponse(403, "0"), true);
   assert.equal(isRetryableGitHubResponse(403, "4999", "60"), true);
+  assert.equal(
+    isRetryableGitHubResponse(403, "4999", null, "You have exceeded a secondary rate limit"),
+    true,
+  );
   assert.equal(isRetryableGitHubResponse(403, "4999"), false);
   assert.equal(isRetryableGitHubResponse(404, null), false);
 });
