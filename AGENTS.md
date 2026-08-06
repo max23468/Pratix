@@ -133,9 +133,9 @@ motivo e rischio residuo.
 ## PR, pubblicazione e release
 
 Usa Conventional Commits e un titolo PR esplicito, non il nome del branch.
-Prima di PR, merge, publish, deploy o release controlla la issue
-`Codex feedback inbox` con label `codex-feedback-inbox` e gestisci i thread
-actionable oppure dichiarali fuori scope.
+Prima di merge, publish, deploy o release verifica che lo status
+`codex-review` sia riuscito sull'esatto HEAD della PR e che non restino finding
+P0-P3 correnti.
 
 Quando il proprietario chiede di pubblicare, completa PR e merge su `main`,
 verifica Vercel production quando applicabile e pulisci branch/worktree

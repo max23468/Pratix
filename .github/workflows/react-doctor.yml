@@ -29,5 +29,5 @@ jobs:
           version: 0.9.5
           scope: ${{ github.event_name == 'pull_request' && 'changed' || 'full' }}
           blocking: warning
-          comment: "true"
+          comment: "false"
           review-comments: "true"
