@@ -52,6 +52,7 @@ test("React Doctor resta bloccante nel workflow dedicato e nel gate generale", (
     reactDoctorWorkflow,
     /scope: \$\{\{ github\.event_name == 'pull_request' && 'changed' \|\| 'full' \}\}/,
   );
+  assert.match(reactDoctorWorkflow, /comment: "false"/);
   assert.match(reactDoctorWorkflow, /review-comments: "true"/);
   assert.equal(doctorConfig.blocking, "warning");
   assert.match(governanceWorkflow, /strict_required_status_checks_policy/);
