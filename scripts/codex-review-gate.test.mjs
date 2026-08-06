@@ -241,7 +241,7 @@ test("un finding top-level sull'HEAD prevale sul riepilogo pulito", () => {
   );
 });
 
-test("un finding top-level senza marker prevale sul riepilogo pulito", () => {
+test("un finding top-level senza SHA non viene attribuito al nuovo HEAD", () => {
   assert.equal(
     classify({
       requiresReviewedCommit: true,
@@ -258,7 +258,7 @@ test("un finding top-level senza marker prevale sul riepilogo pulito", () => {
         },
       ],
     }).state,
-    "failure",
+    "success",
   );
 });
 
@@ -547,7 +547,10 @@ test("l'import in GitHub Actions non avvia la CLI", () => {
 
 test("il workflow usa eventi, permessi e codice trusted", () => {
   assert.match(workflow, /pull_request_target:/);
-  assert.match(workflow, /types:\s*\[opened, synchronize, reopened, ready_for_review, closed\]/);
+  assert.match(
+    workflow,
+    /types:\s*\[opened, synchronize, reopened, ready_for_review, closed, converted_to_draft\]/,
+  );
   assert.match(workflow, /workflow_dispatch:/);
   assert.match(workflow, /type:\s*number/);
   assert.match(workflow, /contents:\s*read/);
@@ -555,7 +558,10 @@ test("il workflow usa eventi, permessi e codice trusted", () => {
   assert.match(workflow, /pull-requests:\s*read/);
   assert.match(workflow, /statuses:\s*write/);
   assert.match(workflow, /cancel-in-progress:\s*true/);
-  assert.match(workflow, /if:\s*github\.event\.action != 'closed'/);
+  assert.match(
+    workflow,
+    /if:\s*github\.event\.action != 'closed' && github\.event\.action != 'converted_to_draft'/,
+  );
   assert.match(workflow, /timeout-minutes:\s*310/);
   assert.match(workflow, /actions\/checkout@[0-9a-f]{40}/);
   assert.match(workflow, /ref:\s*\$\{\{ github\.event\.repository\.default_branch \}\}/);
