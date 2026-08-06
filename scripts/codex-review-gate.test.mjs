@@ -631,6 +631,7 @@ test("il workflow usa eventi, permessi e codice trusted", () => {
   assert.match(workflow, /pull-requests:\s*read/);
   assert.match(workflow, /statuses:\s*write/);
   assert.match(workflow, /cancel-in-progress:\s*true/);
+  assert.ok(workflow.indexOf("if: >-") < workflow.indexOf("concurrency:"));
   assert.match(
     workflow,
     /github\.event\.action != 'closed' && github\.event\.action != 'converted_to_draft'/,

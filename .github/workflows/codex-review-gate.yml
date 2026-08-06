@@ -22,10 +22,6 @@ permissions:
   pull-requests: read
   statuses: write
 
-concurrency:
-  group: codex-review-${{ github.event.pull_request.number || github.event.issue.number || inputs.pull_request }}
-  cancel-in-progress: true
-
 jobs:
   gate:
     name: Aggiorna gate Codex
@@ -36,6 +32,9 @@ jobs:
        github.event_name == 'pull_request_target' ||
        github.event.review.user.login == 'chatgpt-codex-connector[bot]' ||
        github.event.comment.user.login == 'chatgpt-codex-connector[bot]')
+    concurrency:
+      group: codex-review-${{ github.event.pull_request.number || github.event.issue.number || inputs.pull_request }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 310
     steps:
