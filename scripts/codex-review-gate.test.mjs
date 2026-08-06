@@ -79,6 +79,22 @@ test("il commit_id nativo approva una review pulita con corpo vuoto", () => {
   );
 });
 
+test("un finding nel body della review exact-HEAD prevale", () => {
+  assert.equal(
+    classify({
+      reviews: [
+        {
+          user: bot,
+          commit_id: headSha,
+          submitted_at: "2026-08-04T12:00:02Z",
+          body: "**P2** Correggi il gate",
+        },
+      ],
+    }).state,
+    "failure",
+  );
+});
+
 test("la review exact-HEAD approva anche senza riusare un vecchio pollice", () => {
   assert.equal(
     classify({
@@ -477,6 +493,23 @@ test("legge le reazioni dall'ultima invocazione Codex del tentativo corrente", (
       requestedAt,
     ).id,
     3,
+  );
+});
+
+test("ignora un'invocazione creata nello stesso secondo del push", () => {
+  assert.equal(
+    latestCodexInvocation(
+      [
+        {
+          id: 1,
+          user: { login: "max23468" },
+          body: "@codex review",
+          created_at: requestedAt,
+        },
+      ],
+      requestedAt,
+    ),
+    undefined,
   );
 });
 

@@ -109,13 +109,21 @@ export function classifyCodexReview({
 
   for (const review of reviews) {
     const commit = review.commit_id ?? reviewedCommit(review.body);
+    const submittedAt = timestamp(review.submitted_at);
     if (
       review.user?.login === CODEX_BOT &&
       commit &&
       headSha.startsWith(commit) &&
-      timestamp(review.submitted_at) >= timestamp(requestedAt)
+      submittedAt >= timestamp(requestedAt)
     ) {
-      cleanComments.push(timestamp(review.submitted_at));
+      if (/\bP[0-3]\b/.test(review.body)) {
+        return {
+          state: "failure",
+          at: submittedAt,
+          description: "Codex ha trovato problemi nell'ultimo commit",
+        };
+      }
+      if (now - submittedAt >= 30_000) cleanComments.push(submittedAt);
     }
   }
 
@@ -173,7 +181,7 @@ export const latestCodexInvocation = (comments, requestedAt) =>
         timestamp(requestedAt) > 0 &&
         comment.user?.login !== CODEX_BOT &&
         /@codex\s+review\b/i.test(comment.body) &&
-        timestamp(comment.created_at) >= timestamp(requestedAt),
+        timestamp(comment.created_at) > timestamp(requestedAt),
     )
     .sort((left, right) => timestamp(right.created_at) - timestamp(left.created_at))[0];
 
