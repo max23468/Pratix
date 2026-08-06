@@ -239,7 +239,7 @@ Se emergono bug:
 3. aggiornare `CHANGELOG.md` nella categoria corretta;
 4. rieseguire solo i gate proporzionati al diff, poi il gate finale.
 
-Esito 2026-05-09: completata dopo controllo `Codex feedback inbox`.
+Esito 2026-05-09: completata dopo il controllo dei thread Codex allora in uso.
 
 Thread P2 assorbiti nel diff 1.0:
 
@@ -269,7 +269,7 @@ Poi:
 2. creare branch dedicato `codex/pratix-1-0`;
 3. committare con Conventional Commit, ad esempio `chore: release Pratix 1.0.0`;
 4. aprire PR con template;
-5. controllare issue GitHub `Codex feedback inbox`;
+5. controllare la review Codex corrente;
 6. attendere check GitHub;
 7. merge su `main`;
 8. verificare deployment production Vercel `READY`;
@@ -296,7 +296,7 @@ Esito 2026-05-09, pre-push: release `1.0.0` preparata.
    mobile, tema chiaro e tema scuro, con `issueCount: 0`.
 10. `npm run db:push:dry-run`: ok dopo aver fornito
     `SUPABASE_DB_PASSWORD` solo a runtime; esito `Remote database is up to date`.
-11. `Codex feedback inbox`: verificata issue GitHub #34; i quattro thread P2
+11. Review Codex: verificati i quattro thread P2 allora presenti;
     actionable sono stati corretti prima di commit/PR.
 12. Dopo le correzioni P2, `npm run format:changed:check`: ok.
 13. Dopo le correzioni P2, `npm run ci:local`: ok; build, 125 test su 45 file,

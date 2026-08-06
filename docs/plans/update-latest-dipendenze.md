@@ -324,9 +324,8 @@ Aggiornamenti applicati:
    con lo stress test locale su Node 26;
 3. `.github/workflows/quality.yml` usa `actions/setup-node@v5` con
    `node-version: 24`;
-4. `.github/workflows/codex-pr-comments.yml` aggiunge `actions/setup-node@v5`
-   con `node-version: 24`, invece di dipendere dal Node preinstallato del
-   runner.
+4. i workflow Node usano `actions/setup-node@v5` con `node-version: 24`,
+   invece di dipendere dal Node preinstallato del runner.
 
 Verifiche completate:
 
@@ -337,8 +336,8 @@ Verifiche completate:
    ignorata perché gestita manualmente;
 4. `.githooks/pre-push`, `scripts/prepush-guard.mjs`,
    `scripts/format-changed.mjs`, `scripts/release.mjs`,
-   `scripts/db-verify.mjs`, `scripts/recreate-supabase-user.mjs` e
-   `.github/scripts/handle-codex-pr-comments.mjs` passano `node --check`;
+   `scripts/db-verify.mjs` e `scripts/recreate-supabase-user.mjs` passano
+   `node --check`;
 5. `.vercel`, `supabase/.temp/`, `.DS_Store`, `.output` e `node_modules` sono
    ignorati da Git;
 6. Node 24 reale verificato con `npx --yes -p node@24 node -v`, che restituisce
@@ -369,8 +368,7 @@ Aggiornare o verificare anche:
 4. Script custom:
    - `scripts/release.mjs`;
    - `scripts/db-verify.mjs`;
-   - `scripts/recreate-supabase-user.mjs`;
-   - `.github/scripts/handle-codex-pr-comments.mjs`.
+   - `scripts/recreate-supabase-user.mjs`.
 5. Igiene repo:
    - confermare che `supabase/.temp/`, `.vercel`, `.DS_Store`, output di build
      e file con dati personali restino ignorati;
@@ -465,7 +463,7 @@ Versioning:
 Pubblicazione:
 
 1. commit atomico Conventional Commit;
-2. controllare la issue GitHub `Codex feedback inbox`;
+2. controllare la review Codex corrente;
 3. aprire PR con template repo;
 4. attendere check;
 5. merge su `main`;
@@ -477,11 +475,10 @@ Esito Fase 7 locale (2026-05-09):
 
 1. release PATCH `0.12.5` preparata con `npm run release -- --bump patch`;
 2. `docs/ROADMAP.md` aggiornata marcando l'update latest come completato;
-3. risolti i due thread actionable della `Codex feedback inbox`:
+3. risolti i due thread Codex actionable:
    - script npm core resi cross-platform con wrapper Node per Vite;
    - blocchi `Non versionato` esclusi dalla lista pubblica `/novita`;
-4. thread GitHub storici marcati come risolti e sync inbox avviato via workflow
-   `Codex PR comments`;
+4. thread GitHub storici marcati come risolti;
 5. gate locali completati con esito positivo:
    - `npm run format:changed:check`;
    - `npm run ci:local`;

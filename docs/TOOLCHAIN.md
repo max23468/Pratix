@@ -106,7 +106,7 @@ La pubblicazione completa resta PR/merge su `main`, Vercel production verificata
 ## CI e GitHub
 
 - Workflow Quality sulle PR verso `main`.
-- Codex feedback inbox obbligatoria prima di PR ready, merge e pubblicazione.
+- Status `codex-review` exact-HEAD obbligatorio prima di merge e pubblicazione.
 - Dependabot e controlli npm proporzionati ai cambi manifest/lockfile.
 - PR title e template coerenti con Conventional Commit.
 

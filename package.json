@@ -13,8 +13,6 @@
     "smoke:a11y": "node scripts/smoke-a11y.mjs --start-server",
     "smoke:a11y:quick": "node scripts/smoke-a11y.mjs --start-server --quick",
     "smoke:a11y:auth": "node scripts/smoke-a11y-auth.mjs",
-    "codex:comments": "GITHUB_REPOSITORY=max23468/Pratix node .github/scripts/handle-codex-pr-comments.mjs",
-    "codex:comments:dry-run": "DRY_RUN=true GITHUB_REPOSITORY=max23468/Pratix node .github/scripts/handle-codex-pr-comments.mjs",
     "publish:prepare": "node scripts/publish-prepare.mjs",
     "publish:finish": "node scripts/publish-finish.mjs",
     "changelog:check": "node scripts/changelog-quality-check.mjs",

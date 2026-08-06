@@ -9,7 +9,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 ### Sotto il cofano
 
 - Il gate `codex-review` valida esclusivamente la review Codex dell'HEAD
-  corrente della PR usando codice trusted dal branch predefinito.
+  corrente della PR usando codice trusted dal branch predefinito e sostituisce
+  la precedente feedback inbox.
 
 ## [1.14.13] — 2026-08-05
 
