@@ -1,25 +1,17 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Pencil, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { ActivityMobileResults } from "@/components/activity-mobile-results";
 import { ActivityTableResults } from "@/components/activity-table-results";
 import { ListToolbar } from "@/components/list-toolbar";
 import { PageHeader } from "@/components/page-header";
-import { ActivityReviewBadge } from "@/components/activity-review-badge";
 import { CaseActivityDialog, type CaseActivityDialogActivity } from "@/components/case-activities";
-import { MobileListCard } from "@/components/mobile-list-card";
-import { MobileListCardDetails } from "@/components/mobile-list-card-details";
-import { MobileListCardHeader } from "@/components/mobile-list-card-header";
 import { MobileSortSelect } from "@/components/mobile-sort-select";
 import { SearchInput } from "@/components/search-input";
-import { SortableTableHead } from "@/components/sortable-table-head";
 import { SummaryTile } from "@/components/summary-tile";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { TableEmptyState } from "@/components/table-empty-state";
 import {
   Select,
   SelectContent,
@@ -27,33 +19,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  activityCaseLabel,
-  activityCasePartiesLabel,
-  type CaseActivityContext,
-} from "@/lib/case-activities";
-import { formatCurrency, formatDate } from "@/lib/format";
-import { routeRef } from "@/lib/public-route-code";
+import { activityCaseLabel, type CaseActivityContext } from "@/lib/case-activities";
+import { formatCurrency } from "@/lib/format";
 import {
   caseActivityDisplayStatus,
   caseActivityDisplayStatusLabels,
-  caseActivityDisplayStatusVariant,
-  practiceDisplayName,
   priceItemKindLabels,
 } from "@/lib/labels";
-import {
-  handleClickableTableRowClick,
-  handleClickableTableRowKeyDown,
-} from "@/lib/table-row-navigation";
 import {
   parseTableSortDirection,
   parseTableSortKey,

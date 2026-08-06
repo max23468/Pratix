@@ -12,7 +12,6 @@ import { Field } from "@/components/settings/field";
 import { NumField } from "@/components/settings/num-field";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {

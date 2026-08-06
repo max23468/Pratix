@@ -8,7 +8,6 @@ import {
   FileWarning,
   GitCompareArrows,
   ListChecks,
-  Receipt,
   Search,
   User,
   UserRoundSearch,
