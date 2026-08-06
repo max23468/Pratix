@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { renderToString } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
-import { CaseActivitiesTab } from "./case-activities";
+import { CaseActivitiesTab } from "./case-activities-tab";
 import { CaseForm } from "./case-form";
 import { ClientForm } from "./client-form";
 import { CounterpartyForm } from "./counterparty-form";

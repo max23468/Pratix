@@ -174,7 +174,7 @@ function runReactDoctorForRelease() {
   console.log("Release major/minor rilevata: eseguo React Doctor prima di aggiornare i file.");
 
   const npmCommand = process.platform === "win32" ? "npm.cmd" : "npm";
-  const result = spawnSync(npmCommand, ["run", "quality:react-doctor"], {
+  const result = spawnSync(npmCommand, ["run", "doctor"], {
     cwd: root,
     stdio: "inherit",
   });

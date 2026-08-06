@@ -6,7 +6,7 @@ import userEvent from "@testing-library/user-event";
 import { renderToString } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { CaseActivitiesTab } from "./case-activities";
+import { CaseActivitiesTab } from "./case-activities-tab";
 
 const { toast, supabase, deleteQuery, storage } = vi.hoisted(() => {
   const deleteQuery = {

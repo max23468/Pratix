@@ -79,7 +79,7 @@ vi.mock("@/components/case-operations-panel", () => ({
   ),
 }));
 
-vi.mock("@/components/case-activities", () => ({
+vi.mock("@/components/case-activities-tab", () => ({
   CaseActivitiesTab: () => <p>Tab attività</p>,
 }));
 

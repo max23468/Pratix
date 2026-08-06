@@ -376,38 +376,50 @@ function ClientiList() {
                 </TableCell>
               </TableRow>
             ) : (
-              sorted.map((c) => {
-                const displayName = clientDisplayName(c);
-                return (
-                  <TableRow
-                    key={c.id}
-                    className="cursor-pointer"
-                    role="link"
-                    tabIndex={0}
-                    aria-label={`Apri cliente ${displayName}`}
-                    onClick={(event) =>
-                      handleClickableTableRowClick(event, () => openClient(routeRef(c)))
-                    }
-                    onKeyDown={(event) =>
-                      handleClickableTableRowKeyDown(event, () => openClient(routeRef(c)))
-                    }
-                  >
-                    <TableCell>
-                      <span className="font-medium">{displayName}</span>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">{clientKindLabels[c.kind] ?? c.kind}</Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {principalNamesByClient[c.id]?.join(", ") || "—"}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
+              sorted.map((client) => (
+                <ClientTableRow
+                  key={client.id}
+                  client={client}
+                  principalNames={principalNamesByClient[client.id]}
+                  onOpen={() => openClient(routeRef(client))}
+                />
+              ))
             )}
           </TableBody>
         </Table>
       </Card>
     </>
+  );
+}
+
+function ClientTableRow({
+  client,
+  principalNames,
+  onOpen,
+}: {
+  client: ClientListRow;
+  principalNames?: string[];
+  onOpen: () => void;
+}) {
+  const displayName = clientDisplayName(client);
+  return (
+    <TableRow
+      className="cursor-pointer"
+      role="link"
+      tabIndex={0}
+      aria-label={`Apri cliente ${displayName}`}
+      onClick={(event) => handleClickableTableRowClick(event, onOpen)}
+      onKeyDown={(event) => handleClickableTableRowKeyDown(event, onOpen)}
+    >
+      <TableCell>
+        <span className="font-medium">{displayName}</span>
+      </TableCell>
+      <TableCell>
+        <Badge variant="outline">{clientKindLabels[client.kind] ?? client.kind}</Badge>
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {principalNames?.join(", ") || "—"}
+      </TableCell>
+    </TableRow>
   );
 }

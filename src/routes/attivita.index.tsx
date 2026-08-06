@@ -3,13 +3,12 @@ import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Pencil, Plus } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
+import { ActivityMobileResults } from "@/components/activity-mobile-results";
+import { ActivityTableResults } from "@/components/activity-table-results";
 import { ListToolbar } from "@/components/list-toolbar";
 import { PageHeader } from "@/components/page-header";
-import {
-  ActivityReviewBadge,
-  CaseActivityDialog,
-  type CaseActivityDialogActivity,
-} from "@/components/case-activities";
+import { ActivityReviewBadge } from "@/components/activity-review-badge";
+import { CaseActivityDialog, type CaseActivityDialogActivity } from "@/components/case-activities";
 import { MobileListCard } from "@/components/mobile-list-card";
 import { MobileListCardDetails } from "@/components/mobile-list-card-details";
 import { MobileListCardHeader } from "@/components/mobile-list-card-header";
@@ -73,7 +72,7 @@ const attivitaSortKeys = [
   "amount",
 ] as const;
 
-type AttivitaSortKey = (typeof attivitaSortKeys)[number];
+export type AttivitaSortKey = (typeof attivitaSortKeys)[number];
 
 const attivitaDefaultSort: TableSort<AttivitaSortKey> = {
   key: "activity_date",
@@ -121,7 +120,7 @@ type ActivitiesSearch = {
   dir?: "asc" | "desc";
 };
 
-type GlobalActivityRow = CaseActivityDialogActivity & {
+export type GlobalActivityRow = CaseActivityDialogActivity & {
   cases: (CaseActivityContext & { public_code: string; practice_number: number }) | null;
 };
 
@@ -368,271 +367,20 @@ function ActivitiesList() {
         <MobileSortSelect columns={attivitaColumns} sort={sort} onSort={setSort} />
       </div>
 
-      <div className="space-y-3 md:hidden">
-        {isLoading ? (
-          <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>
-        ) : sorted.length === 0 ? (
-          <Card className="p-4">
-            <TableEmptyState
-              title={hasActiveFilters ? "Nessuna attività trovata" : "Nessuna attività"}
-              description={
-                hasActiveFilters
-                  ? "Modifica ricerca o filtri per ampliare i risultati."
-                  : "Registra compensi o rimborsi spese dalla pratica o da inserimento rapido."
-              }
-              action={
-                !hasActiveFilters ? (
-                  <CaseActivityDialog
-                    trigger={
-                      <Button size="sm">
-                        <Plus className="mr-1 size-4" /> Nuova attività
-                      </Button>
-                    }
-                  />
-                ) : undefined
-              }
-            />
-          </Card>
-        ) : (
-          sorted.map((activity) => {
-            const caseRef = activity.cases ? routeRef(activity.cases) : null;
-            const editTitle = activity.invoice_id
-              ? "Le voci collegate a una Fattura non si modificano"
-              : "Modifica voce";
-            const displayStatus = caseActivityDisplayStatus(activity);
-            return (
-              <MobileListCard key={activity.id}>
-                <MobileListCardHeader
-                  eyebrow={formatDate(activity.activity_date)}
-                  title={activity.description}
-                  subtitle={`${priceItemKindLabels[activity.kind]} · ${activity.snapshot_price_name}`}
-                  badge={
-                    <Badge variant={caseActivityDisplayStatusVariant[displayStatus] ?? "outline"}>
-                      {caseActivityDisplayStatusLabels[displayStatus] ?? displayStatus}
-                    </Badge>
-                  }
-                />
-                {activity.needs_review ? (
-                  <div className="mt-2">
-                    <ActivityReviewBadge needsReview={activity.needs_review} />
-                  </div>
-                ) : null}
-                <MobileListCardDetails
-                  rows={[
-                    {
-                      label: "Pratica",
-                      value: activity.cases ? activityCaseLabel(activity.cases) : "—",
-                    },
-                    { label: "Quantità", value: activity.quantity },
-                    {
-                      label: "Totale",
-                      value: formatCurrency(Number(activity.amount)),
-                      valueClassName: "font-medium text-foreground",
-                    },
-                  ]}
-                />
-                <div className="mt-4 flex flex-wrap gap-2">
-                  {caseRef && (
-                    <Button variant="outline" size="sm" asChild>
-                      <Link to="/pratiche/$caseId" params={{ caseId: caseRef }}>
-                        Apri pratica
-                      </Link>
-                    </Button>
-                  )}
-                  <CaseActivityDialog
-                    caseRow={activity.cases ?? undefined}
-                    activity={activity}
-                    trigger={
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={Boolean(activity.invoice_id)}
-                        title={editTitle}
-                      >
-                        <Pencil className="mr-1 size-4" />
-                        Modifica
-                      </Button>
-                    }
-                  />
-                </div>
-              </MobileListCard>
-            );
-          })
-        )}
-      </div>
+      <ActivityMobileResults
+        rows={sorted}
+        isLoading={isLoading}
+        hasActiveFilters={hasActiveFilters}
+      />
 
-      <Card className="hidden min-w-0 md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <SortableTableHead
-                columnKey="activity_date"
-                label="Data"
-                sort={sort}
-                onSort={setSort}
-              />
-              <SortableTableHead columnKey="case" label="Pratica" sort={sort} onSort={setSort} />
-              <SortableTableHead
-                columnKey="activity"
-                label="Attività"
-                sort={sort}
-                onSort={setSort}
-              />
-              <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={setSort} />
-              <SortableTableHead
-                columnKey="quantity"
-                label="Quantità"
-                sort={sort}
-                onSort={setSort}
-                align="right"
-                className="text-right"
-              />
-              <SortableTableHead
-                columnKey="amount"
-                label="Totale"
-                sort={sort}
-                onSort={setSort}
-                align="right"
-                className="text-right"
-              />
-              <TableHead className="w-12" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                  Caricamento…
-                </TableCell>
-              </TableRow>
-            ) : sorted.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                  <TableEmptyState
-                    title={hasActiveFilters ? "Nessuna attività trovata" : "Nessuna attività"}
-                    description={
-                      hasActiveFilters
-                        ? "Modifica ricerca o filtri per ampliare i risultati."
-                        : "Registra compensi o rimborsi spese dalla pratica o da inserimento rapido."
-                    }
-                    action={
-                      !hasActiveFilters ? (
-                        <CaseActivityDialog
-                          trigger={
-                            <Button size="sm">
-                              <Plus className="mr-1 size-4" /> Nuova attività
-                            </Button>
-                          }
-                        />
-                      ) : undefined
-                    }
-                  />
-                </TableCell>
-              </TableRow>
-            ) : (
-              sorted.map((activity) => {
-                const caseRef = activity.cases ? routeRef(activity.cases) : null;
-                const editTitle = activity.invoice_id
-                  ? "Le voci collegate a una Fattura non si modificano"
-                  : "Modifica voce";
-                const displayStatus = caseActivityDisplayStatus(activity);
-                return (
-                  <TableRow
-                    key={activity.id}
-                    className={caseRef ? "cursor-pointer" : undefined}
-                    role={caseRef ? "link" : undefined}
-                    tabIndex={caseRef ? 0 : undefined}
-                    aria-label={
-                      caseRef ? `Apri pratica ${activity.cases?.practice_number}` : undefined
-                    }
-                    onClick={
-                      caseRef
-                        ? (event) => handleClickableTableRowClick(event, () => openCase(caseRef))
-                        : undefined
-                    }
-                    onKeyDown={
-                      caseRef
-                        ? (event) => handleClickableTableRowKeyDown(event, () => openCase(caseRef))
-                        : undefined
-                    }
-                  >
-                    <TableCell className="text-sm">{formatDate(activity.activity_date)}</TableCell>
-                    <TableCell className="text-sm">
-                      {activity.cases ? (
-                        <Link
-                          to="/pratiche/$caseId"
-                          params={{ caseId: routeRef(activity.cases) }}
-                          className="hover:underline"
-                        >
-                          <div className="font-medium">{practiceDisplayName(activity.cases)}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {activityCasePartiesLabel(activity.cases)}
-                          </div>
-                        </Link>
-                      ) : (
-                        "—"
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      <CaseActivityDialog
-                        caseRow={activity.cases ?? undefined}
-                        activity={activity}
-                        trigger={
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            className="h-auto max-w-full justify-start p-0 text-left hover:bg-transparent"
-                            disabled={Boolean(activity.invoice_id)}
-                            aria-label={`Modifica ${activity.description}`}
-                            title={editTitle}
-                          >
-                            <div className="flex min-w-0 flex-col gap-1">
-                              <span className="truncate font-medium">{activity.description}</span>
-                              <ActivityReviewBadge needsReview={activity.needs_review} />
-                              <span className="truncate text-xs text-muted-foreground">
-                                {priceItemKindLabels[activity.kind]} ·{" "}
-                                {activity.snapshot_price_name}
-                              </span>
-                            </div>
-                          </Button>
-                        }
-                      />
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={caseActivityDisplayStatusVariant[displayStatus] ?? "outline"}>
-                        {caseActivityDisplayStatusLabels[displayStatus] ?? displayStatus}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right text-sm">{activity.quantity}</TableCell>
-                    <TableCell className="text-right text-sm font-medium">
-                      {formatCurrency(Number(activity.amount))}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <CaseActivityDialog
-                        caseRow={activity.cases ?? undefined}
-                        activity={activity}
-                        trigger={
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            disabled={Boolean(activity.invoice_id)}
-                            aria-label={`Modifica ${activity.description}`}
-                            title={editTitle}
-                          >
-                            <Pencil className="size-4" />
-                          </Button>
-                        }
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+      <ActivityTableResults
+        rows={sorted}
+        isLoading={isLoading}
+        hasActiveFilters={hasActiveFilters}
+        sort={sort}
+        onSort={setSort}
+        onOpen={openCase}
+      />
     </>
   );
 }

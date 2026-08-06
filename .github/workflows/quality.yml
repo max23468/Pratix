@@ -65,56 +65,5 @@ jobs:
             echo "CHANGELOG.md not changed."
           fi
 
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Build
-        run: npm run build
-
-      - name: Test
-        run: npm test
-
-      - name: Lint changed source files
-        shell: bash
-        run: |
-          base_ref="${GITHUB_BASE_REF:-main}"
-          git fetch origin "$base_ref"
-          diff_base="origin/${base_ref}"
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            diff_base="${{ github.event.pull_request.base.sha }}"
-          fi
-
-          changed_source_files="$(git diff --name-only --diff-filter=ACMR "${diff_base}...HEAD" \
-            | grep -E '^((src|scripts|supabase)/.*\.(ts|tsx|js|jsx|mjs|cjs)|vite\.config\.ts|vitest\.config\.ts|vitest\.coverage-global\.config\.ts|\.oxlintrc\.json)$' \
-            || true)"
-
-          if [[ -z "$changed_source_files" ]]; then
-            echo "No changed source files to lint."
-            exit 0
-          fi
-
-          npx oxlint $changed_source_files
-
-      - name: Detect dependency changes
-        id: dependency-changes
-        shell: bash
-        run: |
-          base_ref="${GITHUB_BASE_REF:-main}"
-          git fetch origin "$base_ref"
-          diff_base="origin/${base_ref}"
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            diff_base="${{ github.event.pull_request.base.sha }}"
-          fi
-
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "run_audit=true" >> "$GITHUB_OUTPUT"
-          elif git diff --name-only "${diff_base}...HEAD" \
-            | grep -Eq '^(package\.json|package-lock\.json)$'; then
-            echo "run_audit=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "run_audit=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Audit dependencies
-        if: steps.dependency-changes.outputs.run_audit == 'true'
-        run: npm audit --audit-level=moderate
+      - name: Complete gate
+        run: npm run check

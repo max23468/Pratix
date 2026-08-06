@@ -224,7 +224,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 - **Type safety**: azzerati i 129 errori `tsc` accumulati (tipi allineati allo
   schema Supabase su fatturazione, attività e prezzi; helper unico per le
   colonne generate da trigger; deduplicato `downloadFile`; fixture di test
-  allineate). Aggiunto lo script `typecheck` e collegato a `ci:local`,
+  allineate). Aggiunto lo script `typecheck` e collegato a `check`,
   `prepush-guard` e al workflow Quality perché gli errori di tipo non tornino.
 
 ## [1.13.11] — 2026-07-19
@@ -247,7 +247,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ### Sotto il cofano
 
-- **React Doctor**: aggiornato il gate a `react-doctor@latest` compatibile con i
+- **React Doctor**: aggiornato il gate a `react-doctor` compatibile con i
   flag correnti e riportato il controllo a `100/100`, spostando le scritture
   owner dei prezzi e degli allegati guidati su server function.
 
@@ -295,7 +295,7 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ### Sotto il cofano
 
-- **React Doctor**: portato `react-doctor@latest` a `100/100` con 0 errori e
+- **React Doctor**: portato `react-doctor` a `100/100` con 0 errori e
   0 warning, correggendo stato derivato nei form, JSX ricreato nei dettagli
   pratica, export inutilizzati e componenti mobile concentrati nello stesso
   file.

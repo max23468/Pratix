@@ -10,6 +10,17 @@ const qualityWorkflow = await readFile(
   new URL("../.github/workflows/quality.yml", import.meta.url),
   "utf8",
 );
+const reactDoctorWorkflow = await readFile(
+  new URL("../.github/workflows/react-doctor.yml", import.meta.url),
+  "utf8",
+);
+const governanceWorkflow = await readFile(
+  new URL("../.github/workflows/github-governance.yml", import.meta.url),
+  "utf8",
+);
+const doctorConfig = JSON.parse(
+  await readFile(new URL("../doctor.config.json", import.meta.url), "utf8"),
+);
 const toolchain = await readFile(new URL("../docs/TOOLCHAIN.md", import.meta.url), "utf8");
 const vercel = JSON.parse(await readFile(new URL("../vercel.json", import.meta.url)));
 
@@ -27,4 +38,22 @@ test("npm 12 viene installato prima delle dipendenze", () => {
   assert.doesNotMatch(publishPrepare, /valuta npm ci/);
   assert.doesNotMatch(toolchain, /^npm ci$/m);
   assert.equal(vercel.installCommand, `${bootstrap} install`);
+});
+
+test("React Doctor resta bloccante nel workflow dedicato e nel gate generale", () => {
+  assert.equal(packageJson.devDependencies["react-doctor"], "0.9.5");
+  assert.equal(packageLock.packages[""].devDependencies["react-doctor"], "0.9.5");
+  assert.equal(packageJson.scripts.doctor, "react-doctor . --scope full --blocking warning");
+  assert.match(packageJson.scripts.check, /npm run doctor/);
+  assert.match(qualityWorkflow, /run: npm run check/);
+  assert.match(reactDoctorWorkflow, /version: 0\.9\.5/);
+  assert.match(reactDoctorWorkflow, /blocking: warning/);
+  assert.match(
+    reactDoctorWorkflow,
+    /scope: \$\{\{ github\.event_name == 'pull_request' && 'changed' \|\| 'full' \}\}/,
+  );
+  assert.match(reactDoctorWorkflow, /review-comments: "true"/);
+  assert.equal(doctorConfig.blocking, "warning");
+  assert.match(governanceWorkflow, /strict_required_status_checks_policy/);
+  assert.match(governanceWorkflow, /Build, format and lint,react-doctor/);
 });

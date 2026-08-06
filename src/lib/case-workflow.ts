@@ -124,10 +124,9 @@ export function buildDebtCollectionWorkflow({
   }
 
   if (hasBlockingQualityChecks && activities.length === 0) {
-    const setupItems = qualityChecks
-      .filter((check) => check.severity === "warning")
-      .map((check) => check.title)
-      .filter((title): title is string => Boolean(title));
+    const setupItems = qualityChecks.flatMap((check) =>
+      check.severity === "warning" && check.title ? [check.title] : [],
+    );
 
     return {
       stage: "Impostazione pratica",

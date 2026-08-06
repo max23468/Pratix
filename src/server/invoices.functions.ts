@@ -114,41 +114,40 @@ async function saveBillingExports({
     }),
   ];
 
-  const savedExports = [];
-  for (const file of exportsToSave) {
-    const storagePath = buildBillingExportStoragePath(userId, billingRunId, file.fileName);
+  return Promise.all(
+    exportsToSave.map(async (file) => {
+      const storagePath = buildBillingExportStoragePath(userId, billingRunId, file.fileName);
 
-    // La riga precede l'upload: un riferimento senza oggetto è innocuo, un oggetto
-    // senza riferimento resta invisibile a ogni pulizia successiva.
-    const { data: billingExport, error: exportError } = await supabase
-      .from("billing_exports")
-      .insert({
-        user_id: userId,
-        billing_run_id: billingRunId,
-        invoice_id: invoiceId,
-        kind: file.fileName.startsWith("compensi") ? "fees" : "expenses",
-        storage_path: storagePath,
-        file_name: file.fileName,
-        mime_type: file.mimeType,
-        size_bytes: file.bytes.byteLength,
-      })
-      .select("id, file_name")
-      .single();
-    if (exportError) throw exportError;
+      // La riga precede l'upload: un riferimento senza oggetto è innocuo, un oggetto
+      // senza riferimento resta invisibile a ogni pulizia successiva.
+      const { data: billingExport, error: exportError } = await supabase
+        .from("billing_exports")
+        .insert({
+          user_id: userId,
+          billing_run_id: billingRunId,
+          invoice_id: invoiceId,
+          kind: file.fileName.startsWith("compensi") ? "fees" : "expenses",
+          storage_path: storagePath,
+          file_name: file.fileName,
+          mime_type: file.mimeType,
+          size_bytes: file.bytes.byteLength,
+        })
+        .select("id, file_name")
+        .single();
+      if (exportError) throw exportError;
 
-    uploadedPaths?.push(storagePath);
-    const { error: uploadError } = await supabase.storage
-      .from(PRATIX_DOCUMENTS_BUCKET)
-      .upload(storagePath, Buffer.from(file.bytes), {
-        contentType: file.mimeType,
-        upsert: true,
-      });
-    if (uploadError) throw uploadError;
+      uploadedPaths?.push(storagePath);
+      const { error: uploadError } = await supabase.storage
+        .from(PRATIX_DOCUMENTS_BUCKET)
+        .upload(storagePath, Buffer.from(file.bytes), {
+          contentType: file.mimeType,
+          upsert: true,
+        });
+      if (uploadError) throw uploadError;
 
-    savedExports.push(billingExport);
-  }
-
-  return savedExports;
+      return billingExport;
+    }),
+  );
 }
 
 /**
@@ -172,18 +171,20 @@ async function sweepAbandonedBillingRuns(supabase: SupabaseClient<Database>, use
   // La pulizia è opportunistica: un suo errore non deve impedire la fatturazione.
   if (error || !runs?.length) return;
 
-  for (const run of runs) {
-    const paths = (run.billing_exports ?? [])
-      .map((billingExport) => billingExport.storage_path)
-      .filter((path): path is string => Boolean(path));
-    if (paths.length > 0) {
-      const { error: removeError } = await supabase.storage
-        .from(PRATIX_DOCUMENTS_BUCKET)
-        .remove(paths);
-      if (removeError) continue;
-    }
-    await supabase.from("billing_runs").delete().eq("id", run.id).eq("user_id", userId);
-  }
+  await Promise.all(
+    runs.map(async (run) => {
+      const paths = (run.billing_exports ?? [])
+        .map((billingExport) => billingExport.storage_path)
+        .filter((path): path is string => Boolean(path));
+      if (paths.length > 0) {
+        const { error: removeError } = await supabase.storage
+          .from(PRATIX_DOCUMENTS_BUCKET)
+          .remove(paths);
+        if (removeError) return;
+      }
+      await supabase.from("billing_runs").delete().eq("id", run.id).eq("user_id", userId);
+    }),
+  );
 }
 
 export const createBillingInvoiceFn = createServerFn({ method: "POST" })
@@ -334,24 +335,26 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
         if (includedError) throw includedError;
       }
 
-      for (const activity of postponed) {
-        const update = postponedActivityUpdate(activity, data.periodEnd);
-        activityRestores.push({
-          id: activity.id,
-          payload: {
-            postponed_until: activity.postponed_until ?? null,
-            postponed_count: Number(activity.postponed_count ?? 0),
-          },
-        });
-        const { error: postponedError } = await supabase
-          .from("case_activities")
-          .update({
-            postponed_until: update.postponed_until,
-            postponed_count: update.postponed_count,
-          })
-          .eq("id", update.id);
-        if (postponedError) throw postponedError;
-      }
+      await Promise.all(
+        postponed.map(async (activity) => {
+          const update = postponedActivityUpdate(activity, data.periodEnd);
+          activityRestores.push({
+            id: activity.id,
+            payload: {
+              postponed_until: activity.postponed_until ?? null,
+              postponed_count: Number(activity.postponed_count ?? 0),
+            },
+          });
+          const { error: postponedError } = await supabase
+            .from("case_activities")
+            .update({
+              postponed_until: update.postponed_until,
+              postponed_count: update.postponed_count,
+            })
+            .eq("id", update.id);
+          if (postponedError) throw postponedError;
+        }),
+      );
 
       const savedExports = await saveBillingExports({
         supabase,
@@ -390,13 +393,15 @@ export const createBillingInvoiceFn = createServerFn({ method: "POST" })
           .remove(uploadedExportPaths);
         storageCleanupFailed = Boolean(removeError);
       }
-      for (const restore of activityRestores) {
-        await supabase
-          .from("case_activities")
-          .update(restore.payload)
-          .eq("id", restore.id)
-          .eq("user_id", userId);
-      }
+      await Promise.all(
+        activityRestores.map((restore) =>
+          supabase
+            .from("case_activities")
+            .update(restore.payload)
+            .eq("id", restore.id)
+            .eq("user_id", userId),
+        ),
+      );
       if (createdInvoiceId) {
         await supabase.from("invoices").delete().eq("id", createdInvoiceId).eq("user_id", userId);
       }
@@ -502,7 +507,9 @@ export const updateDraftBillingInvoiceFn = createServerFn({ method: "POST" })
       .select("storage_path")
       .eq("billing_run_id", invoice.billing_run_id);
     if (previousExportsError) throw previousExportsError;
-    const previousPaths = (previousExports ?? []).map((item) => item.storage_path).filter(Boolean);
+    const previousPaths = (previousExports ?? []).flatMap((item) =>
+      item.storage_path ? [item.storage_path] : [],
+    );
     if (previousPaths.length > 0) {
       const { error: storageError } = await supabase.storage
         .from(PRATIX_DOCUMENTS_BUCKET)
@@ -576,21 +583,23 @@ export const updateDraftBillingInvoiceFn = createServerFn({ method: "POST" })
       if (includedError) throw includedError;
     }
 
-    for (const activity of postponed) {
-      const update = draftPostponedActivityUpdate({
-        activity,
-        periodEnd: data.periodEnd,
-        previousStatus: previousStatusByActivityId.get(activity.id),
-      });
-      const { error: postponedError } = await supabase
-        .from("case_activities")
-        .update({
-          postponed_until: update.postponed_until,
-          postponed_count: update.postponed_count,
-        })
-        .eq("id", update.id);
-      if (postponedError) throw postponedError;
-    }
+    await Promise.all(
+      postponed.map(async (activity) => {
+        const update = draftPostponedActivityUpdate({
+          activity,
+          periodEnd: data.periodEnd,
+          previousStatus: previousStatusByActivityId.get(activity.id),
+        });
+        const { error: postponedError } = await supabase
+          .from("case_activities")
+          .update({
+            postponed_until: update.postponed_until,
+            postponed_count: update.postponed_count,
+          })
+          .eq("id", update.id);
+        if (postponedError) throw postponedError;
+      }),
+    );
 
     const savedExports = await saveBillingExports({
       supabase,
@@ -700,8 +709,10 @@ export const generateBillingExportFn = createServerFn({ method: "POST" })
       .order("position", { ascending: true });
     if (linesError) throw linesError;
     const activityIds = [
-      ...new Set((lines ?? []).map((line) => line.case_activity_id).filter(Boolean)),
-    ] as string[];
+      ...new Set(
+        (lines ?? []).flatMap((line) => (line.case_activity_id ? [line.case_activity_id] : [])),
+      ),
+    ];
     const hearingsByActivityId = new Map<
       string,
       Array<{ hearing_date: string; position: number | string }>

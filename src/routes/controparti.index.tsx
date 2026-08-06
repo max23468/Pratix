@@ -351,53 +351,61 @@ function ContropartiList() {
                 </TableCell>
               </TableRow>
             ) : (
-              sorted.map((counterparty) => {
-                const displayName = counterpartyDisplayName(counterparty);
-                return (
-                  <TableRow
-                    key={counterparty.id}
-                    className="cursor-pointer"
-                    role="link"
-                    tabIndex={0}
-                    aria-label={`Apri controparte ${displayName}`}
-                    onClick={(event) =>
-                      handleClickableTableRowClick(event, () =>
-                        openCounterparty(routeRef(counterparty)),
-                      )
-                    }
-                    onKeyDown={(event) =>
-                      handleClickableTableRowKeyDown(event, () =>
-                        openCounterparty(routeRef(counterparty)),
-                      )
-                    }
-                  >
-                    <TableCell>
-                      <Link
-                        to="/controparti/$counterpartyId"
-                        params={{ counterpartyId: routeRef(counterparty) }}
-                        className="font-medium hover:underline"
-                      >
-                        {displayName}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant="outline">
-                        {counterpartyKindLabels[counterparty.kind] ?? counterparty.kind}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {counterparty.kind === "group" ? (subjectCounts[counterparty.id] ?? 0) : "—"}
-                    </TableCell>
-                    <TableCell className="max-w-sm truncate text-sm text-muted-foreground">
-                      {counterparty.notes ?? "—"}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
+              sorted.map((counterparty) => (
+                <CounterpartyTableRow
+                  key={counterparty.id}
+                  counterparty={counterparty}
+                  subjectCount={subjectCounts[counterparty.id] ?? 0}
+                  onOpen={() => openCounterparty(routeRef(counterparty))}
+                />
+              ))
             )}
           </TableBody>
         </Table>
       </Card>
     </>
+  );
+}
+
+function CounterpartyTableRow({
+  counterparty,
+  subjectCount,
+  onOpen,
+}: {
+  counterparty: CounterpartyListRow;
+  subjectCount: number;
+  onOpen: () => void;
+}) {
+  const displayName = counterpartyDisplayName(counterparty);
+  return (
+    <TableRow
+      className="cursor-pointer"
+      role="link"
+      tabIndex={0}
+      aria-label={`Apri controparte ${displayName}`}
+      onClick={(event) => handleClickableTableRowClick(event, onOpen)}
+      onKeyDown={(event) => handleClickableTableRowKeyDown(event, onOpen)}
+    >
+      <TableCell>
+        <Link
+          to="/controparti/$counterpartyId"
+          params={{ counterpartyId: routeRef(counterparty) }}
+          className="font-medium hover:underline"
+        >
+          {displayName}
+        </Link>
+      </TableCell>
+      <TableCell>
+        <Badge variant="outline">
+          {counterpartyKindLabels[counterparty.kind] ?? counterparty.kind}
+        </Badge>
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {counterparty.kind === "group" ? subjectCount : "—"}
+      </TableCell>
+      <TableCell className="max-w-sm truncate text-sm text-muted-foreground">
+        {counterparty.notes ?? "—"}
+      </TableCell>
+    </TableRow>
   );
 }

@@ -237,69 +237,7 @@ function DashboardContent() {
         actions={<CreateMenu />}
       />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard
-          icon={Briefcase}
-          label="Pratiche senza attività"
-          value={isLoading ? "—" : String(data?.casesWithoutActivities ?? 0)}
-          to="/pratiche"
-          search={{ view: "without_activities" }}
-        />
-        <StatCard
-          icon={AlertTriangle}
-          label="Pratiche da completare"
-          value={isLoading ? "—" : String(data?.casesToComplete ?? 0)}
-          tone={data && data.casesToComplete > 0 ? "danger" : "default"}
-          to="/pratiche"
-          search={{ view: "to_complete" }}
-        />
-        <StatCard
-          icon={ListChecks}
-          label="Attività da fatturare"
-          value={isLoading ? "—" : String(data?.toInvoiceCount ?? 0)}
-          to="/attivita"
-          search={{ status: "to_invoice" }}
-        />
-        <StatCard
-          icon={Receipt}
-          label="Maturato da fatturare"
-          value={isLoading ? "—" : formatCurrency(data?.toInvoiceAmount ?? 0)}
-          tone="gold"
-          to="/attivita"
-          search={{ status: "to_invoice", sort: "amount", dir: "desc" }}
-        />
-        <StatCard
-          icon={Receipt}
-          label="Fatture in bozza"
-          value={isLoading ? "—" : String(data?.draftInvoiceCount ?? 0)}
-          to="/fatture"
-          search={{ status: "draft" }}
-        />
-        <StatCard
-          icon={Receipt}
-          label="Fatture da incassare"
-          value={isLoading ? "—" : formatCurrency(data?.invoicesToCollectAmount ?? 0)}
-          tone="gold"
-          to="/fatture"
-          search={{ status: "to_collect" }}
-        />
-        <StatCard
-          icon={AlertTriangle}
-          label="Fatture scadute"
-          value={isLoading ? "—" : String(data?.overdueInvoiceCount ?? 0)}
-          tone={data && data.overdueInvoiceCount > 0 ? "danger" : "default"}
-          to="/fatture"
-          search={{ status: "expired" }}
-        />
-        <StatCard
-          icon={FileWarning}
-          label="Rimborsi senza allegato"
-          value={isLoading ? "—" : String(data?.expenseWithoutAttachmentCount ?? 0)}
-          tone={data && data.expenseWithoutAttachmentCount > 0 ? "danger" : "default"}
-          to="/attivita"
-          search={{ status: "to_invoice", kind: "expense_reimbursement", attachments: "missing" }}
-        />
-      </div>
+      <DashboardStats data={data} isLoading={isLoading} />
 
       <WorkQueueCard items={data?.workQueue ?? []} isLoading={isLoading} />
 
@@ -401,6 +339,89 @@ function DashboardContent() {
   );
 }
 
+function DashboardStats({
+  data,
+  isLoading,
+}: {
+  data?: {
+    casesWithoutActivities: number;
+    casesToComplete: number;
+    toInvoiceCount: number;
+    toInvoiceAmount: number;
+    draftInvoiceCount: number;
+    invoicesToCollectAmount: number;
+    overdueInvoiceCount: number;
+    expenseWithoutAttachmentCount: number;
+  };
+  isLoading: boolean;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <StatCard
+        icon={Briefcase}
+        label="Pratiche senza attività"
+        value={isLoading ? "—" : String(data?.casesWithoutActivities ?? 0)}
+        to="/pratiche"
+        search={{ view: "without_activities" }}
+      />
+      <StatCard
+        icon={AlertTriangle}
+        label="Pratiche da completare"
+        value={isLoading ? "—" : String(data?.casesToComplete ?? 0)}
+        tone={data && data.casesToComplete > 0 ? "danger" : "default"}
+        to="/pratiche"
+        search={{ view: "to_complete" }}
+      />
+      <StatCard
+        icon={ListChecks}
+        label="Attività da fatturare"
+        value={isLoading ? "—" : String(data?.toInvoiceCount ?? 0)}
+        to="/attivita"
+        search={{ status: "to_invoice" }}
+      />
+      <StatCard
+        icon={Receipt}
+        label="Maturato da fatturare"
+        value={isLoading ? "—" : formatCurrency(data?.toInvoiceAmount ?? 0)}
+        tone="gold"
+        to="/attivita"
+        search={{ status: "to_invoice", sort: "amount", dir: "desc" }}
+      />
+      <StatCard
+        icon={Receipt}
+        label="Fatture in bozza"
+        value={isLoading ? "—" : String(data?.draftInvoiceCount ?? 0)}
+        to="/fatture"
+        search={{ status: "draft" }}
+      />
+      <StatCard
+        icon={Receipt}
+        label="Fatture da incassare"
+        value={isLoading ? "—" : formatCurrency(data?.invoicesToCollectAmount ?? 0)}
+        tone="gold"
+        to="/fatture"
+        search={{ status: "to_collect" }}
+      />
+      <StatCard
+        icon={AlertTriangle}
+        label="Fatture scadute"
+        value={isLoading ? "—" : String(data?.overdueInvoiceCount ?? 0)}
+        tone={data && data.overdueInvoiceCount > 0 ? "danger" : "default"}
+        to="/fatture"
+        search={{ status: "expired" }}
+      />
+      <StatCard
+        icon={FileWarning}
+        label="Rimborsi senza allegato"
+        value={isLoading ? "—" : String(data?.expenseWithoutAttachmentCount ?? 0)}
+        tone={data && data.expenseWithoutAttachmentCount > 0 ? "danger" : "default"}
+        to="/attivita"
+        search={{ status: "to_invoice", kind: "expense_reimbursement", attachments: "missing" }}
+      />
+    </div>
+  );
+}
+
 function buildDashboardWorkQueue({
   cases,
   activities,
@@ -428,8 +449,8 @@ function buildDashboardWorkQueue({
   }, {});
 
   return cases
-    .filter((caseRow) => caseRow.status !== "closed" && caseRow.status !== "archived")
-    .map((caseRow) => {
+    .flatMap((caseRow) => {
+      if (caseRow.status === "closed" || caseRow.status === "archived") return [];
       const caseActivities = activitiesByCase[caseRow.id] ?? [];
       const caseInvoices = invoicesByCase[caseRow.id] ?? [];
       const totals = summarizeCaseOperations(caseActivities, caseInvoices);
@@ -447,7 +468,7 @@ function buildDashboardWorkQueue({
         qualityChecks,
       });
 
-      return {
+      const item = {
         caseRef: routeRef(caseRow),
         practiceNumber: caseRow.practice_number,
         updatedAt: caseRow.updated_at,
@@ -457,8 +478,8 @@ function buildDashboardWorkQueue({
         priorityLabel: formatCaseWorkflowPriorityLabel(workflow.priority),
         priorityVariant: workflow.priorityVariant,
       } satisfies WorkQueueItem;
+      return item.stage === "Pratica sotto controllo" ? [] : [item];
     })
-    .filter((item) => item.stage !== "Pratica sotto controllo")
     .sort((a, b) => {
       const priorityDiff = priorityRank(a.priorityVariant) - priorityRank(b.priorityVariant);
       if (priorityDiff !== 0) return priorityDiff;
