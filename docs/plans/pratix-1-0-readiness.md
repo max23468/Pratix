@@ -79,7 +79,7 @@ La 1.0 è pronta solo se tutti questi punti sono veri.
 
 ### Qualità tecnica
 
-1. `npm run ci:local` passa.
+1. `npm run check` passa.
 2. `npm run format:changed:check` passa sul diff della fase.
 3. `npm run smoke:a11y` passa sulle route pubbliche e autenticate disponibili.
 4. `npm run db:push:dry-run` non mostra drift inatteso.
@@ -120,7 +120,7 @@ Comandi:
 ```sh
 git status --short
 npm run format:changed:check
-npm run ci:local
+npm run check
 npm run smoke:a11y
 npm run db:push:dry-run
 npm run db:advisors:security
@@ -139,7 +139,7 @@ Controlli completati:
 2. `npm run format:changed:check`: ok.
 3. `npx prettier --check docs/plans/pratix-1-0-readiness.md`: ok.
 4. `git diff --check`: ok.
-5. `npm run ci:local`: ok; build, 124 test su 45 file, lint e audit moderato
+5. `npm run check`: ok; build, 124 test su 45 file, lint e audit moderato
    completati senza errori.
 6. `npm run smoke:a11y`: ok; 36 combinazioni auditate su desktop, tablet,
    mobile, tema chiaro e tema scuro, con `issueCount: 0`. Lo smoke è stato
@@ -258,7 +258,7 @@ Quando tutti i criteri sono soddisfatti:
 ```sh
 npm run release -- --bump major
 npm run format:changed:check
-npm run ci:local
+npm run check
 npm run smoke:a11y
 npm run db:push:dry-run
 ```
@@ -290,7 +290,7 @@ Esito 2026-05-09, pre-push: release `1.0.0` preparata.
 5. `npm run format:changed:check`: ok.
 6. `npx prettier --check docs/plans/pratix-1-0-readiness.md`: ok.
 7. `git diff --check`: ok.
-8. `npm run ci:local`: ok; build, 124 test su 45 file, lint e audit moderato
+8. `npm run check`: ok; build, 124 test su 45 file, lint e audit moderato
    completati senza errori.
 9. `npm run smoke:a11y`: ok; 36 combinazioni auditate su desktop, tablet,
    mobile, tema chiaro e tema scuro, con `issueCount: 0`.
@@ -299,7 +299,7 @@ Esito 2026-05-09, pre-push: release `1.0.0` preparata.
 11. Review Codex: verificati i quattro thread P2 allora presenti;
     actionable sono stati corretti prima di commit/PR.
 12. Dopo le correzioni P2, `npm run format:changed:check`: ok.
-13. Dopo le correzioni P2, `npm run ci:local`: ok; build, 125 test su 45 file,
+13. Dopo le correzioni P2, `npm run check`: ok; build, 125 test su 45 file,
     lint e audit moderato completati senza errori.
 14. Dopo le correzioni P2, `npm run smoke:a11y`: ok; 36 combinazioni auditate
     su desktop, tablet, mobile, tema chiaro e tema scuro, con `issueCount: 0`.

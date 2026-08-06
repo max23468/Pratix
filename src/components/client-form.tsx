@@ -2,10 +2,9 @@ import { useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { AlertCircle, Trash2 } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ClientFormActions } from "@/components/client-form-actions";
+import { ClientPrincipalLinks } from "@/components/client-principal-links";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import { DuplicateWarningPanel } from "@/components/duplicate-warning-panel";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,17 +17,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { withTriggerGeneratedCode } from "@/integrations/supabase/insert-helpers";
@@ -287,47 +275,12 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
         }}
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Committenti collegati</CardTitle>
-          <p className="text-sm text-muted-foreground">
-            Seleziona almeno un committente: il collegamento è obbligatorio per salvare il cliente.
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {principalLinkError && (
-            <Alert id="principal-link-error" variant="destructive">
-              <AlertCircle className="size-4" />
-              <AlertTitle>Committente obbligatorio</AlertTitle>
-              <AlertDescription>{principalLinkError}</AlertDescription>
-            </Alert>
-          )}
-          {principals.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              Aggiungi un committente per collegarlo a questo cliente.
-            </p>
-          ) : (
-            principals.map((principal) => (
-              <label
-                key={principal.id}
-                className="flex items-center justify-between gap-3 rounded-md border border-border p-3 text-sm"
-              >
-                <span className="flex flex-col">
-                  <span className="font-medium">{principal.business_name}</span>
-                  {principal.archived_at && (
-                    <span className="text-xs text-muted-foreground">Archiviato</span>
-                  )}
-                </span>
-                <Checkbox
-                  checked={selectedPrincipalIdSet.has(principal.id)}
-                  aria-describedby={principalLinkError ? "principal-link-error" : undefined}
-                  onCheckedChange={(checked) => togglePrincipal(principal.id, checked === true)}
-                />
-              </label>
-            ))
-          )}
-        </CardContent>
-      </Card>
+      <ClientPrincipalLinks
+        principals={principals}
+        selectedIds={selectedPrincipalIdSet}
+        error={principalLinkError}
+        onToggle={togglePrincipal}
+      />
 
       <Card>
         <CardHeader>
@@ -343,42 +296,12 @@ export function ClientForm({ initial, onSaved, onCancel }: Props) {
         </CardContent>
       </Card>
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          {isEdit && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button type="button" variant="outline" size="sm">
-                  <Trash2 className="mr-1 size-4" /> Elimina
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Eliminare il cliente?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    L'azione non può essere annullata. Le pratiche collegate non verranno eliminate
-                    ma resteranno senza cliente.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annulla</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => deleteMutation.mutate()}>
-                    Elimina
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Annulla
-          </Button>
-          <Button type="submit" disabled={saveMutation.isPending}>
-            {saveMutation.isPending ? "Salvataggio…" : "Salva"}
-          </Button>
-        </div>
-      </div>
+      <ClientFormActions
+        isEdit={isEdit}
+        isSaving={saveMutation.isPending}
+        onCancel={onCancel}
+        onDelete={() => deleteMutation.mutate()}
+      />
       {guardDialog}
     </form>
   );

@@ -5,6 +5,9 @@ import { toast } from "sonner";
 import { Save } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
 import { PageHeader } from "@/components/page-header";
+import { InvoiceSettings } from "@/components/settings/invoice-settings";
+import { PaymentSettings } from "@/components/settings/payment-settings";
+import type { ProfileForm } from "@/components/settings/profile-form";
 import { Field } from "@/components/settings/field";
 import { NumField } from "@/components/settings/num-field";
 import { Button } from "@/components/ui/button";
@@ -42,34 +45,6 @@ export const Route = createFileRoute("/impostazioni")({
   }),
   component: SettingsPage,
 });
-
-type ProfileForm = {
-  full_name: string;
-  business_name: string;
-  vat_number: string;
-  tax_code: string;
-  email: string;
-  phone: string;
-  pec: string;
-  bar_association: string;
-  address_street: string;
-  address_zip: string;
-  address_city: string;
-  address_province: string;
-  address_country: string;
-  tax_regime: "ordinario" | "forfettario";
-  cassa_rate: number;
-  vat_rate: number;
-  withholding_rate: number;
-  apply_withholding: boolean;
-  include_stamp_duty: boolean;
-  bank_name: string;
-  iban: string;
-  invoice_number_prefix: string;
-  invoice_year: number;
-  invoice_next_number: number;
-  notes: string;
-};
 
 const empty = (): ProfileForm => ({
   full_name: "",
@@ -370,82 +345,8 @@ function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="pagamenti" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Coordinate bancarie</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <Field
-                label="Banca"
-                value={form.bank_name}
-                onChange={(v) => set("bank_name", v)}
-                placeholder="Es. Banca Alfa"
-              />
-              <div className="sm:col-span-2">
-                <Field
-                  label="IBAN"
-                  value={form.iban}
-                  onChange={(v) => set("iban", v.toUpperCase().replace(/\s+/g, ""))}
-                  placeholder="Es. IT60X0542811101000000123456"
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="fatturazione" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Bollo</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <Label htmlFor="include-stamp-duty">Includi bollo in fattura</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Se attivo, Pratix addebita 2 € quando la fattura supera la soglia prevista.
-                  </p>
-                </div>
-                <Switch
-                  id="include-stamp-duty"
-                  checked={form.include_stamp_duty}
-                  onCheckedChange={(v) => set("include_stamp_duty", v)}
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Numerazione fatture</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-4 sm:grid-cols-3">
-              <Field
-                label="Prefisso (opzionale)"
-                value={form.invoice_number_prefix}
-                onChange={(v) => set("invoice_number_prefix", v)}
-                placeholder="Es. FT-"
-              />
-              <NumField
-                label="Anno corrente"
-                value={form.invoice_year}
-                onChange={(v) => set("invoice_year", Math.round(v))}
-                step={1}
-              />
-              <NumField
-                label="Prossimo numero"
-                value={form.invoice_next_number}
-                onChange={(v) => set("invoice_next_number", Math.max(1, Math.round(v)))}
-                step={1}
-              />
-              <p className="text-xs text-muted-foreground sm:col-span-3">
-                Esempio: con prefisso "FT-" e prossimo numero 7, la prossima fattura sarà{" "}
-                <strong>FT-7</strong>. L'anno si resetta automaticamente al cambio di anno solare.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <PaymentSettings form={form} set={set} />
+        <InvoiceSettings form={form} set={set} />
       </Tabs>
     </AppLayout>
   );

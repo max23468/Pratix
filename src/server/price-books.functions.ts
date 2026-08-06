@@ -113,8 +113,10 @@ async function syncPriceItems(
 
   if (usageError) throw usageError;
 
-  const incomingIds = new Set(items.map((item) => item.id).filter(Boolean));
-  const usedIds = new Set((usageRows ?? []).map((row) => row.price_item_id).filter(Boolean));
+  const incomingIds = new Set(items.flatMap((item) => (item.id ? [item.id] : [])));
+  const usedIds = new Set(
+    (usageRows ?? []).flatMap((row) => (row.price_item_id ? [row.price_item_id] : [])),
+  );
   const deleteIds = [...new Set(deletedItemIds)].filter(
     (id) => !incomingIds.has(id) && !usedIds.has(id),
   );
@@ -130,15 +132,17 @@ async function syncPriceItems(
   }
 
   const updates = items.filter((item) => item.id);
-  for (const item of updates) {
-    const { error } = await supabase
-      .from("price_items")
-      .update(priceItemPayload(item))
-      .eq("id", item.id as string)
-      .eq("price_book_id", priceBookId)
-      .eq("user_id", userId);
-    if (error) throw error;
-  }
+  await Promise.all(
+    updates.map(async (item) => {
+      const { error } = await supabase
+        .from("price_items")
+        .update(priceItemPayload(item))
+        .eq("id", item.id as string)
+        .eq("price_book_id", priceBookId)
+        .eq("user_id", userId);
+      if (error) throw error;
+    }),
+  );
 
   const inserts = items.filter((item) => !item.id);
   if (inserts.length === 0) return;

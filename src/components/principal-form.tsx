@@ -6,6 +6,9 @@ import { Archive, ArchiveRestore } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DuplicateWarningPanel } from "@/components/duplicate-warning-panel";
+import { PrincipalContacts } from "@/components/principal-contacts";
+import { PrincipalEconomicRules } from "@/components/principal-economic-rules";
+import { PrincipalAddress } from "@/components/principal-address";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
@@ -256,156 +259,38 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
         }}
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Regole economiche</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="fees_enabled">Compensi</Label>
-                <p className="text-xs text-muted-foreground">Abilita voci imponibili.</p>
-              </div>
-              <Switch
-                id="fees_enabled"
-                checked={form.fees_enabled}
-                onCheckedChange={(checked) => upd("fees_enabled", checked)}
-              />
-            </div>
-            <div className="flex items-center justify-between gap-3 rounded-md border border-border p-3">
-              <div className="flex flex-col gap-1">
-                <Label htmlFor="expense_reimbursements_enabled">Rimborsi spese</Label>
-                <p className="text-xs text-muted-foreground">Abilita anticipazioni Art. 15.</p>
-              </div>
-              <Switch
-                id="expense_reimbursements_enabled"
-                checked={form.expense_reimbursements_enabled}
-                onCheckedChange={(checked) => upd("expense_reimbursements_enabled", checked)}
-              />
-            </div>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="general_expenses">Spese generali (%)</Label>
-              <Input
-                id="general_expenses"
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.default_general_expenses_rate}
-                onChange={(event) =>
-                  upd("default_general_expenses_rate", Number(event.target.value))
-                }
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="cassa_rate">Cassa forense (%)</Label>
-              <Input
-                id="cassa_rate"
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.default_cassa_rate}
-                onChange={(event) => upd("default_cassa_rate", Number(event.target.value))}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <PrincipalEconomicRules
+        feesEnabled={form.fees_enabled}
+        expensesEnabled={form.expense_reimbursements_enabled}
+        generalExpensesRate={form.default_general_expenses_rate}
+        cassaRate={form.default_cassa_rate}
+        onFeesChange={(value) => upd("fees_enabled", value)}
+        onExpensesChange={(value) => upd("expense_reimbursements_enabled", value)}
+        onGeneralExpensesChange={(value) => upd("default_general_expenses_rate", value)}
+        onCassaChange={(value) => upd("default_cassa_rate", value)}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Contatti</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              value={form.email ?? ""}
-              onChange={(event) => upd("email", event.target.value)}
-              placeholder="Es. amministrazione@bancaalfa.it"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="phone">Telefono</Label>
-            <Input
-              id="phone"
-              value={form.phone ?? ""}
-              onChange={(event) => upd("phone", event.target.value)}
-              placeholder="Es. 0212345678"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="pec">PEC</Label>
-            <Input
-              id="pec"
-              type="email"
-              value={form.pec ?? ""}
-              onChange={(event) => upd("pec", event.target.value)}
-              placeholder="Es. bancaalfa@pec.it"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="sdi_code">Codice destinatario SdI</Label>
-            <Input
-              id="sdi_code"
-              value={form.sdi_code ?? ""}
-              onChange={(event) => upd("sdi_code", event.target.value.toUpperCase().slice(0, 7))}
-              placeholder="Es. 0000000"
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <PrincipalContacts
+        email={form.email ?? ""}
+        phone={form.phone ?? ""}
+        pec={form.pec ?? ""}
+        sdiCode={form.sdi_code ?? ""}
+        onEmailChange={(value) => upd("email", value)}
+        onPhoneChange={(value) => upd("phone", value)}
+        onPecChange={(value) => upd("pec", value)}
+        onSdiCodeChange={(value) => upd("sdi_code", value)}
+      />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Indirizzo</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="address_street">Indirizzo</Label>
-            <Input
-              id="address_street"
-              value={form.address_street ?? ""}
-              onChange={(event) => upd("address_street", event.target.value)}
-              placeholder="Es. Via Roma 10"
-            />
-          </div>
-          <div className="grid gap-4 sm:grid-cols-4">
-            <div className="flex flex-col gap-2 sm:col-span-2">
-              <Label htmlFor="address_city">Città</Label>
-              <Input
-                id="address_city"
-                value={form.address_city ?? ""}
-                onChange={(event) => upd("address_city", event.target.value)}
-                placeholder="Es. Milano"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="address_zip">CAP</Label>
-              <Input
-                id="address_zip"
-                value={form.address_zip ?? ""}
-                onChange={(event) => upd("address_zip", event.target.value)}
-                placeholder="Es. 20121"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="address_province">Prov.</Label>
-              <Input
-                id="address_province"
-                maxLength={2}
-                value={form.address_province ?? ""}
-                onChange={(event) => upd("address_province", event.target.value.toUpperCase())}
-                placeholder="MI"
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <PrincipalAddress
+        street={form.address_street ?? ""}
+        city={form.address_city ?? ""}
+        zip={form.address_zip ?? ""}
+        province={form.address_province ?? ""}
+        onStreetChange={(value) => upd("address_street", value)}
+        onCityChange={(value) => upd("address_city", value)}
+        onZipChange={(value) => upd("address_zip", value)}
+        onProvinceChange={(value) => upd("address_province", value)}
+      />
 
       <Card>
         <CardHeader>

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MailCheck, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ export function EmailAccessCard({ email }: { email: string }) {
   const [draftEmail, setDraftEmail] = useState<string | null>(null);
   const nextEmail = draftEmail ?? email;
   const submitLock = useSubmitLock();
+  const queryClient = useQueryClient();
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -26,7 +27,8 @@ export function EmailAccessCard({ email }: { email: string }) {
       const { error } = await supabase.auth.updateUser({ email: cleanedEmail });
       if (error) throw error;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["profile"] });
       toast.success("Controlla la nuova email per confermare la modifica");
     },
     onError: (err: Error) => toast.error(err.message),

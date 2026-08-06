@@ -435,22 +435,26 @@ export function buildBillingExportRows(
   included: BillingActivity[],
   kind: "fee" | "expense_reimbursement",
 ): BillingExportRow[] {
-  return included
-    .filter((activity) => activity.kind === kind)
-    .map((activity) => ({
-      practiceNumber: activity.cases?.practice_number ?? null,
-      clientName: billingPartyName(activity.clients),
-      counterpartyName: billingCounterpartyName(activity.counterparties),
-      activityDate: activity.activity_date,
-      description: activity.description,
-      quantity: Number(activity.quantity),
-      unitPrice: Number(activity.unit_price),
-      amount: Number(activity.amount),
-      hearingDates: (activity.case_activity_hearings ?? [])
-        .slice()
-        .sort((a, b) => Number(a.position) - Number(b.position))
-        .map((hearing) => hearing.hearing_date),
-    }));
+  return included.flatMap((activity) =>
+    activity.kind === kind
+      ? [
+          {
+            practiceNumber: activity.cases?.practice_number ?? null,
+            clientName: billingPartyName(activity.clients),
+            counterpartyName: billingCounterpartyName(activity.counterparties),
+            activityDate: activity.activity_date,
+            description: activity.description,
+            quantity: Number(activity.quantity),
+            unitPrice: Number(activity.unit_price),
+            amount: Number(activity.amount),
+            hearingDates: (activity.case_activity_hearings ?? [])
+              .slice()
+              .sort((a, b) => Number(a.position) - Number(b.position))
+              .map((hearing) => hearing.hearing_date),
+          },
+        ]
+      : [],
+  );
 }
 
 export function buildBillingExportRowsFromInvoiceLines(
@@ -458,22 +462,26 @@ export function buildBillingExportRowsFromInvoiceLines(
   kind: BillingExportKind,
 ): BillingExportRow[] {
   const lineKind: InvoiceLineKind = kind === "fees" ? "fee" : "expense_art15";
-  return lines
-    .filter((line) => line.kind === lineKind)
-    .map((line) => ({
-      practiceNumber: line.practice_number,
-      clientName: line.client_name ?? "",
-      counterpartyName: line.counterparty_name ?? "",
-      activityDate: line.activity_date ?? "",
-      description: line.description,
-      quantity: Number(line.quantity),
-      unitPrice: Number(line.unit_price),
-      amount: Number(line.amount),
-      hearingDates: (line.case_activity_hearings ?? [])
-        .slice()
-        .sort((a, b) => Number(a.position) - Number(b.position))
-        .map((hearing) => hearing.hearing_date),
-    }));
+  return lines.flatMap((line) =>
+    line.kind === lineKind
+      ? [
+          {
+            practiceNumber: line.practice_number,
+            clientName: line.client_name ?? "",
+            counterpartyName: line.counterparty_name ?? "",
+            activityDate: line.activity_date ?? "",
+            description: line.description,
+            quantity: Number(line.quantity),
+            unitPrice: Number(line.unit_price),
+            amount: Number(line.amount),
+            hearingDates: (line.case_activity_hearings ?? [])
+              .slice()
+              .sort((a, b) => Number(a.position) - Number(b.position))
+              .map((hearing) => hearing.hearing_date),
+          },
+        ]
+      : [],
+  );
 }
 
 export function billedPartyForInvoiceXml(principal: InvoiceXmlPrincipal | null) {

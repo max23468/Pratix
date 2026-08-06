@@ -17,37 +17,38 @@ type StorageListItem = {
 };
 
 async function listStoragePaths(prefix: string): Promise<string[]> {
-  const paths: string[] = [];
   const pageSize = 1000;
-  for (let offset = 0; ; offset += pageSize) {
+  const listPage = async (offset: number): Promise<string[]> => {
     const { data, error } = await supabaseAdmin.storage
       .from(PRATIX_DOCUMENTS_BUCKET)
       .list(prefix, { limit: pageSize, offset });
     if (error) throw error;
 
     const page = (data ?? []) as StorageListItem[];
-    for (const item of page) {
-      const path = `${prefix}/${item.name}`;
-      const isFolder = !item.id && !item.metadata;
-      if (isFolder) {
-        paths.push(...(await listStoragePaths(path)));
-        continue;
-      }
-      paths.push(path);
-    }
-    if (page.length < pageSize) break;
-  }
+    const paths = (
+      await Promise.all(
+        page.map(async (item) => {
+          const path = `${prefix}/${item.name}`;
+          const isFolder = !item.id && !item.metadata;
+          return isFolder ? listStoragePaths(path) : [path];
+        }),
+      )
+    ).flat();
+    return page.length < pageSize ? paths : [...paths, ...(await listPage(offset + pageSize))];
+  };
 
-  return paths;
+  return listPage(0);
 }
 
 async function removeStoragePaths(paths: string[]) {
-  for (let index = 0; index < paths.length; index += 100) {
-    const chunk = paths.slice(index, index + 100);
-    if (chunk.length === 0) continue;
-    const { error } = await supabaseAdmin.storage.from(PRATIX_DOCUMENTS_BUCKET).remove(chunk);
-    if (error) throw error;
-  }
+  await Promise.all(
+    Array.from({ length: Math.ceil(paths.length / 100) }, (_, index) =>
+      paths.slice(index * 100, (index + 1) * 100),
+    ).map(async (chunk) => {
+      const { error } = await supabaseAdmin.storage.from(PRATIX_DOCUMENTS_BUCKET).remove(chunk);
+      if (error) throw error;
+    }),
+  );
 }
 
 async function tryRemoveStoragePaths(paths: string[]) {
@@ -82,7 +83,9 @@ async function knownStoragePaths(userId: string) {
 }
 
 async function deleteAccountData(userId: string) {
-  for (const table of ACCOUNT_DATA_DELETE_TABLE_ORDER) {
+  const deleteAt = async (index: number): Promise<void> => {
+    const table = ACCOUNT_DATA_DELETE_TABLE_ORDER[index];
+    if (!table) return;
     // `profiles` è l'unica tabella chiavata su `id` (pari all'id utente auth);
     // tutte le altre su `user_id`. I due rami restano separati perché
     // TypeScript non correla il nome della tabella alla colonna owner
@@ -92,7 +95,9 @@ async function deleteAccountData(userId: string) {
         ? await supabaseAdmin.from(table).delete().eq("id", userId)
         : await supabaseAdmin.from(table).delete().eq("user_id", userId);
     if (error) throw error;
-  }
+    await deleteAt(index + 1);
+  };
+  await deleteAt(0);
 }
 
 export const deleteAccountFn = createServerFn({ method: "POST" })

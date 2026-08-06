@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CaseForm } from "@/components/case-form";
-import { CaseActivitiesTab } from "@/components/case-activities";
+import { CaseActivitiesTab } from "@/components/case-activities-tab";
 import { CaseOperationsPanel, type CaseOperationsCase } from "@/components/case-operations-panel";
 import { CreditTransfersTab } from "@/components/practices/credit-transfers-tab";
 import { HistoryTab } from "@/components/practices/case-history-tab";

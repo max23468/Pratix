@@ -79,9 +79,9 @@ export function buildNormalizedGuidedCreation(
     ) {
       errors.push(`Attività ${index + 1}: completa tutte le date udienza.`);
     }
-    const hearingDates = activity.hearingDates
-      .map((hearingDate) => hearingDate.date)
-      .filter(Boolean);
+    const hearingDates = activity.hearingDates.flatMap((hearingDate) =>
+      hearingDate.date ? [hearingDate.date] : [],
+    );
 
     return {
       id: activity.activityId,

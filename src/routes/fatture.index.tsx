@@ -5,6 +5,8 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { FileDown, FileText, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { AppLayout } from "@/components/app-layout";
+import { InvoiceListFilters } from "@/components/invoice-list-filters";
+import { InvoiceListResults } from "@/components/invoice-list-results";
 import { ListToolbar } from "@/components/list-toolbar";
 import { mobileListCardLinkClassName } from "@/components/mobile-list-card";
 import { MobileListCardDetails } from "@/components/mobile-list-card-details";
@@ -63,7 +65,7 @@ import {
 } from "@/lib/table-sorting";
 import { generateInvoiceXmlFn } from "@/server/invoices.functions";
 
-type InvoiceListRow = {
+export type InvoiceListRow = {
   id: string;
   public_code: string;
   number: string;
@@ -96,7 +98,7 @@ const fattureSortKeys = [
   "net_to_pay",
 ] as const;
 
-type FattureSortKey = (typeof fattureSortKeys)[number];
+export type FattureSortKey = (typeof fattureSortKeys)[number];
 
 const fattureDefaultSort: TableSort<FattureSortKey> = { key: "issue_date", direction: "desc" };
 
@@ -156,7 +158,7 @@ const invoiceStatusFilterLabels = {
   expired: "Scadute",
 };
 
-type InvoiceStatusFilter = keyof typeof invoiceStatusFilterLabels | "all";
+export type InvoiceStatusFilter = keyof typeof invoiceStatusFilterLabels | "all";
 
 export const Route = createFileRoute("/fatture/")({
   validateSearch: (search: Record<string, unknown>): InvoicesSearch => ({
@@ -456,353 +458,33 @@ function InvoicesIndex() {
 
       <Card>
         <CardContent className="space-y-4 pt-6">
-          <ListToolbar className="mb-0 gap-3 sm:flex-row sm:items-center">
-            <SearchInput
-              placeholder="Cerca per numero o committente"
-              value={search}
-              onChange={(value) =>
-                updateSearch({
-                  q: value,
-                  status,
-                  year,
-                  from: periodStart,
-                  to: periodEnd,
-                })
-              }
-              className="max-w-none"
-            />
-            <Select
-              value={status}
-              onValueChange={(value) =>
-                updateSearch({
-                  q: search,
-                  status: value as InvoiceStatusFilter,
-                  year,
-                  from: periodStart,
-                  to: periodEnd,
-                })
-              }
-            >
-              <SelectTrigger aria-label="Filtra fatture per stato" className="sm:w-44">
-                <SelectValue placeholder="Stato" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutti gli stati</SelectItem>
-                <SelectItem value="to_collect">Da incassare</SelectItem>
-                <SelectItem value="expired">Scadute</SelectItem>
-                {Object.entries(invoiceStatusLabels).map(([k, l]) => (
-                  <SelectItem key={k} value={k}>
-                    {l}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select
-              value={year}
-              onValueChange={(value) =>
-                updateSearch({ q: search, status, year: value, from: periodStart, to: periodEnd })
-              }
-            >
-              <SelectTrigger aria-label="Filtra fatture per anno" className="sm:w-32">
-                <SelectValue placeholder="Anno" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tutti</SelectItem>
-                {years.map((y) => (
-                  <SelectItem key={y} value={String(y)}>
-                    {y}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </ListToolbar>
-
-          <div className="flex flex-col gap-3 border-t pt-4 lg:flex-row lg:items-end lg:justify-between">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-2">
-                <label
-                  className="text-xs font-medium text-muted-foreground"
-                  htmlFor="invoice-period-start"
-                >
-                  Da data fattura
-                </label>
-                <Input
-                  id="invoice-period-start"
-                  type="date"
-                  value={periodStart}
-                  onChange={(event) =>
-                    updateSearch({
-                      q: search,
-                      status,
-                      year,
-                      from: event.target.value,
-                      to: periodEnd,
-                    })
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <label
-                  className="text-xs font-medium text-muted-foreground"
-                  htmlFor="invoice-period-end"
-                >
-                  A data fattura
-                </label>
-                <Input
-                  id="invoice-period-end"
-                  type="date"
-                  value={periodEnd}
-                  onChange={(event) =>
-                    updateSearch({
-                      q: search,
-                      status,
-                      year,
-                      from: periodStart,
-                      to: event.target.value,
-                    })
-                  }
-                />
-              </div>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row lg:justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full sm:w-auto"
-                onClick={() => exportPdfMutation.mutate()}
-                disabled={exportPdfMutation.isPending || filtered.length === 0}
-              >
-                <FileText className="mr-2 size-4" />
-                {exportPdfMutation.isPending ? "Preparazione PDF…" : "Esporta PDF"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full sm:w-auto"
-                onClick={() => exportXmlMutation.mutate()}
-                disabled={exportXmlMutation.isPending || filtered.length === 0}
-              >
-                <FileDown className="mr-2 size-4" />
-                {exportXmlMutation.isPending ? "Preparazione XML…" : "Esporta XML"}
-              </Button>
-            </div>
-          </div>
-
+          <InvoiceListFilters
+            q={search}
+            status={status}
+            year={year}
+            from={periodStart}
+            to={periodEnd}
+            years={years}
+            updateSearch={updateSearch}
+            onExportPdf={() => exportPdfMutation.mutate()}
+            onExportXml={() => exportXmlMutation.mutate()}
+            exportPdfPending={exportPdfMutation.isPending}
+            exportXmlPending={exportXmlMutation.isPending}
+            isEmpty={filtered.length === 0}
+          />
           <div className="md:hidden">
             <MobileSortSelect columns={fattureColumns} sort={sort} onSort={setSort} />
           </div>
 
-          <div className="space-y-3 md:hidden">
-            {isLoading ? (
-              <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>
-            ) : sorted.length === 0 ? (
-              <Card className="p-4">
-                <TableEmptyState
-                  title={hasInvoiceFilters ? "Nessuna fattura trovata" : "Nessuna fattura"}
-                  description={
-                    hasInvoiceFilters
-                      ? "Modifica ricerca, stato, anno o periodo per ampliare i risultati."
-                      : "Crea una fattura partendo dalle attività da fatturare."
-                  }
-                  action={
-                    !hasInvoiceFilters ? (
-                      <Button size="sm" asChild>
-                        <Link to="/fatture/nuova">Nuova fattura</Link>
-                      </Button>
-                    ) : undefined
-                  }
-                />
-              </Card>
-            ) : (
-              sorted.map((i) => {
-                const isOverdue = i.status === "issued" && i.due_date && i.due_date < today;
-                const billedName =
-                  i.principal?.business_name || clientDisplayName(i.client as ClientDisplayData);
-                return (
-                  <Link
-                    key={i.id}
-                    to="/fatture/$invoiceId"
-                    params={{ invoiceId: routeRef(i) }}
-                    className={mobileListCardLinkClassName}
-                  >
-                    <MobileListCardHeader
-                      title={`Fattura ${i.number}/${i.year}`}
-                      subtitle={billedName}
-                      badge={
-                        <Badge
-                          variant={
-                            isOverdue ? "destructive" : invoiceStatusVariant[i.status] || "outline"
-                          }
-                        >
-                          {isOverdue ? "Scaduta" : invoiceStatusLabels[i.status] || i.status}
-                        </Badge>
-                      }
-                    />
-                    <MobileListCardDetails
-                      rows={[
-                        { label: "Data", value: formatDate(i.issue_date) },
-                        { label: "Periodo", value: invoicePeriodLabel(i.billing_run) },
-                        {
-                          label: "Scadenza",
-                          value: formatDate(i.due_date),
-                          valueClassName: isOverdue ? "font-medium text-destructive" : undefined,
-                        },
-                        { label: "Totale", value: formatCurrency(Number(i.total_amount)) },
-                        {
-                          label: "Netto",
-                          value: formatCurrency(Number(i.net_to_pay)),
-                          valueClassName: "font-medium text-foreground",
-                        },
-                      ]}
-                    />
-                  </Link>
-                );
-              })
-            )}
-          </div>
-
-          <div className="hidden overflow-x-auto md:block">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <SortableTableHead
-                    columnKey="number"
-                    label="Numero"
-                    sort={sort}
-                    onSort={setSort}
-                  />
-                  <SortableTableHead
-                    columnKey="issue_date"
-                    label="Data"
-                    sort={sort}
-                    onSort={setSort}
-                  />
-                  <SortableTableHead
-                    columnKey="period"
-                    label="Periodo"
-                    sort={sort}
-                    onSort={setSort}
-                  />
-                  <SortableTableHead
-                    columnKey="principal"
-                    label="Committente"
-                    sort={sort}
-                    onSort={setSort}
-                  />
-                  <SortableTableHead
-                    columnKey="due_date"
-                    label="Scadenza"
-                    sort={sort}
-                    onSort={setSort}
-                  />
-                  <SortableTableHead
-                    columnKey="status"
-                    label="Stato"
-                    sort={sort}
-                    onSort={setSort}
-                  />
-                  <SortableTableHead
-                    columnKey="total_amount"
-                    label="Totale"
-                    sort={sort}
-                    onSort={setSort}
-                    align="right"
-                    className="text-right"
-                  />
-                  <SortableTableHead
-                    columnKey="net_to_pay"
-                    label="Netto"
-                    sort={sort}
-                    onSort={setSort}
-                    align="right"
-                    className="text-right"
-                  />
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading && (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center text-muted-foreground">
-                      Caricamento…
-                    </TableCell>
-                  </TableRow>
-                )}
-                {!isLoading && sorted.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={8} className="py-10 text-center text-muted-foreground">
-                      <TableEmptyState
-                        title={hasInvoiceFilters ? "Nessuna fattura trovata" : "Nessuna fattura"}
-                        description={
-                          hasInvoiceFilters
-                            ? "Modifica ricerca, stato, anno o periodo per ampliare i risultati."
-                            : "Crea una fattura partendo dalle attività da fatturare."
-                        }
-                        action={
-                          !hasInvoiceFilters ? (
-                            <Button size="sm" asChild>
-                              <Link to="/fatture/nuova">Nuova fattura</Link>
-                            </Button>
-                          ) : undefined
-                        }
-                      />
-                    </TableCell>
-                  </TableRow>
-                )}
-                {sorted.map((i) => {
-                  const isOverdue = i.status === "issued" && i.due_date && i.due_date < today;
-                  return (
-                    <TableRow
-                      key={i.id}
-                      className="cursor-pointer"
-                      role="link"
-                      tabIndex={0}
-                      aria-label={`Apri fattura ${i.number}/${i.year}`}
-                      onClick={(event) =>
-                        handleClickableTableRowClick(event, () => openInvoice(routeRef(i)))
-                      }
-                      onKeyDown={(event) =>
-                        handleClickableTableRowKeyDown(event, () => openInvoice(routeRef(i)))
-                      }
-                    >
-                      <TableCell>
-                        <Link
-                          to="/fatture/$invoiceId"
-                          params={{ invoiceId: routeRef(i) }}
-                          className="font-medium hover:underline"
-                        >
-                          {i.number}/{i.year}
-                        </Link>
-                      </TableCell>
-                      <TableCell>{formatDate(i.issue_date)}</TableCell>
-                      <TableCell>{invoicePeriodLabel(i.billing_run)}</TableCell>
-                      <TableCell>
-                        {i.principal?.business_name ||
-                          clientDisplayName(i.client as ClientDisplayData)}
-                      </TableCell>
-                      <TableCell className={isOverdue ? "font-medium text-destructive" : ""}>
-                        {formatDate(i.due_date)}
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant={
-                            isOverdue ? "destructive" : invoiceStatusVariant[i.status] || "outline"
-                          }
-                        >
-                          {isOverdue ? "Scaduta" : invoiceStatusLabels[i.status] || i.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(Number(i.total_amount))}
-                      </TableCell>
-                      <TableCell className="text-right font-medium">
-                        {formatCurrency(Number(i.net_to_pay))}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-          </div>
+          <InvoiceListResults
+            rows={sorted}
+            isLoading={isLoading}
+            hasInvoiceFilters={hasInvoiceFilters}
+            today={today}
+            sort={sort}
+            onSort={setSort}
+            onOpen={openInvoice}
+          />
         </CardContent>
       </Card>
     </AppLayout>
