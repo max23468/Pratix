@@ -1,6 +1,7 @@
 import { pathToFileURL } from "node:url";
 
 const CODEX_BOT = "chatgpt-codex-connector[bot]";
+const TRUSTED_ASSOCIATIONS = new Set(["OWNER", "MEMBER", "COLLABORATOR"]);
 const isDirectExecution =
   process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
 // ponytail: 180 s limita cinque PR concorrenti a circa 500 richieste/ora; passare a
@@ -198,6 +199,7 @@ export const latestCodexInvocation = (comments, requestedAt, invocationId) =>
     .filter(
       (comment) =>
         comment.user?.login !== CODEX_BOT &&
+        TRUSTED_ASSOCIATIONS.has(comment.author_association) &&
         /@codex\s+review\b/i.test(comment.body) &&
         (comment.id === invocationId ||
           (timestamp(requestedAt) > 0 && timestamp(comment.created_at) > timestamp(requestedAt))),

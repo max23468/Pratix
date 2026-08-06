@@ -171,6 +171,7 @@ test("un rerun non riusa il pollice di una vecchia invocazione", () => {
         {
           id: 1,
           user: { login: "max23468" },
+          author_association: "OWNER",
           body: "@codex review",
           created_at: "2026-08-04T12:00:01Z",
         },
@@ -526,12 +527,14 @@ test("legge le reazioni dall'ultima invocazione Codex del tentativo corrente", (
         {
           id: 2,
           user: { login: "max23468" },
+          author_association: "OWNER",
           body: "@codex review",
           created_at: "2026-08-04T12:00:01Z",
         },
         {
           id: 3,
           user: { login: "max23468" },
+          author_association: "OWNER",
           body: "@codex review",
           created_at: "2026-08-04T12:00:02Z",
         },
@@ -549,6 +552,7 @@ test("ignora un'invocazione creata nello stesso secondo del push", () => {
         {
           id: 1,
           user: { login: "max23468" },
+          author_association: "OWNER",
           body: "@codex review",
           created_at: requestedAt,
         },
@@ -566,12 +570,38 @@ test("l'evento dell'invocazione umana avvia il retry anche nello stesso istante"
         {
           id: 7,
           user: { login: "max23468" },
+          author_association: "OWNER",
           body: "@codex review",
           created_at: requestedAt,
         },
       ],
       requestedAt,
       7,
+    ).id,
+    7,
+  );
+});
+
+test("ignora un'invocazione più recente di un utente esterno", () => {
+  assert.equal(
+    latestCodexInvocation(
+      [
+        {
+          id: 7,
+          user: { login: "max23468" },
+          author_association: "OWNER",
+          body: "@codex review",
+          created_at: "2026-08-04T12:00:01Z",
+        },
+        {
+          id: 8,
+          user: { login: "external-user" },
+          author_association: "NONE",
+          body: "@codex review",
+          created_at: "2026-08-04T12:00:02Z",
+        },
+      ],
+      requestedAt,
     ).id,
     7,
   );
