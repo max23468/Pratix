@@ -7,6 +7,7 @@ import {
   classifyCodexReview,
   githubRetryAfterMs,
   hasSuccessfulCodexStatus,
+  latestCodexAttemptAt,
   isRetryableGitHubResponse,
   latestCodexInvocation,
   pullRequestNumber,
@@ -20,6 +21,7 @@ const workflow = await readFile(
   new URL("../.github/workflows/codex-review-gate.yml", import.meta.url),
   "utf8",
 );
+const implementation = await readFile(new URL("./codex-review-gate.mjs", import.meta.url), "utf8");
 
 const classify = (overrides = {}) =>
   classifyCodexReview({
@@ -248,6 +250,32 @@ test("un finding del tentativo corrente prevale sul pollice", () => {
         },
       ],
       reactions: [{ user: bot, content: "+1", created_at: "2026-08-04T12:00:02Z" }],
+    }).state,
+    "failure",
+  );
+});
+
+test("un finding pubblicato prima della review resta associato al tentativo corrente", () => {
+  const attemptAt = "2026-08-04T12:00:01Z";
+  assert.equal(
+    classify({
+      requestedAt: attemptAt,
+      reviewComments: [
+        {
+          user: bot,
+          original_commit_id: headSha,
+          created_at: "2026-08-04T12:00:05Z",
+          body: "**P1** Finding corrente",
+        },
+      ],
+      reviews: [
+        {
+          user: bot,
+          commit_id: headSha,
+          submitted_at: "2026-08-04T12:00:06Z",
+          body: "",
+        },
+      ],
     }).state,
     "failure",
   );
@@ -530,6 +558,43 @@ test("ignora un'invocazione creata nello stesso secondo del push", () => {
   );
 });
 
+test("associa la review all'ultima invocazione compresa nel tentativo corrente", () => {
+  assert.equal(
+    latestCodexInvocation(
+      [
+        {
+          id: 1,
+          user: { login: "max23468" },
+          body: "@codex review",
+          created_at: "2026-08-04T12:00:02Z",
+        },
+      ],
+      "2026-08-04T12:00:01Z",
+      undefined,
+      "2026-08-04T12:00:03Z",
+    ).id,
+    1,
+  );
+});
+
+test("l'evento dell'invocazione umana avvia il retry anche nello stesso istante", () => {
+  assert.equal(
+    latestCodexInvocation(
+      [
+        {
+          id: 7,
+          user: { login: "max23468" },
+          body: "@codex review",
+          created_at: requestedAt,
+        },
+      ],
+      requestedAt,
+      7,
+    ).id,
+    7,
+  );
+});
+
 test("il bootstrap accetta soltanto un numero PR", () => {
   assert.equal(pullRequestNumber({ pull_request: { number: 42 } }), "42");
   assert.equal(pullRequestNumber({ issue: { number: 43, pull_request: {} } }), "43");
@@ -591,6 +656,19 @@ test("un rerun riusa soltanto l'ultimo status Codex riuscito dello stesso SHA", 
   );
 });
 
+test("recupera l'inizio dell'ultimo tentativo per rivalutare eventi tardivi", () => {
+  assert.equal(
+    latestCodexAttemptAt(
+      [
+        { context: "codex-review", state: "failure", created_at: "2026-08-04T12:00:03Z" },
+        { context: "codex-review", state: "pending", created_at: "2026-08-04T12:00:01Z" },
+      ],
+      "fallback",
+    ),
+    "2026-08-04T12:00:01Z",
+  );
+});
+
 test("l'import in GitHub Actions non avvia la CLI", () => {
   const result = spawnSync(
     process.execPath,
@@ -632,12 +710,24 @@ test("il workflow usa eventi, permessi e codice trusted", () => {
   assert.match(workflow, /statuses:\s*write/);
   assert.match(workflow, /cancel-in-progress:\s*true/);
   assert.ok(workflow.indexOf("if: >-") < workflow.indexOf("concurrency:"));
+  assert.match(workflow, /contains\(github\.event\.comment\.body, '@codex review'\)/);
   assert.match(
     workflow,
     /github\.event\.action != 'closed' && github\.event\.action != 'converted_to_draft'/,
   );
+  assert.equal(
+    [
+      ...workflow.matchAll(
+        /github\.event\.action != 'closed' && github\.event\.action != 'converted_to_draft'/g,
+      ),
+    ].length,
+    3,
+  );
   assert.match(workflow, /timeout-minutes:\s*310/);
   assert.match(workflow, /actions\/checkout@[0-9a-f]{40}/);
+  assert.match(workflow, /actions\/setup-node@[0-9a-f]{40}/);
+  assert.match(workflow, /node-version:\s*24/);
   assert.match(workflow, /ref:\s*\$\{\{ github\.event\.repository\.default_branch \}\}/);
   assert.doesNotMatch(workflow, /github\.event\.pull_request\.head/);
+  assert.doesNotMatch(implementation, /event\.action === "deleted"\) return/);
 });
