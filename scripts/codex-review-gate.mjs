@@ -175,21 +175,25 @@ export function classifyCodexReview({
 export const hasSuccessfulCodexStatus = (statuses) =>
   statuses.find((status) => status.context === "codex-review")?.state === "success";
 
-export const latestCodexAttemptAt = (statuses, fallback) =>
-  statuses.find((status) => status.context === "codex-review" && status.state === "pending")
-    ?.created_at ?? fallback;
+export const earliestCodexAttemptAt = (statuses, fallback) =>
+  statuses
+    .filter((status) => status.context === "codex-review" && status.state === "pending")
+    .reduce(
+      (earliest, status) =>
+        !earliest || timestamp(status.created_at) < timestamp(earliest)
+          ? status.created_at
+          : earliest,
+      undefined,
+    ) ?? fallback;
 
-export const latestCodexInvocation = (comments, requestedAt, invocationId, completedAt) =>
+export const latestCodexInvocation = (comments, requestedAt, invocationId) =>
   comments
     .filter(
       (comment) =>
         comment.user?.login !== CODEX_BOT &&
         /@codex\s+review\b/i.test(comment.body) &&
         (comment.id === invocationId ||
-          (timestamp(requestedAt) > 0 && timestamp(comment.created_at) > timestamp(requestedAt)) ||
-          (timestamp(completedAt) > 0 &&
-            timestamp(comment.created_at) > timestamp(requestedAt) &&
-            timestamp(comment.created_at) <= timestamp(completedAt))),
+          (timestamp(requestedAt) > 0 && timestamp(comment.created_at) > timestamp(requestedAt))),
     )
     .sort((left, right) => timestamp(right.created_at) - timestamp(left.created_at))[0];
 
@@ -281,14 +285,14 @@ async function setStatus(repository, sha, state, description) {
   });
 }
 
-async function reviewSignals(repository, number, requestedAt, invocationId, completedAt) {
+async function reviewSignals(repository, number, requestedAt, invocationId) {
   const [comments, reactions, reviews, reviewComments] = await Promise.all([
     all(`/repos/${repository}/issues/${number}/comments`),
     all(`/repos/${repository}/issues/${number}/reactions`),
     all(`/repos/${repository}/pulls/${number}/reviews`),
     all(`/repos/${repository}/pulls/${number}/comments`),
   ]);
-  const invocation = latestCodexInvocation(comments, requestedAt, invocationId, completedAt);
+  const invocation = latestCodexInvocation(comments, requestedAt, invocationId);
   const invocationReactions = invocation
     ? await all(`/repos/${repository}/issues/comments/${invocation.id}/reactions`)
     : [];
@@ -297,8 +301,7 @@ async function reviewSignals(repository, number, requestedAt, invocationId, comp
       (reaction) =>
         reaction.user?.login === CODEX_BOT &&
         reaction.content === "eyes" &&
-        timestamp(reaction.created_at) >= timestamp(requestedAt) &&
-        (!completedAt || timestamp(reaction.created_at) <= timestamp(completedAt)),
+        timestamp(reaction.created_at) >= timestamp(requestedAt),
     )
     .reduce((latest, reaction) => Math.max(latest, timestamp(reaction.created_at)), 0);
   return [
@@ -324,7 +327,7 @@ async function main() {
   const reusesExistingReview =
     process.env.GITHUB_EVENT_NAME === "workflow_dispatch" || event.action === "reopened";
   const statuses = await all(`/repos/${repository}/commits/${headSha}/statuses`);
-  const attemptStartedAt = latestCodexAttemptAt(statuses, pullRequest.updated_at);
+  const attemptStartedAt = earliestCodexAttemptAt(statuses, pullRequest.updated_at);
 
   if (reusesExistingReview && hasSuccessfulCodexStatus(statuses)) return;
 
@@ -334,7 +337,7 @@ async function main() {
     "pending",
     "In attesa della review Codex sull'ultimo commit",
   );
-  if (pullRequest.draft || event.action === "dismissed") return;
+  if (pullRequest.draft) return;
 
   if (["opened", "ready_for_review"].includes(event.action)) {
     await new Promise((resolve) => setTimeout(resolve, 30_000));
@@ -343,9 +346,7 @@ async function main() {
   }
 
   const freshReview = ["opened", "ready_for_review"].includes(event.action);
-  const completedAt = event.review?.submitted_at;
-  const signalRequestedAt =
-    event.action === "deleted" ? attemptStartedAt : event.comment?.created_at;
+  const signalRequestedAt = event.comment?.created_at;
   const requestedAt = reusesExistingReview ? 0 : (signalRequestedAt ?? attemptStartedAt);
   for (let attempt = 0; attempt < CODEX_REVIEW_POLLING.attempts; attempt += 1) {
     let signals;
@@ -355,7 +356,6 @@ async function main() {
         number,
         requestedAt,
         event.comment?.user?.login === CODEX_BOT ? undefined : event.comment?.id,
-        completedAt,
       );
     } catch (error) {
       if (!(error instanceof TypeError) && !error.retryable) throw error;
