@@ -179,7 +179,7 @@ export function pullRequestNumber(event, input) {
 export const isRetryableGitHubResponse = (status, remaining, retryAfter) =>
   status === 429 || status >= 500 || (status === 403 && (remaining === "0" || retryAfter != null));
 
-async function request(path, options = {}) {
+async function requestOnce(path, options = {}) {
   const response = await fetch(`https://api.github.com${path}`, {
     ...options,
     headers: {
@@ -196,10 +196,27 @@ async function request(path, options = {}) {
       response.headers.get("x-ratelimit-remaining"),
       response.headers.get("retry-after"),
     );
+    error.retryAfterMs = Number(response.headers.get("retry-after")) * 1000 || 1000;
     throw error;
   }
   return response.json();
 }
+
+export async function retryGitHubRequest(
+  operation,
+  sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+) {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await operation();
+    } catch (error) {
+      if ((!(error instanceof TypeError) && !error.retryable) || attempt === 2) throw error;
+      await sleep(error.retryAfterMs ?? 1000);
+    }
+  }
+}
+
+const request = (path, options) => retryGitHubRequest(() => requestOnce(path, options));
 
 async function all(path) {
   const items = [];

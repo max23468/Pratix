@@ -9,6 +9,7 @@ import {
   isRetryableGitHubResponse,
   latestCodexInvocation,
   pullRequestNumber,
+  retryGitHubRequest,
 } from "./codex-review-gate.mjs";
 
 const headSha = "0123456789abcdef0123456789abcdef01234567";
@@ -492,6 +493,23 @@ test("ritenta soltanto errori GitHub recuperabili", () => {
   assert.equal(isRetryableGitHubResponse(403, "4999", "60"), true);
   assert.equal(isRetryableGitHubResponse(403, "4999"), false);
   assert.equal(isRetryableGitHubResponse(404, null), false);
+});
+
+test("ritenta anche le scritture GitHub transitorie", async () => {
+  let attempts = 0;
+  const waits = [];
+  const result = await retryGitHubRequest(
+    async () => {
+      attempts += 1;
+      if (attempts < 3) throw Object.assign(new Error("transitorio"), { retryable: true });
+      return "ok";
+    },
+    async (ms) => waits.push(ms),
+  );
+
+  assert.equal(result, "ok");
+  assert.equal(attempts, 3);
+  assert.deepEqual(waits, [1000, 1000]);
 });
 
 test("un rerun riusa soltanto l'ultimo status Codex riuscito dello stesso SHA", () => {
