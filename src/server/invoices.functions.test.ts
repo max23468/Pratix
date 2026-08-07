@@ -251,6 +251,101 @@ function queueInvoiceSave(
   });
 }
 
+const savedExports = [
+  {
+    id: "export-fees",
+    kind: "fees",
+    file_name: "compensi.xlsx",
+    storage_path: "user-1/billing-exports/run-1/compensi.xlsx",
+    storage_status: "pending",
+  },
+  {
+    id: "export-expenses",
+    kind: "expenses",
+    file_name: "rimborsi.xlsx",
+    storage_path: "user-1/billing-exports/run-1/rimborsi.xlsx",
+    storage_status: "pending",
+  },
+];
+
+function queueStoredInvoiceRecovery(
+  supabase: FakeSupabase,
+  { create = false, status = "draft" }: { create?: boolean; status?: "draft" | "issued" } = {},
+) {
+  if (create) {
+    supabase.queue("billing_runs:select:maybeSingle", {
+      data: { id: "run-1", invoice_id: "invoice-1" },
+      error: null,
+    });
+  }
+  supabase.queue(
+    "invoices:select:single",
+    ...Array.from({ length: 3 }, () => ({
+      data: {
+        id: "invoice-1",
+        public_code: "FT-00001",
+        billing_run_id: "run-1",
+        principal_id: "principal-1",
+        number: "12",
+        year: 2026,
+        status,
+      },
+      error: null,
+    })),
+  );
+  supabase.queue("billing_exports:select:many", { data: savedExports, error: null });
+  supabase.queue(
+    "billing_runs:select:single",
+    ...Array.from({ length: 2 }, () => ({
+      data: { period_start: "2026-05-01", period_end: "2026-05-31" },
+      error: null,
+    })),
+  );
+  supabase.queue(
+    "principals:select:single",
+    ...Array.from({ length: 2 }, () => ({
+      data: { business_name: "Committente persistito" },
+      error: null,
+    })),
+  );
+  supabase.queue(
+    "billing_exports:select:maybeSingle",
+    ...savedExports.map((item) => ({ data: item, error: null })),
+  );
+  supabase.queue(
+    "invoice_lines:select:many",
+    {
+      data: [
+        {
+          ...billingActivity,
+          case_activity_id: billingActivity.id,
+          practice_number: 42,
+          client_name: "Cliente persistito",
+          counterparty_name: "Controparte persistita",
+        },
+      ],
+      error: null,
+    },
+    {
+      data: [
+        {
+          ...billingActivity,
+          case_activity_id: "activity-expense",
+          kind: "expense_art15",
+          practice_number: 42,
+          client_name: "Cliente persistito",
+          counterparty_name: "Controparte persistita",
+        },
+      ],
+      error: null,
+    },
+  );
+  supabase.queue("case_activity_hearings:select:many", {
+    data: [{ activity_id: "activity-fee", hearing_date: "2026-05-20", position: 1 }],
+    error: null,
+  });
+}
+
 describe("server functions fatture", () => {
   it("salva fattura e metadati con una sola RPC, poi completa Storage in modo idempotente", async () => {
     const supabase = new FakeSupabase();
@@ -299,22 +394,44 @@ describe("server functions fatture", () => {
     expect(supabase.uploads).toHaveLength(2);
     expect(supabase.calls.some((call) => call.action === "delete")).toBe(false);
 
-    queueInvoiceSave(supabase, { status: "invoiced", invoice_id: "invoice-1" });
+    queueStoredInvoiceRecovery(supabase, { create: true });
     await expect(
       handlerOf<
         { data: typeof billingInput; context: { supabase: FakeSupabase; userId: string } },
         unknown
       >(createBillingInvoiceFn)({
-        data: billingInput,
+        data: {
+          ...billingInput,
+          principalId: "principal-modificato",
+          selections: [],
+        },
         context: { supabase, userId: "user-1" },
       }),
     ).resolves.toMatchObject({ invoiceId: "invoice-1" });
-    expect(supabase.rpcCalls).toHaveLength(2);
+    expect(supabase.rpcCalls).toHaveLength(1);
     expect(supabase.uploads).toHaveLength(4);
+    expect(buildBillingWorkbook).toHaveBeenLastCalledWith(
+      expect.objectContaining({ principalName: "Committente persistito" }),
+    );
   });
 
   it("aggiorna una bozza attraverso la stessa transazione senza progressivi applicativi", async () => {
     const supabase = new FakeSupabase();
+    supabase.queue("invoices:select:single", {
+      data: {
+        id: "invoice-1",
+        public_code: "FT-00001",
+        billing_run_id: "run-1",
+        number: "12",
+        year: 2026,
+        status: "draft",
+      },
+      error: null,
+    });
+    supabase.queue("billing_exports:select:many", {
+      data: savedExports.map((item) => ({ ...item, storage_status: "ready" })),
+      error: null,
+    });
     queueInvoiceSave(supabase);
 
     await handlerOf<
@@ -333,6 +450,35 @@ describe("server functions fatture", () => {
       args: { p_request_id: requestId, p_invoice_id: "invoice-1" },
     });
     expect(supabase.callsFor("profiles", "update")).toHaveLength(0);
+  });
+
+  it("recupera gli export di un aggiornamento già emesso senza rieseguire la RPC", async () => {
+    const supabase = new FakeSupabase();
+    queueStoredInvoiceRecovery(supabase, { status: "issued" });
+
+    await expect(
+      handlerOf<
+        {
+          data: typeof billingInput & { invoiceId: string };
+          context: { supabase: FakeSupabase; userId: string };
+        },
+        unknown
+      >(updateDraftBillingInvoiceFn)({
+        data: {
+          ...billingInput,
+          invoiceId: "invoice-1",
+          principalId: "principal-modificato",
+          selections: [],
+        },
+        context: { supabase, userId: "user-1" },
+      }),
+    ).resolves.toMatchObject({ invoiceId: "invoice-1" });
+
+    expect(supabase.rpcCalls).toHaveLength(0);
+    expect(supabase.uploads).toHaveLength(2);
+    expect(buildBillingWorkbook).toHaveBeenLastCalledWith(
+      expect.objectContaining({ principalName: "Committente persistito" }),
+    );
   });
 
   it("cambia emissione fattura tramite RPC atomica", async () => {

@@ -21,6 +21,7 @@ import {
   type BillingActivity,
   type CreateBillingInvoiceInput,
 } from "@/server/invoice-billing.logic";
+import { buildStoredBillingExport } from "@/server/invoice-export.server";
 
 type BillingExportReference = {
   id: string;
@@ -40,6 +41,8 @@ type SaveBillingInvoiceResult = {
 };
 
 type CreateBillingInvoiceRequest = CreateBillingInvoiceInput & { requestId: string };
+
+type BillingExportFile = ReturnType<typeof buildExportFiles>[number];
 
 const validateRequestId = (requestId: string) => {
   if (
@@ -95,7 +98,7 @@ async function uploadBillingExports({
   supabase: SupabaseClient<Database>;
   userId: string;
   references: BillingExportReference[];
-  files: ReturnType<typeof buildExportFiles>;
+  files: BillingExportFile[];
 }) {
   const attempts = await Promise.allSettled(
     files.map(async (file) => {
@@ -133,6 +136,103 @@ async function uploadBillingExports({
   }
 }
 
+async function findRecoverableInvoice({
+  supabase,
+  userId,
+  requestId,
+  invoiceId,
+}: {
+  supabase: SupabaseClient<Database>;
+  userId: string;
+  requestId: string;
+  invoiceId: string | null;
+}): Promise<SaveBillingInvoiceResult | null> {
+  let savedInvoiceId = invoiceId;
+  let billingRunId: string | null = null;
+
+  if (!savedInvoiceId) {
+    const { data: run, error: runError } = await supabase
+      .from("billing_runs")
+      .select("id, invoice_id")
+      .eq("user_id", userId)
+      .eq("request_id", requestId)
+      .maybeSingle();
+    if (runError) throw runError;
+    if (!run?.invoice_id) return null;
+    savedInvoiceId = run.invoice_id;
+    billingRunId = run.id;
+  }
+
+  const { data: invoice, error: invoiceError } = await supabase
+    .from("invoices")
+    .select("id, public_code, billing_run_id, number, year, status")
+    .eq("id", savedInvoiceId)
+    .eq("user_id", userId)
+    .single();
+  if (invoiceError) throw invoiceError;
+  if (!invoice?.billing_run_id) return null;
+  billingRunId ??= invoice.billing_run_id;
+
+  const { data: exports, error: exportsError } = await supabase
+    .from("billing_exports")
+    .select("id, kind, file_name, storage_path, storage_status")
+    .eq("billing_run_id", billingRunId)
+    .eq("user_id", userId)
+    .order("kind", { ascending: true });
+  if (exportsError) throw exportsError;
+
+  const references = (exports ?? []) as BillingExportReference[];
+  if (
+    references.length !== 2 ||
+    !references.some((item) => item.kind === "fees") ||
+    !references.some((item) => item.kind === "expenses")
+  ) {
+    throw new Error("Riferimenti Storage della fattura incompleti");
+  }
+  if (invoiceId && invoice.status === "draft") {
+    const hasPendingExport = references.some((item) => item.storage_status === "pending");
+    if (!hasPendingExport) return null;
+  }
+
+  return {
+    invoiceId: invoice.id,
+    invoiceRef: invoice.public_code ?? invoice.id,
+    billingRunId,
+    number: invoice.number,
+    year: invoice.year,
+    exports: references,
+  };
+}
+
+async function recoverBillingExports({
+  supabase,
+  userId,
+  saved,
+}: {
+  supabase: SupabaseClient<Database>;
+  userId: string;
+  saved: SaveBillingInvoiceResult;
+}) {
+  const files = await Promise.all(
+    saved.exports.map(async ({ kind }) => ({
+      kind,
+      ...(
+        await buildStoredBillingExport({
+          supabase,
+          userId,
+          invoiceId: saved.invoiceId,
+          kind,
+        })
+      ).file,
+    })),
+  );
+  await uploadBillingExports({ supabase, userId, references: saved.exports, files });
+  return {
+    ...saved,
+    exports: saved.exports.map((item) => ({ ...item, storage_status: "ready" as const })),
+  };
+}
+
 async function saveBillingInvoice({
   input,
   invoiceId,
@@ -144,6 +244,14 @@ async function saveBillingInvoice({
   supabase: SupabaseClient<Database>;
   userId: string;
 }) {
+  const recoverable = await findRecoverableInvoice({
+    supabase,
+    userId,
+    requestId: input.requestId,
+    invoiceId,
+  });
+  if (recoverable) return recoverBillingExports({ supabase, userId, saved: recoverable });
+
   const selectedIds = selectedActivityIds(input.selections);
   const selectionById = selectionMap(input.selections);
 
