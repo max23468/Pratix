@@ -6,15 +6,21 @@ const latestBillingMigration = readFileSync(
   "supabase/migrations/20260807117000_ignore_excluded_billing_items.sql",
   "utf8",
 );
+const latestDuplicateMigration = readFileSync(
+  "supabase/migrations/20260807122000_preserve_merged_case_notes.sql",
+  "utf8",
+);
 
-function billingRpcDefinition(sql: string) {
-  const start = sql.indexOf("CREATE OR REPLACE FUNCTION public.save_billing_invoice");
+function rpcDefinition(sql: string, name: string) {
+  const start = sql.indexOf(`CREATE OR REPLACE FUNCTION public.${name}`);
   const end = sql.indexOf("\n$$;", start);
 
   expect(start).toBeGreaterThanOrEqual(0);
   expect(end).toBeGreaterThan(start);
   return sql.slice(start, end + 4).trim();
 }
+
+const billingRpcDefinition = (sql: string) => rpcDefinition(sql, "save_billing_invoice");
 
 const userOwnedTables = [
   "clients",
@@ -86,6 +92,29 @@ describe("contratti Supabase recupero crediti", () => {
       definition.indexOf("PERFORM ca.id"),
     );
     expect(definition).toContain("WHERE item.status IN ('included', 'postponed')");
+  });
+
+  it("mantiene il merge duplicati atomico, owner-scoped e allineato allo schema", () => {
+    const definition = rpcDefinition(schema, "merge_duplicate_records");
+
+    expect(definition).toBe(rpcDefinition(latestDuplicateMigration, "merge_duplicate_records"));
+    expect(definition).toContain("SECURITY INVOKER");
+    expect(definition).toContain("v_user_id uuid := auth.uid()");
+    expect(definition).toContain("FOR UPDATE");
+    expect(definition.indexOf("IF v_review_status = 'merged'")).toBeLessThan(
+      definition.indexOf("IF p_entity_type = 'principal'"),
+    );
+    expect(definition).toContain("duplicate review already merged with a different record");
+    expect(definition).toContain("nullif(btrim(notes), '')");
+    expect(definition).toContain("format('Pratica assorbita in %s.', v_target)");
+    expect(definition).toContain("UPDATE public.duplicate_reviews AS review");
+    expect(definition).toContain("WHERE id = v_review_id AND user_id = v_user_id");
+    expect(schema).toContain(
+      "REVOKE ALL ON FUNCTION public.merge_duplicate_records(text, uuid, uuid, uuid)",
+    );
+    expect(schema).toContain(
+      "GRANT EXECUTE ON FUNCTION public.merge_duplicate_records(text, uuid, uuid, uuid)",
+    );
   });
 
   it("lega le relazioni operative al proprietario e ogni attività a una sola riga", () => {

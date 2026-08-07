@@ -16,7 +16,6 @@ const duplicateLogicMock = vi.hoisted(() => ({
   scanDuplicateCandidates: vi.fn(),
   scanDuplicateDraft: vi.fn(),
 }));
-const supabaseAdminRef = vi.hoisted(() => ({ current: null as FakeSupabase | null }));
 
 vi.mock("@tanstack/react-start", () => ({
   createServerFn: () => {
@@ -40,12 +39,6 @@ vi.mock("@tanstack/react-start", () => ({
 
 vi.mock("@/integrations/supabase/auth-middleware", () => ({
   requireSupabaseAuth: vi.fn(),
-}));
-
-vi.mock("@/integrations/supabase/client.server", () => ({
-  get supabaseAdmin() {
-    return supabaseAdminRef.current;
-  },
 }));
 
 vi.mock("@/server/duplicates.logic", () => duplicateLogicMock);
@@ -157,6 +150,11 @@ class FakeSupabase {
     return new FakeQueryBuilder(this, table);
   }
 
+  rpc(name: string, payload: unknown) {
+    this.calls.push({ table: name, action: "rpc", payload, filters: [] });
+    return Promise.resolve(this.next(`${name}:rpc`));
+  }
+
   queue(key: string, ...responses: QueryResult[]) {
     this.responses.set(key, responses);
   }
@@ -230,7 +228,6 @@ beforeEach(() => {
   duplicateLogicMock.reviewInsertFromCandidate.mockReset();
   duplicateLogicMock.scanDuplicateCandidates.mockReset();
   duplicateLogicMock.scanDuplicateDraft.mockReset();
-  supabaseAdminRef.current = new FakeSupabase();
   vi.useRealTimers();
 });
 
@@ -734,13 +731,17 @@ describe("duplicates server functions", () => {
     ).toThrow("devono essere distinti");
   });
 
-  it("propaga l'errore DB se il merge pratica non riesce a leggere la pratica da mantenere", async () => {
-    const adminSupabase = new FakeSupabase();
-    adminSupabase.queue("cases:select:maybeSingle", {
-      data: null,
-      error: new Error("cases failed"),
+  it("delega merge e decisione a una sola RPC atomica", async () => {
+    const supabase = new FakeSupabase();
+    supabase.queue("merge_duplicate_records:rpc", {
+      data: {
+        id: "review-case",
+        status: "merged",
+        kept_record_id: "case-keep",
+        merged_record_id: "case-merge",
+      },
+      error: null,
     });
-    supabaseAdminRef.current = adminSupabase;
 
     await expect(
       handlerOf<
@@ -763,294 +764,58 @@ describe("duplicates server functions", () => {
           action: "merge",
           keepRecordId: "case-keep",
         },
-        context: { supabase: new FakeSupabase(), userId: "user-1" },
+        context: { supabase, userId: "user-1" },
       }),
-    ).rejects.toThrow("cases failed");
+    ).resolves.toMatchObject({ id: "review-case", status: "merged" });
+
+    expect(supabase.callsFor("merge_duplicate_records", "rpc")).toEqual([
+      {
+        table: "merge_duplicate_records",
+        action: "rpc",
+        payload: {
+          p_entity_type: "case",
+          p_left_record_id: "case-keep",
+          p_right_record_id: "case-merge",
+          p_kept_record_id: "case-keep",
+        },
+        filters: [],
+      },
+    ]);
+    expect(supabase.callsFor("duplicate_reviews", "update")).toHaveLength(0);
   });
 
-  it("merge principal riallinea riferimenti, link committente-cliente e listini non duplicati", async () => {
-    const adminSupabase = new FakeSupabase();
-    adminSupabase.queue("principal_clients:select:many", {
-      data: [{ client_id: "client-existing" }, { client_id: "client-new" }],
-      error: null,
-    });
-    adminSupabase.queue(
-      "principal_clients:select:maybeSingle",
-      { data: { id: "existing-link" }, error: null },
-      { data: null, error: null },
-    );
-    adminSupabase.queue(
-      "price_books:select:many",
-      {
-        data: [
-          { id: "book-2025", year: 2025 },
-          { id: "book-2026", year: 2026 },
-        ],
-        error: null,
-      },
-      { data: [{ year: 2025 }], error: null },
-    );
-    supabaseAdminRef.current = adminSupabase;
-
+  it("propaga l'errore della transazione di merge senza registrare una decisione separata", async () => {
     const supabase = new FakeSupabase();
-    supabase.queue("duplicate_reviews:update:single", {
-      data: { id: "review-principal", status: "merged" },
-      error: null,
+    supabase.queue("merge_duplicate_records:rpc", {
+      data: null,
+      error: new Error("merge failed"),
     });
 
-    await handlerOf<
-      {
+    await expect(
+      handlerOf<
+        {
+          data: {
+            entityType: "client";
+            leftRecordId: string;
+            rightRecordId: string;
+            action: "merge";
+            keepRecordId: string;
+          };
+          context: { supabase: FakeSupabase; userId: string };
+        },
+        unknown
+      >(resolveDuplicateCandidateFn)({
         data: {
-          entityType: "principal";
-          leftRecordId: string;
-          rightRecordId: string;
-          action: "merge";
-          keepRecordId: string;
-        };
-        context: { supabase: FakeSupabase; userId: string };
-      },
-      unknown
-    >(resolveDuplicateCandidateFn)({
-      data: {
-        entityType: "principal",
-        leftRecordId: "principal-keep",
-        rightRecordId: "principal-merge",
-        action: "merge",
-        keepRecordId: "principal-keep",
-      },
-      context: { supabase, userId: "user-1" },
-    });
+          entityType: "client",
+          leftRecordId: "client-keep",
+          rightRecordId: "client-merge",
+          action: "merge",
+          keepRecordId: "client-keep",
+        },
+        context: { supabase, userId: "user-1" },
+      }),
+    ).rejects.toThrow("merge failed");
 
-    expect(adminSupabase.callsFor("cases", "update")[0]).toMatchObject({
-      payload: { principal_id: "principal-keep" },
-      filters: [
-        ["user_id", "user-1"],
-        ["principal_id", "principal-merge"],
-      ],
-    });
-    expect(adminSupabase.callsFor("billing_runs", "update")[0]).toMatchObject({
-      payload: { principal_id: "principal-keep" },
-    });
-    expect(adminSupabase.callsFor("principal_clients", "delete")[0]).toMatchObject({
-      filters: [
-        ["user_id", "user-1"],
-        ["principal_id", "principal-merge"],
-        ["client_id", "client-existing"],
-      ],
-    });
-    expect(adminSupabase.callsFor("principal_clients", "update")[0]).toMatchObject({
-      payload: { principal_id: "principal-keep" },
-      filters: [
-        ["user_id", "user-1"],
-        ["principal_id", "principal-merge"],
-        ["client_id", "client-new"],
-      ],
-    });
-    expect(adminSupabase.callsFor("price_books", "update")[0]).toMatchObject({
-      payload: { principal_id: "principal-keep" },
-      filters: [
-        ["user_id", "user-1"],
-        ["id", ["book-2026"]],
-      ],
-    });
-    expect(adminSupabase.callsFor("principals", "update")[0].payload).toMatchObject({
-      archived_at: expect.any(String),
-    });
-  });
-
-  it("merge client pulisce i link duplicati e cancella il cliente minimale assorbito", async () => {
-    const adminSupabase = new FakeSupabase();
-    adminSupabase.queue("principal_clients:select:many", {
-      data: [{ principal_id: "principal-existing" }, { principal_id: "principal-new" }],
-      error: null,
-    });
-    adminSupabase.queue(
-      "principal_clients:select:maybeSingle",
-      { data: { id: "existing-link" }, error: null },
-      { data: null, error: null },
-    );
-    adminSupabase.queue("clients:select:maybeSingle", {
-      data: { notes: null },
-      error: null,
-    });
-    supabaseAdminRef.current = adminSupabase;
-
-    const supabase = new FakeSupabase();
-    supabase.queue("duplicate_reviews:update:single", {
-      data: { id: "review-client", status: "merged" },
-      error: null,
-    });
-
-    await handlerOf<
-      {
-        data: {
-          entityType: "client";
-          leftRecordId: string;
-          rightRecordId: string;
-          action: "merge";
-          keepRecordId: string;
-        };
-        context: { supabase: FakeSupabase; userId: string };
-      },
-      unknown
-    >(resolveDuplicateCandidateFn)({
-      data: {
-        entityType: "client",
-        leftRecordId: "client-keep",
-        rightRecordId: "client-merge",
-        action: "merge",
-        keepRecordId: "client-keep",
-      },
-      context: { supabase, userId: "user-1" },
-    });
-
-    expect(adminSupabase.callsFor("case_credit_transfers", "update")).toHaveLength(2);
-    expect(adminSupabase.callsFor("principal_clients", "delete")[0]).toMatchObject({
-      filters: [
-        ["user_id", "user-1"],
-        ["principal_id", "principal-existing"],
-        ["client_id", "client-merge"],
-      ],
-    });
-    expect(adminSupabase.callsFor("principal_clients", "update")[0]).toMatchObject({
-      payload: { client_id: "client-keep" },
-      filters: [
-        ["user_id", "user-1"],
-        ["principal_id", "principal-new"],
-        ["client_id", "client-merge"],
-      ],
-    });
-    expect(adminSupabase.callsFor("clients", "delete")[0]).toMatchObject({
-      filters: [
-        ["user_id", "user-1"],
-        ["id", "client-merge"],
-      ],
-    });
-  });
-
-  it("merge controparte sposta i soggetti e cancella la controparte minimale rimasta vuota", async () => {
-    const adminSupabase = new FakeSupabase();
-    adminSupabase.queue(
-      "counterparty_subjects:select:many",
-      { data: [{ position: 2 }], error: null },
-      { data: [{ id: "subject-1", position: 0 }], error: null },
-      { data: [], error: null },
-    );
-    adminSupabase.queue("counterparties:select:maybeSingle", {
-      data: { notes: null },
-      error: null,
-    });
-    supabaseAdminRef.current = adminSupabase;
-
-    const supabase = new FakeSupabase();
-    supabase.queue("duplicate_reviews:update:single", {
-      data: { id: "review-counterparty", status: "merged" },
-      error: null,
-    });
-
-    await handlerOf<
-      {
-        data: {
-          entityType: "counterparty";
-          leftRecordId: string;
-          rightRecordId: string;
-          action: "merge";
-          keepRecordId: string;
-        };
-        context: { supabase: FakeSupabase; userId: string };
-      },
-      unknown
-    >(resolveDuplicateCandidateFn)({
-      data: {
-        entityType: "counterparty",
-        leftRecordId: "counterparty-keep",
-        rightRecordId: "counterparty-merge",
-        action: "merge",
-        keepRecordId: "counterparty-keep",
-      },
-      context: { supabase, userId: "user-1" },
-    });
-
-    expect(adminSupabase.callsFor("counterparty_subjects", "update")[0]).toMatchObject({
-      payload: {
-        counterparty_id: "counterparty-keep",
-        position: 3,
-      },
-      filters: [
-        ["user_id", "user-1"],
-        ["id", "subject-1"],
-      ],
-    });
-    expect(adminSupabase.callsFor("counterparties", "delete")[0]).toMatchObject({
-      filters: [
-        ["user_id", "user-1"],
-        ["id", "counterparty-merge"],
-      ],
-    });
-  });
-
-  it("merge pratica aggiorna riferimenti e archivia la pratica assorbita con nota esplicita", async () => {
-    const adminSupabase = new FakeSupabase();
-    adminSupabase.queue("cases:select:maybeSingle", {
-      data: {
-        public_code: "PRA-42",
-        practice_number: 42,
-        principal_id: "principal-keep",
-        client_id: "client-keep",
-        counterparty_id: "counterparty-keep",
-      },
-      error: null,
-    });
-    supabaseAdminRef.current = adminSupabase;
-
-    const supabase = new FakeSupabase();
-    supabase.queue("duplicate_reviews:update:single", {
-      data: { id: "review-case", status: "merged" },
-      error: null,
-    });
-
-    await handlerOf<
-      {
-        data: {
-          entityType: "case";
-          leftRecordId: string;
-          rightRecordId: string;
-          action: "merge";
-          keepRecordId: string;
-        };
-        context: { supabase: FakeSupabase; userId: string };
-      },
-      unknown
-    >(resolveDuplicateCandidateFn)({
-      data: {
-        entityType: "case",
-        leftRecordId: "case-keep",
-        rightRecordId: "case-merge",
-        action: "merge",
-        keepRecordId: "case-keep",
-      },
-      context: { supabase, userId: "user-1" },
-    });
-
-    expect(adminSupabase.callsFor("case_activities", "update")[0]).toMatchObject({
-      payload: {
-        case_id: "case-keep",
-        principal_id: "principal-keep",
-        client_id: "client-keep",
-        counterparty_id: "counterparty-keep",
-      },
-    });
-    expect(adminSupabase.callsFor("case_status_history", "update")).toHaveLength(1);
-    expect(adminSupabase.callsFor("case_credit_transfers", "update")).toHaveLength(1);
-    expect(adminSupabase.callsFor("cases", "update")[0]).toMatchObject({
-      payload: {
-        status: "archived",
-        notes: "Pratica assorbita in PRA-42.",
-      },
-      filters: [
-        ["user_id", "user-1"],
-        ["id", "case-merge"],
-      ],
-    });
+    expect(supabase.callsFor("duplicate_reviews", "update")).toHaveLength(0);
   });
 });

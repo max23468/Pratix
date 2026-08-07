@@ -1518,6 +1518,15 @@ export type Database = {
     Functions: {
       apply_import_row: { Args: { p_import_row_id: string }; Returns: string }
       get_next_practice_number: { Args: never; Returns: number }
+      merge_duplicate_records: {
+        Args: {
+          p_entity_type: string
+          p_kept_record_id: string
+          p_left_record_id: string
+          p_right_record_id: string
+        }
+        Returns: Json
+      }
       save_billing_invoice: {
         Args: {
           p_apply_withholding: boolean
