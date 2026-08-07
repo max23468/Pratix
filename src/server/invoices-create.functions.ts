@@ -7,7 +7,6 @@ import { computeInvoice } from "@/lib/invoice-calc";
 import { buildBillingExportStoragePath, PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
 import { nextBillingPeriodStart } from "@/server/invoice-billing.helpers";
 import {
-  assertIncludedActivitiesBillable,
   assertIncludedActivitiesEditable,
   buildBillingExportRows,
   buildBillingRunItemRows,
@@ -180,7 +179,6 @@ async function saveBillingInvoice({
   const firstIncluded = included[0];
   firstIncludedClientId(included);
   if (invoiceId) assertIncludedActivitiesEditable(included, invoiceId);
-  else assertIncludedActivitiesBillable(included);
 
   const totals = computeInvoice(invoiceLinesForTotals(included), {
     cassaRate: Number(input.cassaRate),

@@ -197,7 +197,12 @@ const billingActivity = {
   case_activity_hearings: [{ hearing_date: "2026-05-20", position: 1 }],
 };
 
-function queueInvoiceSave(supabase: FakeSupabase) {
+function queueInvoiceSave(
+  supabase: FakeSupabase,
+  activityOverrides: Partial<Omit<typeof billingActivity, "invoice_id">> & {
+    invoice_id?: string | null;
+  } = {},
+) {
   supabase.queue("principals:select:single", {
     data: { id: "principal-1", business_name: "Banca Test" },
     error: null,
@@ -208,8 +213,13 @@ function queueInvoiceSave(supabase: FakeSupabase) {
   });
   supabase.queue("case_activities:select:many", {
     data: [
-      billingActivity,
-      { ...billingActivity, id: "activity-expense", kind: "expense_reimbursement" },
+      { ...billingActivity, ...activityOverrides },
+      {
+        ...billingActivity,
+        ...activityOverrides,
+        id: "activity-expense",
+        kind: "expense_reimbursement",
+      },
     ],
     error: null,
   });
@@ -289,7 +299,7 @@ describe("server functions fatture", () => {
     expect(supabase.uploads).toHaveLength(2);
     expect(supabase.calls.some((call) => call.action === "delete")).toBe(false);
 
-    queueInvoiceSave(supabase);
+    queueInvoiceSave(supabase, { status: "invoiced", invoice_id: "invoice-1" });
     await expect(
       handlerOf<
         { data: typeof billingInput; context: { supabase: FakeSupabase; userId: string } },
