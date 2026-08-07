@@ -1,5 +1,3 @@
-import { PreviewBlock } from "./preview-block";
-import { Summary } from "./summary";
 import { displayNormalizedClient, displayNormalizedCounterparty } from "./normalization";
 import type { PreparedGuidedCreation, StagedGuidedCreation } from "./types";
 import { Badge } from "@/components/ui/badge";
@@ -133,6 +131,24 @@ export function ReviewStep({
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function PreviewBlock({ title, value }: { title: string; value: string }) {
+  return (
+    <div className="space-y-1 rounded-md border border-border p-3">
+      <p className="text-xs font-medium uppercase text-muted-foreground">{title}</p>
+      <p className="text-sm">{value}</p>
+    </div>
+  );
+}
+
+function Summary({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-md border border-border p-3">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="mt-1 text-base font-semibold">{value}</p>
     </div>
   );
 }

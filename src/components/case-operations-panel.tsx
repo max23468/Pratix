@@ -15,7 +15,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CaseTimeline } from "@/components/case-timeline-card";
 import { CaseOperationsSummary } from "@/components/case-operations-summary";
 import { SummaryTile } from "@/components/summary-tile";
-import { SubjectTile } from "@/components/subject-tile";
 import { Separator } from "@/components/ui/separator";
 import { WorkflowField } from "@/components/workflow-field";
 import { WorkflowPriorityBadge } from "@/components/workflow-priority-badge";
@@ -347,6 +346,15 @@ function renderCaseDetailsSection(children: ReactNode) {
       </div>
       {children}
     </section>
+  );
+}
+
+function SubjectTile({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="truncate text-sm font-medium">{value}</p>
+    </div>
   );
 }
 
