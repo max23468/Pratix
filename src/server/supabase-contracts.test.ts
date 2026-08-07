@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 
 const schema = readFileSync("supabase/schema.sql", "utf8");
 const latestBillingMigration = readFileSync(
-  "supabase/migrations/20260807116000_serialize_billing_request_claim.sql",
+  "supabase/migrations/20260807117000_ignore_excluded_billing_items.sql",
   "utf8",
 );
 
@@ -85,6 +85,7 @@ describe("contratti Supabase recupero crediti", () => {
     expect(definition.indexOf("INSERT INTO public.billing_runs")).toBeLessThan(
       definition.indexOf("PERFORM ca.id"),
     );
+    expect(definition).toContain("WHERE item.status IN ('included', 'postponed')");
   });
 
   it("lega le relazioni operative al proprietario e ogni attività a una sola riga", () => {

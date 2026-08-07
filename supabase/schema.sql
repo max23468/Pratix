@@ -836,7 +836,8 @@ BEGIN
     JOIN jsonb_to_recordset(p_items)
       AS item(activity_id uuid, status public.billing_run_item_status)
       ON item.activity_id = ca.id
-    WHERE NOT (
+    WHERE item.status IN ('included', 'postponed')
+      AND NOT (
         (ca.status = 'to_invoice' AND ca.invoice_id IS NULL)
         OR (NOT v_new_run AND ca.invoice_id = v_invoice_id)
       )
