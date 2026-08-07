@@ -6,8 +6,18 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.15] — 2026-08-07
+
+### Correzioni
+
+- La creazione e la modifica delle fatture salvano tutti i dati in un'unica
+  transazione; i rendiconti Excel possono essere ritentati senza duplicare la
+  fattura o lasciare dati parziali.
+
 ### Sotto il cofano
 
+- Separati i flussi di fatture, pratiche e controllo duplicati nelle rispettive
+  sezioni operative, eliminando componenti e helper non più usati.
 - Il gate `codex-review` valida esclusivamente la review Codex dell'HEAD
   corrente della PR usando codice trusted dal branch predefinito e sostituisce
   la precedente feedback inbox.
@@ -1573,6 +1583,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.15]: #11415--2026-08-07
 [1.14.14]: #11414--2026-08-06
 [1.14.13]: #11413--2026-08-05
 [1.14.12]: #11412--2026-07-29
