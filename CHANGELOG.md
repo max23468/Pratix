@@ -6,6 +6,14 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.16] — 2026-08-07
+
+### Correzioni
+
+- L'unione dei duplicati completa tutti gli spostamenti in una sola transazione,
+  conserva le note delle pratiche assorbite e può essere ritentata senza effetti
+  doppi.
+
 ## [1.14.15] — 2026-08-07
 
 ### Correzioni
@@ -1583,6 +1591,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.16]: #11416--2026-08-07
 [1.14.15]: #11415--2026-08-07
 [1.14.14]: #11414--2026-08-06
 [1.14.13]: #11413--2026-08-05

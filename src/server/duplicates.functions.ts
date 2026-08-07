@@ -1,6 +1,5 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   canMergeDuplicateEntity,
   DUPLICATE_SNOOZE_OPTIONS,
@@ -14,7 +13,6 @@ import {
 } from "@/server/duplicates-decision.server";
 import { loadDuplicateScanData } from "@/server/duplicates-load.server";
 import { scanDuplicateCandidates, scanDuplicateDraft } from "@/server/duplicates.logic";
-import { mergeRecords } from "@/server/duplicates-merge.server";
 
 type FindDuplicateDraftInput = {
   entityType: DuplicateEntityType;
@@ -89,23 +87,22 @@ export const resolveDuplicateCandidateFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(validateResolveDuplicateInput)
   .handler(async ({ data, context }) => {
-    let keptRecordId: string | null = null;
-    let mergedRecordId: string | null = null;
-
     if (data.action === "merge") {
       if (!data.keepRecordId) throw new Error("Scegli il record da mantenere");
       if (![data.leftRecordId, data.rightRecordId].includes(data.keepRecordId)) {
         throw new Error("Record da mantenere non valido");
       }
-      keptRecordId = data.keepRecordId;
-      mergedRecordId = keptRecordId === data.leftRecordId ? data.rightRecordId : data.leftRecordId;
-      await mergeRecords(
-        supabaseAdmin,
-        context.userId,
-        data.entityType,
-        keptRecordId,
-        mergedRecordId,
-      );
+      const { data: review, error } = await context.supabase.rpc("merge_duplicate_records", {
+        p_entity_type: data.entityType,
+        p_left_record_id: data.leftRecordId,
+        p_right_record_id: data.rightRecordId,
+        p_kept_record_id: data.keepRecordId,
+      });
+      if (error) throw error;
+      if (!review || typeof review !== "object" || Array.isArray(review)) {
+        throw new Error("Esito unione duplicati non valido");
+      }
+      return review;
     }
 
     return saveDuplicateDecision({
@@ -116,8 +113,8 @@ export const resolveDuplicateCandidateFn = createServerFn({ method: "POST" })
       rightRecordId: data.rightRecordId,
       action: data.action,
       snoozeInterval: data.snoozeInterval,
-      keptRecordId,
-      mergedRecordId,
+      keptRecordId: null,
+      mergedRecordId: null,
     });
   });
 
