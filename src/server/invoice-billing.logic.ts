@@ -308,7 +308,7 @@ export function buildBillingExportRowsFromInvoiceLines(
 ): BillingExportRow[] {
   const lineKind: InvoiceLineKind = kind === "fees" ? "fee" : "expense_art15";
   return lines.flatMap((line) =>
-    line.kind === lineKind
+    line.kind === lineKind && line.case_activity_id
       ? [
           {
             practiceNumber: line.practice_number,
