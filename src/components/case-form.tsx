@@ -2,39 +2,16 @@ import { useCallback, useMemo, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { RefreshCcw, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { DuplicateWarningPanel } from "@/components/duplicate-warning-panel";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
-  CaseCounterpartyField,
-  CasePrincipalClientFields,
-} from "@/components/case-form-subject-sections";
+  CaseDetailsSection,
+  CaseFormActions,
+  CaseReferencesSection,
+} from "@/components/case-form-sections";
 import { supabase } from "@/integrations/supabase/client";
 import { withTriggerGeneratedCode } from "@/integrations/supabase/insert-helpers";
 import { useAuth } from "@/lib/auth-context";
-import { caseStatusLabels, clientDisplayName, compareClients } from "@/lib/labels";
+import { clientDisplayName, compareClients } from "@/lib/labels";
 import type { DuplicateCandidate } from "@/lib/duplicate-matching";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { routeRef } from "@/lib/public-route-code";
@@ -819,99 +796,19 @@ export function CaseForm(props: Props) {
   const { onCancel, onSaved } = props;
   const controller = useCaseForm(props);
   const {
-    isEdit,
-    form,
-    upd,
     formRef,
     handleSubmit,
     duplicateCandidates,
     setDuplicateCandidates,
     duplicateOverrideRef,
     saveMutation,
-    deleteMutation,
-    useNextPracticeNumber,
     guardDialog,
     saveLock,
   } = controller;
 
   return (
     <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col gap-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Dati pratica</CardTitle>
-          <CardDescription>
-            La pratica nasce dall'incrocio fra committente, cliente e controparte.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="grid gap-4 lg:grid-cols-3">
-            <CasePrincipalClientFields controller={controller} />
-            <CaseCounterpartyField controller={controller} />
-          </div>
-
-          <div className="max-w-sm">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="practice_number">Numero pratica</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="practice_number"
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={form.practice_number ?? ""}
-                  onChange={(event) => {
-                    const value = event.target.value;
-                    const numericValue = value === "" ? null : Number(value);
-                    upd("practice_number", numericValue);
-                  }}
-                  placeholder="Es. 157"
-                />
-                {!isEdit && (
-                  <Button type="button" variant="outline" onClick={useNextPracticeNumber}>
-                    <RefreshCcw className="mr-1 size-4" /> Prossimo
-                  </Button>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid gap-4 md:grid-cols-3">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="status">Stato pratica</Label>
-              <Select value={form.status} onValueChange={(value) => upd("status", value)}>
-                <SelectTrigger id="status">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.entries(caseStatusLabels).map(([value, label]) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="opened_at">Data apertura</Label>
-              <Input
-                id="opened_at"
-                type="date"
-                value={form.opened_at}
-                onChange={(event) => upd("opened_at", event.target.value)}
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="closed_at">Data chiusura</Label>
-              <Input
-                id="closed_at"
-                type="date"
-                value={form.closed_at ?? ""}
-                onChange={(event) => upd("closed_at", event.target.value || null)}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <CaseDetailsSection controller={controller} />
 
       <DuplicateWarningPanel
         candidates={duplicateCandidates}
@@ -924,80 +821,8 @@ export function CaseForm(props: Props) {
         }}
       />
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Riferimenti</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="authority">Autorità giudiziaria</Label>
-              <Input
-                id="authority"
-                value={form.authority ?? ""}
-                onChange={(event) => upd("authority", event.target.value)}
-                placeholder="Es. Tribunale di Milano"
-              />
-            </div>
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="rg_number">N. R.G.</Label>
-              <Input
-                id="rg_number"
-                value={form.rg_number ?? ""}
-                onChange={(event) => upd("rg_number", event.target.value)}
-                placeholder="Es. 1234/2026"
-              />
-            </div>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label htmlFor="notes">Note</Label>
-            <Textarea
-              id="notes"
-              rows={4}
-              value={form.notes ?? ""}
-              onChange={(event) => upd("notes", event.target.value)}
-              placeholder="Es. stato trattativa, prossima attività o dettaglio del credito"
-            />
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          {isEdit && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button type="button" variant="outline" size="sm">
-                  <Trash2 className="mr-1 size-4" /> Elimina
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Eliminare la pratica?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    L'eliminazione riguarda anche voci fatturabili, allegati e storico stati
-                    associati. L'azione non può essere annullata.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annulla</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => deleteMutation.mutate()}>
-                    Elimina
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Annulla
-          </Button>
-          <Button type="submit" disabled={saveMutation.isPending}>
-            {saveMutation.isPending ? "Salvataggio…" : "Salva"}
-          </Button>
-        </div>
-      </div>
+      <CaseReferencesSection controller={controller} />
+      <CaseFormActions controller={controller} onCancel={onCancel} />
       {guardDialog}
     </form>
   );
