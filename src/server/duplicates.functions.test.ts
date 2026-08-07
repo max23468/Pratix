@@ -723,6 +723,15 @@ describe("duplicates server functions", () => {
         action: "dismiss",
       }),
     ).toThrow("Coppia duplicato non valida");
+
+    expect(() =>
+      validateResolve({
+        entityType: "client",
+        leftRecordId: "a",
+        rightRecordId: "a",
+        action: "dismiss",
+      }),
+    ).toThrow("devono essere distinti");
   });
 
   it("propaga l'errore DB se il merge pratica non riesce a leggere la pratica da mantenere", async () => {

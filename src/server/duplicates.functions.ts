@@ -22,7 +22,6 @@ type FindDuplicateDraftInput = {
 };
 
 type ResolveDuplicateInput = {
-  reviewId?: string | null;
   entityType: DuplicateEntityType;
   leftRecordId: string;
   rightRecordId: string;
@@ -165,6 +164,9 @@ function validateResolveDuplicateInput(input: ResolveDuplicateInput) {
   }
   if (!input.leftRecordId || !input.rightRecordId) {
     throw new Error("Coppia duplicato non valida");
+  }
+  if (input.leftRecordId === input.rightRecordId) {
+    throw new Error("I record duplicati devono essere distinti");
   }
   return input;
 }

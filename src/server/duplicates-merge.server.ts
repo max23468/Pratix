@@ -66,7 +66,8 @@ async function mergeClients(client: unknown, userId: string, keptId: string, mer
   );
   await mergePrincipalClientLinksForClient(db, userId, keptId, mergedId);
   if (await canDeleteMinimalClient(db, userId, mergedId)) {
-    await db.from("clients").delete().eq("user_id", userId).eq("id", mergedId);
+    const { error } = await db.from("clients").delete().eq("user_id", userId).eq("id", mergedId);
+    if (error) throw error;
   }
 }
 
@@ -88,7 +89,12 @@ async function mergeCounterparties(
     mergedId,
   );
   if (await canDeleteMinimalCounterparty(db, userId, mergedId)) {
-    await db.from("counterparties").delete().eq("user_id", userId).eq("id", mergedId);
+    const { error } = await db
+      .from("counterparties")
+      .delete()
+      .eq("user_id", userId)
+      .eq("id", mergedId);
+    if (error) throw error;
   }
 }
 
@@ -178,7 +184,7 @@ async function mergeCases(client: unknown, userId: string, keptId: string, merge
   ]);
 
   const target = keptCase?.public_code || keptCase?.practice_number || keptId;
-  await db
+  const { error: archiveError } = await db
     .from("cases")
     .update({
       status: "archived",
@@ -186,6 +192,7 @@ async function mergeCases(client: unknown, userId: string, keptId: string, merge
     })
     .eq("user_id", userId)
     .eq("id", mergedId);
+  if (archiveError) throw archiveError;
 }
 
 async function updateTable(
@@ -224,19 +231,21 @@ async function mergePrincipalClientLinks(
         .maybeSingle();
       if (existingError) throw existingError;
       if (existing) {
-        await db
+        const { error } = await db
           .from("principal_clients")
           .delete()
           .eq("user_id", userId)
           .eq("principal_id", mergedPrincipalId)
           .eq("client_id", link.client_id);
+        if (error) throw error;
       } else {
-        await db
+        const { error } = await db
           .from("principal_clients")
           .update({ principal_id: keptPrincipalId })
           .eq("user_id", userId)
           .eq("principal_id", mergedPrincipalId)
           .eq("client_id", link.client_id);
+        if (error) throw error;
       }
     }),
   );
@@ -266,19 +275,21 @@ async function mergePrincipalClientLinksForClient(
         .maybeSingle();
       if (existingError) throw existingError;
       if (existing) {
-        await db
+        const { error } = await db
           .from("principal_clients")
           .delete()
           .eq("user_id", userId)
           .eq("principal_id", link.principal_id)
           .eq("client_id", mergedClientId);
+        if (error) throw error;
       } else {
-        await db
+        const { error } = await db
           .from("principal_clients")
           .update({ client_id: keptClientId })
           .eq("user_id", userId)
           .eq("principal_id", link.principal_id)
           .eq("client_id", mergedClientId);
+        if (error) throw error;
       }
     }),
   );
