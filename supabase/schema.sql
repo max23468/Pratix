@@ -1062,8 +1062,8 @@ CREATE OR REPLACE FUNCTION public.merge_duplicate_records(
 )
 RETURNS jsonb
 LANGUAGE plpgsql
-SECURITY INVOKER
-SET search_path = public
+SECURITY DEFINER
+SET search_path = ''
 AS $$
 DECLARE
   v_user_id uuid := auth.uid();

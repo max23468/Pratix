@@ -6,8 +6,12 @@ const latestBillingMigration = readFileSync(
   "supabase/migrations/20260807117000_ignore_excluded_billing_items.sql",
   "utf8",
 );
-const latestDuplicateMigration = readFileSync(
+const latestDuplicateDefinitionMigration = readFileSync(
   "supabase/migrations/20260807122000_preserve_merged_case_notes.sql",
+  "utf8",
+);
+const latestDuplicateSecurityMigration = readFileSync(
+  "supabase/migrations/20260807123000_secure_duplicate_merge_history.sql",
   "utf8",
 );
 
@@ -18,6 +22,11 @@ function rpcDefinition(sql: string, name: string) {
   expect(start).toBeGreaterThanOrEqual(0);
   expect(end).toBeGreaterThan(start);
   return sql.slice(start, end + 4).trim();
+}
+
+function rpcBody(sql: string, name: string) {
+  const definition = rpcDefinition(sql, name);
+  return definition.slice(definition.indexOf("AS $$"));
 }
 
 const billingRpcDefinition = (sql: string) => rpcDefinition(sql, "save_billing_invoice");
@@ -97,8 +106,16 @@ describe("contratti Supabase recupero crediti", () => {
   it("mantiene il merge duplicati atomico, owner-scoped e allineato allo schema", () => {
     const definition = rpcDefinition(schema, "merge_duplicate_records");
 
-    expect(definition).toBe(rpcDefinition(latestDuplicateMigration, "merge_duplicate_records"));
-    expect(definition).toContain("SECURITY INVOKER");
+    expect(rpcBody(schema, "merge_duplicate_records")).toBe(
+      rpcBody(latestDuplicateDefinitionMigration, "merge_duplicate_records"),
+    );
+    expect(definition).toContain("SECURITY DEFINER");
+    expect(definition).toContain("SET search_path = ''");
+    expect(latestDuplicateSecurityMigration).toContain(
+      "ALTER FUNCTION public.merge_duplicate_records(text, uuid, uuid, uuid)",
+    );
+    expect(latestDuplicateSecurityMigration).toContain("SECURITY DEFINER");
+    expect(latestDuplicateSecurityMigration).toContain("SET search_path = ''");
     expect(definition).toContain("v_user_id uuid := auth.uid()");
     expect(definition).toContain("FOR UPDATE");
     expect(definition.indexOf("IF v_review_status = 'merged'")).toBeLessThan(
