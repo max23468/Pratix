@@ -277,6 +277,11 @@ function queueStoredInvoiceRecovery(
       data: { id: "run-1", invoice_id: "invoice-1" },
       error: null,
     });
+  } else {
+    supabase.queue("billing_runs:select:maybeSingle", {
+      data: { id: "run-1" },
+      error: null,
+    });
   }
   supabase.queue(
     "invoices:select:single",
@@ -428,10 +433,6 @@ describe("server functions fatture", () => {
       },
       error: null,
     });
-    supabase.queue("billing_exports:select:many", {
-      data: savedExports.map((item) => ({ ...item, storage_status: "ready" })),
-      error: null,
-    });
     queueInvoiceSave(supabase);
 
     await handlerOf<
@@ -479,6 +480,41 @@ describe("server functions fatture", () => {
     expect(buildBillingWorkbook).toHaveBeenLastCalledWith(
       expect.objectContaining({ principalName: "Committente persistito" }),
     );
+  });
+
+  it("rifiuta un aggiornamento obsoleto emesso da una richiesta diversa", async () => {
+    const supabase = new FakeSupabase();
+    supabase.queue("invoices:select:single", {
+      data: {
+        id: "invoice-1",
+        public_code: "FT-00001",
+        billing_run_id: "run-1",
+        number: "12",
+        year: 2026,
+      },
+      error: null,
+    });
+    queueInvoiceSave(supabase);
+    supabase.queue("rpc:save_billing_invoice", {
+      data: null,
+      error: new Error("draft invoice not found"),
+    });
+
+    await expect(
+      handlerOf<
+        {
+          data: typeof billingInput & { invoiceId: string };
+          context: { supabase: FakeSupabase; userId: string };
+        },
+        unknown
+      >(updateDraftBillingInvoiceFn)({
+        data: { ...billingInput, invoiceId: "invoice-1" },
+        context: { supabase, userId: "user-1" },
+      }),
+    ).rejects.toThrow("draft invoice not found");
+
+    expect(supabase.rpcCalls).toHaveLength(1);
+    expect(supabase.uploads).toHaveLength(0);
   });
 
   it("cambia emissione fattura tramite RPC atomica", async () => {

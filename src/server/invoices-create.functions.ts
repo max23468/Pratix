@@ -165,13 +165,25 @@ async function findRecoverableInvoice({
 
   const { data: invoice, error: invoiceError } = await supabase
     .from("invoices")
-    .select("id, public_code, billing_run_id, number, year, status")
+    .select("id, public_code, billing_run_id, number, year")
     .eq("id", savedInvoiceId)
     .eq("user_id", userId)
     .single();
   if (invoiceError) throw invoiceError;
   if (!invoice?.billing_run_id) return null;
   billingRunId ??= invoice.billing_run_id;
+
+  if (invoiceId) {
+    const { data: matchingRun, error: runError } = await supabase
+      .from("billing_runs")
+      .select("id")
+      .eq("id", billingRunId)
+      .eq("user_id", userId)
+      .eq("request_id", requestId)
+      .maybeSingle();
+    if (runError) throw runError;
+    if (!matchingRun) return null;
+  }
 
   const { data: exports, error: exportsError } = await supabase
     .from("billing_exports")
@@ -189,11 +201,6 @@ async function findRecoverableInvoice({
   ) {
     throw new Error("Riferimenti Storage della fattura incompleti");
   }
-  if (invoiceId && invoice.status === "draft") {
-    const hasPendingExport = references.some((item) => item.storage_status === "pending");
-    if (!hasPendingExport) return null;
-  }
-
   return {
     invoiceId: invoice.id,
     invoiceRef: invoice.public_code ?? invoice.id,
