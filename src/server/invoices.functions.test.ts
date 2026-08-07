@@ -327,6 +327,7 @@ function queueStoredInvoiceRecovery(
           practice_number: 42,
           client_name: "Cliente persistito",
           counterparty_name: "Controparte persistita",
+          hearing_dates: ["2026-05-20"],
         },
       ],
       error: null,
@@ -340,15 +341,12 @@ function queueStoredInvoiceRecovery(
           practice_number: 42,
           client_name: "Cliente persistito",
           counterparty_name: "Controparte persistita",
+          hearing_dates: [],
         },
       ],
       error: null,
     },
   );
-  supabase.queue("case_activity_hearings:select:many", {
-    data: [{ activity_id: "activity-fee", hearing_date: "2026-05-20", position: 1 }],
-    error: null,
-  });
 }
 
 describe("server functions fatture", () => {
@@ -408,7 +406,7 @@ describe("server functions fatture", () => {
         data: {
           ...billingInput,
           principalId: "principal-modificato",
-          selections: [],
+          selections: [{ activityId: "activity-modificata", status: "included" }],
         },
         context: { supabase, userId: "user-1" },
       }),
@@ -469,7 +467,7 @@ describe("server functions fatture", () => {
           ...billingInput,
           invoiceId: "invoice-1",
           principalId: "principal-modificato",
-          selections: [],
+          selections: [{ activityId: "activity-modificata", status: "included" }],
         },
         context: { supabase, userId: "user-1" },
       }),
@@ -564,6 +562,7 @@ describe("server functions fatture", () => {
           client_name: "Cliente snapshot",
           counterparty_name: "Controparte snapshot",
           activity_date: "2026-05-10",
+          hearing_dates: ["2026-05-20"],
           kind: "fee",
           description: "Descrizione storicizzata",
           quantity: 3,
@@ -571,10 +570,6 @@ describe("server functions fatture", () => {
           amount: 360,
         },
       ],
-      error: null,
-    });
-    supabase.queue("case_activity_hearings:select:many", {
-      data: [{ activity_id: "activity-1", hearing_date: "2026-05-20", position: 1 }],
       error: null,
     });
 

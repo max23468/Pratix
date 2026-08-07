@@ -620,10 +620,14 @@ DECLARE
   v_prefix text;
   v_next_number integer;
   v_item_count integer;
+  v_invoice_status public.invoice_status;
   v_new_run boolean := p_invoice_id IS NULL;
 BEGIN
   IF v_user_id IS NULL THEN
     RAISE EXCEPTION 'authentication required';
+  END IF;
+  IF p_request_id IS NULL THEN
+    RAISE EXCEPTION 'request id is required';
   END IF;
   IF p_status NOT IN ('draft', 'issued') THEN
     RAISE EXCEPTION 'invalid invoice status';
@@ -631,20 +635,25 @@ BEGIN
   IF p_period_end < p_period_start THEN
     RAISE EXCEPTION 'invalid billing period';
   END IF;
-  IF jsonb_typeof(p_lines) <> 'array'
-     OR jsonb_typeof(p_items) <> 'array'
-     OR jsonb_typeof(p_exports) <> 'array' THEN
+  IF jsonb_typeof(p_lines) IS DISTINCT FROM 'array'
+     OR jsonb_typeof(p_items) IS DISTINCT FROM 'array'
+     OR jsonb_typeof(p_exports) IS DISTINCT FROM 'array' THEN
     RAISE EXCEPTION 'invalid billing payload';
   END IF;
   IF jsonb_array_length(p_items) = 0 THEN
     RAISE EXCEPTION 'at least one billing item is required';
   END IF;
+  IF jsonb_array_length(p_lines) = 0 THEN
+    RAISE EXCEPTION 'at least one invoice line is required';
+  END IF;
+  IF jsonb_array_length(p_exports) <> 2 OR (
+    SELECT count(DISTINCT export.kind)
+    FROM jsonb_to_recordset(p_exports) AS export(kind public.billing_export_kind)
+  ) <> 2 THEN
+    RAISE EXCEPTION 'both billing exports are required';
+  END IF;
 
   IF v_new_run THEN
-    IF p_request_id IS NULL THEN
-      RAISE EXCEPTION 'request id is required';
-    END IF;
-
     SELECT i.id, i.billing_run_id, i.public_code, i.number, i.year
       INTO v_invoice_id, v_billing_run_id, v_public_code, v_number, v_year
     FROM public.billing_runs br
@@ -676,15 +685,46 @@ BEGIN
       );
     END IF;
   ELSE
-    SELECT i.id, i.billing_run_id, i.public_code, i.number, i.year
-      INTO v_invoice_id, v_billing_run_id, v_public_code, v_number, v_year
+    SELECT i.id, i.billing_run_id, i.public_code, i.number, i.year, i.status
+      INTO v_invoice_id, v_billing_run_id, v_public_code, v_number, v_year, v_invoice_status
     FROM public.invoices i
     WHERE i.id = p_invoice_id
       AND i.user_id = v_user_id
-      AND i.status = 'draft'
     FOR UPDATE;
 
     IF v_invoice_id IS NULL OR v_billing_run_id IS NULL THEN
+      RAISE EXCEPTION 'invoice not found';
+    END IF;
+
+    IF EXISTS (
+      SELECT 1
+      FROM public.billing_runs br
+      WHERE br.id = v_billing_run_id
+        AND br.user_id = v_user_id
+        AND br.request_id = p_request_id
+    ) THEN
+      RETURN jsonb_build_object(
+        'invoiceId', v_invoice_id,
+        'invoiceRef', v_public_code,
+        'billingRunId', v_billing_run_id,
+        'number', v_number,
+        'year', v_year,
+        'exports', (
+          SELECT coalesce(jsonb_agg(jsonb_build_object(
+            'id', be.id,
+            'kind', be.kind,
+            'file_name', be.file_name,
+            'storage_path', be.storage_path,
+            'storage_status', be.storage_status
+          ) ORDER BY be.kind), '[]'::jsonb)
+          FROM public.billing_exports be
+          WHERE be.billing_run_id = v_billing_run_id
+            AND be.user_id = v_user_id
+        )
+      );
+    END IF;
+
+    IF v_invoice_status <> 'draft' THEN
       RAISE EXCEPTION 'draft invoice not found';
     END IF;
   END IF;
@@ -696,62 +736,6 @@ BEGIN
       AND p.user_id = v_user_id
   ) THEN
     RAISE EXCEPTION 'principal not found';
-  END IF;
-
-  SELECT count(*)
-    INTO v_item_count
-  FROM (
-    SELECT DISTINCT item.activity_id
-    FROM jsonb_to_recordset(p_items) AS item(activity_id uuid, status public.billing_run_item_status)
-  ) requested;
-
-  IF v_item_count <> jsonb_array_length(p_items) THEN
-    RAISE EXCEPTION 'duplicate billing activities';
-  END IF;
-
-  PERFORM ca.id
-  FROM public.case_activities ca
-  JOIN jsonb_to_recordset(p_items)
-    AS item(activity_id uuid, status public.billing_run_item_status)
-    ON item.activity_id = ca.id
-  WHERE ca.user_id = v_user_id
-    AND ca.principal_id = p_principal_id
-  FOR UPDATE;
-
-  IF NOT FOUND OR (
-    SELECT count(*)
-    FROM public.case_activities ca
-    JOIN jsonb_to_recordset(p_items)
-      AS item(activity_id uuid, status public.billing_run_item_status)
-      ON item.activity_id = ca.id
-    WHERE ca.user_id = v_user_id
-      AND ca.principal_id = p_principal_id
-  ) <> v_item_count THEN
-    RAISE EXCEPTION 'one or more activities are unavailable';
-  END IF;
-
-  IF NOT EXISTS (
-    SELECT 1
-    FROM jsonb_to_recordset(p_items)
-      AS item(activity_id uuid, status public.billing_run_item_status)
-    WHERE item.status = 'included'
-  ) THEN
-    RAISE EXCEPTION 'at least one included activity is required';
-  END IF;
-
-  IF EXISTS (
-    SELECT 1
-    FROM public.case_activities ca
-    JOIN jsonb_to_recordset(p_items)
-      AS item(activity_id uuid, status public.billing_run_item_status)
-      ON item.activity_id = ca.id
-    WHERE item.status = 'included'
-      AND NOT (
-        (ca.status = 'to_invoice' AND ca.invoice_id IS NULL)
-        OR (NOT v_new_run AND ca.invoice_id = v_invoice_id)
-      )
-  ) THEN
-    RAISE EXCEPTION 'one or more included activities are already invoiced';
   END IF;
 
   IF v_new_run THEN
@@ -803,7 +787,64 @@ BEGIN
         )
       );
     END IF;
+  END IF;
 
+  SELECT count(*)
+    INTO v_item_count
+  FROM (
+    SELECT DISTINCT item.activity_id
+    FROM jsonb_to_recordset(p_items) AS item(activity_id uuid, status public.billing_run_item_status)
+  ) requested;
+
+  IF v_item_count <> jsonb_array_length(p_items) THEN
+    RAISE EXCEPTION 'duplicate billing activities';
+  END IF;
+
+  PERFORM ca.id
+  FROM public.case_activities ca
+  JOIN jsonb_to_recordset(p_items)
+    AS item(activity_id uuid, status public.billing_run_item_status)
+    ON item.activity_id = ca.id
+  WHERE ca.user_id = v_user_id
+    AND ca.principal_id = p_principal_id
+  FOR UPDATE;
+
+  IF NOT FOUND OR (
+    SELECT count(*)
+    FROM public.case_activities ca
+    JOIN jsonb_to_recordset(p_items)
+      AS item(activity_id uuid, status public.billing_run_item_status)
+      ON item.activity_id = ca.id
+    WHERE ca.user_id = v_user_id
+      AND ca.principal_id = p_principal_id
+  ) <> v_item_count THEN
+    RAISE EXCEPTION 'one or more activities are unavailable';
+  END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+    FROM jsonb_to_recordset(p_items)
+      AS item(activity_id uuid, status public.billing_run_item_status)
+    WHERE item.status = 'included'
+  ) THEN
+    RAISE EXCEPTION 'at least one included activity is required';
+  END IF;
+
+  IF EXISTS (
+    SELECT 1
+    FROM public.case_activities ca
+    JOIN jsonb_to_recordset(p_items)
+      AS item(activity_id uuid, status public.billing_run_item_status)
+      ON item.activity_id = ca.id
+    WHERE NOT (
+        (ca.status = 'to_invoice' AND ca.invoice_id IS NULL)
+        OR (NOT v_new_run AND ca.invoice_id = v_invoice_id)
+      )
+  ) THEN
+    RAISE EXCEPTION 'one or more activities are already invoiced';
+  END IF;
+
+  IF v_new_run THEN
     SELECT invoice_year, invoice_next_number, coalesce(invoice_number_prefix, '')
       INTO v_year, v_next_number, v_prefix
     FROM public.profiles
@@ -848,7 +889,8 @@ BEGIN
       AND invoice_id = v_invoice_id;
 
     UPDATE public.billing_runs
-    SET principal_id = p_principal_id,
+    SET request_id = p_request_id,
+        principal_id = p_principal_id,
         period_start = p_period_start,
         period_end = p_period_end,
         status = 'finalized',
@@ -925,12 +967,12 @@ BEGIN
 
   INSERT INTO public.invoice_lines (
     user_id, invoice_id, position, case_activity_id, practice_number,
-    client_name, counterparty_name, activity_date, kind, description,
+    client_name, counterparty_name, activity_date, hearing_dates, kind, description,
     quantity, unit_price, amount
   )
   SELECT v_user_id, v_invoice_id, line.position, line.case_activity_id,
          line.practice_number, line.client_name, line.counterparty_name,
-         line.activity_date, line.kind, line.description, line.quantity,
+         line.activity_date, line.hearing_dates, line.kind, line.description, line.quantity,
          line.unit_price, line.amount
   FROM jsonb_to_recordset(p_lines) AS line(
     position integer,
@@ -939,6 +981,7 @@ BEGIN
     client_name text,
     counterparty_name text,
     activity_date date,
+    hearing_dates date[],
     kind public.invoice_line_kind,
     description text,
     quantity numeric,
@@ -1191,6 +1234,7 @@ CREATE TABLE public.invoice_lines (
   client_name text,
   counterparty_name text,
   activity_date date,
+  hearing_dates date[] NOT NULL DEFAULT '{}'::date[],
   kind        public.invoice_line_kind NOT NULL DEFAULT 'fee',
   description text NOT NULL,
   quantity    numeric NOT NULL DEFAULT 1,

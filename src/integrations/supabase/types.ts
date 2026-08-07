@@ -920,6 +920,7 @@ export type Database = {
           counterparty_name: string | null
           created_at: string
           description: string
+          hearing_dates: string[]
           id: string
           invoice_id: string
           kind: Database["public"]["Enums"]["invoice_line_kind"]
@@ -937,6 +938,7 @@ export type Database = {
           counterparty_name?: string | null
           created_at?: string
           description: string
+          hearing_dates?: string[]
           id?: string
           invoice_id: string
           kind?: Database["public"]["Enums"]["invoice_line_kind"]
@@ -954,6 +956,7 @@ export type Database = {
           counterparty_name?: string | null
           created_at?: string
           description?: string
+          hearing_dates?: string[]
           id?: string
           invoice_id?: string
           kind?: Database["public"]["Enums"]["invoice_line_kind"]

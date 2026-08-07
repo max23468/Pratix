@@ -73,7 +73,7 @@ export type BillingInvoiceLine = {
   quantity: number | string;
   unit_price: number | string;
   amount: number | string;
-  case_activity_hearings?: Array<{ hearing_date: string; position: number | string }> | null;
+  hearing_dates?: string[] | null;
 };
 
 /** Riga persistita su `invoice_lines`. Rispecchia la nullabilità dello schema. */
@@ -86,6 +86,7 @@ export type BillingInvoiceLineRow = {
   client_name: string | null;
   counterparty_name: string | null;
   activity_date: string;
+  hearing_dates: string[];
   kind: InvoiceLineKind;
   description: string;
   quantity: number;
@@ -225,6 +226,10 @@ export function buildInvoiceLineRows({
     client_name: billingPartyName(activity.clients),
     counterparty_name: billingCounterpartyName(activity.counterparties),
     activity_date: activity.activity_date,
+    hearing_dates: (activity.case_activity_hearings ?? [])
+      .slice()
+      .sort((a, b) => Number(a.position) - Number(b.position))
+      .map((hearing) => hearing.hearing_date),
     kind: (activity.kind === "fee" ? "fee" : "expense_art15") as InvoiceLineKind,
     description: activity.description,
     quantity: Number(activity.quantity),
@@ -242,6 +247,7 @@ export function buildInvoiceLineRows({
       client_name: null,
       counterparty_name: null,
       activity_date: input.issueDate,
+      hearing_dates: [],
       kind: "fee",
       description: `Spese generali ${input.generalExpensesRate}%`,
       quantity: 1,
@@ -319,10 +325,7 @@ export function buildBillingExportRowsFromInvoiceLines(
             quantity: Number(line.quantity),
             unitPrice: Number(line.unit_price),
             amount: Number(line.amount),
-            hearingDates: (line.case_activity_hearings ?? [])
-              .slice()
-              .sort((a, b) => Number(a.position) - Number(b.position))
-              .map((hearing) => hearing.hearing_date),
+            hearingDates: line.hearing_dates ?? [],
           },
         ]
       : [],

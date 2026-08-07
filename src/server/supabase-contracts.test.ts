@@ -2,6 +2,19 @@ import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 
 const schema = readFileSync("supabase/schema.sql", "utf8");
+const latestBillingMigration = readFileSync(
+  "supabase/migrations/20260807116000_serialize_billing_request_claim.sql",
+  "utf8",
+);
+
+function billingRpcDefinition(sql: string) {
+  const start = sql.indexOf("CREATE OR REPLACE FUNCTION public.save_billing_invoice");
+  const end = sql.indexOf("\n$$;", start);
+
+  expect(start).toBeGreaterThanOrEqual(0);
+  expect(end).toBeGreaterThan(start);
+  return sql.slice(start, end + 4).trim();
+}
 
 const userOwnedTables = [
   "clients",
@@ -62,6 +75,16 @@ describe("contratti Supabase recupero crediti", () => {
       "REVOKE EXECUTE ON FUNCTION public.set_invoice_issue_state(uuid, boolean) FROM PUBLIC, anon",
     );
     expect(schema).toContain("GRANT EXECUTE ON FUNCTION public.set_invoice_issue_state");
+  });
+
+  it("mantiene schema canonico e ultima migrazione allineati sulla RPC fatture", () => {
+    const definition = billingRpcDefinition(schema);
+
+    expect(definition).toBe(billingRpcDefinition(latestBillingMigration));
+    expect(schema).toContain("hearing_dates date[] NOT NULL DEFAULT '{}'::date[]");
+    expect(definition.indexOf("INSERT INTO public.billing_runs")).toBeLessThan(
+      definition.indexOf("PERFORM ca.id"),
+    );
   });
 
   it("lega le relazioni operative al proprietario e ogni attività a una sola riga", () => {

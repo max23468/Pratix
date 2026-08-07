@@ -56,7 +56,7 @@ export async function buildStoredBillingExport({
   const { data: lines, error: linesError } = await supabase
     .from("invoice_lines")
     .select(
-      "case_activity_id, practice_number, client_name, counterparty_name, activity_date, kind, description, quantity, unit_price, amount",
+      "case_activity_id, practice_number, client_name, counterparty_name, activity_date, hearing_dates, kind, description, quantity, unit_price, amount",
     )
     .eq("user_id", userId)
     .eq("invoice_id", invoice.id)
@@ -64,46 +64,12 @@ export async function buildStoredBillingExport({
     .order("position", { ascending: true });
   if (linesError) throw linesError;
 
-  const activityIds = [
-    ...new Set(
-      (lines ?? []).flatMap((line) => (line.case_activity_id ? [line.case_activity_id] : [])),
-    ),
-  ];
-  const hearingsByActivityId = new Map<
-    string,
-    Array<{ hearing_date: string; position: number | string }>
-  >();
-
-  if (kind === "fees" && activityIds.length > 0) {
-    const { data: hearings, error: hearingsError } = await supabase
-      .from("case_activity_hearings")
-      .select("activity_id, hearing_date, position")
-      .eq("user_id", userId)
-      .in("activity_id", activityIds)
-      .order("position", { ascending: true });
-    if (hearingsError) throw hearingsError;
-
-    for (const hearing of hearings ?? []) {
-      const current = hearingsByActivityId.get(hearing.activity_id) ?? [];
-      current.push({ hearing_date: hearing.hearing_date, position: hearing.position });
-      hearingsByActivityId.set(hearing.activity_id, current);
-    }
-  }
-
   const file = buildBillingWorkbook({
     kind,
     principalName: principal.business_name,
     periodStart: billingRun.period_start,
     periodEnd: billingRun.period_end,
-    rows: buildBillingExportRowsFromInvoiceLines(
-      (lines ?? []).map((line) => ({
-        ...line,
-        case_activity_hearings: line.case_activity_id
-          ? (hearingsByActivityId.get(line.case_activity_id) ?? [])
-          : [],
-      })),
-      kind,
-    ),
+    rows: buildBillingExportRowsFromInvoiceLines(lines ?? [], kind),
   });
 
   return { exportReference, file };
