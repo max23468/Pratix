@@ -27,7 +27,7 @@ vi.mock("@/server/price-books.functions", () => ({
   savePriceBookFn: {},
 }));
 
-vi.mock("@/server/invoices.functions", () => ({
+vi.mock("@/server/invoices-create.functions", () => ({
   createBillingInvoiceFn: {},
   updateDraftBillingInvoiceFn: {},
 }));

@@ -7,6 +7,11 @@ export type Json =
   | Json[]
 
 export type Database = {
+  // Allows to automatically instantiate createClient with right options
+  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
+  __InternalSupabase: {
+    PostgrestVersion: "14.5"
+  }
   public: {
     Tables: {
       activity_attachments: {
@@ -81,6 +86,7 @@ export type Database = {
           mime_type: string | null
           size_bytes: number | null
           storage_path: string
+          storage_status: string
           updated_at: string
           user_id: string
         }
@@ -96,6 +102,7 @@ export type Database = {
           mime_type?: string | null
           size_bytes?: number | null
           storage_path: string
+          storage_status?: string
           updated_at?: string
           user_id: string
         }
@@ -111,6 +118,7 @@ export type Database = {
           mime_type?: string | null
           size_bytes?: number | null
           storage_path?: string
+          storage_status?: string
           updated_at?: string
           user_id?: string
         }
@@ -196,6 +204,7 @@ export type Database = {
           period_start: string
           principal_id: string
           reimbursements_total: number
+          request_id: string | null
           status: Database["public"]["Enums"]["billing_run_status"]
           updated_at: string
           user_id: string
@@ -216,6 +225,7 @@ export type Database = {
           period_start: string
           principal_id: string
           reimbursements_total?: number
+          request_id?: string | null
           status?: Database["public"]["Enums"]["billing_run_status"]
           updated_at?: string
           user_id: string
@@ -236,6 +246,7 @@ export type Database = {
           period_start?: string
           principal_id?: string
           reimbursements_total?: number
+          request_id?: string | null
           status?: Database["public"]["Enums"]["billing_run_status"]
           updated_at?: string
           user_id?: string
@@ -520,11 +531,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "case_status_history_case_id_fkey"
-            columns: ["case_id"]
+            foreignKeyName: "case_status_history_case_owner_fkey"
+            columns: ["case_id", "user_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "user_id"]
           },
         ]
       }
@@ -582,11 +593,11 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "cases_client_id_fkey"
-            columns: ["client_id"]
+            foreignKeyName: "cases_client_owner_fkey"
+            columns: ["client_id", "user_id"]
             isOneToOne: false
             referencedRelation: "clients"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "user_id"]
           },
           {
             foreignKeyName: "cases_counterparty_owner_fkey"
@@ -748,6 +759,7 @@ export type Database = {
           right_record_id: string
           score: number
           snapshot: Json
+          snoozed_until: string | null
           status: string
           updated_at: string
           user_id: string
@@ -767,6 +779,7 @@ export type Database = {
           right_record_id: string
           score?: number
           snapshot?: Json
+          snoozed_until?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -786,6 +799,7 @@ export type Database = {
           right_record_id?: string
           score?: number
           snapshot?: Json
+          snoozed_until?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -906,6 +920,7 @@ export type Database = {
           counterparty_name: string | null
           created_at: string
           description: string
+          hearing_dates: string[]
           id: string
           invoice_id: string
           kind: Database["public"]["Enums"]["invoice_line_kind"]
@@ -923,6 +938,7 @@ export type Database = {
           counterparty_name?: string | null
           created_at?: string
           description: string
+          hearing_dates?: string[]
           id?: string
           invoice_id: string
           kind?: Database["public"]["Enums"]["invoice_line_kind"]
@@ -940,6 +956,7 @@ export type Database = {
           counterparty_name?: string | null
           created_at?: string
           description?: string
+          hearing_dates?: string[]
           id?: string
           invoice_id?: string
           kind?: Database["public"]["Enums"]["invoice_line_kind"]
@@ -958,11 +975,11 @@ export type Database = {
             referencedColumns: ["id", "user_id"]
           },
           {
-            foreignKeyName: "invoice_lines_invoice_id_fkey"
-            columns: ["invoice_id"]
+            foreignKeyName: "invoice_lines_invoice_owner_fkey"
+            columns: ["invoice_id", "user_id"]
             isOneToOne: false
             referencedRelation: "invoices"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "user_id"]
           },
         ]
       }
@@ -1081,18 +1098,18 @@ export type Database = {
             referencedColumns: ["id", "user_id"]
           },
           {
-            foreignKeyName: "invoices_case_id_fkey"
-            columns: ["case_id"]
+            foreignKeyName: "invoices_case_owner_fkey"
+            columns: ["case_id", "user_id"]
             isOneToOne: false
             referencedRelation: "cases"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "user_id"]
           },
           {
-            foreignKeyName: "invoices_client_id_fkey"
-            columns: ["client_id"]
+            foreignKeyName: "invoices_client_owner_fkey"
+            columns: ["client_id", "user_id"]
             isOneToOne: false
             referencedRelation: "clients"
-            referencedColumns: ["id"]
+            referencedColumns: ["id", "user_id"]
           },
           {
             foreignKeyName: "invoices_principal_owner_fkey"
@@ -1501,6 +1518,43 @@ export type Database = {
     Functions: {
       apply_import_row: { Args: { p_import_row_id: string }; Returns: string }
       get_next_practice_number: { Args: never; Returns: number }
+      save_billing_invoice: {
+        Args: {
+          p_apply_withholding: boolean
+          p_case_id: string
+          p_cassa_amount: number
+          p_cassa_base_amount: number
+          p_cassa_rate: number
+          p_client_id: string
+          p_compensation_total: number
+          p_due_date: string
+          p_exports: Json
+          p_general_expenses_amount: number
+          p_general_expenses_rate: number
+          p_include_general_expenses: boolean
+          p_invoice_id: string
+          p_issue_date: string
+          p_items: Json
+          p_lines: Json
+          p_net_to_pay: number
+          p_notes: string
+          p_payment_method: string
+          p_period_end: string
+          p_period_start: string
+          p_postponed_until: string
+          p_principal_id: string
+          p_reimbursements_total: number
+          p_request_id: string
+          p_stamp_amount: number
+          p_status: Database["public"]["Enums"]["invoice_status"]
+          p_total_amount: number
+          p_vat_amount: number
+          p_vat_rate: number
+          p_withholding_amount: number
+          p_withholding_rate: number
+        }
+        Returns: Json
+      }
       set_invoice_issue_state: {
         Args: { p_invoice_id: string; p_issued: boolean }
         Returns: string

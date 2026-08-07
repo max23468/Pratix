@@ -231,7 +231,7 @@ vi.mock("@tanstack/react-start", () => ({
     serverFn === updateDraftBillingInvoiceFn ? updateDraftBillingInvoice : createBillingInvoice,
 }));
 
-vi.mock("@/server/invoices.functions", () => ({
+vi.mock("@/server/invoices-create.functions", () => ({
   createBillingInvoiceFn,
   updateDraftBillingInvoiceFn,
 }));

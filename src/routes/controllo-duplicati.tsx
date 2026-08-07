@@ -117,7 +117,6 @@ function DuplicateControlPage() {
       readServerResult(
         await resolveDuplicate({
           data: {
-            reviewId: input.candidate.reviewId,
             entityType: input.candidate.entityType,
             leftRecordId: input.candidate.left.id,
             rightRecordId: input.candidate.right.id,

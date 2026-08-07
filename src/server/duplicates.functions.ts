@@ -4,73 +4,24 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import {
   canMergeDuplicateEntity,
   DUPLICATE_SNOOZE_OPTIONS,
-  duplicatePairKey,
-  type DuplicateCandidate,
   type DuplicateEntityType,
-  type DuplicateReviewStatus,
   type DuplicateSnoozeInterval,
 } from "@/lib/duplicate-matching";
 import {
-  reviewInsertFromCandidate,
-  scanDuplicateCandidates,
-  scanDuplicateDraft,
-  type ActivityDuplicateRow,
-  type CaseDuplicateRow,
-  type ClientDuplicateRow,
-  type CounterpartyDuplicateRow,
-  type CounterpartySubjectDuplicateRow,
-  type DuplicateReviewRow,
-  type PrincipalDuplicateRow,
-} from "@/server/duplicates.logic";
-
-type UntypedResponse<T> = {
-  data: T | null;
-  error: Error | null;
-};
-
-type UntypedQuery<T = unknown> = PromiseLike<UntypedResponse<T>> & {
-  select: (columns?: string) => UntypedQuery<T>;
-  insert: (values: unknown) => UntypedQuery<T>;
-  upsert: (values: unknown, options?: Record<string, unknown>) => UntypedQuery<T>;
-  update: (values: unknown) => UntypedQuery<T>;
-  delete: () => UntypedQuery<T>;
-  eq: (column: string, value: unknown) => UntypedQuery<T>;
-  in: (column: string, values: unknown[]) => UntypedQuery<T>;
-  is: (column: string, value: unknown) => UntypedQuery<T>;
-  order: (column: string, options?: Record<string, unknown>) => UntypedQuery<T>;
-  limit: (count: number) => UntypedQuery<T>;
-  single: () => PromiseLike<UntypedResponse<T>>;
-  maybeSingle: () => PromiseLike<UntypedResponse<T>>;
-};
-
-type UntypedSupabase = {
-  from: <T = unknown>(table: string) => UntypedQuery<T>;
-};
-
-type DuplicateSubjectLabelRow = {
-  kind: string;
-  first_name: string | null;
-  last_name: string | null;
-  business_name: string | null;
-};
-
-type ActivityScanRow = ActivityDuplicateRow & {
-  cases: { public_code: string | null; practice_number: number } | null;
-  principals: { business_name: string } | null;
-  clients: DuplicateSubjectLabelRow | null;
-  counterparties: DuplicateSubjectLabelRow | null;
-};
+  attachPersistedReviews,
+  persistOpenCandidates,
+  saveDuplicateDecision,
+} from "@/server/duplicates-decision.server";
+import { loadDuplicateScanData } from "@/server/duplicates-load.server";
+import { scanDuplicateCandidates, scanDuplicateDraft } from "@/server/duplicates.logic";
+import { mergeRecords } from "@/server/duplicates-merge.server";
 
 type FindDuplicateDraftInput = {
   entityType: DuplicateEntityType;
   draft: Record<string, unknown>;
 };
 
-const MAX_DUPLICATE_SCAN_ROWS = 500;
-const DUPLICATE_SCAN_FETCH_LIMIT = MAX_DUPLICATE_SCAN_ROWS + 1;
-
 type ResolveDuplicateInput = {
-  reviewId?: string | null;
   entityType: DuplicateEntityType;
   leftRecordId: string;
   rightRecordId: string;
@@ -86,36 +37,19 @@ export type DuplicateSummaryResult = {
   resolvedCount: number;
 };
 
-const asDb = (client: unknown) => client as UntypedSupabase;
-
 export const scanDuplicateCandidatesFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const data = await loadDuplicateScanData(context.supabase, context.userId);
-    const scan = scanDuplicateCandidates(data);
-
+    const scan = scanDuplicateCandidates(
+      await loadDuplicateScanData(context.supabase, context.userId),
+    );
     const inserted = await persistOpenCandidates(
       context.supabase,
       context.userId,
       scan.openCandidates,
     );
-    const reviewsByPair = new Map(
-      inserted.map((review) => [
-        duplicatePairKey(review.entity_type, review.left_record_id, review.right_record_id),
-        review,
-      ]),
-    );
-
     return {
-      openCandidates: scan.openCandidates.map((candidate) => {
-        if (candidate.reviewId) return candidate;
-        const review = reviewsByPair.get(
-          duplicatePairKey(candidate.entityType, candidate.left.id, candidate.right.id),
-        );
-        return review
-          ? { ...candidate, reviewId: review.id, detectedAt: review.detected_at }
-          : candidate;
-      }),
+      openCandidates: attachPersistedReviews(scan.openCandidates, inserted),
       resolvedCandidates: scan.resolvedCandidates,
     };
   });
@@ -123,8 +57,9 @@ export const scanDuplicateCandidatesFn = createServerFn({ method: "POST" })
 export const getDuplicateSummaryFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }): Promise<DuplicateSummaryResult> => {
-    const data = await loadDuplicateScanData(context.supabase, context.userId);
-    const scan = scanDuplicateCandidates(data);
+    const scan = scanDuplicateCandidates(
+      await loadDuplicateScanData(context.supabase, context.userId),
+    );
     const open = scan.openCandidates.filter((candidate) => candidate.status === "open");
     return {
       openCount: open.length,
@@ -154,11 +89,8 @@ export const resolveDuplicateCandidateFn = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator(validateResolveDuplicateInput)
   .handler(async ({ data, context }) => {
-    const status = statusForAction(data.action);
     let keptRecordId: string | null = null;
     let mergedRecordId: string | null = null;
-    const snoozedUntil =
-      data.action === "snooze" ? calculateSnoozedUntil(data.snoozeInterval ?? "24h") : null;
 
     if (data.action === "merge") {
       if (!data.keepRecordId) throw new Error("Scegli il record da mantenere");
@@ -166,8 +98,7 @@ export const resolveDuplicateCandidateFn = createServerFn({ method: "POST" })
         throw new Error("Record da mantenere non valido");
       }
       keptRecordId = data.keepRecordId;
-      mergedRecordId =
-        data.keepRecordId === data.leftRecordId ? data.rightRecordId : data.leftRecordId;
+      mergedRecordId = keptRecordId === data.leftRecordId ? data.rightRecordId : data.leftRecordId;
       await mergeRecords(
         supabaseAdmin,
         context.userId,
@@ -177,652 +108,18 @@ export const resolveDuplicateCandidateFn = createServerFn({ method: "POST" })
       );
     }
 
-    const [leftRecordId, rightRecordId] =
-      data.leftRecordId < data.rightRecordId
-        ? [data.leftRecordId, data.rightRecordId]
-        : [data.rightRecordId, data.leftRecordId];
-
-    const query = asDb(context.supabase)
-      .from<DuplicateReviewRow>("duplicate_reviews")
-      .update({
-        status,
-        kept_record_id: keptRecordId,
-        merged_record_id: mergedRecordId,
-        snoozed_until: snoozedUntil,
-        resolved_at: status === "snoozed" ? null : new Date().toISOString(),
-      })
-      .eq("user_id", context.userId)
-      .eq("entity_type", data.entityType)
-      .eq("left_record_id", leftRecordId)
-      .eq("right_record_id", rightRecordId)
-      .select("*")
-      .single();
-
-    const { data: review, error } = await query;
-    if (error) throw error;
-    return review;
+    return saveDuplicateDecision({
+      client: context.supabase,
+      userId: context.userId,
+      entityType: data.entityType,
+      leftRecordId: data.leftRecordId,
+      rightRecordId: data.rightRecordId,
+      action: data.action,
+      snoozeInterval: data.snoozeInterval,
+      keptRecordId,
+      mergedRecordId,
+    });
   });
-
-/**
- * `scope: "draft"` carica solo gli insiemi usati dal controllo in fase di
- * creazione: attività e revisioni non servono e il loro volume non deve
- * bloccare il salvataggio di committenti, clienti, controparti e pratiche.
- */
-async function loadDuplicateScanData(
-  client: unknown,
-  userId: string,
-  scope: "full" | "draft" = "full",
-) {
-  const db = asDb(client);
-  const emptyResult = <T>() => Promise.resolve({ data: [] as T, error: null });
-  const fullScope = scope === "full";
-  const [
-    principalsResult,
-    clientsResult,
-    principalLinksResult,
-    counterpartiesResult,
-    subjectsResult,
-    casesResult,
-    activitiesResult,
-    reviewsResult,
-  ] = await Promise.all([
-    db
-      .from<PrincipalDuplicateRow[]>("principals")
-      .select(
-        "id, public_code, business_name, tax_code, vat_number, email, pec, phone, address_city, archived_at",
-      )
-      .eq("user_id", userId)
-      .limit(DUPLICATE_SCAN_FETCH_LIMIT),
-    db
-      .from<ClientDuplicateRow[]>("clients")
-      .select("id, public_code, kind, first_name, last_name, business_name, notes")
-      .eq("user_id", userId)
-      .limit(DUPLICATE_SCAN_FETCH_LIMIT),
-    db
-      .from<Array<{ client_id: string; principals: { business_name: string } | null }>>(
-        "principal_clients",
-      )
-      .select("client_id, principals(business_name)")
-      .eq("user_id", userId)
-      .limit(DUPLICATE_SCAN_FETCH_LIMIT),
-    db
-      .from<CounterpartyDuplicateRow[]>("counterparties")
-      .select("id, public_code, kind, first_name, last_name, business_name, notes")
-      .eq("user_id", userId)
-      .limit(DUPLICATE_SCAN_FETCH_LIMIT),
-    db
-      .from<
-        Array<{
-          id: string;
-          counterparty_id: string;
-          kind: string;
-          first_name: string | null;
-          last_name: string | null;
-          business_name: string | null;
-          notes: string | null;
-          position: number;
-          counterparties: {
-            public_code: string | null;
-            kind: string;
-            first_name: string | null;
-            last_name: string | null;
-            business_name: string | null;
-          } | null;
-        }>
-      >("counterparty_subjects")
-      .select(
-        "id, counterparty_id, kind, first_name, last_name, business_name, notes, position, counterparties(public_code, kind, first_name, last_name, business_name)",
-      )
-      .eq("user_id", userId)
-      .limit(DUPLICATE_SCAN_FETCH_LIMIT),
-    db
-      .from<
-        Array<
-          CaseDuplicateRow & {
-            principals: { business_name: string } | null;
-            clients: {
-              kind: string;
-              first_name: string | null;
-              last_name: string | null;
-              business_name: string | null;
-            } | null;
-            counterparties: {
-              kind: string;
-              first_name: string | null;
-              last_name: string | null;
-              business_name: string | null;
-            } | null;
-          }
-        >
-      >("cases")
-      .select(
-        "id, public_code, practice_number, principal_id, client_id, counterparty_id, authority, rg_number, opened_at, status, principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
-      )
-      .eq("user_id", userId)
-      .limit(DUPLICATE_SCAN_FETCH_LIMIT),
-    fullScope
-      ? db
-          .from<ActivityScanRow[]>("case_activities")
-          .select(
-            "id, case_id, principal_id, client_id, counterparty_id, price_item_id, invoice_id, activity_date, kind, status, snapshot_price_code, snapshot_price_name, description, quantity, unit_price, amount, cases(public_code, practice_number), principals(business_name), clients(kind, first_name, last_name, business_name), counterparties(kind, first_name, last_name, business_name)",
-          )
-          .eq("user_id", userId)
-          .limit(DUPLICATE_SCAN_FETCH_LIMIT)
-      : emptyResult<ActivityScanRow[]>(),
-    fullScope
-      ? db
-          .from<DuplicateReviewRow[]>("duplicate_reviews")
-          .select("*")
-          .eq("user_id", userId)
-          .limit(DUPLICATE_SCAN_FETCH_LIMIT)
-      : emptyResult<DuplicateReviewRow[]>(),
-  ]);
-
-  for (const result of [
-    principalsResult,
-    clientsResult,
-    principalLinksResult,
-    counterpartiesResult,
-    subjectsResult,
-    casesResult,
-    activitiesResult,
-    reviewsResult,
-  ]) {
-    if (result.error) throw result.error;
-  }
-
-  // ponytail: limite per tabella; passare a blocking/index DB se un singolo utente supera 500 righe.
-  if (
-    [
-      principalsResult,
-      clientsResult,
-      principalLinksResult,
-      counterpartiesResult,
-      subjectsResult,
-      casesResult,
-      activitiesResult,
-      reviewsResult,
-    ].some((result) => (result.data?.length ?? 0) > MAX_DUPLICATE_SCAN_ROWS)
-  ) {
-    throw new Error(
-      "Controllo duplicati non disponibile per insiemi oltre 500 righe. Riduci i dati archiviati e riprova.",
-    );
-  }
-
-  const principalNamesByClient = new Map<string, string[]>();
-  for (const link of principalLinksResult.data ?? []) {
-    const name = link.principals?.business_name;
-    if (!name) continue;
-    principalNamesByClient.set(link.client_id, [
-      ...(principalNamesByClient.get(link.client_id) ?? []),
-      name,
-    ]);
-  }
-
-  const subjectLabelsByCounterparty = new Map<string, string[]>();
-  for (const subject of subjectsResult.data ?? []) {
-    const label =
-      subject.kind === "company"
-        ? subject.business_name
-        : [subject.first_name, subject.last_name].filter(Boolean).join(" ");
-    if (!label) continue;
-    subjectLabelsByCounterparty.set(subject.counterparty_id, [
-      ...(subjectLabelsByCounterparty.get(subject.counterparty_id) ?? []),
-      label,
-    ]);
-  }
-
-  return {
-    principals: principalsResult.data ?? [],
-    clients: (clientsResult.data ?? []).map((client) => ({
-      ...client,
-      principalNames: principalNamesByClient.get(client.id) ?? [],
-    })),
-    counterparties: (counterpartiesResult.data ?? []).map((counterparty) => ({
-      ...counterparty,
-      subjectLabels: subjectLabelsByCounterparty.get(counterparty.id) ?? [],
-    })),
-    counterpartySubjects: (subjectsResult.data ?? []).map(
-      (subject): CounterpartySubjectDuplicateRow => ({
-        id: subject.id,
-        counterparty_id: subject.counterparty_id,
-        kind: subject.kind,
-        first_name: subject.first_name,
-        last_name: subject.last_name,
-        business_name: subject.business_name,
-        notes: subject.notes,
-        position: subject.position,
-        counterpartyPublicCode: subject.counterparties?.public_code ?? null,
-        counterpartyName: subject.counterparties
-          ? duplicateCounterpartyLabel(subject.counterparties)
-          : null,
-      }),
-    ),
-    cases: (casesResult.data ?? []).map((caseRow) => ({
-      ...caseRow,
-      principalName: caseRow.principals?.business_name ?? null,
-      clientName: caseRow.clients
-        ? caseRow.clients.kind === "company"
-          ? caseRow.clients.business_name
-          : [caseRow.clients.first_name, caseRow.clients.last_name].filter(Boolean).join(" ")
-        : null,
-      counterpartyName: caseRow.counterparties
-        ? caseRow.counterparties.kind === "individual"
-          ? [caseRow.counterparties.first_name, caseRow.counterparties.last_name]
-              .filter(Boolean)
-              .join(" ")
-          : caseRow.counterparties.business_name
-        : null,
-    })),
-    activities: (activitiesResult.data ?? []).map((activity) => ({
-      ...activity,
-      casePublicCode: activity.cases?.public_code ?? null,
-      casePracticeNumber: activity.cases?.practice_number ?? null,
-      principalName: activity.principals?.business_name ?? null,
-      clientName: activity.clients ? duplicateClientLabel(activity.clients) : null,
-      counterpartyName: activity.counterparties
-        ? duplicateCounterpartyLabel(activity.counterparties)
-        : null,
-    })),
-    reviews: reviewsResult.data ?? [],
-  };
-}
-
-async function persistOpenCandidates(
-  client: unknown,
-  userId: string,
-  candidates: DuplicateCandidate[],
-) {
-  const rows = candidates.flatMap((candidate) =>
-    candidate.reviewId ? [] : [reviewInsertFromCandidate(userId, candidate)],
-  );
-  if (rows.length === 0) return [];
-
-  const { data, error } = await asDb(client)
-    .from<DuplicateReviewRow[]>("duplicate_reviews")
-    .upsert(rows, {
-      onConflict: "user_id,entity_type,left_record_id,right_record_id",
-      ignoreDuplicates: true,
-    })
-    .select("*");
-  if (error) throw error;
-  return data ?? [];
-}
-
-async function mergeRecords(
-  client: unknown,
-  userId: string,
-  entityType: DuplicateEntityType,
-  keptId: string,
-  mergedId: string,
-) {
-  if (!canMergeDuplicateEntity(entityType)) {
-    throw new Error("Questo tipo di sospetto non supporta l'unione automatica");
-  }
-  if (entityType === "principal") return mergePrincipals(client, userId, keptId, mergedId);
-  if (entityType === "client") return mergeClients(client, userId, keptId, mergedId);
-  if (entityType === "counterparty") return mergeCounterparties(client, userId, keptId, mergedId);
-  return mergeCases(client, userId, keptId, mergedId);
-}
-
-async function mergePrincipals(client: unknown, userId: string, keptId: string, mergedId: string) {
-  const db = asDb(client);
-  await updateTable(db, "cases", { principal_id: keptId }, userId, "principal_id", mergedId);
-  await updateTable(
-    db,
-    "case_activities",
-    { principal_id: keptId },
-    userId,
-    "principal_id",
-    mergedId,
-  );
-  await updateTable(db, "invoices", { principal_id: keptId }, userId, "principal_id", mergedId);
-  await updateTable(db, "billing_runs", { principal_id: keptId }, userId, "principal_id", mergedId);
-  await mergePrincipalClientLinks(db, userId, keptId, mergedId);
-  await mergePriceBooks(db, userId, keptId, mergedId);
-  await updateTable(
-    db,
-    "principals",
-    { archived_at: new Date().toISOString() },
-    userId,
-    "id",
-    mergedId,
-  );
-}
-
-async function mergeClients(client: unknown, userId: string, keptId: string, mergedId: string) {
-  const db = asDb(client);
-  await updateTable(db, "cases", { client_id: keptId }, userId, "client_id", mergedId);
-  await updateTable(db, "case_activities", { client_id: keptId }, userId, "client_id", mergedId);
-  await updateTable(db, "invoices", { client_id: keptId }, userId, "client_id", mergedId);
-  await updateTable(
-    db,
-    "case_credit_transfers",
-    { previous_client_id: keptId },
-    userId,
-    "previous_client_id",
-    mergedId,
-  );
-  await updateTable(
-    db,
-    "case_credit_transfers",
-    { new_client_id: keptId },
-    userId,
-    "new_client_id",
-    mergedId,
-  );
-  await mergePrincipalClientLinksForClient(db, userId, keptId, mergedId);
-  if (await canDeleteMinimalClient(db, userId, mergedId)) {
-    await db.from("clients").delete().eq("user_id", userId).eq("id", mergedId);
-  }
-}
-
-async function mergeCounterparties(
-  client: unknown,
-  userId: string,
-  keptId: string,
-  mergedId: string,
-) {
-  const db = asDb(client);
-  await updateTable(db, "cases", { counterparty_id: keptId }, userId, "counterparty_id", mergedId);
-  await moveCounterpartySubjects(db, userId, keptId, mergedId);
-  await updateTable(
-    db,
-    "case_activities",
-    { counterparty_id: keptId },
-    userId,
-    "counterparty_id",
-    mergedId,
-  );
-  if (await canDeleteMinimalCounterparty(db, userId, mergedId)) {
-    await db.from("counterparties").delete().eq("user_id", userId).eq("id", mergedId);
-  }
-}
-
-async function moveCounterpartySubjects(
-  db: UntypedSupabase,
-  userId: string,
-  keptCounterpartyId: string,
-  mergedCounterpartyId: string,
-) {
-  const [{ data: keptSubjects, error: keptError }, { data: mergedSubjects, error: mergedError }] =
-    await Promise.all([
-      db
-        .from<Array<{ position: number }>>("counterparty_subjects")
-        .select("position")
-        .eq("user_id", userId)
-        .eq("counterparty_id", keptCounterpartyId),
-      db
-        .from<Array<{ id: string; position: number }>>("counterparty_subjects")
-        .select("id, position")
-        .eq("user_id", userId)
-        .eq("counterparty_id", mergedCounterpartyId)
-        .order("position", { ascending: true }),
-    ]);
-  if (keptError) throw keptError;
-  if (mergedError) throw mergedError;
-
-  const nextPosition =
-    Math.max(-1, ...(keptSubjects ?? []).map((subject) => Number(subject.position))) + 1;
-
-  await Promise.all(
-    (mergedSubjects ?? []).map(async (subject, index) => {
-      const { error } = await db
-        .from("counterparty_subjects")
-        .update({ counterparty_id: keptCounterpartyId, position: nextPosition + index })
-        .eq("user_id", userId)
-        .eq("id", subject.id);
-      if (error) throw error;
-    }),
-  );
-}
-
-async function mergeCases(client: unknown, userId: string, keptId: string, mergedId: string) {
-  const db = asDb(client);
-  const { data: keptCase, error } = await db
-    .from<{
-      public_code: string | null;
-      practice_number: number;
-      principal_id: string | null;
-      client_id: string | null;
-      counterparty_id: string | null;
-    }>("cases")
-    .select("public_code, practice_number, principal_id, client_id, counterparty_id")
-    .eq("user_id", userId)
-    .eq("id", keptId)
-    .maybeSingle();
-  if (error) throw error;
-  if (!keptCase) throw new Error("Pratica da mantenere non trovata");
-
-  await Promise.all([
-    updateTable(
-      db,
-      "case_activities",
-      {
-        case_id: keptId,
-        principal_id: keptCase.principal_id,
-        client_id: keptCase.client_id,
-        counterparty_id: keptCase.counterparty_id,
-      },
-      userId,
-      "case_id",
-      mergedId,
-    ),
-    updateTable(
-      db,
-      "invoices",
-      {
-        case_id: keptId,
-        principal_id: keptCase.principal_id,
-        client_id: keptCase.client_id,
-      },
-      userId,
-      "case_id",
-      mergedId,
-    ),
-    updateTable(db, "case_status_history", { case_id: keptId }, userId, "case_id", mergedId),
-    updateTable(db, "case_credit_transfers", { case_id: keptId }, userId, "case_id", mergedId),
-  ]);
-
-  const target = keptCase?.public_code || keptCase?.practice_number || keptId;
-  await db
-    .from("cases")
-    .update({
-      status: "archived",
-      notes: `Pratica assorbita in ${target}.`,
-    })
-    .eq("user_id", userId)
-    .eq("id", mergedId);
-}
-
-async function updateTable(
-  db: UntypedSupabase,
-  table: string,
-  values: Record<string, unknown>,
-  userId: string,
-  column: string,
-  value: string,
-) {
-  const { error } = await db.from(table).update(values).eq("user_id", userId).eq(column, value);
-  if (error) throw error;
-}
-
-async function mergePrincipalClientLinks(
-  db: UntypedSupabase,
-  userId: string,
-  keptPrincipalId: string,
-  mergedPrincipalId: string,
-) {
-  const { data: links, error } = await db
-    .from<Array<{ client_id: string }>>("principal_clients")
-    .select("client_id")
-    .eq("user_id", userId)
-    .eq("principal_id", mergedPrincipalId);
-  if (error) throw error;
-
-  await Promise.all(
-    (links ?? []).map(async (link) => {
-      const { data: existing, error: existingError } = await db
-        .from<{ id: string }>("principal_clients")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("principal_id", keptPrincipalId)
-        .eq("client_id", link.client_id)
-        .maybeSingle();
-      if (existingError) throw existingError;
-      if (existing) {
-        await db
-          .from("principal_clients")
-          .delete()
-          .eq("user_id", userId)
-          .eq("principal_id", mergedPrincipalId)
-          .eq("client_id", link.client_id);
-      } else {
-        await db
-          .from("principal_clients")
-          .update({ principal_id: keptPrincipalId })
-          .eq("user_id", userId)
-          .eq("principal_id", mergedPrincipalId)
-          .eq("client_id", link.client_id);
-      }
-    }),
-  );
-}
-
-async function mergePrincipalClientLinksForClient(
-  db: UntypedSupabase,
-  userId: string,
-  keptClientId: string,
-  mergedClientId: string,
-) {
-  const { data: links, error } = await db
-    .from<Array<{ principal_id: string }>>("principal_clients")
-    .select("principal_id")
-    .eq("user_id", userId)
-    .eq("client_id", mergedClientId);
-  if (error) throw error;
-
-  await Promise.all(
-    (links ?? []).map(async (link) => {
-      const { data: existing, error: existingError } = await db
-        .from<{ id: string }>("principal_clients")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("principal_id", link.principal_id)
-        .eq("client_id", keptClientId)
-        .maybeSingle();
-      if (existingError) throw existingError;
-      if (existing) {
-        await db
-          .from("principal_clients")
-          .delete()
-          .eq("user_id", userId)
-          .eq("principal_id", link.principal_id)
-          .eq("client_id", mergedClientId);
-      } else {
-        await db
-          .from("principal_clients")
-          .update({ client_id: keptClientId })
-          .eq("user_id", userId)
-          .eq("principal_id", link.principal_id)
-          .eq("client_id", mergedClientId);
-      }
-    }),
-  );
-}
-
-async function mergePriceBooks(
-  db: UntypedSupabase,
-  userId: string,
-  keptPrincipalId: string,
-  mergedPrincipalId: string,
-) {
-  const [{ data: mergedBooks, error: mergedError }, { data: keptBooks, error: keptError }] =
-    await Promise.all([
-      db
-        .from<Array<{ id: string; year: number }>>("price_books")
-        .select("id, year")
-        .eq("user_id", userId)
-        .eq("principal_id", mergedPrincipalId),
-      db
-        .from<Array<{ year: number }>>("price_books")
-        .select("year")
-        .eq("user_id", userId)
-        .eq("principal_id", keptPrincipalId),
-    ]);
-  if (mergedError) throw mergedError;
-  if (keptError) throw keptError;
-
-  const keptYears = new Set((keptBooks ?? []).map((book) => book.year));
-  const movableIds = (mergedBooks ?? []).flatMap((book) =>
-    keptYears.has(book.year) ? [] : [book.id],
-  );
-  if (movableIds.length === 0) return;
-  const { error } = await db
-    .from("price_books")
-    .update({ principal_id: keptPrincipalId })
-    .eq("user_id", userId)
-    .in("id", movableIds);
-  if (error) throw error;
-}
-
-async function canDeleteMinimalClient(db: UntypedSupabase, userId: string, clientId: string) {
-  const { data: client, error } = await db
-    .from<ClientDuplicateRow>("clients")
-    .select("notes")
-    .eq("user_id", userId)
-    .eq("id", clientId)
-    .maybeSingle();
-  if (error) throw error;
-  return Boolean(client && !client.notes);
-}
-
-async function canDeleteMinimalCounterparty(
-  db: UntypedSupabase,
-  userId: string,
-  counterpartyId: string,
-) {
-  const [{ data: counterparty, error }, { data: subjects, error: subjectsError }] =
-    await Promise.all([
-      db
-        .from<CounterpartyDuplicateRow>("counterparties")
-        .select("notes")
-        .eq("user_id", userId)
-        .eq("id", counterpartyId)
-        .maybeSingle(),
-      db
-        .from<Array<{ id: string }>>("counterparty_subjects")
-        .select("id")
-        .eq("user_id", userId)
-        .eq("counterparty_id", counterpartyId)
-        .limit(1),
-    ]);
-  if (error) throw error;
-  if (subjectsError) throw subjectsError;
-  return Boolean(counterparty && !counterparty.notes && (subjects ?? []).length === 0);
-}
-
-function duplicateClientLabel(client: {
-  kind: string;
-  first_name: string | null;
-  last_name: string | null;
-  business_name: string | null;
-}) {
-  return client.kind === "company"
-    ? client.business_name
-    : [client.first_name, client.last_name].filter(Boolean).join(" ");
-}
-
-function duplicateCounterpartyLabel(counterparty: {
-  kind: string;
-  first_name: string | null;
-  last_name: string | null;
-  business_name: string | null;
-}) {
-  return counterparty.kind === "individual"
-    ? [counterparty.first_name, counterparty.last_name].filter(Boolean).join(" ")
-    : counterparty.business_name;
-}
 
 function validateFindDuplicateDraftInput(input: FindDuplicateDraftInput) {
   if (!input || typeof input !== "object") throw new Error("Input controllo duplicati non valido");
@@ -836,8 +133,9 @@ function validateFindDuplicateDraftInput(input: FindDuplicateDraftInput) {
 }
 
 function validateResolveDuplicateInput(input: ResolveDuplicateInput) {
-  if (!input || typeof input !== "object")
+  if (!input || typeof input !== "object") {
     throw new Error("Input risoluzione duplicato non valido");
+  }
   if (
     ![
       "principal",
@@ -864,21 +162,11 @@ function validateResolveDuplicateInput(input: ResolveDuplicateInput) {
   if (input.action === "merge" && !canMergeDuplicateEntity(input.entityType)) {
     throw new Error("Questo tipo di sospetto non supporta l'unione automatica");
   }
-  if (!input.leftRecordId || !input.rightRecordId) throw new Error("Coppia duplicato non valida");
+  if (!input.leftRecordId || !input.rightRecordId) {
+    throw new Error("Coppia duplicato non valida");
+  }
+  if (input.leftRecordId === input.rightRecordId) {
+    throw new Error("I record duplicati devono essere distinti");
+  }
   return input;
-}
-
-function statusForAction(action: ResolveDuplicateInput["action"]): DuplicateReviewStatus {
-  if (action === "dismiss") return "dismissed";
-  if (action === "merge") return "merged";
-  return "snoozed";
-}
-
-function calculateSnoozedUntil(interval: DuplicateSnoozeInterval) {
-  const date = new Date();
-  if (interval === "1h") date.setHours(date.getHours() + 1);
-  if (interval === "24h") date.setDate(date.getDate() + 1);
-  if (interval === "1w") date.setDate(date.getDate() + 7);
-  if (interval === "1m") date.setMonth(date.getMonth() + 1);
-  return date.toISOString();
 }

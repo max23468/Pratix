@@ -5,7 +5,6 @@ import {
   billingDatePattern,
   billingCounterpartyName,
   billingPartyName,
-  nextBillingPeriodStart,
   type BillingPartyDisplay,
 } from "@/server/invoice-billing.helpers";
 
@@ -74,7 +73,7 @@ export type BillingInvoiceLine = {
   quantity: number | string;
   unit_price: number | string;
   amount: number | string;
-  case_activity_hearings?: Array<{ hearing_date: string; position: number | string }> | null;
+  hearing_dates?: string[] | null;
 };
 
 /** Riga persistita su `invoice_lines`. Rispecchia la nullabilità dello schema. */
@@ -87,6 +86,7 @@ export type BillingInvoiceLineRow = {
   client_name: string | null;
   counterparty_name: string | null;
   activity_date: string;
+  hearing_dates: string[];
   kind: InvoiceLineKind;
   description: string;
   quantity: number;
@@ -193,140 +193,12 @@ export function assertIncludedActivitiesEditable(included: BillingActivity[], in
   }
 }
 
-export function includedActivityUpdateForInvoiceStatus({
-  invoiceId,
-  invoiceStatus,
-}: {
-  invoiceId: string;
-  invoiceStatus: CreateBillingInvoiceInput["status"];
-}) {
-  return {
-    status: invoiceStatus === "issued" ? ("invoiced" as const) : ("to_invoice" as const),
-    invoice_id: invoiceId,
-    postponed_until: null,
-  };
-}
-
 export function invoiceLinesForTotals(included: BillingActivity[]): InvoiceLineInput[] {
   return included.map((activity) => ({
     kind: activity.kind === "fee" ? "fee" : "expense_art15",
     quantity: Number(activity.quantity),
     unit_price: Number(activity.unit_price),
   }));
-}
-
-export function buildBillingRunRow({
-  input,
-  userId,
-  totals,
-}: {
-  input: CreateBillingInvoiceInput;
-  userId: string;
-  totals: BillingTotals;
-}) {
-  return {
-    user_id: userId,
-    principal_id: input.principalId,
-    period_start: input.periodStart,
-    period_end: input.periodEnd,
-    status: "finalized" as const,
-    include_general_expenses: input.includeGeneralExpenses,
-    general_expenses_rate: input.generalExpensesRate,
-    compensation_total: totals.taxableFees,
-    general_expenses_amount: totals.generalExpensesAmount,
-    cassa_rate: input.cassaRate,
-    cassa_base_amount: totals.cassaBaseAmount,
-    cassa_amount: totals.cassaAmount,
-    reimbursements_total: totals.art15Expenses,
-    notes: input.notes?.trim() || null,
-  };
-}
-
-export function buildInvoiceRow({
-  input,
-  userId,
-  billingRunId,
-  firstIncluded,
-  number,
-  year,
-  totals,
-}: {
-  input: CreateBillingInvoiceInput;
-  userId: string;
-  billingRunId: string;
-  firstIncluded: BillingActivity;
-  number: string;
-  year: number;
-  totals: BillingTotals;
-}) {
-  return {
-    user_id: userId,
-    client_id: firstIncluded.client_id,
-    case_id: firstIncluded.case_id,
-    principal_id: input.principalId,
-    billing_run_id: billingRunId,
-    number,
-    year,
-    issue_date: input.issueDate,
-    due_date: input.dueDate || null,
-    status: input.status,
-    cassa_rate: input.cassaRate,
-    vat_rate: input.vatRate,
-    withholding_rate: input.withholdingRate,
-    apply_withholding: input.applyWithholding,
-    taxable_fees: totals.taxableFees,
-    art15_expenses: totals.art15Expenses,
-    general_expenses_amount: totals.generalExpensesAmount,
-    general_expenses_rate: input.generalExpensesRate,
-    include_general_expenses: input.includeGeneralExpenses,
-    cassa_base_amount: totals.cassaBaseAmount,
-    cassa_amount: totals.cassaAmount,
-    vat_amount: totals.vatAmount,
-    withholding_amount: totals.withholdingAmount,
-    stamp_amount: totals.stampAmount,
-    total_amount: totals.totalAmount,
-    net_to_pay: totals.netToPay,
-    payment_method: input.paymentMethod?.trim() || null,
-    notes: input.notes?.trim() || null,
-  };
-}
-
-export function buildInvoiceUpdateRow({
-  input,
-  firstIncluded,
-  totals,
-}: {
-  input: CreateBillingInvoiceInput;
-  firstIncluded: BillingActivity;
-  totals: BillingTotals;
-}) {
-  return {
-    client_id: firstIncluded.client_id,
-    case_id: firstIncluded.case_id,
-    principal_id: input.principalId,
-    issue_date: input.issueDate,
-    due_date: input.dueDate || null,
-    status: input.status,
-    paid_at: null,
-    cassa_rate: input.cassaRate,
-    vat_rate: input.vatRate,
-    withholding_rate: input.withholdingRate,
-    apply_withholding: input.applyWithholding,
-    taxable_fees: totals.taxableFees,
-    art15_expenses: totals.art15Expenses,
-    general_expenses_amount: totals.generalExpensesAmount,
-    general_expenses_rate: input.generalExpensesRate,
-    include_general_expenses: input.includeGeneralExpenses,
-    cassa_base_amount: totals.cassaBaseAmount,
-    cassa_amount: totals.cassaAmount,
-    vat_amount: totals.vatAmount,
-    withholding_amount: totals.withholdingAmount,
-    stamp_amount: totals.stampAmount,
-    total_amount: totals.totalAmount,
-    net_to_pay: totals.netToPay,
-    payment_method: input.paymentMethod?.trim() || null,
-    notes: input.notes?.trim() || null,
-  };
 }
 
 export function buildInvoiceLineRows({
@@ -354,6 +226,10 @@ export function buildInvoiceLineRows({
     client_name: billingPartyName(activity.clients),
     counterparty_name: billingCounterpartyName(activity.counterparties),
     activity_date: activity.activity_date,
+    hearing_dates: (activity.case_activity_hearings ?? [])
+      .slice()
+      .sort((a, b) => Number(a.position) - Number(b.position))
+      .map((hearing) => hearing.hearing_date),
     kind: (activity.kind === "fee" ? "fee" : "expense_art15") as InvoiceLineKind,
     description: activity.description,
     quantity: Number(activity.quantity),
@@ -371,6 +247,7 @@ export function buildInvoiceLineRows({
       client_name: null,
       counterparty_name: null,
       activity_date: input.issueDate,
+      hearing_dates: [],
       kind: "fee",
       description: `Spese generali ${input.generalExpensesRate}%`,
       quantity: 1,
@@ -405,32 +282,6 @@ export function buildBillingRunItemRows({
   });
 }
 
-export function postponedActivityUpdate(activity: BillingActivity, periodEnd: string) {
-  return {
-    id: activity.id,
-    postponed_until: nextBillingPeriodStart(periodEnd),
-    postponed_count: Number(activity.postponed_count ?? 0) + 1,
-  };
-}
-
-export function draftPostponedActivityUpdate({
-  activity,
-  periodEnd,
-  previousStatus,
-}: {
-  activity: BillingActivity;
-  periodEnd: string;
-  previousStatus?: BillingItemStatus;
-}) {
-  const update = postponedActivityUpdate(activity, periodEnd);
-  return previousStatus === "postponed"
-    ? {
-        ...update,
-        postponed_count: Number(activity.postponed_count ?? 0),
-      }
-    : update;
-}
-
 export function buildBillingExportRows(
   included: BillingActivity[],
   kind: "fee" | "expense_reimbursement",
@@ -463,7 +314,7 @@ export function buildBillingExportRowsFromInvoiceLines(
 ): BillingExportRow[] {
   const lineKind: InvoiceLineKind = kind === "fees" ? "fee" : "expense_art15";
   return lines.flatMap((line) =>
-    line.kind === lineKind
+    line.kind === lineKind && line.case_activity_id
       ? [
           {
             practiceNumber: line.practice_number,
@@ -474,10 +325,7 @@ export function buildBillingExportRowsFromInvoiceLines(
             quantity: Number(line.quantity),
             unitPrice: Number(line.unit_price),
             amount: Number(line.amount),
-            hearingDates: (line.case_activity_hearings ?? [])
-              .slice()
-              .sort((a, b) => Number(a.position) - Number(b.position))
-              .map((hearing) => hearing.hearing_date),
+            hearingDates: line.hearing_dates ?? [],
           },
         ]
       : [],
