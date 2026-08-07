@@ -39,7 +39,7 @@ import {
   type SortableColumn,
   type TableSort,
 } from "@/lib/table-sorting";
-import { generateInvoiceXmlFn } from "@/server/invoices.functions";
+import { generateInvoiceXmlFn } from "@/server/invoices-export.functions";
 
 export type InvoiceListRow = {
   id: string;

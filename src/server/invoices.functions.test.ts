@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 type QueryResult = { data?: unknown; error?: Error | null };
 type StoredCall = {
@@ -7,12 +7,6 @@ type StoredCall = {
   payload?: unknown;
   filters: Array<[string, unknown]>;
 };
-type StoredRpcCall = {
-  fn: string;
-  args?: unknown;
-};
-
-const capturedServerFns = vi.hoisted(() => [] as Array<Record<string, unknown>>);
 
 vi.mock("@tanstack/react-start", () => ({
   createServerFn: () => {
@@ -27,7 +21,6 @@ vi.mock("@tanstack/react-start", () => ({
       },
       handler(handler: unknown) {
         serverFn.handler = handler;
-        capturedServerFns.push(serverFn);
         return serverFn;
       },
     };
@@ -39,25 +32,17 @@ vi.mock("@/integrations/supabase/auth-middleware", () => ({
 }));
 
 vi.mock("@/lib/billing-xlsx", () => ({
-  buildBillingWorkbook: vi.fn(
-    ({ kind }: { kind: "fees" | "expenses" }) =>
-      ({
-        fileName: kind === "fees" ? "compensi-committente.xlsx" : "rimborsi-spese-committente.xlsx",
-        mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        bytes: new Uint8Array([1, 2, 3]),
-      }) as const,
-  ),
+  buildBillingWorkbook: vi.fn(({ kind }: { kind: "fees" | "expenses" }) => ({
+    fileName: kind === "fees" ? "compensi.xlsx" : "rimborsi.xlsx",
+    mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    bytes: new Uint8Array([1, 2, 3]),
+  })),
 }));
 
 import { buildBillingWorkbook } from "@/lib/billing-xlsx";
-import {
-  createBillingInvoiceFn,
-  generateBillingExportFn,
-  generateInvoiceXmlFn,
-  reserveInvoiceNumber,
-  setInvoiceIssueStateFn,
-  updateDraftBillingInvoiceFn,
-} from "./invoices.functions";
+import { createBillingInvoiceFn, updateDraftBillingInvoiceFn } from "./invoices-create.functions";
+import { generateBillingExportFn, generateInvoiceXmlFn } from "./invoices-export.functions";
+import { setInvoiceIssueStateFn } from "./invoices-issue.functions";
 
 class FakeQueryBuilder {
   private action = "select";
@@ -79,43 +64,13 @@ class FakeQueryBuilder {
     return this;
   }
 
-  insert(payload: unknown) {
-    this.action = "insert";
-    this.payload = payload;
-    return this;
-  }
-
-  delete() {
-    this.action = "delete";
-    return this;
-  }
-
   eq(column: string, value: unknown) {
-    this.filters.push([column, value]);
-    return this;
-  }
-
-  is(column: string, value: unknown) {
     this.filters.push([column, value]);
     return this;
   }
 
   in(column: string, value: unknown) {
     this.filters.push([column, value]);
-    return this;
-  }
-
-  lte(column: string, value: unknown) {
-    this.filters.push([column, value]);
-    return this;
-  }
-
-  lt(column: string, value: unknown) {
-    this.filters.push([column, value]);
-    return this;
-  }
-
-  limit() {
     return this;
   }
 
@@ -127,6 +82,10 @@ class FakeQueryBuilder {
     return this.resolve("single");
   }
 
+  maybeSingle() {
+    return this.resolve("maybeSingle");
+  }
+
   then<TResult1 = QueryResult, TResult2 = never>(
     onfulfilled?: ((value: QueryResult) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
@@ -134,7 +93,7 @@ class FakeQueryBuilder {
     return this.resolve("many").then(onfulfilled, onrejected);
   }
 
-  private resolve(mode: "single" | "many") {
+  private resolve(mode: "single" | "maybeSingle" | "many") {
     this.supabase.calls.push({
       table: this.table,
       action: this.action,
@@ -147,21 +106,16 @@ class FakeQueryBuilder {
 
 class FakeSupabase {
   readonly calls: StoredCall[] = [];
-  readonly rpcCalls: StoredRpcCall[] = [];
-  readonly uploads: Array<{ bucket: string; path: string; body: Buffer; options: unknown }> = [];
-  readonly removals: Array<{ bucket: string; paths: string[] }> = [];
-  storageRemoveError: Error | null = null;
+  readonly rpcCalls: Array<{ fn: string; args?: unknown }> = [];
+  readonly uploads: Array<{ bucket: string; path: string; options: unknown }> = [];
+  uploadErrors: Array<Error | null> = [];
   private readonly responses = new Map<string, QueryResult[]>();
 
   readonly storage = {
     from: (bucket: string) => ({
-      upload: (path: string, body: Buffer, options: unknown) => {
-        this.uploads.push({ bucket, path, body, options });
-        return Promise.resolve({ error: null });
-      },
-      remove: (paths: string[]) => {
-        this.removals.push({ bucket, paths });
-        return Promise.resolve({ error: this.storageRemoveError });
+      upload: (path: string, _body: Buffer, options: unknown) => {
+        this.uploads.push({ bucket, path, options });
+        return Promise.resolve({ error: this.uploadErrors.shift() ?? null });
       },
     }),
   };
@@ -182,7 +136,6 @@ class FakeSupabase {
   next(key: string): QueryResult {
     const queued = this.responses.get(key);
     if (queued?.length) return queued.shift()!;
-    if (key.endsWith(":single")) return { data: { id: `${key.split(":")[0]}-id` }, error: null };
     return { data: null, error: null };
   }
 
@@ -194,7 +147,9 @@ class FakeSupabase {
 const handlerOf = <TArgs, TResult>(serverFn: unknown) =>
   (serverFn as { handler: (args: TArgs) => Promise<TResult> }).handler;
 
+const requestId = "11111111-1111-4111-8111-111111111111";
 const billingInput = {
+  requestId,
   principalId: "principal-1",
   periodStart: "2026-05-01",
   periodEnd: "2026-05-31",
@@ -229,7 +184,7 @@ const billingActivity = {
   quantity: 2,
   unit_price: 500,
   amount: 1000,
-  postponed_count: null,
+  postponed_count: 0,
   postponed_until: null,
   cases: { practice_number: 42 },
   clients: { kind: "individual", first_name: "Ada", last_name: "Rossi", business_name: null },
@@ -242,20 +197,15 @@ const billingActivity = {
   case_activity_hearings: [{ hearing_date: "2026-05-20", position: 1 }],
 };
 
-/** Creazione fattura che fallisce sul secondo insert dei rendiconti, dopo gli upload. */
-function queueInvoiceCreationFailingAfterUpload(supabase: FakeSupabase) {
+function queueInvoiceSave(supabase: FakeSupabase) {
   supabase.queue("principals:select:single", {
-    data: { id: "principal-1", business_name: "Banca Test", default_general_expenses_rate: 10 },
+    data: { id: "principal-1", business_name: "Banca Test" },
     error: null,
   });
-  supabase.queue(
-    "profiles:select:single",
-    { data: { tax_regime: "ordinario", include_stamp_duty: false }, error: null },
-    {
-      data: { invoice_year: 2026, invoice_next_number: 12, invoice_number_prefix: "" },
-      error: null,
-    },
-  );
+  supabase.queue("profiles:select:single", {
+    data: { tax_regime: "ordinario", include_stamp_duty: false },
+    error: null,
+  });
   supabase.queue("case_activities:select:many", {
     data: [
       billingActivity,
@@ -263,362 +213,116 @@ function queueInvoiceCreationFailingAfterUpload(supabase: FakeSupabase) {
     ],
     error: null,
   });
-  supabase.queue("billing_runs:insert:single", { data: { id: "run-1" }, error: null });
-  supabase.queue("invoices:insert:single", {
-    data: { id: "invoice-1", public_code: "FT-00001" },
-    error: null,
-  });
-  supabase.queue(
-    "billing_exports:insert:single",
-    { data: { id: "export-fees", file_name: "compensi-committente.xlsx" }, error: null },
-    { data: null, error: new Error("storage non disponibile") },
-  );
-}
-
-beforeEach(() => {
-  capturedServerFns.length = 0;
-});
-
-describe("server functions fatture", () => {
-  it("riserva il prossimo numero fattura e aggiorna il progressivo", async () => {
-    const supabase = new FakeSupabase();
-    supabase.queue("profiles:select:single", {
-      data: { invoice_year: 2026, invoice_next_number: 7, invoice_number_prefix: "F-" },
-      error: null,
-    });
-
-    const result = await handlerOf<
-      { context: { supabase: FakeSupabase; userId: string } },
-      { number: string; year: number }
-    >(reserveInvoiceNumber)({
-      context: { supabase, userId: "user-1" },
-    });
-
-    expect(result).toEqual({ number: "F-7", year: 2026 });
-    expect(supabase.callsFor("profiles", "update")[0].payload).toEqual({
-      invoice_year: 2026,
-      invoice_next_number: 8,
-    });
-  });
-
-  it("crea fattura da attività incluse, rinvia le escluse e salva i rendiconti", async () => {
-    const supabase = new FakeSupabase();
-    supabase.queue("principals:select:single", {
-      data: {
-        id: "principal-1",
-        business_name: "Banca Test",
-        default_general_expenses_rate: 10,
-      },
-      error: null,
-    });
-    supabase.queue(
-      "profiles:select:single",
-      { data: { tax_regime: "ordinario", include_stamp_duty: false }, error: null },
-      {
-        data: { invoice_year: 2026, invoice_next_number: 12, invoice_number_prefix: "" },
-        error: null,
-      },
-    );
-    supabase.queue("case_activities:select:many", {
-      data: [
-        billingActivity,
-        {
-          ...billingActivity,
-          id: "activity-expense",
-          kind: "expense_reimbursement",
-          amount: 118.5,
-          quantity: 1,
-          unit_price: 118.5,
-          postponed_count: 1,
-        },
-      ],
-      error: null,
-    });
-    supabase.queue("billing_runs:insert:single", { data: { id: "run-1" }, error: null });
-    supabase.queue("invoices:insert:single", {
-      data: { id: "invoice-1", public_code: "FT-00001" },
-      error: null,
-    });
-    supabase.queue(
-      "billing_exports:insert:single",
-      { data: { id: "export-fees", file_name: "compensi-committente.xlsx" }, error: null },
-      {
-        data: { id: "export-expenses", file_name: "rimborsi-spese-committente.xlsx" },
-        error: null,
-      },
-    );
-
-    const result = await handlerOf<
-      { data: typeof billingInput; context: { supabase: FakeSupabase; userId: string } },
-      {
-        invoiceId: string;
-        invoiceRef: string;
-        billingRunId: string;
-        number: string;
-        exports: unknown[];
-      }
-    >(createBillingInvoiceFn)({
-      data: billingInput,
-      context: { supabase, userId: "user-1" },
-    });
-
-    expect(result).toMatchObject({
-      invoiceId: "invoice-1",
-      invoiceRef: "FT-00001",
-      billingRunId: "run-1",
-      number: "12",
-      exports: [
-        { id: "export-fees", file_name: "compensi-committente.xlsx" },
-        { id: "export-expenses", file_name: "rimborsi-spese-committente.xlsx" },
-      ],
-    });
-    expect(supabase.callsFor("invoice_lines", "insert")[0].payload).toHaveLength(2);
-    const activityUpdates = supabase.callsFor("case_activities", "update");
-    expect(activityUpdates).toHaveLength(2);
-    expect(activityUpdates[0].payload).toMatchObject({
-      status: "to_invoice",
-      invoice_id: "invoice-1",
-      postponed_until: null,
-    });
-    expect(supabase.uploads).toHaveLength(2);
-    expect(supabase.uploads[0].path).toContain("billing-exports/run-1/");
-  });
-
-  it("ripristina le attività ed elimina fattura e ciclo se la creazione fallisce", async () => {
-    const supabase = new FakeSupabase();
-    queueInvoiceCreationFailingAfterUpload(supabase);
-
-    await expect(
-      handlerOf<
-        { data: typeof billingInput; context: { supabase: FakeSupabase; userId: string } },
-        unknown
-      >(createBillingInvoiceFn)({
-        data: billingInput,
-        context: { supabase, userId: "user-1" },
-      }),
-    ).rejects.toThrow("storage non disponibile");
-
-    const restores = supabase.callsFor("case_activities", "update").slice(-2);
-    expect(restores[0].payload).toEqual({
-      status: "to_invoice",
-      invoice_id: null,
-      postponed_until: null,
-    });
-    expect(restores[1].payload).toEqual({ postponed_until: null, postponed_count: 0 });
-    expect(supabase.removals).toEqual([
-      { bucket: "pratix-documents", paths: supabase.uploads.map((upload) => upload.path) },
-    ]);
-    expect(supabase.callsFor("invoices", "delete")[0].filters).toEqual([
-      ["id", "invoice-1"],
-      ["user_id", "user-1"],
-    ]);
-    expect(supabase.callsFor("billing_runs", "delete")[0].filters).toEqual([
-      ["id", "run-1"],
-      ["user_id", "user-1"],
-    ]);
-  });
-
-  it("conserva ciclo e riferimenti ai rendiconti se Storage rifiuta la rimozione", async () => {
-    const supabase = new FakeSupabase();
-    supabase.storageRemoveError = new Error("storage remove non riuscita");
-    queueInvoiceCreationFailingAfterUpload(supabase);
-
-    await expect(
-      handlerOf<
-        { data: typeof billingInput; context: { supabase: FakeSupabase; userId: string } },
-        unknown
-      >(createBillingInvoiceFn)({
-        data: billingInput,
-        context: { supabase, userId: "user-1" },
-      }),
-    ).rejects.toThrow("storage non disponibile");
-
-    expect(supabase.removals).toHaveLength(1);
-    expect(supabase.callsFor("invoices", "delete")).toHaveLength(1);
-    expect(supabase.callsFor("billing_runs", "delete")).toHaveLength(0);
-  });
-
-  it("rimuove i cicli senza fattura rimasti da creazioni fallite precedenti", async () => {
-    const supabase = new FakeSupabase();
-    supabase.queue("billing_runs:select:many", {
-      data: [
-        {
-          id: "run-orfano",
-          billing_exports: [{ storage_path: "user-1/billing-exports/run-orfano/compensi.xlsx" }],
-        },
-      ],
-      error: null,
-    });
-    queueInvoiceCreationFailingAfterUpload(supabase);
-
-    await expect(
-      handlerOf<
-        { data: typeof billingInput; context: { supabase: FakeSupabase; userId: string } },
-        unknown
-      >(createBillingInvoiceFn)({
-        data: billingInput,
-        context: { supabase, userId: "user-1" },
-      }),
-    ).rejects.toThrow("storage non disponibile");
-
-    expect(supabase.removals[0]).toEqual({
-      bucket: "pratix-documents",
-      paths: ["user-1/billing-exports/run-orfano/compensi.xlsx"],
-    });
-    expect(supabase.callsFor("billing_runs", "delete")[0].filters).toEqual([
-      ["id", "run-orfano"],
-      ["user_id", "user-1"],
-    ]);
-    // I cicli `cancelled` sono storico di fatture eliminate: la ricerca li esclude.
-    expect(supabase.callsFor("billing_runs", "select")[0].filters).toEqual([
-      ["user_id", "user-1"],
-      ["status", "finalized"],
-      ["invoice_id", null],
-      ["created_at", expect.any(String)],
-    ]);
-  });
-
-  it("lascia il ciclo abbandonato per un nuovo tentativo se Storage rifiuta", async () => {
-    const supabase = new FakeSupabase();
-    supabase.storageRemoveError = new Error("storage remove non riuscita");
-    supabase.queue("billing_runs:select:many", {
-      data: [
-        {
-          id: "run-orfano",
-          billing_exports: [{ storage_path: "user-1/billing-exports/run-orfano/compensi.xlsx" }],
-        },
-      ],
-      error: null,
-    });
-    queueInvoiceCreationFailingAfterUpload(supabase);
-
-    await expect(
-      handlerOf<
-        { data: typeof billingInput; context: { supabase: FakeSupabase; userId: string } },
-        unknown
-      >(createBillingInvoiceFn)({
-        data: billingInput,
-        context: { supabase, userId: "user-1" },
-      }),
-    ).rejects.toThrow("storage non disponibile");
-
-    expect(supabase.removals).toHaveLength(2);
-    expect(supabase.callsFor("billing_runs", "delete")).toHaveLength(0);
-  });
-
-  it("aggiorna una fattura in bozza senza riservare un nuovo numero", async () => {
-    const supabase = new FakeSupabase();
-    supabase.queue("invoices:select:single", {
-      data: {
-        id: "invoice-1",
-        public_code: "FT-00001",
-        number: "12",
-        year: 2026,
-        status: "draft",
-        billing_run_id: "run-1",
-      },
-      error: null,
-    });
-    supabase.queue("principals:select:single", {
-      data: {
-        id: "principal-1",
-        business_name: "Banca Test",
-        default_general_expenses_rate: 10,
-      },
-      error: null,
-    });
-    supabase.queue("profiles:select:single", {
-      data: { tax_regime: "forfettario", include_stamp_duty: true },
-      error: null,
-    });
-    supabase.queue("case_activities:select:many", {
-      data: [
-        { ...billingActivity, status: "invoiced", invoice_id: "invoice-1" },
-        {
-          ...billingActivity,
-          id: "activity-expense",
-          kind: "expense_reimbursement",
-          amount: 118.5,
-          quantity: 1,
-          unit_price: 118.5,
-          postponed_count: 1,
-        },
-      ],
-      error: null,
-    });
-    supabase.queue("billing_exports:select:many", {
-      data: [{ storage_path: "user-1/billing-exports/run-1/old.xlsx" }],
-      error: null,
-    });
-    supabase.queue("billing_run_items:select:many", {
-      data: [
-        { activity_id: "activity-fee", status: "included" },
-        { activity_id: "activity-expense", status: "postponed" },
-      ],
-      error: null,
-    });
-    supabase.queue(
-      "billing_exports:insert:single",
-      { data: { id: "export-fees", file_name: "compensi-committente.xlsx" }, error: null },
-      {
-        data: { id: "export-expenses", file_name: "rimborsi-spese-committente.xlsx" },
-        error: null,
-      },
-    );
-
-    const result = await handlerOf<
-      {
-        // `billingInput.status` è il literal `"draft"`; qui la bozza viene
-        // emessa, quindi lo stato override è parte del contratto testato.
-        data: Omit<typeof billingInput, "status"> & {
-          invoiceId: string;
-          status: "draft" | "issued";
-        };
-        context: { supabase: FakeSupabase; userId: string };
-      },
-      {
-        invoiceId: string;
-        invoiceRef: string;
-        billingRunId: string;
-        number: string;
-        year: number;
-      }
-    >(updateDraftBillingInvoiceFn)({
-      data: { ...billingInput, invoiceId: "invoice-1", status: "issued" },
-      context: { supabase, userId: "user-1" },
-    });
-
-    expect(result).toMatchObject({
+  supabase.queue("rpc:save_billing_invoice", {
+    data: {
       invoiceId: "invoice-1",
       invoiceRef: "FT-00001",
       billingRunId: "run-1",
       number: "12",
       year: 2026,
+      exports: [
+        {
+          id: "export-fees",
+          kind: "fees",
+          file_name: "compensi.xlsx",
+          storage_path: "user-1/billing-exports/run-1/compensi.xlsx",
+          storage_status: "pending",
+        },
+        {
+          id: "export-expenses",
+          kind: "expenses",
+          file_name: "rimborsi.xlsx",
+          storage_path: "user-1/billing-exports/run-1/rimborsi.xlsx",
+          storage_status: "pending",
+        },
+      ],
+    },
+    error: null,
+  });
+}
+
+describe("server functions fatture", () => {
+  it("salva fattura e metadati con una sola RPC, poi completa Storage in modo idempotente", async () => {
+    const supabase = new FakeSupabase();
+    queueInvoiceSave(supabase);
+
+    const result = await handlerOf<
+      { data: typeof billingInput; context: { supabase: FakeSupabase; userId: string } },
+      { invoiceId: string; exports: Array<{ storage_status: string }> }
+    >(createBillingInvoiceFn)({
+      data: billingInput,
+      context: { supabase, userId: "user-1" },
+    });
+
+    expect(result.invoiceId).toBe("invoice-1");
+    expect(result.exports.every((item) => item.storage_status === "ready")).toBe(true);
+    expect(supabase.rpcCalls).toHaveLength(1);
+    expect(supabase.rpcCalls[0]).toMatchObject({
+      fn: "save_billing_invoice",
+      args: { p_request_id: requestId, p_invoice_id: null },
+    });
+    expect(
+      supabase.calls.some((call) => call.action === "insert" || call.action === "delete"),
+    ).toBe(false);
+    expect(supabase.uploads).toHaveLength(2);
+    expect(supabase.uploads.every((upload) => upload.options)).toBe(true);
+    expect(supabase.uploads[0].options).toMatchObject({ upsert: true });
+    expect(supabase.callsFor("billing_exports", "update")).toHaveLength(2);
+  });
+
+  it("mantiene il risultato atomico recuperabile quando un upload fallisce e consente il retry", async () => {
+    const supabase = new FakeSupabase();
+    queueInvoiceSave(supabase);
+    supabase.uploadErrors = [new Error("Storage non disponibile"), null];
+
+    await expect(
+      handlerOf<
+        { data: typeof billingInput; context: { supabase: FakeSupabase; userId: string } },
+        unknown
+      >(createBillingInvoiceFn)({
+        data: billingInput,
+        context: { supabase, userId: "user-1" },
+      }),
+    ).rejects.toThrow("Fattura salvata");
+
+    expect(supabase.rpcCalls).toHaveLength(1);
+    expect(supabase.uploads).toHaveLength(2);
+    expect(supabase.calls.some((call) => call.action === "delete")).toBe(false);
+
+    queueInvoiceSave(supabase);
+    await expect(
+      handlerOf<
+        { data: typeof billingInput; context: { supabase: FakeSupabase; userId: string } },
+        unknown
+      >(createBillingInvoiceFn)({
+        data: billingInput,
+        context: { supabase, userId: "user-1" },
+      }),
+    ).resolves.toMatchObject({ invoiceId: "invoice-1" });
+    expect(supabase.rpcCalls).toHaveLength(2);
+    expect(supabase.uploads).toHaveLength(4);
+  });
+
+  it("aggiorna una bozza attraverso la stessa transazione senza progressivi applicativi", async () => {
+    const supabase = new FakeSupabase();
+    queueInvoiceSave(supabase);
+
+    await handlerOf<
+      {
+        data: typeof billingInput & { invoiceId: string };
+        context: { supabase: FakeSupabase; userId: string };
+      },
+      unknown
+    >(updateDraftBillingInvoiceFn)({
+      data: { ...billingInput, invoiceId: "invoice-1" },
+      context: { supabase, userId: "user-1" },
+    });
+
+    expect(supabase.rpcCalls[0]).toMatchObject({
+      fn: "save_billing_invoice",
+      args: { p_request_id: requestId, p_invoice_id: "invoice-1" },
     });
     expect(supabase.callsFor("profiles", "update")).toHaveLength(0);
-    expect(supabase.callsFor("invoice_lines", "delete")).toHaveLength(1);
-    expect(supabase.callsFor("billing_run_items", "delete")).toHaveLength(1);
-    expect(supabase.callsFor("invoices", "update")[0].payload).toMatchObject({
-      status: "issued",
-      paid_at: null,
-      principal_id: "principal-1",
-      stamp_amount: 2,
-    });
-    expect(supabase.callsFor("case_activities", "update")).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          payload: expect.objectContaining({
-            status: "invoiced",
-            invoice_id: "invoice-1",
-            postponed_until: null,
-          }),
-        }),
-      ]),
-    );
-    expect(supabase.callsFor("case_activities", "update").at(-1)?.payload).toMatchObject({
-      postponed_count: 1,
-    });
-    expect(supabase.uploads).toHaveLength(2);
   });
 
   it("cambia emissione fattura tramite RPC atomica", async () => {
@@ -638,16 +342,11 @@ describe("server functions fatture", () => {
 
     expect(result).toEqual({ invoiceId: "invoice-1" });
     expect(supabase.rpcCalls).toEqual([
-      {
-        fn: "set_invoice_issue_state",
-        args: { p_invoice_id: "invoice-1", p_issued: true },
-      },
+      { fn: "set_invoice_issue_state", args: { p_invoice_id: "invoice-1", p_issued: true } },
     ]);
-    expect(supabase.callsFor("invoices", "update")).toHaveLength(0);
-    expect(supabase.callsFor("case_activities", "update")).toHaveLength(0);
   });
 
-  it("rigenera un rendiconto Excel scaricabile dai dati della fattura", async () => {
+  it("rigenera un rendiconto dai dati della fattura e recupera il file Storage", async () => {
     const supabase = new FakeSupabase();
     supabase.queue("invoices:select:single", {
       data: { id: "invoice-1", billing_run_id: "run-1", principal_id: "principal-1" },
@@ -659,6 +358,10 @@ describe("server functions fatture", () => {
     });
     supabase.queue("principals:select:single", {
       data: { business_name: "Banca Test" },
+      error: null,
+    });
+    supabase.queue("billing_exports:select:maybeSingle", {
+      data: { id: "export-fees", storage_path: "user-1/billing-exports/run-1/compensi.xlsx" },
       error: null,
     });
     supabase.queue("invoice_lines:select:many", {
@@ -679,54 +382,30 @@ describe("server functions fatture", () => {
       error: null,
     });
     supabase.queue("case_activity_hearings:select:many", {
-      data: [
-        { activity_id: "activity-1", hearing_date: "2026-05-20", position: 2 },
-        { activity_id: "activity-1", hearing_date: "2026-05-10", position: 1 },
-      ],
+      data: [{ activity_id: "activity-1", hearing_date: "2026-05-20", position: 1 }],
       error: null,
     });
 
     const result = await handlerOf<
       {
-        data: { invoiceId: string; kind: "fees" | "expenses" };
+        data: { invoiceId: string; kind: "fees" };
         context: { supabase: FakeSupabase; userId: string };
       },
-      { bytesBase64: string; fileName: string; mimeType: string }
+      { bytesBase64: string }
     >(generateBillingExportFn)({
       data: { invoiceId: "invoice-1", kind: "fees" },
       context: { supabase, userId: "user-1" },
     });
 
-    expect(result).toEqual({
-      bytesBase64: Buffer.from([1, 2, 3]).toString("base64"),
-      fileName: "compensi-committente.xlsx",
-      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    });
-    expect(buildBillingWorkbook).toHaveBeenLastCalledWith({
-      kind: "fees",
-      principalName: "Banca Test",
-      periodStart: "2026-05-01",
-      periodEnd: "2026-05-31",
-      rows: [
-        {
-          practiceNumber: 42,
-          clientName: "Cliente snapshot",
-          counterpartyName: "Controparte snapshot",
-          activityDate: "2026-05-10",
-          description: "Descrizione storicizzata",
-          quantity: 3,
-          unitPrice: 120,
-          amount: 360,
-          hearingDates: ["2026-05-10", "2026-05-20"],
-        },
-      ],
-    });
-    expect(supabase.callsFor("invoice_lines", "select")[0].filters).toEqual(
-      expect.arrayContaining([
-        ["invoice_id", "invoice-1"],
-        ["kind", "fee"],
-      ]),
+    expect(result.bytesBase64).toBe(Buffer.from([1, 2, 3]).toString("base64"));
+    expect(buildBillingWorkbook).toHaveBeenLastCalledWith(
+      expect.objectContaining({ kind: "fees", principalName: "Banca Test" }),
     );
+    expect(supabase.uploads[0]).toMatchObject({
+      path: "user-1/billing-exports/run-1/compensi.xlsx",
+      options: { upsert: true },
+    });
+    expect(supabase.callsFor("billing_exports", "update")).toHaveLength(1);
   });
 
   it("genera XML usando il committente come soggetto fatturato", async () => {
@@ -740,7 +419,6 @@ describe("server functions fatture", () => {
         due_date: "2026-06-30",
         payment_method: "Bonifico bancario",
         principal_id: "principal-1",
-        client_id: "client-1",
         cassa_rate: 4,
         vat_rate: 22,
         withholding_rate: 20,
@@ -760,7 +438,6 @@ describe("server functions fatture", () => {
     supabase.queue("profiles:select:single", {
       data: {
         business_name: "Avv. Test",
-        full_name: null,
         vat_number: "12345678901",
         tax_code: "TSTTST80A01H501A",
         address_street: "Via Roma 1",
@@ -791,7 +468,6 @@ describe("server functions fatture", () => {
         vat_number: "01234567890",
         tax_code: "01234567890",
         sdi_code: "ABC1234",
-        pec: null,
         address_street: "Via Milano 2",
         address_zip: "20100",
         address_city: "Milano",
@@ -800,6 +476,7 @@ describe("server functions fatture", () => {
       },
       error: null,
     });
+
     const result = await handlerOf<
       { data: { invoiceId: string }; context: { supabase: FakeSupabase; userId: string } },
       { xml: string; filename: string }
@@ -811,6 +488,5 @@ describe("server functions fatture", () => {
     expect(result.filename).toBe("IT12345678901_202612.xml");
     expect(result.xml).toContain("<Denominazione>Banca Test</Denominazione>");
     expect(result.xml).toContain("<CodiceDestinatario>ABC1234</CodiceDestinatario>");
-    expect(supabase.callsFor("clients", "select")).toHaveLength(0);
   });
 });

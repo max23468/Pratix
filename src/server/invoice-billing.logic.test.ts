@@ -6,15 +6,10 @@ import {
   buildBillingExportRows,
   buildBillingExportRowsFromInvoiceLines,
   buildBillingRunItemRows,
-  buildBillingRunRow,
   buildInvoiceLineRows,
-  buildInvoiceRow,
-  draftPostponedActivityUpdate,
   firstIncludedClientId,
-  includedActivityUpdateForInvoiceStatus,
   invoiceLinesForTotals,
   partitionBillingActivities,
-  postponedActivityUpdate,
   selectedActivityIds,
   selectionMap,
   validateCreateBillingInvoiceInput,
@@ -144,18 +139,6 @@ describe("selezioni e attività fatturabili", () => {
     expect(() =>
       assertIncludedActivitiesBillable([activity({ status: "invoiced", invoice_id: "invoice-1" })]),
     ).toThrow("già fatturate");
-    expect(
-      includedActivityUpdateForInvoiceStatus({
-        invoiceId: "invoice-1",
-        invoiceStatus: "draft",
-      }),
-    ).toEqual({ status: "to_invoice", invoice_id: "invoice-1", postponed_until: null });
-    expect(
-      includedActivityUpdateForInvoiceStatus({
-        invoiceId: "invoice-1",
-        invoiceStatus: "issued",
-      }),
-    ).toEqual({ status: "invoiced", invoice_id: "invoice-1", postponed_until: null });
   });
 
   it("costruisce righe per totali, fattura, rendiconto e rinvio", () => {
@@ -176,27 +159,6 @@ describe("selezioni e attività fatturabili", () => {
       { kind: "fee", quantity: 2, unit_price: 500 },
       { kind: "expense_art15", quantity: 1, unit_price: 118.5 },
     ]);
-    expect(buildBillingRunRow({ input, userId: "user-1", totals })).toMatchObject({
-      user_id: "user-1",
-      compensation_total: 1000,
-      notes: "Note operative",
-    });
-    expect(
-      buildInvoiceRow({
-        input,
-        userId: "user-1",
-        billingRunId: "run-1",
-        firstIncluded: fee,
-        number: "12",
-        year: 2026,
-        totals,
-      }),
-    ).toMatchObject({
-      client_id: "client-1",
-      payment_method: "Bonifico",
-      net_to_pay: 1296.18,
-      stamp_amount: 2,
-    });
     expect(
       buildInvoiceLineRows({
         input,
@@ -223,22 +185,6 @@ describe("selezioni e attività fatturabili", () => {
         hearingDates: ["2026-05-10", "2026-05-20"],
       },
     ]);
-    expect(postponedActivityUpdate(activity({ postponed_count: "2" }), "2026-05-31")).toEqual({
-      id: "activity-fee",
-      postponed_until: "2026-06-01",
-      postponed_count: 3,
-    });
-    expect(
-      draftPostponedActivityUpdate({
-        activity: activity({ postponed_count: "2" }),
-        periodEnd: "2026-05-31",
-        previousStatus: "postponed",
-      }),
-    ).toEqual({
-      id: "activity-fee",
-      postponed_until: "2026-06-01",
-      postponed_count: 2,
-    });
   });
 
   it("ricostruisce i rendiconti dagli snapshot delle righe fattura", () => {

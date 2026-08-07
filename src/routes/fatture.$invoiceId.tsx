@@ -52,11 +52,8 @@ import { invoiceStatusLabels, invoiceStatusVariant } from "@/lib/labels";
 import { publicCodeLookup } from "@/lib/public-route-code";
 import { getAuthHeaders, readServerResult } from "@/lib/server-functions";
 import { PRATIX_DOCUMENTS_BUCKET } from "@/lib/storage-paths";
-import {
-  generateBillingExportFn,
-  generateInvoiceXmlFn,
-  setInvoiceIssueStateFn,
-} from "@/server/invoices.functions";
+import { generateBillingExportFn, generateInvoiceXmlFn } from "@/server/invoices-export.functions";
+import { setInvoiceIssueStateFn } from "@/server/invoices-issue.functions";
 
 type GenerateInvoiceXmlResult = {
   xml: string;
