@@ -130,6 +130,31 @@ Scegli gate proporzionati al diff:
 Non inventare risultati. Se un controllo rilevante non è eseguibile, dichiara
 motivo e rischio residuo.
 
+## Significato di `Pubblica`
+
+Quando il proprietario, riferendosi alla repository o alla modifica corrente,
+dice `Pubblica` o chiede in modo affermativo e inequivocabile di pubblicare,
+autorizza l'intero ciclo tecnico applicabile. Domande, ipotesi, pianificazioni e
+negazioni non costituiscono autorizzazione. L'agente non si ferma a stati
+intermedi e completa tutti i passaggi applicabili: preparazione e verifiche,
+branch e commit, versione e changelog quando richiesti, push, PR, soli gate
+bloccanti, merge, tag e GitHub Release quando previsti, deploy o promozione
+tecnica e verifica live. La sequenza concreta, in particolare tra versionamento,
+merge, deploy e release, è quella definita dalla policy della repository.
+
+La pulizia finale rimuove soltanto branch e worktree temporanei creati nel ciclo
+corrente e già assorbiti; controlla stash e altri residui senza alterare elementi
+preesistenti o estranei alla pubblicazione. Se un passaggio non è applicabile, lo
+dichiara e prosegue con gli altri. La richiesta affermativa di pubblicazione
+vale come autorizzazione a PR, merge, deploy tecnico e release previsti dal
+ciclo, senza una seconda conferma. Non autorizza pubblicazione di temi Shopify
+live, submission Shopify App Store, billing o nuove attivazioni produttive,
+TestFlight o App Store, invii Aruba, email o scansioni reali, né aggiornamenti
+Notion: queste azioni richiedono una richiesta esplicita separata. Una richiesta
+riferita soltanto a una di queste azioni non avvia la pubblicazione della
+repository. Non dichiarare `pubblicato` finché il ciclo applicabile e la
+rilettura finale di PR, check, deploy, release e stato Git non sono completi.
+
 ## PR, pubblicazione e release
 
 Usa Conventional Commits e un titolo PR esplicito, non il nome del branch.
@@ -137,10 +162,7 @@ Prima di merge, publish, deploy o release verifica che lo status
 `codex-review` sia riuscito sull'esatto HEAD della PR, che non restino finding
 P0/P1 e che gli eventuali P2/P3 siano stati valutati come advisory.
 
-Quando il proprietario chiede di pubblicare, completa PR e merge su `main`,
-verifica Vercel production quando applicabile e pulisci branch/worktree
-dedicati. Una PR o preview aperta non equivale a pubblicazione. Dopo il merge
-usa, quando applicabile:
+Dopo il merge usa, quando applicabile:
 
 ```sh
 npm run publish:finish -- --pr <numero-pr> --routes /,/novita
