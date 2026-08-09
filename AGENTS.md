@@ -134,8 +134,8 @@ motivo e rischio residuo.
 
 Usa Conventional Commits e un titolo PR esplicito, non il nome del branch.
 Prima di merge, publish, deploy o release verifica che lo status
-`codex-review` sia riuscito sull'esatto HEAD della PR e che non restino finding
-P0-P3 correnti.
+`codex-review` sia riuscito sull'esatto HEAD della PR, che non restino finding
+P0/P1 e che gli eventuali P2/P3 siano stati valutati come advisory.
 
 Quando il proprietario chiede di pubblicare, completa PR e merge su `main`,
 verifica Vercel production quando applicabile e pulisci branch/worktree

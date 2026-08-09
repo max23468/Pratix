@@ -82,7 +82,7 @@ test("il commit_id nativo approva una review pulita con corpo vuoto", () => {
   );
 });
 
-test("un finding nel body della review exact-HEAD prevale", () => {
+test("un finding P2 nel body della review exact-HEAD resta advisory", () => {
   assert.equal(
     classify({
       reviews: [
@@ -91,6 +91,22 @@ test("un finding nel body della review exact-HEAD prevale", () => {
           commit_id: headSha,
           submitted_at: "2026-08-04T12:00:02Z",
           body: "**P2** Correggi il gate",
+        },
+      ],
+    }).state,
+    "success",
+  );
+});
+
+test("un finding P1 nel body della review exact-HEAD blocca", () => {
+  assert.equal(
+    classify({
+      reviews: [
+        {
+          user: bot,
+          commit_id: headSha,
+          submitted_at: "2026-08-04T12:00:02Z",
+          body: "**P1** Correggi il gate",
         },
       ],
     }).state,
@@ -283,7 +299,7 @@ test("un finding pubblicato prima della review resta associato al tentativo corr
   );
 });
 
-test("un finding top-level sull'HEAD prevale sul riepilogo pulito", () => {
+test("un finding P2 top-level sull'HEAD resta advisory", () => {
   assert.equal(
     classify({
       requiresReviewedCommit: true,
@@ -300,7 +316,7 @@ test("un finding top-level sull'HEAD prevale sul riepilogo pulito", () => {
         },
       ],
     }).state,
-    "failure",
+    "success",
   );
 });
 

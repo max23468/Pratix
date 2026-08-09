@@ -14,7 +14,8 @@ obsoleti senza bloccare direttamente il merge del commit corrente.
 Usare un unico status `codex-review`, pubblicato sull'HEAD corrente da un
 workflow `pull_request_target` che esegue soltanto codice del branch
 predefinito. Approvazioni, finding ed errori devono essere attribuibili allo
-stesso SHA e al tentativo corrente; i finding P0-P3 prevalgono sempre.
+stesso SHA e al tentativo corrente; i finding P0/P1 prevalgono sempre, mentre
+P2/P3 restano advisory dopo la conclusione della review e l'assestamento dei segnali.
 
 La feedback inbox, i suoi workflow, script, test e ADR precedenti vengono
 rimossi. La protezione di `main` richiede `codex-review` insieme ai check già
