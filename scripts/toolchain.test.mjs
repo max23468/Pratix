@@ -41,12 +41,12 @@ test("npm 12 viene installato prima delle dipendenze", () => {
 });
 
 test("React Doctor resta bloccante nel workflow dedicato e nel gate generale", () => {
-  assert.equal(packageJson.devDependencies["react-doctor"], "0.9.5");
-  assert.equal(packageLock.packages[""].devDependencies["react-doctor"], "0.9.5");
-  assert.equal(packageJson.scripts.doctor, "react-doctor . --scope full --blocking warning");
+  assert.equal(packageJson.devDependencies["react-doctor"], "0.9.11");
+  assert.equal(packageLock.packages[""].devDependencies["react-doctor"], "0.9.11");
+  assert.equal(packageJson.scripts.doctor, "react-doctor --scope full --blocking warning .");
   assert.match(packageJson.scripts.check, /npm run doctor/);
   assert.match(qualityWorkflow, /run: npm run check/);
-  assert.match(reactDoctorWorkflow, /version: 0\.9\.5/);
+  assert.match(reactDoctorWorkflow, /version: latest/);
   assert.match(reactDoctorWorkflow, /blocking: warning/);
   assert.match(
     reactDoctorWorkflow,
@@ -54,6 +54,7 @@ test("React Doctor resta bloccante nel workflow dedicato e nel gate generale", (
   );
   assert.match(reactDoctorWorkflow, /comment: "false"/);
   assert.match(reactDoctorWorkflow, /review-comments: "true"/);
+  assert.match(reactDoctorWorkflow, /commit-status: "false"/);
   assert.equal(doctorConfig.blocking, "warning");
   assert.match(governanceWorkflow, /strict_required_status_checks_policy/);
   assert.match(governanceWorkflow, /Build, format and lint,codex-review,react-doctor/);
