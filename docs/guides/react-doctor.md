@@ -9,6 +9,7 @@ npm run doctor
 ```
 
 Il comando esegue una scansione completa con la versione fissata nel lockfile e blocca errori e warning.
+Il workflow GitHub usa invece sempre `version: latest`.
 
 ## Soglia operativa
 
