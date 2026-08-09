@@ -130,6 +130,27 @@ Scegli gate proporzionati al diff:
 Non inventare risultati. Se un controllo rilevante non è eseguibile, dichiara
 motivo e rischio residuo.
 
+## Significato di `Pubblica`
+
+Quando il proprietario dice `Pubblica`, `pubblica`, parla di `pubblicare` o usa
+espressioni equivalenti, autorizza l'intero ciclo tecnico applicabile alla
+repository. L'agente non si ferma a stati intermedi: prepara e verifica la
+modifica; crea branch e commit; esegue push; apre o aggiorna la PR; attende e
+soddisfa i soli gate bloccanti; esegue il merge; completa deploy o promozione
+tecnica e verifica live quando applicabili; crea versione, tag e GitHub Release
+quando previsti dalla policy; infine aggiorna e verifica la branch di base,
+elimina branch e worktree temporanei locali e remoti già assorbiti e controlla
+stash e altri residui.
+
+Se un passaggio non è applicabile, lo dichiara e prosegue con gli altri. La
+richiesta di pubblicazione vale come autorizzazione a PR, merge, deploy tecnico
+e release previsti dal ciclo, senza una seconda conferma. Non autorizza
+pubblicazione di temi Shopify live, submission Shopify App Store, billing o
+nuove attivazioni produttive, TestFlight o App Store, invii Aruba, email o
+scansioni reali, né aggiornamenti Notion: queste azioni richiedono una richiesta
+esplicita separata. Non dichiarare `pubblicato` finché il ciclo applicabile e la
+rilettura finale di PR, check, deploy, release e stato Git non sono completi.
+
 ## PR, pubblicazione e release
 
 Usa Conventional Commits e un titolo PR esplicito, non il nome del branch.
@@ -137,10 +158,7 @@ Prima di merge, publish, deploy o release verifica che lo status
 `codex-review` sia riuscito sull'esatto HEAD della PR, che non restino finding
 P0/P1 e che gli eventuali P2/P3 siano stati valutati come advisory.
 
-Quando il proprietario chiede di pubblicare, completa PR e merge su `main`,
-verifica Vercel production quando applicabile e pulisci branch/worktree
-dedicati. Una PR o preview aperta non equivale a pubblicazione. Dopo il merge
-usa, quando applicabile:
+Dopo il merge usa, quando applicabile:
 
 ```sh
 npm run publish:finish -- --pr <numero-pr> --routes /,/novita
