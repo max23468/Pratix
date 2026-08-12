@@ -149,7 +149,7 @@ export async function loadDuplicateScanData(
     if (result.error) throw result.error;
   }
 
-  // ponytail: limite per tabella; massimo produzione 76 righe al 2026-08-07.
+  // Limite per tabella; massimo produzione 76 righe al 2026-08-07.
   // Passare a blocking/index DB se un singolo utente supera 500 righe.
   if (
     [
