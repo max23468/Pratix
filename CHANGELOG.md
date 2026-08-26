@@ -6,6 +6,14 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.18] — 2026-08-26
+
+### Sotto il cofano
+
+- Aggiornati Vite e Rolldown alle versioni correnti mantenendo il rendering
+  server stabile con un bundle Nitro unico finché la correzione upstream non è
+  disponibile.
+
 ## [1.14.17] — 2026-08-26
 
 ### Correzioni
@@ -1603,6 +1611,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.18]: #11418--2026-08-26
 [1.14.17]: #11417--2026-08-26
 [1.14.16]: #11416--2026-08-07
 [1.14.15]: #11415--2026-08-07

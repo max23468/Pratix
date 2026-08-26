@@ -68,7 +68,12 @@ export default defineConfig({
   plugins: [
     stripDependencyUseClientDirectives(),
     tanstackStart(),
-    nitro(),
+    nitro({
+      // Rolldown 1.2.x can emit an undeclared namespace export when Nitro
+      // splits the dynamically loaded SSR service (rolldown/rolldown#10734).
+      // Keep the service in one chunk until the upstream fix is released.
+      inlineDynamicImports: true,
+    }),
     viteReact(),
     tailwindcss(),
   ],
