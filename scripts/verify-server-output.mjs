@@ -5,20 +5,26 @@ import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 import process from "node:process";
 
-const outputDirectory = path.resolve(process.cwd(), ".output/server");
+const outputDirectories = [
+  path.resolve(process.cwd(), ".output/server"),
+  path.resolve(process.cwd(), ".vercel/output/functions"),
+].filter(existsSync);
 
-if (!existsSync(outputDirectory)) {
-  console.error(`Output server non trovato: ${outputDirectory}`);
+if (outputDirectories.length === 0) {
+  console.error("Output server non trovato nei layout Nitro locale o Vercel.");
   process.exit(1);
 }
 
-const modules = readdirSync(outputDirectory, { recursive: true })
-  .filter((entry) => typeof entry === "string" && entry.endsWith(".mjs"))
-  .map((entry) => path.join(outputDirectory, entry))
+const modules = outputDirectories
+  .flatMap((outputDirectory) =>
+    readdirSync(outputDirectory, { recursive: true })
+      .filter((entry) => typeof entry === "string" && entry.endsWith(".mjs"))
+      .map((entry) => path.join(outputDirectory, entry)),
+  )
   .sort();
 
 if (modules.length === 0) {
-  console.error(`Nessun modulo ESM trovato in ${outputDirectory}`);
+  console.error("Nessun modulo ESM trovato negli output server.");
   process.exit(1);
 }
 
