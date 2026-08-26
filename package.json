@@ -5,10 +5,11 @@
   "sideEffects": false,
   "scripts": {
     "dev": "node scripts/vite-with-tailwind-compat.mjs dev",
-    "build": "node scripts/vite-with-tailwind-compat.mjs build",
+    "build": "node scripts/vite-with-tailwind-compat.mjs build && npm run verify:server-output",
     "build:dev": "node scripts/vite-with-tailwind-compat.mjs build --mode development",
     "check": "npm run typecheck && npm run build && npm test && npm run lint && npm run doctor && npm audit --audit-level=moderate",
     "typecheck": "tsc --noEmit",
+    "verify:server-output": "node scripts/verify-server-output.mjs",
     "doctor": "react-doctor --scope full --blocking warning .",
     "smoke:a11y": "node scripts/smoke-a11y.mjs --start-server",
     "smoke:a11y:quick": "node scripts/smoke-a11y.mjs --start-server --quick",
@@ -87,11 +88,12 @@
     "react-doctor": "0.9.12",
     "supabase": "^2.115.0",
     "typescript": "^7.0.2",
-    "vite": "^8.2.2",
+    "vite": "8.1.5",
     "vitest": "^4.1.11"
   },
   "overrides": {
-    "encoding-sniffer": "^1.0.2"
+    "encoding-sniffer": "^1.0.2",
+    "rolldown": "1.1.0"
   },
   "engines": {
     "node": ">=24.15 <25",
