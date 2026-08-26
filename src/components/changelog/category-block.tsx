@@ -1,4 +1,5 @@
 import { AreaGroupList } from "@/components/changelog/area-group-list";
+import { Settings2, ShieldCheck, Sparkles, Wrench } from "lucide-react";
 import {
   CATEGORY_META,
   groupItemsByArea,
@@ -17,14 +18,22 @@ export function CategoryBlock({
   compact?: boolean;
 }) {
   const meta = CATEGORY_META[category];
-  const Icon = category === "fix" ? sectionIcon(sections) : meta.icon;
+  const isSecurityFix = category === "fix" && sectionIcon(sections) === ShieldCheck;
   const isHighlight = category === "highlight";
   const areaGroups = groupItemsByArea(sections);
 
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <Icon className={`size-4 ${meta.tone}`} strokeWidth={1.8} />
+        {isSecurityFix ? (
+          <ShieldCheck className={`size-4 ${meta.tone}`} strokeWidth={1.8} />
+        ) : category === "highlight" ? (
+          <Sparkles className={`size-4 ${meta.tone}`} strokeWidth={1.8} />
+        ) : category === "internal" ? (
+          <Settings2 className={`size-4 ${meta.tone}`} strokeWidth={1.8} />
+        ) : (
+          <Wrench className={`size-4 ${meta.tone}`} strokeWidth={1.8} />
+        )}
         <h3 className="text-sm font-semibold text-foreground">{meta.label}</h3>
       </div>
       <div className={isHighlight ? "space-y-3" : "space-y-2.5"}>

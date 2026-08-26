@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Save } from "lucide-react";
@@ -73,10 +73,41 @@ const empty = (): ProfileForm => ({
   notes: "",
 });
 
+function profileForm(data: Record<string, unknown>): ProfileForm {
+  return {
+    full_name: String(data.full_name ?? ""),
+    business_name: String(data.business_name ?? ""),
+    vat_number: String(data.vat_number ?? ""),
+    tax_code: String(data.tax_code ?? ""),
+    email: String(data.email ?? ""),
+    phone: String(data.phone ?? ""),
+    pec: String(data.pec ?? ""),
+    bar_association: String(data.bar_association ?? ""),
+    address_street: String(data.address_street ?? ""),
+    address_zip: String(data.address_zip ?? ""),
+    address_city: String(data.address_city ?? ""),
+    address_province: String(data.address_province ?? ""),
+    address_country: String(data.address_country ?? "IT"),
+    tax_regime: (data.tax_regime as "ordinario" | "forfettario") ?? "ordinario",
+    cassa_rate: Number(data.cassa_rate ?? 4),
+    vat_rate: Number(data.vat_rate ?? 22),
+    withholding_rate: Number(data.withholding_rate ?? 20),
+    apply_withholding: Boolean(data.apply_withholding ?? true),
+    include_stamp_duty: Boolean(data.include_stamp_duty ?? false),
+    bank_name: String(data.bank_name ?? ""),
+    iban: String(data.iban ?? ""),
+    invoice_number_prefix: String(data.invoice_number_prefix ?? ""),
+    invoice_year: Number(data.invoice_year ?? new Date().getFullYear()),
+    invoice_next_number: Number(data.invoice_next_number ?? 1),
+    notes: "",
+  };
+}
+
 function SettingsPage() {
   const { user } = useAuth();
   const qc = useQueryClient();
   const [form, setForm] = useState<ProfileForm>(empty);
+  const [formSource, setFormSource] = useState<unknown>();
   const saveLock = useSubmitLock();
 
   const { data, isLoading } = useQuery({
@@ -93,36 +124,10 @@ function SettingsPage() {
     },
   });
 
-  useEffect(() => {
-    if (!data) return;
-    setForm({
-      full_name: data.full_name ?? "",
-      business_name: data.business_name ?? "",
-      vat_number: data.vat_number ?? "",
-      tax_code: data.tax_code ?? "",
-      email: data.email ?? "",
-      phone: data.phone ?? "",
-      pec: data.pec ?? "",
-      bar_association: data.bar_association ?? "",
-      address_street: data.address_street ?? "",
-      address_zip: data.address_zip ?? "",
-      address_city: data.address_city ?? "",
-      address_province: data.address_province ?? "",
-      address_country: data.address_country ?? "IT",
-      tax_regime: (data.tax_regime as "ordinario" | "forfettario") ?? "ordinario",
-      cassa_rate: Number(data.cassa_rate ?? 4),
-      vat_rate: Number(data.vat_rate ?? 22),
-      withholding_rate: Number(data.withholding_rate ?? 20),
-      apply_withholding: data.apply_withholding ?? true,
-      include_stamp_duty: data.include_stamp_duty ?? false,
-      bank_name: data.bank_name ?? "",
-      iban: data.iban ?? "",
-      invoice_number_prefix: data.invoice_number_prefix ?? "",
-      invoice_year: data.invoice_year ?? new Date().getFullYear(),
-      invoice_next_number: data.invoice_next_number ?? 1,
-      notes: "",
-    });
-  }, [data]);
+  if (data !== formSource) {
+    setFormSource(data);
+    setForm(data ? profileForm(data) : empty());
+  }
 
   const set = <K extends keyof ProfileForm>(k: K, v: ProfileForm[K]) =>
     setForm((s) => ({ ...s, [k]: v }));
