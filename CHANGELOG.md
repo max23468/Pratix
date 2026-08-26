@@ -6,6 +6,18 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.17] — 2026-08-26
+
+### Correzioni
+
+- Ripristinato l'avvio della produzione dopo l'aggiornamento della toolchain di
+  build.
+
+### Sotto il cofano
+
+- Fissata una combinazione Vite/Rolldown compatibile con il rendering server e
+  aggiunto un controllo di validità su tutti i moduli generati prima del deploy.
+
 ## [1.14.16] — 2026-08-07
 
 ### Correzioni
@@ -1591,6 +1603,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.17]: #11417--2026-08-26
 [1.14.16]: #11416--2026-08-07
 [1.14.15]: #11415--2026-08-07
 [1.14.14]: #11414--2026-08-06
