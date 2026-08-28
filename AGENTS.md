@@ -163,10 +163,6 @@ rilettura finale di PR, check, deploy, release e stato Git non sono completi.
 ## PR, pubblicazione e release
 
 Usa Conventional Commits e un titolo PR esplicito, non il nome del branch.
-Prima di merge, publish, deploy o release verifica che lo status
-`codex-review` sia riuscito sull'esatto HEAD della PR, che non restino finding
-P0/P1 e che gli eventuali P2/P3 siano stati valutati come advisory.
-
 Dopo il merge usa, quando applicabile:
 
 ```sh

@@ -57,5 +57,5 @@ test("React Doctor resta bloccante nel workflow dedicato e nel gate generale", (
   assert.match(reactDoctorWorkflow, /commit-status: "false"/);
   assert.equal(doctorConfig.blocking, "warning");
   assert.match(governanceWorkflow, /strict_required_status_checks_policy/);
-  assert.match(governanceWorkflow, /Build, format and lint,codex-review,react-doctor/);
+  assert.match(governanceWorkflow, /Build, format and lint,react-doctor/);
 });

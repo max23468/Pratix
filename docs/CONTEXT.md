@@ -53,7 +53,6 @@ Fuori perimetro salvo decisione esplicita:
 - Pubblicare significa merge su `main`, verifica Vercel production quando serve e cleanup branch/worktree.
 - Rilasciare significa `npm run release` secondo `docs/guides/versioning-e-release.md`.
 - Per docs interne non esposte all'app, non serve bump SemVer.
-- Prima del merge verificare `codex-review` sull'esatto HEAD della PR.
 - Dopo merge controllare branch locali e worktree temporanei.
 - Per modifiche docs-only/governance-only usare verifiche proporzionate:
   review documentale, coerenza link e `git diff --check`, senza smoke, deploy
