@@ -49,9 +49,11 @@ const FORMATTABLE = new Set([
   "graphql",
   "gql",
 ]);
+const OXFMT_IGNORED = new Set(["package-lock.json"]);
 
 const files = changedFiles()
   .filter(isExistingFile)
+  .filter((file) => !OXFMT_IGNORED.has(file))
   .filter((file) => FORMATTABLE.has(file.split(".").pop()?.toLowerCase() ?? ""));
 
 if (files.length === 0) {
