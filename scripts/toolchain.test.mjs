@@ -6,6 +6,7 @@ const packageJson = JSON.parse(await readFile(new URL("../package.json", import.
 const packageLock = JSON.parse(await readFile(new URL("../package-lock.json", import.meta.url)));
 const npmrc = await readFile(new URL("../.npmrc", import.meta.url), "utf8");
 const publishPrepare = await readFile(new URL("./publish-prepare.mjs", import.meta.url), "utf8");
+const formatChanged = await readFile(new URL("./format-changed.mjs", import.meta.url), "utf8");
 const qualityWorkflow = await readFile(
   new URL("../.github/workflows/quality.yml", import.meta.url),
   "utf8",
@@ -38,6 +39,11 @@ test("npm 12 viene installato prima delle dipendenze", () => {
   assert.doesNotMatch(publishPrepare, /valuta npm ci/);
   assert.doesNotMatch(toolchain, /^npm ci$/m);
   assert.equal(vercel.installCommand, `${bootstrap} install`);
+});
+
+test("il formatter incrementale lascia il lockfile ai controlli npm", () => {
+  assert.match(formatChanged, /OXFMT_IGNORED = new Set\(\["package-lock\.json"\]\)/);
+  assert.match(formatChanged, /!OXFMT_IGNORED\.has\(file\)/);
 });
 
 test("React Doctor resta bloccante nel workflow dedicato e nel gate generale", () => {

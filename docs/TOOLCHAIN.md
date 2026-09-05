@@ -53,6 +53,9 @@ npm run format:changed:check
 npm run format:changed
 ```
 
+Il formatter incrementale esclude `package-lock.json`, che oxfmt ignora per
+design; integrità e sicurezza del lockfile sono verificate dai comandi npm.
+
 Release e pubblicazione:
 
 ```sh
