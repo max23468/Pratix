@@ -339,65 +339,92 @@ function DashboardContent() {
   );
 }
 
-function DashboardStats({
-  data,
-  isLoading,
-}: {
-  data?: {
-    casesWithoutActivities: number;
-    casesToComplete: number;
-    toInvoiceCount: number;
-    toInvoiceAmount: number;
-    draftInvoiceCount: number;
-    invoicesToCollectAmount: number;
-    overdueInvoiceCount: number;
-    expenseWithoutAttachmentCount: number;
-  };
+type DashboardStatsData = {
+  casesWithoutActivities: number;
+  casesToComplete: number;
+  toInvoiceCount: number;
+  toInvoiceAmount: number;
+  draftInvoiceCount: number;
+  invoicesToCollectAmount: number;
+  overdueInvoiceCount: number;
+  expenseWithoutAttachmentCount: number;
+};
+
+type StatsGroupProps = {
+  data?: DashboardStatsData;
   isLoading: boolean;
-}) {
+};
+
+function countValue(isLoading: boolean, count: number | undefined) {
+  return isLoading ? "—" : String(count ?? 0);
+}
+
+function currencyValue(isLoading: boolean, amount: number | undefined) {
+  return isLoading ? "—" : formatCurrency(amount ?? 0);
+}
+
+function alertTone(count: number | undefined) {
+  return count !== undefined && count > 0 ? "danger" : "default";
+}
+
+function CaseStats({ data, isLoading }: StatsGroupProps) {
   return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+    <>
       <StatCard
         icon={Briefcase}
         label="Pratiche senza attività"
-        value={isLoading ? "—" : String(data?.casesWithoutActivities ?? 0)}
+        value={countValue(isLoading, data?.casesWithoutActivities)}
         to="/pratiche"
         search={{ view: "without_activities" }}
       />
       <StatCard
         icon={AlertTriangle}
         label="Pratiche da completare"
-        value={isLoading ? "—" : String(data?.casesToComplete ?? 0)}
-        tone={data && data.casesToComplete > 0 ? "danger" : "default"}
+        value={countValue(isLoading, data?.casesToComplete)}
+        tone={alertTone(data?.casesToComplete)}
         to="/pratiche"
         search={{ view: "to_complete" }}
       />
+    </>
+  );
+}
+
+function ActivityStats({ data, isLoading }: StatsGroupProps) {
+  return (
+    <>
       <StatCard
         icon={ListChecks}
         label="Attività da fatturare"
-        value={isLoading ? "—" : String(data?.toInvoiceCount ?? 0)}
+        value={countValue(isLoading, data?.toInvoiceCount)}
         to="/attivita"
         search={{ status: "to_invoice" }}
       />
       <StatCard
         icon={Receipt}
         label="Maturato da fatturare"
-        value={isLoading ? "—" : formatCurrency(data?.toInvoiceAmount ?? 0)}
+        value={currencyValue(isLoading, data?.toInvoiceAmount)}
         tone="gold"
         to="/attivita"
         search={{ status: "to_invoice", sort: "amount", dir: "desc" }}
       />
+    </>
+  );
+}
+
+function InvoiceStats({ data, isLoading }: StatsGroupProps) {
+  return (
+    <>
       <StatCard
         icon={Receipt}
         label="Fatture in bozza"
-        value={isLoading ? "—" : String(data?.draftInvoiceCount ?? 0)}
+        value={countValue(isLoading, data?.draftInvoiceCount)}
         to="/fatture"
         search={{ status: "draft" }}
       />
       <StatCard
         icon={Receipt}
         label="Fatture da incassare"
-        value={isLoading ? "—" : formatCurrency(data?.invoicesToCollectAmount ?? 0)}
+        value={currencyValue(isLoading, data?.invoicesToCollectAmount)}
         tone="gold"
         to="/fatture"
         search={{ status: "to_collect" }}
@@ -405,19 +432,35 @@ function DashboardStats({
       <StatCard
         icon={AlertTriangle}
         label="Fatture scadute"
-        value={isLoading ? "—" : String(data?.overdueInvoiceCount ?? 0)}
-        tone={data && data.overdueInvoiceCount > 0 ? "danger" : "default"}
+        value={countValue(isLoading, data?.overdueInvoiceCount)}
+        tone={alertTone(data?.overdueInvoiceCount)}
         to="/fatture"
         search={{ status: "expired" }}
       />
-      <StatCard
-        icon={FileWarning}
-        label="Rimborsi senza allegato"
-        value={isLoading ? "—" : String(data?.expenseWithoutAttachmentCount ?? 0)}
-        tone={data && data.expenseWithoutAttachmentCount > 0 ? "danger" : "default"}
-        to="/attivita"
-        search={{ status: "to_invoice", kind: "expense_reimbursement", attachments: "missing" }}
-      />
+    </>
+  );
+}
+
+function ExpenseAttachmentStat({ data, isLoading }: StatsGroupProps) {
+  return (
+    <StatCard
+      icon={FileWarning}
+      label="Rimborsi senza allegato"
+      value={countValue(isLoading, data?.expenseWithoutAttachmentCount)}
+      tone={alertTone(data?.expenseWithoutAttachmentCount)}
+      to="/attivita"
+      search={{ status: "to_invoice", kind: "expense_reimbursement", attachments: "missing" }}
+    />
+  );
+}
+
+function DashboardStats({ data, isLoading }: StatsGroupProps) {
+  return (
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <CaseStats data={data} isLoading={isLoading} />
+      <ActivityStats data={data} isLoading={isLoading} />
+      <InvoiceStats data={data} isLoading={isLoading} />
+      <ExpenseAttachmentStat data={data} isLoading={isLoading} />
     </div>
   );
 }
