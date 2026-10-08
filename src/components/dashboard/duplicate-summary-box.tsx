@@ -18,7 +18,6 @@ export function DuplicateSummaryBox({
   }
 
   const openCount = summary?.openCount ?? 0;
-  const highConfidenceCount = summary?.highConfidenceCount ?? 0;
   const hasOpen = openCount > 0;
   const badgeText = isLoading
     ? "Controllo…"
@@ -49,26 +48,7 @@ export function DuplicateSummaryBox({
           </div>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-4 lg:min-w-[30rem]">
-          <DuplicateSummaryMetric
-            label="Da verificare"
-            value={isLoading ? "—" : String(openCount)}
-            tone={hasOpen ? "danger" : "default"}
-          />
-          <DuplicateSummaryMetric
-            label="Alta probabilità"
-            value={isLoading ? "—" : String(highConfidenceCount)}
-            tone={highConfidenceCount > 0 ? "danger" : "default"}
-          />
-          <DuplicateSummaryMetric
-            label="Rimandati"
-            value={isLoading ? "—" : String(summary?.snoozedCount ?? 0)}
-          />
-          <DuplicateSummaryMetric
-            label="Risolti"
-            value={isLoading ? "—" : String(summary?.resolvedCount ?? 0)}
-          />
-        </div>
+        <DuplicateMetrics summary={summary} isLoading={isLoading} />
 
         <Button variant={hasOpen ? "default" : "outline"} asChild className="shrink-0">
           <Link to="/controllo-duplicati">
@@ -78,5 +58,39 @@ export function DuplicateSummaryBox({
         </Button>
       </CardContent>
     </Card>
+  );
+}
+
+function DuplicateMetrics({
+  summary,
+  isLoading,
+}: {
+  summary?: DuplicateSummary;
+  isLoading: boolean;
+}) {
+  const openCount = summary?.openCount ?? 0;
+  const highConfidenceCount = summary?.highConfidenceCount ?? 0;
+  const hasOpen = openCount > 0;
+  return (
+    <div className="grid gap-2 sm:grid-cols-4 lg:min-w-[30rem]">
+      <DuplicateSummaryMetric
+        label="Da verificare"
+        value={isLoading ? "—" : String(openCount)}
+        tone={hasOpen ? "danger" : "default"}
+      />
+      <DuplicateSummaryMetric
+        label="Alta probabilità"
+        value={isLoading ? "—" : String(highConfidenceCount)}
+        tone={highConfidenceCount > 0 ? "danger" : "default"}
+      />
+      <DuplicateSummaryMetric
+        label="Rimandati"
+        value={isLoading ? "—" : String(summary?.snoozedCount ?? 0)}
+      />
+      <DuplicateSummaryMetric
+        label="Risolti"
+        value={isLoading ? "—" : String(summary?.resolvedCount ?? 0)}
+      />
+    </div>
   );
 }
