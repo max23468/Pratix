@@ -93,26 +93,12 @@ export const Route = createFileRoute("/prezzi/")({
   ),
 });
 
-function PrezziList() {
-  const navigate = Route.useNavigate();
-  const routeSearch = Route.useSearch();
-  const q = routeSearch.q ?? "";
-  const urlSort =
-    routeSearch.sort && routeSearch.dir
-      ? { key: routeSearch.sort, direction: routeSearch.dir }
-      : undefined;
+type PriceBookCounts = { fees: number; expenses: number; enabled: number };
 
-  const updateSearch = (next: PrezziSearch) =>
-    navigate({
-      search: {
-        q: normalizeTextSearch(next.q ?? q),
-        sort: next.sort ?? routeSearch.sort,
-        dir: next.dir ?? routeSearch.dir,
-      },
-      replace: true,
-    });
+const emptyPriceBookCounts: PriceBookCounts = { fees: 0, expenses: 0, enabled: 0 };
 
-  const { data: priceBooks = [], isLoading } = useQuery({
+function usePriceBooksQuery() {
+  return useQuery({
     queryKey: ["price-books"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -126,7 +112,9 @@ function PrezziList() {
       return (data ?? []) as PriceBookListRow[];
     },
   });
+}
 
+function usePrincipalNameById() {
   const { data: principals = [] } = useQuery({
     queryKey: ["principals", "price-list"],
     queryFn: async () => {
@@ -139,6 +127,13 @@ function PrezziList() {
     },
   });
 
+  return useMemo(
+    () => new Map(principals.map((principal) => [principal.id, principal.business_name])),
+    [principals],
+  );
+}
+
+function usePriceItemCounts() {
   const { data: priceItems = [] } = useQuery({
     queryKey: ["price-items", "counts"],
     queryFn: async () => {
@@ -150,26 +145,23 @@ function PrezziList() {
     },
   });
 
-  const principalNameById = useMemo(
-    () => new Map(principals.map((principal) => [principal.id, principal.business_name])),
-    [principals],
-  );
-
-  const countsByBook = useMemo(() => {
-    return priceItems.reduce<Record<string, { fees: number; expenses: number; enabled: number }>>(
-      (acc, item) => {
-        const current = acc[item.price_book_id] ?? { fees: 0, expenses: 0, enabled: 0 };
-        if (item.kind === "fee") current.fees += 1;
-        if (item.kind === "expense_reimbursement") current.expenses += 1;
-        if (item.is_enabled) current.enabled += 1;
-        acc[item.price_book_id] = current;
-        return acc;
-      },
-      {},
-    );
+  return useMemo(() => {
+    return priceItems.reduce<Record<string, PriceBookCounts>>((acc, item) => {
+      const current = acc[item.price_book_id] ?? { fees: 0, expenses: 0, enabled: 0 };
+      if (item.kind === "fee") current.fees += 1;
+      if (item.kind === "expense_reimbursement") current.expenses += 1;
+      if (item.is_enabled) current.enabled += 1;
+      acc[item.price_book_id] = current;
+      return acc;
+    }, {});
   }, [priceItems]);
+}
 
-  const prezziColumns = useMemo<readonly SortableColumn<PriceBookListRow, PrezziSortKey>[]>(
+function usePrezziColumns(
+  principalNameById: Map<string, string>,
+  countsByBook: Record<string, PriceBookCounts>,
+) {
+  return useMemo<readonly SortableColumn<PriceBookListRow, PrezziSortKey>[]>(
     () => [
       {
         key: "principal",
@@ -213,16 +205,14 @@ function PrezziList() {
     ],
     [countsByBook, principalNameById],
   );
+}
 
-  const { sort, setSort } = usePersistentTableSort({
-    section: "prezzi",
-    columns: prezziColumns,
-    defaultSort: prezziDefaultSort,
-    urlSort,
-    onSortChange: (next) => updateSearch({ q, sort: next.key, dir: next.direction }),
-  });
-
-  const filtered = useMemo(() => {
+function useFilteredPriceBooks(
+  priceBooks: PriceBookListRow[],
+  principalNameById: Map<string, string>,
+  q: string,
+) {
+  return useMemo(() => {
     const term = q.trim().toLowerCase();
     if (!term) return priceBooks;
     return priceBooks.filter((book) => {
@@ -234,21 +224,224 @@ function PrezziList() {
       );
     });
   }, [priceBooks, principalNameById, q]);
+}
 
+function comparePriceBooks(a: PriceBookListRow, b: PriceBookListRow) {
+  return b.year - a.year || new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+}
+
+function urlSortFromSearch(search: PrezziSearch) {
+  return search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
+}
+
+function PriceBookMobileCard({
+  book,
+  counts,
+  principalName,
+}: {
+  book: PriceBookListRow;
+  counts: PriceBookCounts;
+  principalName: string;
+}) {
+  return (
+    <Link
+      to="/prezzi/$priceBookId"
+      params={{ priceBookId: routeRef(book) }}
+      className={mobileListCardLinkClassName}
+    >
+      <MobileListCardHeader
+        title={principalName}
+        subtitle={`Anno ${book.year}`}
+        badge={
+          <Badge variant={priceBookStatusVariant[book.status]}>
+            {priceBookStatusLabels[book.status]}
+          </Badge>
+        }
+      />
+      <MobileListCardDetails
+        rows={[
+          { label: "Regole", value: rulesLabel(book) },
+          {
+            label: "Voci",
+            value: `${counts.fees} compensi, ${counts.expenses} rimborsi`,
+          },
+          {
+            label: "Validità",
+            value: `${book.valid_from} → ${book.valid_to ?? "senza fine"}`,
+          },
+        ]}
+      />
+    </Link>
+  );
+}
+
+function PrezziEmptyState({ hasSearch }: { hasSearch: boolean }) {
+  return (
+    <TableEmptyState
+      title={hasSearch ? "Nessun prezzo trovato" : "Nessun prezzo"}
+      description={
+        hasSearch
+          ? "Modifica ricerca o ordinamento per ampliare i risultati."
+          : "Crea il primo set annuale per un committente."
+      }
+      action={
+        hasSearch ? undefined : (
+          <Button size="sm" asChild>
+            <Link to="/prezzi/nuovo">Nuovi prezzi</Link>
+          </Button>
+        )
+      }
+    />
+  );
+}
+
+type PrezziListBodyProps = {
+  isLoading: boolean;
+  rows: PriceBookListRow[];
+  hasSearch: boolean;
+  principalNameById: Map<string, string>;
+  countsByBook: Record<string, PriceBookCounts>;
+};
+
+function PrezziMobileList({
+  isLoading,
+  rows,
+  hasSearch,
+  principalNameById,
+  countsByBook,
+}: PrezziListBodyProps) {
+  if (isLoading) {
+    return <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>;
+  }
+  if (rows.length === 0) {
+    return (
+      <Card className="p-4">
+        <PrezziEmptyState hasSearch={hasSearch} />
+      </Card>
+    );
+  }
+  return rows.map((book) => (
+    <PriceBookMobileCard
+      key={book.id}
+      book={book}
+      counts={countsByBook[book.id] ?? emptyPriceBookCounts}
+      principalName={principalNameById.get(book.principal_id) ?? "—"}
+    />
+  ));
+}
+
+function PrezziTableMessage({ children }: { children: React.ReactNode }) {
+  return (
+    <TableRow>
+      <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+        {children}
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function PrezziTableBody({
+  isLoading,
+  rows,
+  hasSearch,
+  principalNameById,
+  countsByBook,
+  onOpen,
+}: PrezziListBodyProps & { onOpen: (priceBookId: string) => void }) {
+  if (isLoading) return <PrezziTableMessage>Caricamento…</PrezziTableMessage>;
+  if (rows.length === 0) {
+    return (
+      <PrezziTableMessage>
+        {hasSearch ? "Nessun risultato." : "Nessun prezzo. Crea il primo set annuale."}
+      </PrezziTableMessage>
+    );
+  }
+  return rows.map((book) => (
+    <PriceBookTableRow
+      key={book.id}
+      book={book}
+      counts={countsByBook[book.id] ?? emptyPriceBookCounts}
+      principalName={principalNameById.get(book.principal_id) ?? "—"}
+      onOpen={() => onOpen(routeRef(book))}
+    />
+  ));
+}
+
+function PrezziTable({
+  sort,
+  onSort,
+  ...bodyProps
+}: {
+  sort: TableSort<PrezziSortKey>;
+  onSort: (key: PrezziSortKey) => void;
+} & React.ComponentProps<typeof PrezziTableBody>) {
+  return (
+    <Card className="hidden min-w-0 md:block">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <SortableTableHead
+              columnKey="principal"
+              label="Committente"
+              sort={sort}
+              onSort={onSort}
+            />
+            <SortableTableHead columnKey="year" label="Anno" sort={sort} onSort={onSort} />
+            <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={onSort} />
+            <SortableTableHead columnKey="rules" label="Regole" sort={sort} onSort={onSort} />
+            <SortableTableHead columnKey="items" label="Voci" sort={sort} onSort={onSort} />
+            <SortableTableHead columnKey="validity" label="Validità" sort={sort} onSort={onSort} />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <PrezziTableBody {...bodyProps} />
+        </TableBody>
+      </Table>
+    </Card>
+  );
+}
+
+function PrezziList() {
+  const navigate = Route.useNavigate();
+  const routeSearch = Route.useSearch();
+  const q = routeSearch.q ?? "";
+  const urlSort = urlSortFromSearch(routeSearch);
+
+  const updateSearch = (next: PrezziSearch) =>
+    navigate({
+      search: {
+        q: normalizeTextSearch(next.q ?? q),
+        sort: next.sort ?? routeSearch.sort,
+        dir: next.dir ?? routeSearch.dir,
+      },
+      replace: true,
+    });
+
+  const { data: priceBooks = [], isLoading } = usePriceBooksQuery();
+  const principalNameById = usePrincipalNameById();
+  const countsByBook = usePriceItemCounts();
+  const prezziColumns = usePrezziColumns(principalNameById, countsByBook);
+
+  const { sort, setSort } = usePersistentTableSort({
+    section: "prezzi",
+    columns: prezziColumns,
+    defaultSort: prezziDefaultSort,
+    urlSort,
+    onSortChange: (next) => updateSearch({ q, sort: next.key, dir: next.direction }),
+  });
+
+  const filtered = useFilteredPriceBooks(priceBooks, principalNameById, q);
   const sorted = useMemo(
-    () =>
-      sortRows(
-        filtered,
-        prezziColumns,
-        sort,
-        (a, b) =>
-          b.year - a.year || new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-      ),
+    () => sortRows(filtered, prezziColumns, sort, comparePriceBooks),
     [filtered, prezziColumns, sort],
   );
-
-  const openPriceBook = (priceBookId: string) =>
-    navigate({ to: "/prezzi/$priceBookId", params: { priceBookId } });
+  const bodyProps = {
+    isLoading,
+    rows: sorted,
+    hasSearch: !!q,
+    principalNameById,
+    countsByBook,
+  };
 
   return (
     <>
@@ -277,114 +470,15 @@ function PrezziList() {
       </div>
 
       <div className="space-y-3 md:hidden">
-        {isLoading ? (
-          <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>
-        ) : sorted.length === 0 ? (
-          <Card className="p-4">
-            <TableEmptyState
-              title={q ? "Nessun prezzo trovato" : "Nessun prezzo"}
-              description={
-                q
-                  ? "Modifica ricerca o ordinamento per ampliare i risultati."
-                  : "Crea il primo set annuale per un committente."
-              }
-              action={
-                !q ? (
-                  <Button size="sm" asChild>
-                    <Link to="/prezzi/nuovo">Nuovi prezzi</Link>
-                  </Button>
-                ) : undefined
-              }
-            />
-          </Card>
-        ) : (
-          sorted.map((book) => {
-            const counts = countsByBook[book.id] ?? { fees: 0, expenses: 0, enabled: 0 };
-            const principalName = principalNameById.get(book.principal_id) ?? "—";
-            return (
-              <Link
-                key={book.id}
-                to="/prezzi/$priceBookId"
-                params={{ priceBookId: routeRef(book) }}
-                className={mobileListCardLinkClassName}
-              >
-                <MobileListCardHeader
-                  title={principalName}
-                  subtitle={`Anno ${book.year}`}
-                  badge={
-                    <Badge variant={priceBookStatusVariant[book.status]}>
-                      {priceBookStatusLabels[book.status]}
-                    </Badge>
-                  }
-                />
-                <MobileListCardDetails
-                  rows={[
-                    { label: "Regole", value: rulesLabel(book) },
-                    {
-                      label: "Voci",
-                      value: `${counts.fees} compensi, ${counts.expenses} rimborsi`,
-                    },
-                    {
-                      label: "Validità",
-                      value: `${book.valid_from} → ${book.valid_to ?? "senza fine"}`,
-                    },
-                  ]}
-                />
-              </Link>
-            );
-          })
-        )}
+        <PrezziMobileList {...bodyProps} />
       </div>
 
-      <Card className="hidden min-w-0 md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <SortableTableHead
-                columnKey="principal"
-                label="Committente"
-                sort={sort}
-                onSort={setSort}
-              />
-              <SortableTableHead columnKey="year" label="Anno" sort={sort} onSort={setSort} />
-              <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={setSort} />
-              <SortableTableHead columnKey="rules" label="Regole" sort={sort} onSort={setSort} />
-              <SortableTableHead columnKey="items" label="Voci" sort={sort} onSort={setSort} />
-              <SortableTableHead
-                columnKey="validity"
-                label="Validità"
-                sort={sort}
-                onSort={setSort}
-              />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  Caricamento…
-                </TableCell>
-              </TableRow>
-            ) : sorted.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  {q ? "Nessun risultato." : "Nessun prezzo. Crea il primo set annuale."}
-                </TableCell>
-              </TableRow>
-            ) : (
-              sorted.map((book) => (
-                <PriceBookTableRow
-                  key={book.id}
-                  book={book}
-                  counts={countsByBook[book.id] ?? { fees: 0, expenses: 0, enabled: 0 }}
-                  principalName={principalNameById.get(book.principal_id) ?? "—"}
-                  onOpen={() => openPriceBook(routeRef(book))}
-                />
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+      <PrezziTable
+        {...bodyProps}
+        sort={sort}
+        onSort={setSort}
+        onOpen={(priceBookId) => navigate({ to: "/prezzi/$priceBookId", params: { priceBookId } })}
+      />
     </>
   );
 }
