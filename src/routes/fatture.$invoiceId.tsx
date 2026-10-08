@@ -403,20 +403,344 @@ function useInvoiceDetailPage() {
   };
 }
 
+type InvoiceDetailData = NonNullable<ReturnType<typeof useInvoiceDetailPage>["data"]>;
+type InvoiceRecord = InvoiceDetailData["invoice"];
+type ActionMutation = { mutate: () => void; isPending: boolean };
+
+function invoiceCapabilities(status: string) {
+  const isOpen = status === "issued" || status === "overdue";
+  return {
+    canEditDraft: status === "draft",
+    canMarkIssued: status === "draft",
+    canUnmarkIssued: isOpen,
+    canMarkPaid: isOpen,
+    canUnmarkPaid: status === "paid",
+  };
+}
+
+function InvoiceLinesCard({ lines }: { lines: InvoiceDetailData["lines"] }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Righe fattura</CardTitle>
+      </CardHeader>
+      <CardContent className="overflow-x-auto">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Data</TableHead>
+              <TableHead>Pratica</TableHead>
+              <TableHead>Cliente</TableHead>
+              <TableHead>Controparte</TableHead>
+              <TableHead>Descrizione</TableHead>
+              <TableHead className="text-right">Q.tà</TableHead>
+              <TableHead className="text-right">Prezzo</TableHead>
+              <TableHead className="text-right">Totale</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {lines.map((line) => (
+              <InvoiceLineRow key={line.id} line={line} />
+            ))}
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  );
+}
+
+function InvoiceLineRow({ line }: { line: InvoiceDetailData["lines"][number] }) {
+  return (
+    <TableRow>
+      <TableCell>{formatDate(line.activity_date)}</TableCell>
+      <TableCell>{line.practice_number ? `N. ${line.practice_number}` : "—"}</TableCell>
+      <TableCell>{line.client_name || "—"}</TableCell>
+      <TableCell>{line.counterparty_name || "—"}</TableCell>
+      <TableCell>
+        <div className="flex flex-col gap-1">
+          <span>{line.description}</span>
+          <span className="text-xs text-muted-foreground">
+            {invoiceLineKindLabels[line.kind as InvoiceLineKind]}
+          </span>
+        </div>
+      </TableCell>
+      <TableCell className="text-right">{Number(line.quantity)}</TableCell>
+      <TableCell className="text-right">{formatCurrency(Number(line.unit_price))}</TableCell>
+      <TableCell className="text-right font-medium">
+        {formatCurrency(Number(line.amount))}
+      </TableCell>
+    </TableRow>
+  );
+}
+
+function InvoiceTotalsCard({ invoice }: { invoice: InvoiceRecord }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Totali</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <Badge variant={invoiceStatusVariant[invoice.status] ?? "outline"}>
+          {invoiceStatusLabels[invoice.status] ?? invoice.status}
+        </Badge>
+        <SummaryRow label="Data" value={formatDate(invoice.issue_date)} />
+        <SummaryRow label="Compensi" value={formatCurrency(Number(invoice.taxable_fees))} />
+        {Number(invoice.general_expenses_amount) > 0 && (
+          <SummaryRow
+            label="Spese generali"
+            value={formatCurrency(Number(invoice.general_expenses_amount))}
+          />
+        )}
+        <SummaryRow label="Cassa" value={formatCurrency(Number(invoice.cassa_amount))} />
+        {Number(invoice.vat_amount) > 0 && (
+          <SummaryRow label="IVA" value={formatCurrency(Number(invoice.vat_amount))} />
+        )}
+        <SummaryRow
+          label="Rimborsi Art. 15"
+          value={formatCurrency(Number(invoice.art15_expenses))}
+        />
+        <SummaryRow label="Totale" value={formatCurrency(Number(invoice.total_amount))} strong />
+        <SummaryRow label="Netto" value={formatCurrency(Number(invoice.net_to_pay))} strong />
+      </CardContent>
+    </Card>
+  );
+}
+
+function InvoiceActionButton({
+  mutation,
+  icon: Icon,
+  children,
+}: {
+  mutation: ActionMutation;
+  icon: typeof Send;
+  children: React.ReactNode;
+}) {
+  return (
+    <Button
+      variant="outline"
+      className="w-full justify-start"
+      onClick={() => mutation.mutate()}
+      disabled={mutation.isPending}
+    >
+      <Icon className="mr-2 size-4" /> {children}
+    </Button>
+  );
+}
+
+function EditDraftButton({ invoice }: { invoice: InvoiceRecord }) {
+  return (
+    <Button asChild className="w-full justify-start">
+      <Link to="/fatture/nuova" search={{ bozza: invoice.public_code ?? invoice.id }}>
+        <Pencil className="mr-2 size-4" /> Modifica bozza
+      </Link>
+    </Button>
+  );
+}
+
+function DeleteInvoiceDialog({ onConfirm }: { onConfirm: () => void }) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="destructive" className="w-full justify-start">
+          <Trash2 className="mr-2 size-4" /> Elimina fattura
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Eliminare la fattura?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Le attività collegate torneranno da fatturare e i rendiconti Excel verranno rimossi
+            dallo storage.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Annulla</AlertDialogCancel>
+          <AlertDialogAction
+            onClick={onConfirm}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+          >
+            Elimina
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+function IssueStateActions({
+  status,
+  markIssuedMutation,
+  unmarkIssuedMutation,
+}: {
+  status: string;
+  markIssuedMutation: ActionMutation;
+  unmarkIssuedMutation: ActionMutation;
+}) {
+  const { canMarkIssued, canUnmarkIssued } = invoiceCapabilities(status);
+  return (
+    <>
+      {canMarkIssued && (
+        <InvoiceActionButton mutation={markIssuedMutation} icon={Send}>
+          Segna come emessa
+        </InvoiceActionButton>
+      )}
+      {canUnmarkIssued && (
+        <div className="space-y-1">
+          <InvoiceActionButton mutation={unmarkIssuedMutation} icon={RotateCcw}>
+            Riporta in bozza
+          </InvoiceActionButton>
+          <p className="text-xs text-muted-foreground">
+            Le Attività restano collegate a questa fattura e non tornano da fatturare.
+          </p>
+        </div>
+      )}
+    </>
+  );
+}
+
+function PaymentStateActions({
+  status,
+  markPaidMutation,
+  unmarkPaidMutation,
+}: {
+  status: string;
+  markPaidMutation: ActionMutation;
+  unmarkPaidMutation: ActionMutation;
+}) {
+  const { canMarkPaid, canUnmarkPaid } = invoiceCapabilities(status);
+  return (
+    <>
+      {canMarkPaid && (
+        <InvoiceActionButton mutation={markPaidMutation} icon={CheckCircle2}>
+          Segna come pagata
+        </InvoiceActionButton>
+      )}
+      {canUnmarkPaid && (
+        <InvoiceActionButton mutation={unmarkPaidMutation} icon={RotateCcw}>
+          Annulla pagamento
+        </InvoiceActionButton>
+      )}
+    </>
+  );
+}
+
+type InvoiceMutations = Pick<
+  ReturnType<typeof useInvoiceDetailPage>,
+  | "deleteMutation"
+  | "markPaidMutation"
+  | "unmarkPaidMutation"
+  | "markIssuedMutation"
+  | "unmarkIssuedMutation"
+>;
+
+function InvoiceActionsCard({
+  invoice,
+  mutations,
+}: {
+  invoice: InvoiceRecord;
+  mutations: InvoiceMutations;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Azioni</CardTitle>
+      </CardHeader>
+      <CardContent className="grid gap-2">
+        {invoiceCapabilities(invoice.status).canEditDraft && <EditDraftButton invoice={invoice} />}
+        <IssueStateActions
+          status={invoice.status}
+          markIssuedMutation={mutations.markIssuedMutation}
+          unmarkIssuedMutation={mutations.unmarkIssuedMutation}
+        />
+        <PaymentStateActions
+          status={invoice.status}
+          markPaidMutation={mutations.markPaidMutation}
+          unmarkPaidMutation={mutations.unmarkPaidMutation}
+        />
+        <DeleteInvoiceDialog onConfirm={() => mutations.deleteMutation.mutate()} />
+      </CardContent>
+    </Card>
+  );
+}
+
+function ExportDownloadButton({
+  item,
+  isDownloading,
+  onDownload,
+}: {
+  item: InvoiceDetailData["exports"][number];
+  isDownloading: boolean;
+  onDownload: (exportId: string, kind: "fees" | "expenses") => Promise<void>;
+}) {
+  const kind = item.kind === "fees" || item.kind === "expenses" ? item.kind : "fees";
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      className="w-full min-w-0 justify-start overflow-hidden"
+      disabled={isDownloading}
+      onClick={() => void onDownload(item.id, kind)}
+    >
+      <FileSpreadsheet className="mr-2 size-4 shrink-0" />
+      <span className="min-w-0 truncate text-left">
+        {isDownloading ? "Preparazione download…" : item.file_name}
+      </span>
+    </Button>
+  );
+}
+
+function InvoiceDocumentsCard({
+  exports,
+  downloadingExportId,
+  downloadXmlMutation,
+  onDownloadPdf,
+  onDownloadExport,
+}: {
+  exports: InvoiceDetailData["exports"];
+  downloadingExportId: string | null;
+  downloadXmlMutation: ActionMutation;
+  onDownloadPdf: () => void;
+  onDownloadExport: (exportId: string, kind: "fees" | "expenses") => Promise<void>;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Documenti</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+          <Button variant="outline" className="w-full justify-start" onClick={onDownloadPdf}>
+            <FileText className="mr-2 size-4" /> PDF
+          </Button>
+          <Button
+            variant="outline"
+            className="w-full justify-start"
+            onClick={() => downloadXmlMutation.mutate()}
+            disabled={downloadXmlMutation.isPending}
+          >
+            <FileDown className="mr-2 size-4" />
+            {downloadXmlMutation.isPending ? "Generazione…" : "XML SdI"}
+          </Button>
+        </div>
+        {exports.length === 0 && (
+          <p className="text-sm text-muted-foreground">Nessun rendiconto salvato.</p>
+        )}
+        {exports.map((item) => (
+          <ExportDownloadButton
+            key={item.id}
+            item={item}
+            isDownloading={downloadingExportId === item.id}
+            onDownload={onDownloadExport}
+          />
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
 function InvoiceDetailPage() {
-  const {
-    data,
-    isLoading,
-    downloadingExportId,
-    deleteMutation,
-    markPaidMutation,
-    unmarkPaidMutation,
-    markIssuedMutation,
-    unmarkIssuedMutation,
-    downloadXmlMutation,
-    handleDownloadPdf,
-    downloadExport,
-  } = useInvoiceDetailPage();
+  const { data, isLoading, downloadingExportId, handleDownloadPdf, downloadExport, ...mutations } =
+    useInvoiceDetailPage();
 
   if (isLoading || !data) {
     return (
@@ -427,12 +751,6 @@ function InvoiceDetailPage() {
   }
 
   const billedName = data.principal?.business_name ?? data.client?.business_name ?? "—";
-  const hasVatAmount = Number(data.invoice.vat_amount) > 0;
-  const canEditDraft = data.invoice.status === "draft";
-  const canMarkIssued = data.invoice.status === "draft";
-  const canUnmarkIssued = data.invoice.status === "issued" || data.invoice.status === "overdue";
-  const canMarkPaid = data.invoice.status === "issued" || data.invoice.status === "overdue";
-  const canUnmarkPaid = data.invoice.status === "paid";
 
   return (
     <AppLayout>
@@ -456,232 +774,18 @@ function InvoiceDetailPage() {
       />
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Righe fattura</CardTitle>
-          </CardHeader>
-          <CardContent className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Data</TableHead>
-                  <TableHead>Pratica</TableHead>
-                  <TableHead>Cliente</TableHead>
-                  <TableHead>Controparte</TableHead>
-                  <TableHead>Descrizione</TableHead>
-                  <TableHead className="text-right">Q.tà</TableHead>
-                  <TableHead className="text-right">Prezzo</TableHead>
-                  <TableHead className="text-right">Totale</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {data.lines.map((line) => (
-                  <TableRow key={line.id}>
-                    <TableCell>{formatDate(line.activity_date)}</TableCell>
-                    <TableCell>
-                      {line.practice_number ? `N. ${line.practice_number}` : "—"}
-                    </TableCell>
-                    <TableCell>{line.client_name || "—"}</TableCell>
-                    <TableCell>{line.counterparty_name || "—"}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        <span>{line.description}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {invoiceLineKindLabels[line.kind as InvoiceLineKind]}
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">{Number(line.quantity)}</TableCell>
-                    <TableCell className="text-right">
-                      {formatCurrency(Number(line.unit_price))}
-                    </TableCell>
-                    <TableCell className="text-right font-medium">
-                      {formatCurrency(Number(line.amount))}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
+        <InvoiceLinesCard lines={data.lines} />
 
         <div className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Totali</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <Badge variant={invoiceStatusVariant[data.invoice.status] ?? "outline"}>
-                {invoiceStatusLabels[data.invoice.status] ?? data.invoice.status}
-              </Badge>
-              <SummaryRow label="Data" value={formatDate(data.invoice.issue_date)} />
-              <SummaryRow
-                label="Compensi"
-                value={formatCurrency(Number(data.invoice.taxable_fees))}
-              />
-              {Number(data.invoice.general_expenses_amount) > 0 && (
-                <SummaryRow
-                  label="Spese generali"
-                  value={formatCurrency(Number(data.invoice.general_expenses_amount))}
-                />
-              )}
-              <SummaryRow label="Cassa" value={formatCurrency(Number(data.invoice.cassa_amount))} />
-              {hasVatAmount && (
-                <SummaryRow label="IVA" value={formatCurrency(Number(data.invoice.vat_amount))} />
-              )}
-              <SummaryRow
-                label="Rimborsi Art. 15"
-                value={formatCurrency(Number(data.invoice.art15_expenses))}
-              />
-              <SummaryRow
-                label="Totale"
-                value={formatCurrency(Number(data.invoice.total_amount))}
-                strong
-              />
-              <SummaryRow
-                label="Netto"
-                value={formatCurrency(Number(data.invoice.net_to_pay))}
-                strong
-              />
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Azioni</CardTitle>
-            </CardHeader>
-            <CardContent className="grid gap-2">
-              {canEditDraft && (
-                <Button asChild className="w-full justify-start">
-                  <Link
-                    to="/fatture/nuova"
-                    search={{ bozza: data.invoice.public_code ?? data.invoice.id }}
-                  >
-                    <Pencil className="mr-2 size-4" /> Modifica bozza
-                  </Link>
-                </Button>
-              )}
-              {canMarkIssued && (
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => markIssuedMutation.mutate()}
-                  disabled={markIssuedMutation.isPending}
-                >
-                  <Send className="mr-2 size-4" /> Segna come emessa
-                </Button>
-              )}
-              {canUnmarkIssued && (
-                <div className="space-y-1">
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={() => unmarkIssuedMutation.mutate()}
-                    disabled={unmarkIssuedMutation.isPending}
-                  >
-                    <RotateCcw className="mr-2 size-4" /> Riporta in bozza
-                  </Button>
-                  <p className="text-xs text-muted-foreground">
-                    Le Attività restano collegate a questa fattura e non tornano da fatturare.
-                  </p>
-                </div>
-              )}
-              {canMarkPaid && (
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => markPaidMutation.mutate()}
-                  disabled={markPaidMutation.isPending}
-                >
-                  <CheckCircle2 className="mr-2 size-4" /> Segna come pagata
-                </Button>
-              )}
-              {canUnmarkPaid && (
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => unmarkPaidMutation.mutate()}
-                  disabled={unmarkPaidMutation.isPending}
-                >
-                  <RotateCcw className="mr-2 size-4" /> Annulla pagamento
-                </Button>
-              )}
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive" className="w-full justify-start">
-                    <Trash2 className="mr-2 size-4" /> Elimina fattura
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Eliminare la fattura?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Le attività collegate torneranno da fatturare e i rendiconti Excel verranno
-                      rimossi dallo storage.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Annulla</AlertDialogCancel>
-                    <AlertDialogAction
-                      onClick={() => deleteMutation.mutate()}
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                    >
-                      Elimina
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Documenti</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={handleDownloadPdf}
-                >
-                  <FileText className="mr-2 size-4" /> PDF
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full justify-start"
-                  onClick={() => downloadXmlMutation.mutate()}
-                  disabled={downloadXmlMutation.isPending}
-                >
-                  <FileDown className="mr-2 size-4" />
-                  {downloadXmlMutation.isPending ? "Generazione…" : "XML SdI"}
-                </Button>
-              </div>
-              {data.exports.length === 0 && (
-                <p className="text-sm text-muted-foreground">Nessun rendiconto salvato.</p>
-              )}
-              {data.exports.map((item) => (
-                <Button
-                  key={item.id}
-                  type="button"
-                  variant="outline"
-                  className="w-full min-w-0 justify-start overflow-hidden"
-                  disabled={downloadingExportId === item.id}
-                  onClick={() =>
-                    void downloadExport(
-                      item.id,
-                      item.kind === "fees" || item.kind === "expenses" ? item.kind : "fees",
-                    )
-                  }
-                >
-                  <FileSpreadsheet className="mr-2 size-4 shrink-0" />
-                  <span className="min-w-0 truncate text-left">
-                    {downloadingExportId === item.id ? "Preparazione download…" : item.file_name}
-                  </span>
-                </Button>
-              ))}
-            </CardContent>
-          </Card>
+          <InvoiceTotalsCard invoice={data.invoice} />
+          <InvoiceActionsCard invoice={data.invoice} mutations={mutations} />
+          <InvoiceDocumentsCard
+            exports={data.exports}
+            downloadingExportId={downloadingExportId}
+            downloadXmlMutation={mutations.downloadXmlMutation}
+            onDownloadPdf={handleDownloadPdf}
+            onDownloadExport={downloadExport}
+          />
         </div>
       </div>
     </AppLayout>
