@@ -78,48 +78,13 @@ export function PasskeyAccessCard({ userId }: { userId: string }) {
           <p className="text-sm text-muted-foreground">{passkeysUnavailableMessage()}</p>
         ) : passkeySupported ? (
           <div className="space-y-3">
-            {isLoading ? (
-              <p className="text-sm text-muted-foreground">Caricamento passkey…</p>
-            ) : passkeyListFailed ? (
-              <p className="text-sm text-muted-foreground">
-                Non è stato possibile caricare le passkey. Puoi continuare a usare il link via
-                email.
-              </p>
-            ) : passkeys.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                Nessuna passkey collegata a questo account.
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {passkeys.map((passkey) => (
-                  <div
-                    key={passkey.id}
-                    className="flex items-center justify-between gap-3 rounded-md border border-border p-3"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {passkey.friendly_name || "Passkey"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Aggiunta il{" "}
-                        {new Date(passkey.created_at).toLocaleDateString("it-IT", {
-                          timeZone: "Europe/Rome",
-                        })}
-                      </p>
-                    </div>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteMutation.mutate(passkey.id)}
-                      disabled={deleteMutation.isPending}
-                    >
-                      Rimuovi
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <PasskeyList
+              isLoading={isLoading}
+              failed={passkeyListFailed}
+              passkeys={passkeys}
+              isDeleting={deleteMutation.isPending}
+              onDelete={(id) => deleteMutation.mutate(id)}
+            />
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">
@@ -140,5 +105,59 @@ export function PasskeyAccessCard({ userId }: { userId: string }) {
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+function PasskeyList({
+  isLoading,
+  failed: passkeyListFailed,
+  passkeys,
+  isDeleting,
+  onDelete,
+}: {
+  isLoading: boolean;
+  failed: boolean;
+  passkeys: PasskeyListItem[];
+  isDeleting: boolean;
+  onDelete: (id: string) => void;
+}) {
+  return isLoading ? (
+    <p className="text-sm text-muted-foreground">Caricamento passkey…</p>
+  ) : passkeyListFailed ? (
+    <p className="text-sm text-muted-foreground">
+      Non è stato possibile caricare le passkey. Puoi continuare a usare il link via email.
+    </p>
+  ) : passkeys.length === 0 ? (
+    <p className="text-sm text-muted-foreground">Nessuna passkey collegata a questo account.</p>
+  ) : (
+    <div className="space-y-2">
+      {passkeys.map((passkey) => (
+        <div
+          key={passkey.id}
+          className="flex items-center justify-between gap-3 rounded-md border border-border p-3"
+        >
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium text-foreground">
+              {passkey.friendly_name || "Passkey"}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Aggiunta il{" "}
+              {new Date(passkey.created_at).toLocaleDateString("it-IT", {
+                timeZone: "Europe/Rome",
+              })}
+            </p>
+          </div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => onDelete(passkey.id)}
+            disabled={isDeleting}
+          >
+            Rimuovi
+          </Button>
+        </div>
+      ))}
+    </div>
   );
 }
