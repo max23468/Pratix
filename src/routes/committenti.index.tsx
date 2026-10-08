@@ -151,16 +151,274 @@ export const Route = createFileRoute("/committenti/")({
   ),
 });
 
+type CommittentiFilters = {
+  q: string;
+  status: PrincipalStatusFilter;
+  economics: PrincipalEconomicsFilter;
+};
+
+function usePrincipalsQuery() {
+  return useQuery({
+    queryKey: ["principals"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("principals")
+        .select(
+          "id, public_code, business_name, tax_code, vat_number, email, address_city, fees_enabled, expense_reimbursements_enabled, archived_at, created_at",
+        )
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as PrincipalListRow[];
+    },
+  });
+}
+
+function matchesStatus(principal: PrincipalListRow, status: PrincipalStatusFilter) {
+  if (status === "active") return !principal.archived_at;
+  if (status === "archived") return !!principal.archived_at;
+  return true;
+}
+
+function matchesEconomics(principal: PrincipalListRow, economics: PrincipalEconomicsFilter) {
+  const fees = principal.fees_enabled;
+  const expenses = principal.expense_reimbursements_enabled;
+  if (economics === "fees") return fees;
+  if (economics === "expenses") return expenses;
+  if (economics === "fees_only") return fees && !expenses;
+  if (economics === "expenses_only") return !fees && expenses;
+  return true;
+}
+
+function matchesSearchTerm(principal: PrincipalListRow, term: string) {
+  if (!term) return true;
+  return [
+    principal.business_name,
+    principal.tax_code,
+    principal.vat_number,
+    principal.email,
+    principal.address_city,
+  ]
+    .filter(Boolean)
+    .some((value) => value?.toLowerCase().includes(term));
+}
+
+function useFilteredPrincipals(
+  data: PrincipalListRow[] | undefined,
+  { q, status, economics }: CommittentiFilters,
+) {
+  return useMemo(() => {
+    if (!data) return [];
+    const term = q.trim().toLowerCase();
+    return data.filter(
+      (principal) =>
+        matchesStatus(principal, status) &&
+        matchesEconomics(principal, economics) &&
+        matchesSearchTerm(principal, term),
+    );
+  }, [data, economics, q, status]);
+}
+
+function urlSortFromSearch(search: CommittentiSearch) {
+  return search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
+}
+
+function hasActiveFilters({ q, status, economics }: CommittentiFilters) {
+  return !!q || status !== "active" || economics !== "all";
+}
+
+function CommittentiToolbar({
+  filters,
+  onChange,
+}: {
+  filters: CommittentiFilters;
+  onChange: (next: CommittentiFilters) => void;
+}) {
+  const { q, status, economics } = filters;
+  return (
+    <ListToolbar>
+      <SearchInput
+        placeholder="Cerca per ragione sociale, CF, P.IVA, email…"
+        value={q}
+        onChange={(value) => onChange({ q: value, status, economics })}
+      />
+      <Select
+        value={status}
+        onValueChange={(value) =>
+          onChange({ q, status: value as PrincipalStatusFilter, economics })
+        }
+      >
+        <SelectTrigger aria-label="Filtra committenti per stato" className="lg:w-44">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Tutti gli stati</SelectItem>
+          <SelectItem value="active">Attivi</SelectItem>
+          <SelectItem value="archived">Archiviati</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select
+        value={economics}
+        onValueChange={(value) =>
+          onChange({ q, status, economics: value as PrincipalEconomicsFilter })
+        }
+      >
+        <SelectTrigger aria-label="Filtra committenti per regole economiche" className="lg:w-56">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">Tutte le regole</SelectItem>
+          <SelectItem value="fees">Con compensi</SelectItem>
+          <SelectItem value="expenses">Con rimborsi</SelectItem>
+          <SelectItem value="fees_only">Solo compensi</SelectItem>
+          <SelectItem value="expenses_only">Solo rimborsi</SelectItem>
+        </SelectContent>
+      </Select>
+    </ListToolbar>
+  );
+}
+
+function CommittentiEmptyState({ hasFilters }: { hasFilters: boolean }) {
+  return (
+    <TableEmptyState
+      title={hasFilters ? "Nessun committente trovato" : "Nessun committente"}
+      description={
+        hasFilters
+          ? "Modifica ricerca o filtri per ampliare i risultati."
+          : "Aggiungi il primo committente per configurare prezzi, clienti e pratiche."
+      }
+      action={
+        hasFilters ? undefined : (
+          <Button size="sm" asChild>
+            <Link to="/committenti/nuovo">Nuovo committente</Link>
+          </Button>
+        )
+      }
+    />
+  );
+}
+
+function PrincipalStatusBadge({ archived }: { archived: boolean }) {
+  return (
+    <Badge variant={archived ? "secondary" : "outline"}>{archived ? "Archiviato" : "Attivo"}</Badge>
+  );
+}
+
+function PrincipalMobileCard({ principal }: { principal: PrincipalListRow }) {
+  return (
+    <Link
+      to="/committenti/$principalId"
+      params={{ principalId: routeRef(principal) }}
+      className={mobileListCardLinkClassName}
+    >
+      <MobileListCardHeader
+        title={principal.business_name}
+        subtitle={economicRulesLabel(principal)}
+        badge={<PrincipalStatusBadge archived={!!principal.archived_at} />}
+      />
+      <MobileListCardDetails
+        rows={[
+          {
+            label: "CF / P.IVA",
+            value: principal.vat_number || principal.tax_code || "—",
+          },
+          { label: "Email", value: principal.email ?? "—" },
+          { label: "Città", value: principal.address_city ?? "—" },
+        ]}
+      />
+    </Link>
+  );
+}
+
+type CommittentiListBodyProps = {
+  isLoading: boolean;
+  rows: PrincipalListRow[];
+  hasFilters: boolean;
+};
+
+function CommittentiMobileList({ isLoading, rows, hasFilters }: CommittentiListBodyProps) {
+  if (isLoading) {
+    return <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>;
+  }
+  if (rows.length === 0) {
+    return (
+      <Card className="p-4">
+        <CommittentiEmptyState hasFilters={hasFilters} />
+      </Card>
+    );
+  }
+  return rows.map((principal) => <PrincipalMobileCard key={principal.id} principal={principal} />);
+}
+
+function CommittentiTableBody({
+  isLoading,
+  rows,
+  hasFilters,
+  onOpen,
+}: CommittentiListBodyProps & { onOpen: (principalId: string) => void }) {
+  if (isLoading || rows.length === 0) {
+    return (
+      <TableRow>
+        <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
+          {isLoading ? "Caricamento…" : <CommittentiEmptyState hasFilters={hasFilters} />}
+        </TableCell>
+      </TableRow>
+    );
+  }
+  return rows.map((principal) => (
+    <PrincipalTableRow
+      key={principal.id}
+      principal={principal}
+      onOpen={() => onOpen(routeRef(principal))}
+    />
+  ));
+}
+
+function CommittentiTable({
+  sort,
+  onSort,
+  ...bodyProps
+}: {
+  sort: TableSort<CommittentiSortKey>;
+  onSort: (key: CommittentiSortKey) => void;
+} & React.ComponentProps<typeof CommittentiTableBody>) {
+  return (
+    <Card className="hidden min-w-0 md:block">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <SortableTableHead
+              columnKey="business_name"
+              label="Ragione sociale"
+              sort={sort}
+              onSort={onSort}
+            />
+            <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={onSort} />
+            <SortableTableHead
+              columnKey="economics"
+              label="Regole economiche"
+              sort={sort}
+              onSort={onSort}
+            />
+            <SortableTableHead columnKey="tax" label="CF / P.IVA" sort={sort} onSort={onSort} />
+            <SortableTableHead columnKey="email" label="Email" sort={sort} onSort={onSort} />
+            <SortableTableHead columnKey="city" label="Città" sort={sort} onSort={onSort} />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <CommittentiTableBody {...bodyProps} />
+        </TableBody>
+      </Table>
+    </Card>
+  );
+}
+
 function CommittentiList() {
   const navigate = Route.useNavigate();
   const routeSearch = Route.useSearch();
   const q = routeSearch.q ?? "";
   const status = routeSearch.status ?? "active";
   const economics = routeSearch.economics ?? "all";
-  const urlSort =
-    routeSearch.sort && routeSearch.dir
-      ? { key: routeSearch.sort, direction: routeSearch.dir }
-      : undefined;
+  const urlSort = urlSortFromSearch(routeSearch);
 
   const updateSearch = (next: CommittentiSearch) =>
     navigate({
@@ -174,19 +432,7 @@ function CommittentiList() {
       replace: true,
     });
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["principals"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("principals")
-        .select(
-          "id, public_code, business_name, tax_code, vat_number, email, address_city, fees_enabled, expense_reimbursements_enabled, archived_at, created_at",
-        )
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return (data ?? []) as PrincipalListRow[];
-    },
-  });
+  const { data, isLoading } = usePrincipalsQuery();
 
   const { sort, setSort } = usePersistentTableSort({
     section: "committenti",
@@ -197,43 +443,10 @@ function CommittentiList() {
       updateSearch({ q, status, economics, sort: next.key, dir: next.direction }),
   });
 
-  const filtered = useMemo(() => {
-    const term = q.trim().toLowerCase();
-    if (!data) return [];
-    return data.filter((principal) => {
-      if (status === "active" && principal.archived_at) return false;
-      if (status === "archived" && !principal.archived_at) return false;
-      if (economics === "fees" && !principal.fees_enabled) return false;
-      if (economics === "expenses" && !principal.expense_reimbursements_enabled) return false;
-      if (
-        economics === "fees_only" &&
-        (!principal.fees_enabled || principal.expense_reimbursements_enabled)
-      ) {
-        return false;
-      }
-      if (
-        economics === "expenses_only" &&
-        (principal.fees_enabled || !principal.expense_reimbursements_enabled)
-      ) {
-        return false;
-      }
-      if (!term) return true;
-      return [
-        principal.business_name,
-        principal.tax_code,
-        principal.vat_number,
-        principal.email,
-        principal.address_city,
-      ]
-        .filter(Boolean)
-        .some((value) => value?.toLowerCase().includes(term));
-    });
-  }, [data, economics, q, status]);
-
+  const filters = { q, status, economics };
+  const filtered = useFilteredPrincipals(data, filters);
   const sorted = useMemo(() => sortRows(filtered, committentiColumns, sort), [filtered, sort]);
-
-  const openPrincipal = (principalId: string) =>
-    navigate({ to: "/committenti/$principalId", params: { principalId } });
+  const hasFilters = hasActiveFilters(filters);
 
   return (
     <>
@@ -249,172 +462,26 @@ function CommittentiList() {
         }
       />
 
-      <ListToolbar>
-        <SearchInput
-          placeholder="Cerca per ragione sociale, CF, P.IVA, email…"
-          value={q}
-          onChange={(value) => updateSearch({ q: value, status, economics })}
-        />
-        <Select
-          value={status}
-          onValueChange={(value) =>
-            updateSearch({ q, status: value as PrincipalStatusFilter, economics })
-          }
-        >
-          <SelectTrigger aria-label="Filtra committenti per stato" className="lg:w-44">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tutti gli stati</SelectItem>
-            <SelectItem value="active">Attivi</SelectItem>
-            <SelectItem value="archived">Archiviati</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select
-          value={economics}
-          onValueChange={(value) =>
-            updateSearch({ q, status, economics: value as PrincipalEconomicsFilter })
-          }
-        >
-          <SelectTrigger aria-label="Filtra committenti per regole economiche" className="lg:w-56">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Tutte le regole</SelectItem>
-            <SelectItem value="fees">Con compensi</SelectItem>
-            <SelectItem value="expenses">Con rimborsi</SelectItem>
-            <SelectItem value="fees_only">Solo compensi</SelectItem>
-            <SelectItem value="expenses_only">Solo rimborsi</SelectItem>
-          </SelectContent>
-        </Select>
-      </ListToolbar>
+      <CommittentiToolbar filters={filters} onChange={updateSearch} />
 
       <div className="mb-4 md:hidden">
         <MobileSortSelect columns={committentiColumns} sort={sort} onSort={setSort} />
       </div>
 
       <div className="space-y-3 md:hidden">
-        {isLoading ? (
-          <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>
-        ) : sorted.length === 0 ? (
-          <Card className="p-4">
-            <TableEmptyState
-              title={
-                q || status !== "active" || economics !== "all"
-                  ? "Nessun committente trovato"
-                  : "Nessun committente"
-              }
-              description={
-                q || status !== "active" || economics !== "all"
-                  ? "Modifica ricerca o filtri per ampliare i risultati."
-                  : "Aggiungi il primo committente per configurare prezzi, clienti e pratiche."
-              }
-              action={
-                !q && status === "active" && economics === "all" ? (
-                  <Button size="sm" asChild>
-                    <Link to="/committenti/nuovo">Nuovo committente</Link>
-                  </Button>
-                ) : undefined
-              }
-            />
-          </Card>
-        ) : (
-          sorted.map((principal) => (
-            <Link
-              key={principal.id}
-              to="/committenti/$principalId"
-              params={{ principalId: routeRef(principal) }}
-              className={mobileListCardLinkClassName}
-            >
-              <MobileListCardHeader
-                title={principal.business_name}
-                subtitle={economicRulesLabel(principal)}
-                badge={
-                  <Badge variant={principal.archived_at ? "secondary" : "outline"}>
-                    {principal.archived_at ? "Archiviato" : "Attivo"}
-                  </Badge>
-                }
-              />
-              <MobileListCardDetails
-                rows={[
-                  {
-                    label: "CF / P.IVA",
-                    value: principal.vat_number || principal.tax_code || "—",
-                  },
-                  { label: "Email", value: principal.email ?? "—" },
-                  { label: "Città", value: principal.address_city ?? "—" },
-                ]}
-              />
-            </Link>
-          ))
-        )}
+        <CommittentiMobileList isLoading={isLoading} rows={sorted} hasFilters={hasFilters} />
       </div>
 
-      <Card className="hidden min-w-0 md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <SortableTableHead
-                columnKey="business_name"
-                label="Ragione sociale"
-                sort={sort}
-                onSort={setSort}
-              />
-              <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={setSort} />
-              <SortableTableHead
-                columnKey="economics"
-                label="Regole economiche"
-                sort={sort}
-                onSort={setSort}
-              />
-              <SortableTableHead columnKey="tax" label="CF / P.IVA" sort={sort} onSort={setSort} />
-              <SortableTableHead columnKey="email" label="Email" sort={sort} onSort={setSort} />
-              <SortableTableHead columnKey="city" label="Città" sort={sort} onSort={setSort} />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  Caricamento…
-                </TableCell>
-              </TableRow>
-            ) : sorted.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  <TableEmptyState
-                    title={
-                      q || status !== "active" || economics !== "all"
-                        ? "Nessun committente trovato"
-                        : "Nessun committente"
-                    }
-                    description={
-                      q || status !== "active" || economics !== "all"
-                        ? "Modifica ricerca o filtri per ampliare i risultati."
-                        : "Aggiungi il primo committente per configurare prezzi, clienti e pratiche."
-                    }
-                    action={
-                      !q && status === "active" && economics === "all" ? (
-                        <Button size="sm" asChild>
-                          <Link to="/committenti/nuovo">Nuovo committente</Link>
-                        </Button>
-                      ) : undefined
-                    }
-                  />
-                </TableCell>
-              </TableRow>
-            ) : (
-              sorted.map((principal) => (
-                <PrincipalTableRow
-                  key={principal.id}
-                  principal={principal}
-                  onOpen={() => openPrincipal(routeRef(principal))}
-                />
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+      <CommittentiTable
+        sort={sort}
+        onSort={setSort}
+        isLoading={isLoading}
+        rows={sorted}
+        hasFilters={hasFilters}
+        onOpen={(principalId) =>
+          navigate({ to: "/committenti/$principalId", params: { principalId } })
+        }
+      />
     </>
   );
 }
@@ -445,9 +512,7 @@ function PrincipalTableRow({
         </Link>
       </TableCell>
       <TableCell>
-        <Badge variant={principal.archived_at ? "secondary" : "outline"}>
-          {principal.archived_at ? "Archiviato" : "Attivo"}
-        </Badge>
+        <PrincipalStatusBadge archived={!!principal.archived_at} />
       </TableCell>
       <TableCell className="text-sm text-muted-foreground">
         {economicRulesLabel(principal)}
