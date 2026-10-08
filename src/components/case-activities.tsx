@@ -828,4 +828,4 @@ export function CaseActivityDialog(props: CaseActivityDialogProps) {
       </DialogContent>
     </Dialog>
   );
-        }
+}
