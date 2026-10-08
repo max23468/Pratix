@@ -454,6 +454,266 @@ function PraticheList() {
   );
 }
 
+type PracticeActivitySummary = { toInvoice: number; invoiced: number; toInvoiceAmount: number };
+
+const emptyPracticeActivitySummary: PracticeActivitySummary = {
+  toInvoice: 0,
+  invoiced: 0,
+  toInvoiceAmount: 0,
+};
+
+function practiceBillingLabel(summary: PracticeActivitySummary, withAmount: boolean) {
+  if (summary.toInvoice > 0) {
+    const base = `${summary.toInvoice} da fatturare`;
+    return withAmount ? `${base} · ${formatCurrency(summary.toInvoiceAmount)}` : base;
+  }
+  return summary.invoiced > 0 ? `${summary.invoiced} fatturate` : "—";
+}
+
+function PracticeStatusBadge({ status }: { status: string }) {
+  return (
+    <Badge variant={caseStatusVariant[status] ?? "outline"}>
+      {caseStatusLabels[status] ?? status}
+    </Badge>
+  );
+}
+
+function PracticeEmptyState({ hasFilters }: { hasFilters: boolean }) {
+  return (
+    <TableEmptyState
+      title={hasFilters ? "Nessuna pratica trovata" : "Nessuna pratica aperta"}
+      description={
+        hasFilters
+          ? "Modifica ricerca, vista o ordinamento per ampliare i risultati."
+          : "Crea la prima pratica e collega committente, cliente e controparte."
+      }
+      action={
+        hasFilters ? undefined : (
+          <Button size="sm" asChild>
+            <Link to="/pratiche/nuova">Nuova pratica</Link>
+          </Button>
+        )
+      }
+    />
+  );
+}
+
+function PracticeWorkflowSummary({ workflow }: { workflow: PracticeWorkflowRow }) {
+  return (
+    <div className="mt-3 rounded-md border border-border/70 p-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <Badge variant={workflow.priorityVariant}>{workflow.priorityLabel}</Badge>
+        <span className="text-xs text-muted-foreground">{workflow.stage}</span>
+      </div>
+      <p className="mt-2 text-sm font-medium text-foreground">{workflow.action}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{workflow.reason}</p>
+    </div>
+  );
+}
+
+function PracticeMobileCard({
+  practice,
+  summary,
+  workflow,
+}: {
+  practice: PracticeListRow;
+  summary: PracticeActivitySummary;
+  workflow?: PracticeWorkflowRow;
+}) {
+  return (
+    <Link
+      to="/pratiche/$caseId"
+      params={{ caseId: routeRef(practice) }}
+      className={mobileListCardLinkClassName}
+    >
+      <MobileListCardHeader
+        title={practice.practice_number}
+        badge={<PracticeStatusBadge status={practice.status} />}
+      />
+      {workflow ? <PracticeWorkflowSummary workflow={workflow} /> : null}
+      <MobileListCardDetails
+        rows={[
+          { label: "Committente", value: practice.principals?.business_name ?? "—" },
+          {
+            label: "Cliente",
+            value: practice.clients ? clientDisplayName(practice.clients) : "—",
+          },
+          {
+            label: "Controparte",
+            value: practice.counterparties ? counterpartyDisplayName(practice.counterparties) : "—",
+          },
+          { label: "Fatturazione", value: practiceBillingLabel(summary, true) },
+          { label: "Aperta il", value: formatDate(practice.opened_at) },
+        ]}
+      />
+    </Link>
+  );
+}
+
+function PracticeTableRow({
+  practice,
+  summary,
+  onOpen,
+}: {
+  practice: PracticeListRow;
+  summary: PracticeActivitySummary;
+  onOpen: () => void;
+}) {
+  return (
+    <TableRow
+      className="cursor-pointer"
+      role="link"
+      tabIndex={0}
+      aria-label={`Apri pratica ${practice.practice_number}`}
+      onClick={(event) => handleClickableTableRowClick(event, onOpen)}
+      onKeyDown={(event) => handleClickableTableRowKeyDown(event, onOpen)}
+    >
+      <TableCell>
+        <Link
+          to="/pratiche/$caseId"
+          params={{ caseId: routeRef(practice) }}
+          className="font-medium hover:underline"
+        >
+          {practice.practice_number}
+        </Link>
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {practice.principals?.business_name ?? "—"}
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {practice.clients ? clientDisplayName(practice.clients) : "—"}
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {practice.counterparties ? counterpartyDisplayName(practice.counterparties) : "—"}
+      </TableCell>
+      <TableCell>
+        <PracticeStatusBadge status={practice.status} />
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {practiceBillingLabel(summary, false)}
+      </TableCell>
+      <TableCell className="text-sm text-muted-foreground">
+        {formatDate(practice.opened_at)}
+      </TableCell>
+    </TableRow>
+  );
+}
+
+type PracticeListBodyProps = {
+  isLoading: boolean;
+  rows: PracticeListRow[];
+  hasFilters: boolean;
+  activitySummaryByCase: Record<string, PracticeActivitySummary>;
+};
+
+function PracticeMobileList({
+  isLoading,
+  rows,
+  hasFilters,
+  activitySummaryByCase,
+  workflowByCase,
+}: PracticeListBodyProps & { workflowByCase: Record<string, PracticeWorkflowRow> }) {
+  if (isLoading) {
+    return <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>;
+  }
+  if (rows.length === 0) {
+    return (
+      <Card className="p-4">
+        <PracticeEmptyState hasFilters={hasFilters} />
+      </Card>
+    );
+  }
+  return rows.map((practice) => (
+    <PracticeMobileCard
+      key={practice.id}
+      practice={practice}
+      summary={activitySummaryByCase[practice.id] ?? emptyPracticeActivitySummary}
+      workflow={workflowByCase[practice.id]}
+    />
+  ));
+}
+
+function PracticeTableBody({
+  isLoading,
+  rows,
+  hasFilters,
+  activitySummaryByCase,
+  onOpen,
+}: PracticeListBodyProps & { onOpen: (caseId: string) => void }) {
+  if (isLoading || rows.length === 0) {
+    return (
+      <TableRow>
+        <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
+          {isLoading ? "Caricamento…" : <PracticeEmptyState hasFilters={hasFilters} />}
+        </TableCell>
+      </TableRow>
+    );
+  }
+  return rows.map((practice) => (
+    <PracticeTableRow
+      key={practice.id}
+      practice={practice}
+      summary={activitySummaryByCase[practice.id] ?? emptyPracticeActivitySummary}
+      onOpen={() => onOpen(routeRef(practice))}
+    />
+  ));
+}
+
+function PracticeTable({
+  sort,
+  onSort,
+  ...bodyProps
+}: {
+  sort: TableSort<PraticheSortKey>;
+  onSort: (columnKey: PraticheSortKey) => void;
+} & React.ComponentProps<typeof PracticeTableBody>) {
+  return (
+    <Card className="hidden min-w-0 md:block">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <SortableTableHead
+              columnKey="practice_number"
+              label="Pratica"
+              sort={sort}
+              onSort={onSort}
+            />
+            <SortableTableHead
+              columnKey="principal"
+              label="Committente"
+              sort={sort}
+              onSort={onSort}
+            />
+            <SortableTableHead columnKey="client" label="Cliente" sort={sort} onSort={onSort} />
+            <SortableTableHead
+              columnKey="counterparty"
+              label="Controparte"
+              sort={sort}
+              onSort={onSort}
+            />
+            <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={onSort} />
+            <SortableTableHead
+              columnKey="billing"
+              label="Fatturazione"
+              sort={sort}
+              onSort={onSort}
+            />
+            <SortableTableHead
+              columnKey="opened_at"
+              label="Aperta il"
+              sort={sort}
+              onSort={onSort}
+            />
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          <PracticeTableBody {...bodyProps} />
+        </TableBody>
+      </Table>
+    </Card>
+  );
+}
+
 function PracticeResults({
   isLoading,
   rows,
@@ -469,225 +729,24 @@ function PracticeResults({
   rows: PracticeListRow[];
   q: string;
   view: PraticheView;
-  activitySummaryByCase: Record<
-    string,
-    { toInvoice: number; invoiced: number; toInvoiceAmount: number }
-  >;
+  activitySummaryByCase: Record<string, PracticeActivitySummary>;
   workflowByCase: Record<string, PracticeWorkflowRow>;
   sort: TableSort<PraticheSortKey>;
   onSort: (columnKey: PraticheSortKey) => void;
   onOpen: (caseId: string) => void;
 }) {
+  const bodyProps = {
+    isLoading,
+    rows,
+    hasFilters: !!q || view !== "open",
+    activitySummaryByCase,
+  };
   return (
     <>
       <div className="space-y-3 md:hidden">
-        {isLoading ? (
-          <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>
-        ) : rows.length === 0 ? (
-          <Card className="p-4">
-            <TableEmptyState
-              title={q || view !== "open" ? "Nessuna pratica trovata" : "Nessuna pratica aperta"}
-              description={
-                q || view !== "open"
-                  ? "Modifica ricerca, vista o ordinamento per ampliare i risultati."
-                  : "Crea la prima pratica e collega committente, cliente e controparte."
-              }
-              action={
-                !q && view === "open" ? (
-                  <Button size="sm" asChild>
-                    <Link to="/pratiche/nuova">Nuova pratica</Link>
-                  </Button>
-                ) : undefined
-              }
-            />
-          </Card>
-        ) : (
-          rows.map((c) => {
-            const summary = activitySummaryByCase[c.id] ?? {
-              toInvoice: 0,
-              invoiced: 0,
-              toInvoiceAmount: 0,
-            };
-            const workflow = workflowByCase[c.id];
-            return (
-              <Link
-                key={c.id}
-                to="/pratiche/$caseId"
-                params={{ caseId: routeRef(c) }}
-                className={mobileListCardLinkClassName}
-              >
-                <MobileListCardHeader
-                  title={c.practice_number}
-                  badge={
-                    <Badge variant={caseStatusVariant[c.status] ?? "outline"}>
-                      {caseStatusLabels[c.status] ?? c.status}
-                    </Badge>
-                  }
-                />
-                {workflow ? (
-                  <div className="mt-3 rounded-md border border-border/70 p-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant={workflow.priorityVariant}>{workflow.priorityLabel}</Badge>
-                      <span className="text-xs text-muted-foreground">{workflow.stage}</span>
-                    </div>
-                    <p className="mt-2 text-sm font-medium text-foreground">{workflow.action}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{workflow.reason}</p>
-                  </div>
-                ) : null}
-                <MobileListCardDetails
-                  rows={[
-                    { label: "Committente", value: c.principals?.business_name ?? "—" },
-                    { label: "Cliente", value: c.clients ? clientDisplayName(c.clients) : "—" },
-                    {
-                      label: "Controparte",
-                      value: c.counterparties ? counterpartyDisplayName(c.counterparties) : "—",
-                    },
-                    {
-                      label: "Fatturazione",
-                      value:
-                        summary.toInvoice > 0
-                          ? `${summary.toInvoice} da fatturare · ${formatCurrency(summary.toInvoiceAmount)}`
-                          : summary.invoiced > 0
-                            ? `${summary.invoiced} fatturate`
-                            : "—",
-                    },
-                    { label: "Aperta il", value: formatDate(c.opened_at) },
-                  ]}
-                />
-              </Link>
-            );
-          })
-        )}
+        <PracticeMobileList {...bodyProps} workflowByCase={workflowByCase} />
       </div>
-
-      <Card className="hidden min-w-0 md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <SortableTableHead
-                columnKey="practice_number"
-                label="Pratica"
-                sort={sort}
-                onSort={onSort}
-              />
-              <SortableTableHead
-                columnKey="principal"
-                label="Committente"
-                sort={sort}
-                onSort={onSort}
-              />
-              <SortableTableHead columnKey="client" label="Cliente" sort={sort} onSort={onSort} />
-              <SortableTableHead
-                columnKey="counterparty"
-                label="Controparte"
-                sort={sort}
-                onSort={onSort}
-              />
-              <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={onSort} />
-              <SortableTableHead
-                columnKey="billing"
-                label="Fatturazione"
-                sort={sort}
-                onSort={onSort}
-              />
-              <SortableTableHead
-                columnKey="opened_at"
-                label="Aperta il"
-                sort={sort}
-                onSort={onSort}
-              />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                  Caricamento…
-                </TableCell>
-              </TableRow>
-            ) : rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                  <TableEmptyState
-                    title={
-                      q || view !== "open" ? "Nessuna pratica trovata" : "Nessuna pratica aperta"
-                    }
-                    description={
-                      q || view !== "open"
-                        ? "Modifica ricerca, vista o ordinamento per ampliare i risultati."
-                        : "Crea la prima pratica e collega committente, cliente e controparte."
-                    }
-                    action={
-                      !q && view === "open" ? (
-                        <Button size="sm" asChild>
-                          <Link to="/pratiche/nuova">Nuova pratica</Link>
-                        </Button>
-                      ) : undefined
-                    }
-                  />
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((c) => {
-                const summary = activitySummaryByCase[c.id] ?? {
-                  toInvoice: 0,
-                  invoiced: 0,
-                  toInvoiceAmount: 0,
-                };
-                return (
-                  <TableRow
-                    key={c.id}
-                    className="cursor-pointer"
-                    role="link"
-                    tabIndex={0}
-                    aria-label={`Apri pratica ${c.practice_number}`}
-                    onClick={(event) =>
-                      handleClickableTableRowClick(event, () => onOpen(routeRef(c)))
-                    }
-                    onKeyDown={(event) =>
-                      handleClickableTableRowKeyDown(event, () => onOpen(routeRef(c)))
-                    }
-                  >
-                    <TableCell>
-                      <Link
-                        to="/pratiche/$caseId"
-                        params={{ caseId: routeRef(c) }}
-                        className="font-medium hover:underline"
-                      >
-                        {c.practice_number}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {c.principals?.business_name ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {c.clients ? clientDisplayName(c.clients) : "—"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {c.counterparties ? counterpartyDisplayName(c.counterparties) : "—"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={caseStatusVariant[c.status] ?? "outline"}>
-                        {caseStatusLabels[c.status] ?? c.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {summary.toInvoice > 0
-                        ? `${summary.toInvoice} da fatturare`
-                        : summary.invoiced > 0
-                          ? `${summary.invoiced} fatturate`
-                          : "—"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatDate(c.opened_at)}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+      <PracticeTable {...bodyProps} sort={sort} onSort={onSort} onOpen={onOpen} />
     </>
   );
 }
