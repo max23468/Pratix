@@ -1,4 +1,5 @@
-import { RefreshCcw, Trash2 } from "lucide-react";
+import { FormActions } from "@/components/form-actions";
+import { RefreshCcw } from "lucide-react";
 import {
   CaseCounterpartyField,
   CasePrincipalClientFields,
@@ -15,17 +16,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { caseStatusLabels } from "@/lib/labels";
 import type { CaseFormController } from "@/components/case-form";
 
@@ -165,41 +155,13 @@ export function CaseFormActions({
   const { deleteMutation, isEdit, saveMutation } = controller;
 
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      <div>
-        {isEdit && (
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button type="button" variant="outline" size="sm">
-                <Trash2 className="mr-1 size-4" /> Elimina
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Eliminare la pratica?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  L'eliminazione riguarda anche voci fatturabili, allegati e storico stati
-                  associati. L'azione non può essere annullata.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Annulla</AlertDialogCancel>
-                <AlertDialogAction onClick={() => deleteMutation.mutate()}>
-                  Elimina
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
-      </div>
-      <div className="flex gap-2">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Annulla
-        </Button>
-        <Button type="submit" disabled={saveMutation.isPending}>
-          {saveMutation.isPending ? "Salvataggio…" : "Salva"}
-        </Button>
-      </div>
-    </div>
+    <FormActions
+      isEdit={isEdit}
+      isPending={saveMutation.isPending}
+      onCancel={onCancel}
+      onDelete={() => deleteMutation.mutate()}
+      deleteTitle="Eliminare la pratica?"
+      deleteDescription="L'eliminazione riguarda anche voci fatturabili, allegati e storico stati associati. L'azione non pu\u00f2 essere annullata."
+    />
   );
 }
