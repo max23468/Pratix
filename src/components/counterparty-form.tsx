@@ -381,4 +381,4 @@ async function syncSubjects(counterpartyId: string, userId: string, subjects: Su
 
   const { error } = await supabase.from("counterparty_subjects").insert(payload);
   if (error) throw error;
-    }
+}
