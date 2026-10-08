@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { Logo } from "@/components/brand/logo";
-import { Button } from "@/components/ui/button";
+import { PasswordlessAccessCard } from "@/components/passwordless-access-card";
 
 export const Route = createFileRoute("/reimposta-password")({
   head: () => ({
@@ -29,20 +29,11 @@ function PasswordlessNoticePage() {
           <Logo form="lockup" size={24} />
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-6 shadow-elevated">
-          <h1 className="font-display text-2xl font-semibold text-foreground">
-            Accesso senza password
-          </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Pratix non usa più password. Per entrare richiedi un link sicuro e un codice monouso via
-            email dalla pagina di accesso.
-          </p>
-          <div className="mt-6">
-            <Button asChild className="w-full">
-              <Link to="/login">Vai all'accesso</Link>
-            </Button>
-          </div>
-        </div>
+        <PasswordlessAccessCard
+          title="Accesso senza password"
+          description="Pratix non usa pi\u00f9 password. Per entrare richiedi un link sicuro e un codice monouso via email dalla pagina di accesso."
+          actionLabel="Vai all'accesso"
+        />
       </div>
     </div>
   );
