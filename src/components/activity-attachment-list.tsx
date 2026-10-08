@@ -30,6 +30,7 @@ export function ActivityAttachmentList({ attachments }: { attachments: ActivityA
             variant="ghost"
             size="icon"
             className="size-7"
+            aria-label={`Apri ${attachment.display_name}`}
             onClick={() => openAttachment(attachment, "preview")}
           >
             <Eye className="size-3.5" />
@@ -39,6 +40,7 @@ export function ActivityAttachmentList({ attachments }: { attachments: ActivityA
             variant="ghost"
             size="icon"
             className="size-7"
+            aria-label={`Scarica ${attachment.display_name}`}
             onClick={() => openAttachment(attachment, "download")}
           >
             <Download className="size-3.5" />
