@@ -137,7 +137,6 @@ const invoiceStatusFilterLabels = {
 export type InvoiceStatusFilter = keyof typeof invoiceStatusFilterLabels | "all";
 
 export const Route = createFileRoute("/fatture/")({
-  loader: () => ({ today: new Date().toISOString().slice(0, 10) }),
   validateSearch: (search: Record<string, unknown>): InvoicesSearch => ({
     q: parseTextSearch(search.q),
     status: parseFilterValue(search.status, invoiceStatusFilterLabels),
@@ -147,6 +146,7 @@ export const Route = createFileRoute("/fatture/")({
     sort: parseTableSortKey(search.sort, fattureSortKeys),
     dir: parseTableSortDirection(search.dir),
   }),
+  loader: () => ({ today: new Date().toISOString().slice(0, 10) }),
   head: () => ({
     meta: [
       { title: "Fatture · Pratix" },

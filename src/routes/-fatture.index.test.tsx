@@ -49,7 +49,7 @@ describe("Invoice reference date", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2026-10-09T23:30:00Z"));
     const loader = (Route as unknown as { loader: () => { today: string } }).loader;
-    expect(JSON.parse(JSON.stringify(loader()))).toEqual({ today: "2026-10-09" });
+    expect(JSON.stringify(loader())).toBe('{"today":"2026-10-09"}');
     vi.setSystemTime(new Date("2026-10-10T00:00:00Z"));
     expect(loader()).toEqual({ today: "2026-10-10" });
   });
