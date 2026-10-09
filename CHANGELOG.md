@@ -6,6 +6,13 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.20] — 2026-10-09
+
+### Sotto il cofano
+
+- Aggiornati i tipi di Node alla patch 24.19.2, mantenendo la compatibilità
+  con il runtime Node 24 usato in produzione.
+
 ## [1.14.19] — 2026-10-09
 
 ### Correzioni
@@ -1625,6 +1632,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.20]: #11420--2026-10-09
 [1.14.19]: #11419--2026-10-09
 [1.14.18]: #11418--2026-08-26
 [1.14.17]: #11417--2026-08-26
