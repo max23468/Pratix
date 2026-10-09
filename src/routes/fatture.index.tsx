@@ -146,6 +146,7 @@ export const Route = createFileRoute("/fatture/")({
     sort: parseTableSortKey(search.sort, fattureSortKeys),
     dir: parseTableSortDirection(search.dir),
   }),
+  loader: () => ({ today: new Date().toISOString().slice(0, 10) }),
   head: () => ({
     meta: [
       { title: "Fatture · Pratix" },
@@ -181,7 +182,7 @@ function InvoicesIndex() {
     routeSearch.sort && routeSearch.dir
       ? { key: routeSearch.sort, direction: routeSearch.dir }
       : undefined;
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const { today } = Route.useLoaderData();
   const hasInvoiceFilters = Boolean(
     search.trim() || status !== "all" || year !== "all" || periodStart || periodEnd,
   );
