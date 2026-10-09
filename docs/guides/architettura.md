@@ -3,7 +3,7 @@
 ## Stack
 
 - **Framework**: TanStack Start v1 (full-stack React 19)
-- **Build**: Vite 7
+- **Build**: Vite 8
 - **Routing**: file-based in `src/routes/`, route tree auto-generato
 - **Backend**: Supabase di proprietà del progetto — Postgres, Auth passwordless, passkey dietro feature flag e Storage privato
 - **Deploy**: Vercel
