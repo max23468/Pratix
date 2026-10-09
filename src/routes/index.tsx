@@ -64,7 +64,7 @@ function Landing() {
     <div className="min-h-dvh bg-background">
       <header className="border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
-          <Link to="/" aria-label="Pratix">
+          <Link to="/">
             <Logo form="lockup" size={30} />
           </Link>
           <div className="flex items-center gap-1">
@@ -84,7 +84,7 @@ function Landing() {
       <main>
         <section className="relative mx-auto max-w-6xl px-6 py-20 lg:py-28">
           <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
-            <Link to="/" aria-label="Pratix" className="inline-flex">
+            <Link to="/" className="inline-flex">
               <Logo form="mark" size={88} />
             </Link>
             <div className="mt-8 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground shadow-soft">

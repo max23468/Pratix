@@ -26,7 +26,7 @@ function PrivacyPage() {
     <div className="min-h-dvh bg-background">
       <header className="border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6 py-4">
-          <Link to="/" aria-label="Pratix">
+          <Link to="/">
             <Logo form="lockup" size={22} />
           </Link>
           <Link to="/" className="text-sm font-medium text-muted-foreground hover:text-foreground">

@@ -6,6 +6,18 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+### Correzioni
+
+- I link del logo nelle pagine pubbliche usano il nome accessibile del logo,
+  senza sovrascriverlo con un'etichetta ridondante.
+
+### Sotto il cofano
+
+- Aggiornati gli strumenti di sviluppo e le dipendenze applicative, inclusi
+  Vitest 5 e Nitro, mantenendo Node 24 per la compatibilità con Vercel.
+- Allineato npm tra setup locale, controlli automatici e deployment; aggiornato
+  il controllo React Doctor su GitHub.
+
 ## [1.14.18] — 2026-08-26
 
 ### Sotto il cofano

@@ -104,7 +104,7 @@ function LoginPage() {
   return (
     <div className="flex min-h-dvh items-center justify-center bg-background px-4 py-10">
       <div className="w-full max-w-sm">
-        <Link to="/" className="mb-8 flex items-center justify-center" aria-label="Pratix">
+        <Link to="/" className="mb-8 flex items-center justify-center">
           <Logo form="lockup" size={30} />
         </Link>
 

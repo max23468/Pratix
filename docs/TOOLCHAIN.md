@@ -16,9 +16,12 @@ Questo documento dichiara runtime, strumenti e verifiche operative di Pratix. Le
 
 - Node richiesto: `>=24.15 <25`.
 - npm richiesto: `>=12 <13`.
-- Package manager dichiarato: `npm@12.0.2`.
+- Package manager dichiarato: `npm@12.2.0`.
 - Lockfile autoritativo: `package-lock.json`.
 - Lockfile alternativi non ammessi.
+
+Node 24 resta allineato al runtime Vercel. Aggiorna i tipi Node nella stessa
+linea; Node 26 e i suoi tipi non fanno parte della toolchain di produzione.
 
 Il primo setup, anche partendo dall'npm 11 incluso in alcune installazioni di
 Node 24, esegue npm 12 senza modificare l'installazione globale e installa le

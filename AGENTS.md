@@ -33,7 +33,7 @@ Riferimenti: [`docs/CONTEXT.md`](./docs/CONTEXT.md),
 ## Stack e confini tecnici
 
 - Usa `npm`; `package-lock.json` è l'unico lockfile autoritativo.
-- Frontend: React, TanStack Start v1, Vite 7, Tailwind v4, shadcn/Radix.
+- Frontend: React, TanStack Start v1, Vite 8, Tailwind v4, shadcn/Radix.
 - Routing file-based in `src/routes/`: file piatti dot-separated, root
   `src/routes/__root.tsx`, import da `@tanstack/react-router`.
 - Backend: Supabase PostgreSQL con RLS, Auth passwordless, passkey dietro
