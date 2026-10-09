@@ -137,6 +137,7 @@ const invoiceStatusFilterLabels = {
 export type InvoiceStatusFilter = keyof typeof invoiceStatusFilterLabels | "all";
 
 export const Route = createFileRoute("/fatture/")({
+  loader: () => ({ today: new Date().toISOString().slice(0, 10) }),
   validateSearch: (search: Record<string, unknown>): InvoicesSearch => ({
     q: parseTextSearch(search.q),
     status: parseFilterValue(search.status, invoiceStatusFilterLabels),
@@ -181,7 +182,7 @@ function InvoicesIndex() {
     routeSearch.sort && routeSearch.dir
       ? { key: routeSearch.sort, direction: routeSearch.dir }
       : undefined;
-  const today = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const { today } = Route.useLoaderData();
   const hasInvoiceFilters = Boolean(
     search.trim() || status !== "all" || year !== "all" || periodStart || periodEnd,
   );
