@@ -97,27 +97,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
         throw new Error("Abilita almeno compensi o rimborsi spese");
       }
 
-      const payload = {
-        user_id: user.id,
-        business_name: form.business_name.trim(),
-        tax_code: form.tax_code?.trim() || null,
-        vat_number: form.vat_number?.trim() || null,
-        email: form.email?.trim() || null,
-        phone: form.phone?.trim() || null,
-        pec: form.pec?.trim() || null,
-        sdi_code: form.sdi_code?.trim() || null,
-        address_street: form.address_street?.trim() || null,
-        address_city: form.address_city?.trim() || null,
-        address_zip: form.address_zip?.trim() || null,
-        address_province: form.address_province?.trim() || null,
-        address_country: form.address_country?.trim() || "IT",
-        fees_enabled: form.fees_enabled,
-        expense_reimbursements_enabled: form.expense_reimbursements_enabled,
-        default_general_expenses_rate: Number(form.default_general_expenses_rate || 0),
-        default_cassa_rate: Number(form.default_cassa_rate || 0),
-        notes: form.notes?.trim() || null,
-        archived_at: form.archived_at,
-      };
+      const payload = buildPrincipalPayload(form, user.id);
 
       if (isEdit && initial?.id) {
         const { data, error } = await supabase
@@ -269,27 +249,7 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
         onCassaChange={(value) => upd("default_cassa_rate", value)}
       />
 
-      <PrincipalContacts
-        email={form.email ?? ""}
-        phone={form.phone ?? ""}
-        pec={form.pec ?? ""}
-        sdiCode={form.sdi_code ?? ""}
-        onEmailChange={(value) => upd("email", value)}
-        onPhoneChange={(value) => upd("phone", value)}
-        onPecChange={(value) => upd("pec", value)}
-        onSdiCodeChange={(value) => upd("sdi_code", value)}
-      />
-
-      <PrincipalAddress
-        street={form.address_street ?? ""}
-        city={form.address_city ?? ""}
-        zip={form.address_zip ?? ""}
-        province={form.address_province ?? ""}
-        onStreetChange={(value) => upd("address_street", value)}
-        onCityChange={(value) => upd("address_city", value)}
-        onZipChange={(value) => upd("address_zip", value)}
-        onProvinceChange={(value) => upd("address_province", value)}
-      />
+      <PrincipalContactAndAddress form={form} upd={upd} />
 
       <Card>
         <CardHeader>
@@ -335,5 +295,62 @@ export function PrincipalForm({ initial, onSaved, onCancel }: Props) {
       </div>
       {guardDialog}
     </form>
+  );
+}
+
+function buildPrincipalPayload(form: PrincipalRow, userId: string) {
+  return {
+    user_id: userId,
+    business_name: form.business_name.trim(),
+    tax_code: form.tax_code?.trim() || null,
+    vat_number: form.vat_number?.trim() || null,
+    email: form.email?.trim() || null,
+    phone: form.phone?.trim() || null,
+    pec: form.pec?.trim() || null,
+    sdi_code: form.sdi_code?.trim() || null,
+    address_street: form.address_street?.trim() || null,
+    address_city: form.address_city?.trim() || null,
+    address_zip: form.address_zip?.trim() || null,
+    address_province: form.address_province?.trim() || null,
+    address_country: form.address_country?.trim() || "IT",
+    fees_enabled: form.fees_enabled,
+    expense_reimbursements_enabled: form.expense_reimbursements_enabled,
+    default_general_expenses_rate: Number(form.default_general_expenses_rate || 0),
+    default_cassa_rate: Number(form.default_cassa_rate || 0),
+    notes: form.notes?.trim() || null,
+    archived_at: form.archived_at,
+  };
+}
+
+function PrincipalContactAndAddress({
+  form,
+  upd,
+}: {
+  form: PrincipalRow;
+  upd: <K extends keyof PrincipalRow>(key: K, value: PrincipalRow[K]) => void;
+}) {
+  return (
+    <>
+      <PrincipalContacts
+        email={form.email ?? ""}
+        phone={form.phone ?? ""}
+        pec={form.pec ?? ""}
+        sdiCode={form.sdi_code ?? ""}
+        onEmailChange={(value) => upd("email", value)}
+        onPhoneChange={(value) => upd("phone", value)}
+        onPecChange={(value) => upd("pec", value)}
+        onSdiCodeChange={(value) => upd("sdi_code", value)}
+      />
+      <PrincipalAddress
+        street={form.address_street ?? ""}
+        city={form.address_city ?? ""}
+        zip={form.address_zip ?? ""}
+        province={form.address_province ?? ""}
+        onStreetChange={(value) => upd("address_street", value)}
+        onCityChange={(value) => upd("address_city", value)}
+        onZipChange={(value) => upd("address_zip", value)}
+        onProvinceChange={(value) => upd("address_province", value)}
+      />
+    </>
   );
 }

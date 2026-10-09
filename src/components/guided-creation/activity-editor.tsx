@@ -55,6 +55,7 @@ export function ActivityEditor({
           type="button"
           variant="ghost"
           size="icon"
+          aria-label={`Rimuovi attività ${index + 1}`}
           onClick={() => removeActivity(activity.localId)}
         >
           <Trash2 className="size-4" />

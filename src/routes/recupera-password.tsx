@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Logo } from "@/components/brand/logo";
-import { Button } from "@/components/ui/button";
+import { PasswordlessAccessCard } from "@/components/passwordless-access-card";
 
 export const Route = createFileRoute("/recupera-password")({
   head: () => ({
@@ -30,18 +30,11 @@ function EmailAccessInfoPage() {
           <Logo form="lockup" size={24} />
         </Link>
 
-        <div className="rounded-xl border border-border bg-card p-6 shadow-elevated">
-          <h1 className="font-display text-2xl font-semibold text-foreground">Accesso via email</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Non c'è una password da recuperare: inserisci la tua email nella pagina di accesso e
-            riceverai un link sicuro e un codice monouso.
-          </p>
-          <div className="mt-6">
-            <Button asChild className="w-full">
-              <Link to="/login">Richiedi link e codice</Link>
-            </Button>
-          </div>
-        </div>
+        <PasswordlessAccessCard
+          title="Accesso via email"
+          description="Non c'\u00e8 una password da recuperare: inserisci la tua email nella pagina di accesso e riceverai un link sicuro e un codice monouso."
+          actionLabel="Richiedi link e codice"
+        />
       </div>
     </div>
   );

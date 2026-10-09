@@ -168,17 +168,258 @@ type CaseActivityDialogProps = {
   onSaved?: () => void;
 };
 
-function useCaseActivityDialog({
-  caseRow,
-  trigger,
-  activity,
-  open: controlledOpen,
-  onOpenChange,
-  onSaved,
-}: CaseActivityDialogProps) {
-  const { user } = useAuth();
-  const qc = useQueryClient();
-  const [internalOpen, setInternalOpen] = useState(false);
+type ActivitySaveContext = {
+  user: ReturnType<typeof useAuth>["user"];
+  activity: CaseActivityDialogActivity | undefined;
+  selectedCase: CaseActivityContext | null;
+  isEditing: boolean;
+  priceBook: PriceBookRow | null;
+  activityYear: number;
+  selectedItem: PriceItemRow | null;
+  description: string;
+  calculatedQuantity: number;
+  isFixedFeePrice: boolean;
+  parsedFreeAmount: number | null;
+  requiresHearingDates: boolean;
+  hearingDates: HearingDateDraft[];
+  activityDate: string;
+  status: ActivityFormState["status"];
+  needsReview: boolean;
+  notes: string;
+  file: File | null;
+  attachmentName: string;
+  attachmentType: string;
+  attachmentNotes: string;
+};
+
+async function saveCaseActivity(context: ActivitySaveContext) {
+  const {
+    user,
+    activity,
+    selectedCase,
+    isEditing,
+    priceBook,
+    activityYear,
+    selectedItem,
+    description,
+    calculatedQuantity,
+    isFixedFeePrice,
+    parsedFreeAmount,
+    requiresHearingDates,
+    hearingDates,
+    activityDate,
+    status,
+    needsReview,
+    notes,
+    file,
+    attachmentName,
+    attachmentType,
+    attachmentNotes,
+  } = context;
+  if (!user) throw new Error("Sessione non valida");
+  if (activity?.invoice_id) throw new Error("La voce è collegata a una fattura");
+  if (!selectedCase) throw new Error("Seleziona una pratica");
+  if (!selectedCase.principal_id || !selectedCase.client_id) {
+    throw new Error("Completa committente e cliente della pratica");
+  }
+  if (!isEditing && !priceBook) {
+    throw new Error(`Nessun prezzo configurato per il ${activityYear}`);
+  }
+  if (!isEditing && !selectedItem) throw new Error("Seleziona una voce prezzo");
+  if (!description.trim()) throw new Error("Inserisci una descrizione");
+  if (calculatedQuantity <= 0) throw new Error("Inserisci una quantità positiva");
+  const unitPriceForSave = isFixedFeePrice
+    ? Number(selectedItem?.unit_price ?? 0)
+    : parsedFreeAmount;
+  if (unitPriceForSave === null || unitPriceForSave < 0) {
+    throw new Error("Inserisci un importo valido");
+  }
+  if (requiresHearingDates && hearingDates.some((hearingDate) => !hearingDate.date)) {
+    throw new Error("Completa tutte le date udienza");
+  }
+
+  if (isEditing) {
+    if (!activity) throw new Error("Attività non disponibile");
+    const { error, count } = await supabase
+      .from("case_activities")
+      .update(
+        {
+          activity_date: activityDate,
+          status,
+          needs_review: needsReview,
+          description: description.trim(),
+          quantity: calculatedQuantity,
+          unit_price: unitPriceForSave,
+          notes: notes.trim() || null,
+        },
+        { count: "exact" },
+      )
+      .eq("id", activity.id)
+      .is("invoice_id", null);
+    if (error) throw error;
+    if (count !== 1) {
+      throw new Error("La voce è stata collegata a una Fattura e non può più essere modificata");
+    }
+
+    const { error: deleteHearingsError } = await supabase
+      .from("case_activity_hearings")
+      .delete()
+      .eq("activity_id", activity.id);
+    if (deleteHearingsError) throw deleteHearingsError;
+
+    if (requiresHearingDates && hearingDates.length > 0) {
+      const { error: hearingsError } = await supabase.from("case_activity_hearings").insert(
+        hearingDates.map((hearingDate, index) => ({
+          user_id: user.id,
+          activity_id: activity.id,
+          hearing_date: hearingDate.date,
+          position: index + 1,
+        })),
+      );
+      if (hearingsError) throw hearingsError;
+    }
+
+    if (file) {
+      const storagePath = buildActivityAttachmentStoragePath(
+        user.id,
+        activity.id,
+        `${Date.now()}-${file.name}`,
+      );
+      const { error: uploadError } = await supabase.storage
+        .from(PRATIX_DOCUMENTS_BUCKET)
+        .upload(storagePath, file, { contentType: file.type || undefined, upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { error: attachmentError } = await supabase.from("activity_attachments").insert({
+        user_id: user.id,
+        activity_id: activity.id,
+        storage_path: storagePath,
+        original_file_name: file.name,
+        display_name: attachmentName.trim() || file.name,
+        document_type: attachmentType.trim() || null,
+        mime_type: file.type || null,
+        size_bytes: file.size,
+        preview_available: file.type.startsWith("image/") || file.type === "application/pdf",
+        notes: attachmentNotes.trim() || null,
+      });
+      if (attachmentError) throw attachmentError;
+    }
+    return;
+  }
+
+  const currentPriceBook = priceBook;
+  const currentItem = selectedItem;
+  if (!currentPriceBook || !currentItem) throw new Error("Seleziona una voce prezzo");
+
+  const { data: createdActivity, error } = await supabase
+    .from("case_activities")
+    .insert({
+      user_id: user.id,
+      case_id: selectedCase.id,
+      principal_id: selectedCase.principal_id,
+      client_id: selectedCase.client_id,
+      counterparty_id: selectedCase.counterparty_id,
+      price_book_id: currentPriceBook.id,
+      price_item_id: currentItem.id,
+      activity_date: activityDate,
+      kind: currentItem.kind,
+      status,
+      needs_review: needsReview,
+      snapshot_price_year: currentPriceBook.year,
+      snapshot_price_code: currentItem.code,
+      snapshot_price_name: currentItem.name,
+      description: description.trim(),
+      quantity: calculatedQuantity,
+      unit_price: unitPriceForSave,
+      notes: notes.trim() || null,
+    })
+    .select("id")
+    .single();
+  if (error) throw error;
+
+  if (currentItem.requires_hearing_dates) {
+    const { error: hearingsError } = await supabase.from("case_activity_hearings").insert(
+      hearingDates.map((hearingDate, index) => ({
+        user_id: user.id,
+        activity_id: createdActivity.id,
+        hearing_date: hearingDate.date,
+        position: index + 1,
+      })),
+    );
+    if (hearingsError) throw hearingsError;
+  }
+
+  if (file) {
+    const storagePath = buildActivityAttachmentStoragePath(
+      user.id,
+      createdActivity.id,
+      `${Date.now()}-${file.name}`,
+    );
+    const { error: uploadError } = await supabase.storage
+      .from(PRATIX_DOCUMENTS_BUCKET)
+      .upload(storagePath, file, { contentType: file.type || undefined, upsert: false });
+    if (uploadError) throw uploadError;
+
+    const { error: attachmentError } = await supabase.from("activity_attachments").insert({
+      user_id: user.id,
+      activity_id: createdActivity.id,
+      storage_path: storagePath,
+      original_file_name: file.name,
+      display_name: attachmentName.trim() || file.name,
+      document_type: attachmentType.trim() || null,
+      mime_type: file.type || null,
+      size_bytes: file.size,
+      preview_available: file.type.startsWith("image/") || file.type === "application/pdf",
+      notes: attachmentNotes.trim() || null,
+    });
+    if (attachmentError) throw attachmentError;
+  }
+}
+
+type ActivityFormFieldSetter = <K extends keyof ActivityFormState>(
+  key: K,
+  value: SetStateAction<ActivityFormState[K]>,
+) => void;
+
+function applyExistingActivity(
+  activity: CaseActivityDialogActivity,
+  formKey: string,
+  setFormField: ActivityFormFieldSetter,
+) {
+  setFormField("selectedCaseId", activity.case_id);
+  setFormField("activityDate", activity.activity_date);
+  setFormField("priceItemId", activity.price_item_id);
+  setFormField("description", activity.description);
+  setFormField("quantity", Number(activity.quantity) || 1);
+  setFormField(
+    "freeAmountInput",
+    formatDecimalInputValue(
+      activity.kind === "expense_reimbursement"
+        ? Number(activity.amount) || 0
+        : Number(activity.unit_price) || 0,
+    ),
+  );
+  setFormField("status", activity.status);
+  setFormField("needsReview", activity.needs_review);
+  setFormField("notes", activity.notes ?? "");
+  setFormField(
+    "hearingDates",
+    [...(activity.case_activity_hearings ?? [])]
+      .sort((a, b) => a.position - b.position)
+      .map((hearing) => ({ id: hearing.id, date: hearing.hearing_date })),
+  );
+  setFormField("file", null);
+  setFormField("attachmentName", "");
+  setFormField("attachmentType", "");
+  setFormField("attachmentNotes", "");
+  setFormField("loadedFormKey", formKey);
+}
+
+function useActivityFormState(
+  caseRow: CaseActivityContext | undefined,
+  activity: CaseActivityDialogActivity | undefined,
+  open: boolean,
+) {
   const [formState, setFormState] = useReducer(
     (state: ActivityFormState, update: (state: ActivityFormState) => ActivityFormState) =>
       update(state),
@@ -208,29 +449,55 @@ function useCaseActivityDialog({
       ...state,
       [key]: typeof value === "function" ? value(state[key]) : value,
     }));
-  const {
-    selectedCaseId,
-    activityDate,
-    priceItemId,
-    description,
-    quantity,
-    freeAmountInput,
-    status,
-    needsReview,
-    notes,
-    hearingDates,
-    file,
-    attachmentName,
-    attachmentType,
-    attachmentNotes,
-    loadedFormKey,
-  } = formState;
-  const isEditing = Boolean(activity);
-  const open = controlledOpen ?? internalOpen;
-  const saveLock = useSubmitLock();
+  const { loadedFormKey } = formState;
+  const formKey = open
+    ? activity
+      ? `activity:${activity.id}`
+      : `new:${caseRow?.id ?? "global"}`
+    : null;
 
-  const activityYear = currentYearFromDate(activityDate);
+  if (formKey && loadedFormKey !== formKey) {
+    if (!activity) {
+      setFormField("selectedCaseId", caseRow?.id ?? "");
+      setFormField("activityDate", today());
+      setFormField("priceItemId", "");
+      setFormField("description", "");
+      setFormField("quantity", 1);
+      setFormField("freeAmountInput", "0");
+      setFormField("status", "to_invoice");
+      setFormField("needsReview", false);
+      setFormField("notes", "");
+      setFormField("hearingDates", []);
+      setFormField("file", null);
+      setFormField("attachmentName", "");
+      setFormField("attachmentType", "");
+      setFormField("attachmentNotes", "");
+      setFormField("loadedFormKey", formKey);
+    } else {
+      applyExistingActivity(activity, formKey, setFormField);
+    }
+  }
 
+  return { formState, setFormField };
+}
+
+function useActivityPricing({
+  caseRow,
+  activity,
+  open,
+  selectedCaseId,
+  activityYear,
+  isEditing,
+  priceItemId,
+}: {
+  caseRow: CaseActivityContext | undefined;
+  activity: CaseActivityDialogActivity | undefined;
+  open: boolean;
+  selectedCaseId: string;
+  activityYear: number;
+  isEditing: boolean;
+  priceItemId: string;
+}) {
   const { data: caseOptions = [] } = useQuery({
     queryKey: ["cases", "activity-dialog"],
     enabled: open && !caseRow,
@@ -304,59 +571,74 @@ function useCaseActivityDialog({
     !isExpenseReimbursement &&
     (selectedItem?.requires_hearing_dates ?? Boolean(activity?.case_activity_hearings?.length));
 
-  const formKey = open
-    ? activity
-      ? `activity:${activity.id}`
-      : `new:${caseRow?.id ?? "global"}`
-    : null;
+  return {
+    sortedCaseOptions,
+    selectedCase,
+    priceBook,
+    availablePriceItems,
+    selectedItem,
+    effectiveKind,
+    isExpenseReimbursement,
+    requiresHearingDates,
+  };
+}
 
-  if (formKey && loadedFormKey !== formKey) {
-    if (!activity) {
-      setFormField("selectedCaseId", caseRow?.id ?? "");
-      setFormField("activityDate", today());
-      setFormField("priceItemId", "");
-      setFormField("description", "");
-      setFormField("quantity", 1);
-      setFormField("freeAmountInput", "0");
-      setFormField("status", "to_invoice");
-      setFormField("needsReview", false);
-      setFormField("notes", "");
-      setFormField("hearingDates", []);
-      setFormField("file", null);
-      setFormField("attachmentName", "");
-      setFormField("attachmentType", "");
-      setFormField("attachmentNotes", "");
-      setFormField("loadedFormKey", formKey);
-    } else {
-      setFormField("selectedCaseId", activity.case_id);
-      setFormField("activityDate", activity.activity_date);
-      setFormField("priceItemId", activity.price_item_id);
-      setFormField("description", activity.description);
-      setFormField("quantity", Number(activity.quantity) || 1);
-      setFormField(
-        "freeAmountInput",
-        formatDecimalInputValue(
-          activity.kind === "expense_reimbursement"
-            ? Number(activity.amount) || 0
-            : Number(activity.unit_price) || 0,
-        ),
-      );
-      setFormField("status", activity.status);
-      setFormField("needsReview", activity.needs_review);
-      setFormField("notes", activity.notes ?? "");
-      setFormField(
-        "hearingDates",
-        [...(activity.case_activity_hearings ?? [])]
-          .sort((a, b) => a.position - b.position)
-          .map((hearing) => ({ id: hearing.id, date: hearing.hearing_date })),
-      );
-      setFormField("file", null);
-      setFormField("attachmentName", "");
-      setFormField("attachmentType", "");
-      setFormField("attachmentNotes", "");
-      setFormField("loadedFormKey", formKey);
-    }
-  }
+function useCaseActivityDialog({
+  caseRow,
+  trigger,
+  activity,
+  open: controlledOpen,
+  onOpenChange,
+  onSaved,
+}: CaseActivityDialogProps) {
+  const { user } = useAuth();
+  const qc = useQueryClient();
+  const [internalOpen, setInternalOpen] = useState(false);
+  const { formState, setFormField } = useActivityFormState(
+    caseRow,
+    activity,
+    controlledOpen ?? internalOpen,
+  );
+  const {
+    selectedCaseId,
+    activityDate,
+    priceItemId,
+    description,
+    quantity,
+    freeAmountInput,
+    status,
+    needsReview,
+    notes,
+    hearingDates,
+    file,
+    attachmentName,
+    attachmentType,
+    attachmentNotes,
+  } = formState;
+  const isEditing = Boolean(activity);
+  const open = controlledOpen ?? internalOpen;
+  const saveLock = useSubmitLock();
+
+  const activityYear = currentYearFromDate(activityDate);
+
+  const {
+    sortedCaseOptions,
+    selectedCase,
+    priceBook,
+    availablePriceItems,
+    selectedItem,
+    effectiveKind,
+    isExpenseReimbursement,
+    requiresHearingDates,
+  } = useActivityPricing({
+    caseRow,
+    activity,
+    open,
+    selectedCaseId,
+    activityYear,
+    isEditing,
+    priceItemId,
+  });
 
   const calculatedQuantity = isExpenseReimbursement
     ? 1
@@ -372,168 +654,30 @@ function useCaseActivityDialog({
   const total = calculatedQuantity * unitPrice;
 
   const save = useMutation({
-    mutationFn: async () => {
-      if (!user) throw new Error("Sessione non valida");
-      if (activity?.invoice_id) throw new Error("La voce è collegata a una fattura");
-      if (!selectedCase) throw new Error("Seleziona una pratica");
-      if (!selectedCase.principal_id || !selectedCase.client_id) {
-        throw new Error("Completa committente e cliente della pratica");
-      }
-      if (!isEditing && !priceBook) {
-        throw new Error(`Nessun prezzo configurato per il ${activityYear}`);
-      }
-      if (!isEditing && !selectedItem) throw new Error("Seleziona una voce prezzo");
-      if (!description.trim()) throw new Error("Inserisci una descrizione");
-      if (calculatedQuantity <= 0) throw new Error("Inserisci una quantità positiva");
-      const unitPriceForSave = isFixedFeePrice
-        ? Number(selectedItem?.unit_price ?? 0)
-        : parsedFreeAmount;
-      if (unitPriceForSave === null || unitPriceForSave < 0) {
-        throw new Error("Inserisci un importo valido");
-      }
-      if (requiresHearingDates && hearingDates.some((hearingDate) => !hearingDate.date)) {
-        throw new Error("Completa tutte le date udienza");
-      }
-
-      if (isEditing) {
-        if (!activity) throw new Error("Attività non disponibile");
-        const { error, count } = await supabase
-          .from("case_activities")
-          .update(
-            {
-              activity_date: activityDate,
-              status,
-              needs_review: needsReview,
-              description: description.trim(),
-              quantity: calculatedQuantity,
-              unit_price: unitPriceForSave,
-              notes: notes.trim() || null,
-            },
-            { count: "exact" },
-          )
-          .eq("id", activity.id)
-          .is("invoice_id", null);
-        if (error) throw error;
-        if (count !== 1) {
-          throw new Error(
-            "La voce è stata collegata a una Fattura e non può più essere modificata",
-          );
-        }
-
-        const { error: deleteHearingsError } = await supabase
-          .from("case_activity_hearings")
-          .delete()
-          .eq("activity_id", activity.id);
-        if (deleteHearingsError) throw deleteHearingsError;
-
-        if (requiresHearingDates && hearingDates.length > 0) {
-          const { error: hearingsError } = await supabase.from("case_activity_hearings").insert(
-            hearingDates.map((hearingDate, index) => ({
-              user_id: user.id,
-              activity_id: activity.id,
-              hearing_date: hearingDate.date,
-              position: index + 1,
-            })),
-          );
-          if (hearingsError) throw hearingsError;
-        }
-
-        if (file) {
-          const storagePath = buildActivityAttachmentStoragePath(
-            user.id,
-            activity.id,
-            `${Date.now()}-${file.name}`,
-          );
-          const { error: uploadError } = await supabase.storage
-            .from(PRATIX_DOCUMENTS_BUCKET)
-            .upload(storagePath, file, { contentType: file.type || undefined, upsert: false });
-          if (uploadError) throw uploadError;
-
-          const { error: attachmentError } = await supabase.from("activity_attachments").insert({
-            user_id: user.id,
-            activity_id: activity.id,
-            storage_path: storagePath,
-            original_file_name: file.name,
-            display_name: attachmentName.trim() || file.name,
-            document_type: attachmentType.trim() || null,
-            mime_type: file.type || null,
-            size_bytes: file.size,
-            preview_available: file.type.startsWith("image/") || file.type === "application/pdf",
-            notes: attachmentNotes.trim() || null,
-          });
-          if (attachmentError) throw attachmentError;
-        }
-        return;
-      }
-
-      const currentPriceBook = priceBook;
-      const currentItem = selectedItem;
-      if (!currentPriceBook || !currentItem) throw new Error("Seleziona una voce prezzo");
-
-      const { data: createdActivity, error } = await supabase
-        .from("case_activities")
-        .insert({
-          user_id: user.id,
-          case_id: selectedCase.id,
-          principal_id: selectedCase.principal_id,
-          client_id: selectedCase.client_id,
-          counterparty_id: selectedCase.counterparty_id,
-          price_book_id: currentPriceBook.id,
-          price_item_id: currentItem.id,
-          activity_date: activityDate,
-          kind: currentItem.kind,
-          status,
-          needs_review: needsReview,
-          snapshot_price_year: currentPriceBook.year,
-          snapshot_price_code: currentItem.code,
-          snapshot_price_name: currentItem.name,
-          description: description.trim(),
-          quantity: calculatedQuantity,
-          unit_price: unitPriceForSave,
-          notes: notes.trim() || null,
-        })
-        .select("id")
-        .single();
-      if (error) throw error;
-
-      if (currentItem.requires_hearing_dates) {
-        const { error: hearingsError } = await supabase.from("case_activity_hearings").insert(
-          hearingDates.map((hearingDate, index) => ({
-            user_id: user.id,
-            activity_id: createdActivity.id,
-            hearing_date: hearingDate.date,
-            position: index + 1,
-          })),
-        );
-        if (hearingsError) throw hearingsError;
-      }
-
-      if (file) {
-        const storagePath = buildActivityAttachmentStoragePath(
-          user.id,
-          createdActivity.id,
-          `${Date.now()}-${file.name}`,
-        );
-        const { error: uploadError } = await supabase.storage
-          .from(PRATIX_DOCUMENTS_BUCKET)
-          .upload(storagePath, file, { contentType: file.type || undefined, upsert: false });
-        if (uploadError) throw uploadError;
-
-        const { error: attachmentError } = await supabase.from("activity_attachments").insert({
-          user_id: user.id,
-          activity_id: createdActivity.id,
-          storage_path: storagePath,
-          original_file_name: file.name,
-          display_name: attachmentName.trim() || file.name,
-          document_type: attachmentType.trim() || null,
-          mime_type: file.type || null,
-          size_bytes: file.size,
-          preview_available: file.type.startsWith("image/") || file.type === "application/pdf",
-          notes: attachmentNotes.trim() || null,
-        });
-        if (attachmentError) throw attachmentError;
-      }
-    },
+    mutationFn: () =>
+      saveCaseActivity({
+        user,
+        activity,
+        selectedCase,
+        isEditing,
+        priceBook,
+        activityYear,
+        selectedItem,
+        description,
+        calculatedQuantity,
+        isFixedFeePrice,
+        parsedFreeAmount,
+        requiresHearingDates,
+        hearingDates,
+        activityDate,
+        status,
+        needsReview,
+        notes,
+        file,
+        attachmentName,
+        attachmentType,
+        attachmentNotes,
+      }),
     onSuccess: () => {
       toast.success(isEditing ? "Voce fatturabile aggiornata" : "Voce fatturabile registrata");
       if (selectedCase) {

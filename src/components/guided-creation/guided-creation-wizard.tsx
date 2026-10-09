@@ -379,28 +379,13 @@ function WizardNavigation({
         <ArrowLeft className="mr-1 size-4" /> Indietro
       </Button>
       <div className="flex gap-2">
-        {step < 3 ? (
-          <Button type="submit">
-            Avanti <ArrowRight className="ml-1 size-4" />
-          </Button>
-        ) : staged ? (
-          <Button
-            type="submit"
-            disabled={isConfirming || errorCount > 0 || staged.status === "imported"}
-          >
-            <CheckCircle2 className="mr-1 size-4" />
-            {staged.status === "imported"
-              ? "Creazione completata"
-              : isConfirming
-                ? "Conferma in corso…"
-                : "Conferma creazione"}
-          </Button>
-        ) : (
-          <Button type="submit" disabled={isPreparing || errorCount > 0}>
-            <FileInput className="mr-1 size-4" />
-            {isPreparing ? "Preparazione…" : "Prepara anteprima"}
-          </Button>
-        )}
+        <WizardForwardAction
+          step={step}
+          staged={staged}
+          errorCount={errorCount}
+          isPreparing={isPreparing}
+          isConfirming={isConfirming}
+        />
       </div>
     </div>
   );
@@ -479,4 +464,40 @@ async function uploadGuidedCreationActivityAttachments(
   );
 
   return results.flatMap((error) => (error ? [error] : []));
+}
+
+function WizardForwardAction({
+  step,
+  staged,
+  errorCount,
+  isPreparing,
+  isConfirming,
+}: {
+  step: number;
+  staged: StagedGuidedCreation | null;
+  errorCount: number;
+  isPreparing: boolean;
+  isConfirming: boolean;
+}) {
+  if (step < 3)
+    return (
+      <Button type="submit">
+        Avanti <ArrowRight className="ml-1 size-4" />
+      </Button>
+    );
+  return staged ? (
+    <Button type="submit" disabled={isConfirming || errorCount > 0 || staged.status === "imported"}>
+      <CheckCircle2 className="mr-1 size-4" />
+      {staged.status === "imported"
+        ? "Creazione completata"
+        : isConfirming
+          ? "Conferma in corso…"
+          : "Conferma creazione"}
+    </Button>
+  ) : (
+    <Button type="submit" disabled={isPreparing || errorCount > 0}>
+      <FileInput className="mr-1 size-4" />
+      {isPreparing ? "Preparazione…" : "Prepara anteprima"}
+    </Button>
+  );
 }

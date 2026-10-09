@@ -1,3 +1,4 @@
+import { SubjectKindField } from "@/components/subject-kind-field";
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DuplicateWarningPanel } from "@/components/duplicate-warning-panel";
@@ -266,24 +267,7 @@ export function CasePrincipalClientFields({ controller }: { controller: CaseForm
 }
 
 export function CaseCounterpartyField({ controller }: { controller: CaseFormController }) {
-  const {
-    form,
-    upd,
-    quickCreatedCounterparties,
-    quickCounterpartyOpen,
-    setQuickCounterpartyOpen,
-    quickCounterparty,
-    resetQuickCounterparty,
-    quickCounterpartyLock,
-    updateQuickCounterparty,
-    updateQuickCounterpartySubject,
-    addQuickCounterpartySubject,
-    removeQuickCounterpartySubject,
-    quickCounterpartyDuplicates,
-    setQuickCounterpartyDuplicates,
-    quickCounterpartyOverrideRef,
-    createQuickCounterpartyMutation,
-  } = controller;
+  const { form, upd, quickCreatedCounterparties, setQuickCounterpartyOpen } = controller;
   return (
     <div className="flex flex-col gap-2">
       <Label htmlFor="counterparty_id">Controparte</Label>
@@ -304,218 +288,213 @@ export function CaseCounterpartyField({ controller }: { controller: CaseFormCont
           <Plus className="mr-1 size-4" /> Nuova
         </Button>
       </div>
-      {quickCounterpartyOpen ? (
-        <div className="flex flex-col gap-3 rounded-md border border-border p-3">
+      <QuickCounterpartyForm controller={controller} />
+    </div>
+  );
+}
+
+function QuickCounterpartyForm({ controller }: { controller: CaseFormController }) {
+  const {
+    upd,
+    quickCounterpartyOpen,
+    setQuickCounterpartyOpen,
+    quickCounterparty,
+    resetQuickCounterparty,
+    quickCounterpartyLock,
+    updateQuickCounterparty,
+    quickCounterpartyDuplicates,
+    setQuickCounterpartyDuplicates,
+    quickCounterpartyOverrideRef,
+    createQuickCounterpartyMutation,
+  } = controller;
+  return quickCounterpartyOpen ? (
+    <div className="flex flex-col gap-3 rounded-md border border-border p-3">
+      <div className="flex flex-col gap-2">
+        <Label htmlFor="quick_counterparty_kind">Tipo controparte</Label>
+        <Select
+          value={quickCounterparty.kind}
+          onValueChange={(value) => updateQuickCounterparty("kind", value as CounterpartyKind)}
+        >
+          <SelectTrigger id="quick_counterparty_kind">
+            <SelectValue placeholder="Seleziona tipo" />
+          </SelectTrigger>
+          <SelectContent>
+            {Object.entries(counterpartyKindLabels).map(([value, label]) => (
+              <SelectItem key={value} value={value}>
+                {label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      {quickCounterparty.kind === "individual" ? (
+        <div className="grid gap-3 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="quick_counterparty_kind">Tipo controparte</Label>
-            <Select
-              value={quickCounterparty.kind}
-              onValueChange={(value) => updateQuickCounterparty("kind", value as CounterpartyKind)}
-            >
-              <SelectTrigger id="quick_counterparty_kind">
-                <SelectValue placeholder="Seleziona tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(counterpartyKindLabels).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="quick_counterparty_last_name">Cognome</Label>
+            <Input
+              id="quick_counterparty_last_name"
+              value={quickCounterparty.last_name}
+              onChange={(event) => updateQuickCounterparty("last_name", event.target.value)}
+              placeholder="Es. Rossi"
+            />
           </div>
-          {quickCounterparty.kind === "individual" ? (
-            <div className="grid gap-3 sm:grid-cols-2">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="quick_counterparty_last_name">Cognome</Label>
-                <Input
-                  id="quick_counterparty_last_name"
-                  value={quickCounterparty.last_name}
-                  onChange={(event) => updateQuickCounterparty("last_name", event.target.value)}
-                  placeholder="Es. Rossi"
-                />
-              </div>
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="quick_counterparty_first_name">Nome</Label>
-                <Input
-                  id="quick_counterparty_first_name"
-                  value={quickCounterparty.first_name}
-                  onChange={(event) => updateQuickCounterparty("first_name", event.target.value)}
-                  placeholder="Es. Anna"
-                />
-              </div>
-            </div>
-          ) : null}
-          {quickCounterparty.kind && quickCounterparty.kind !== "individual" ? (
-            <div className="flex flex-col gap-2">
-              <Label htmlFor="quick_counterparty_business_name">
-                {quickCounterparty.kind === "group"
-                  ? "Nome controparte composta"
-                  : "Ragione sociale"}
-              </Label>
-              <Input
-                id="quick_counterparty_business_name"
-                value={quickCounterparty.business_name}
-                onChange={(event) => updateQuickCounterparty("business_name", event.target.value)}
-                placeholder={
-                  quickCounterparty.kind === "group"
-                    ? "Es. Debitori collegati"
-                    : "Es. Debitore S.r.l."
-                }
-              />
-            </div>
-          ) : null}
-          {quickCounterparty.kind === "group" ? (
-            <div className="flex flex-col gap-3 rounded-md border border-border p-3">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-sm font-medium">Soggetti della controparte</p>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addQuickCounterpartySubject}
-                >
-                  <Plus className="mr-1 size-4" /> Soggetto
-                </Button>
-              </div>
-              {quickCounterparty.subjects.map((subject, index) => (
-                <div key={subject.localId} className="rounded-md border border-border p-3">
-                  <div className="mb-3 flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium">Soggetto {index + 1}</p>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeQuickCounterpartySubject(index)}
-                    >
-                      <Trash2 className="mr-1 size-4" /> Rimuovi
-                    </Button>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="flex flex-col gap-2">
-                      <Label htmlFor={`quick_counterparty_subject_kind_${index}`}>Tipo</Label>
-                      <Select
-                        value={subject.kind}
-                        onValueChange={(value) =>
-                          updateQuickCounterpartySubject(index, "kind", value as ClientKind)
-                        }
-                      >
-                        <SelectTrigger id={`quick_counterparty_subject_kind_${index}`}>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {Object.entries(clientKindLabels).map(([value, label]) => (
-                            <SelectItem key={value} value={value}>
-                              {label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    {subject.kind === "company" ? (
-                      <div className="flex flex-col gap-2">
-                        <Label htmlFor={`quick_counterparty_subject_business_${index}`}>
-                          Ragione sociale
-                        </Label>
-                        <Input
-                          id={`quick_counterparty_subject_business_${index}`}
-                          value={subject.business_name}
-                          onChange={(event) =>
-                            updateQuickCounterpartySubject(
-                              index,
-                              "business_name",
-                              event.target.value,
-                            )
-                          }
-                          placeholder="Es. Debitore S.r.l."
-                        />
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex flex-col gap-2">
-                          <Label htmlFor={`quick_counterparty_subject_last_${index}`}>
-                            Cognome
-                          </Label>
-                          <Input
-                            id={`quick_counterparty_subject_last_${index}`}
-                            value={subject.last_name}
-                            onChange={(event) =>
-                              updateQuickCounterpartySubject(index, "last_name", event.target.value)
-                            }
-                            placeholder="Es. Rossi"
-                          />
-                        </div>
-                        <div className="flex flex-col gap-2">
-                          <Label htmlFor={`quick_counterparty_subject_first_${index}`}>Nome</Label>
-                          <Input
-                            id={`quick_counterparty_subject_first_${index}`}
-                            value={subject.first_name}
-                            onChange={(event) =>
-                              updateQuickCounterpartySubject(
-                                index,
-                                "first_name",
-                                event.target.value,
-                              )
-                            }
-                            placeholder="Es. Anna"
-                          />
-                        </div>
-                      </>
-                    )}
-                    <div className="flex flex-col gap-2 sm:col-span-2">
-                      <Label htmlFor={`quick_counterparty_subject_notes_${index}`}>Note</Label>
-                      <Textarea
-                        id={`quick_counterparty_subject_notes_${index}`}
-                        rows={2}
-                        value={subject.notes}
-                        onChange={(event) =>
-                          updateQuickCounterpartySubject(index, "notes", event.target.value)
-                        }
-                        placeholder="Es. ruolo del soggetto nella controparte"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : null}
-          <DuplicateWarningPanel
-            candidates={quickCounterpartyDuplicates}
-            onUseExisting={(record) => {
-              upd("counterparty_id", record.id);
-              resetQuickCounterparty();
-              setQuickCounterpartyDuplicates([]);
-              setQuickCounterpartyOpen(false);
-            }}
-            onCreateAnyway={() => {
-              quickCounterpartyOverrideRef.current = true;
-              setQuickCounterpartyDuplicates([]);
-              if (quickCounterpartyLock.acquire()) createQuickCounterpartyMutation.mutate();
-            }}
-          />
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                resetQuickCounterparty();
-                setQuickCounterpartyOpen(false);
-              }}
-            >
-              Annulla
-            </Button>
-            <Button
-              type="button"
-              onClick={() => {
-                if (quickCounterpartyLock.acquire()) createQuickCounterpartyMutation.mutate();
-              }}
-              disabled={createQuickCounterpartyMutation.isPending}
-            >
-              {createQuickCounterpartyMutation.isPending ? "Creazione…" : "Crea"}
-            </Button>
+          <div className="flex flex-col gap-2">
+            <Label htmlFor="quick_counterparty_first_name">Nome</Label>
+            <Input
+              id="quick_counterparty_first_name"
+              value={quickCounterparty.first_name}
+              onChange={(event) => updateQuickCounterparty("first_name", event.target.value)}
+              placeholder="Es. Anna"
+            />
           </div>
         </div>
       ) : null}
+      {quickCounterparty.kind && quickCounterparty.kind !== "individual" ? (
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="quick_counterparty_business_name">
+            {quickCounterparty.kind === "group" ? "Nome controparte composta" : "Ragione sociale"}
+          </Label>
+          <Input
+            id="quick_counterparty_business_name"
+            value={quickCounterparty.business_name}
+            onChange={(event) => updateQuickCounterparty("business_name", event.target.value)}
+            placeholder={
+              quickCounterparty.kind === "group" ? "Es. Debitori collegati" : "Es. Debitore S.r.l."
+            }
+          />
+        </div>
+      ) : null}
+      <QuickCounterpartySubjects controller={controller} />
+      <DuplicateWarningPanel
+        candidates={quickCounterpartyDuplicates}
+        onUseExisting={(record) => {
+          upd("counterparty_id", record.id);
+          resetQuickCounterparty();
+          setQuickCounterpartyDuplicates([]);
+          setQuickCounterpartyOpen(false);
+        }}
+        onCreateAnyway={() => {
+          quickCounterpartyOverrideRef.current = true;
+          setQuickCounterpartyDuplicates([]);
+          if (quickCounterpartyLock.acquire()) createQuickCounterpartyMutation.mutate();
+        }}
+      />
+      <div className="flex justify-end gap-2">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            resetQuickCounterparty();
+            setQuickCounterpartyOpen(false);
+          }}
+        >
+          Annulla
+        </Button>
+        <Button
+          type="button"
+          onClick={() => {
+            if (quickCounterpartyLock.acquire()) createQuickCounterpartyMutation.mutate();
+          }}
+          disabled={createQuickCounterpartyMutation.isPending}
+        >
+          {createQuickCounterpartyMutation.isPending ? "Creazione…" : "Crea"}
+        </Button>
+      </div>
     </div>
-  );
+  ) : null;
+}
+
+function QuickCounterpartySubjects({ controller }: { controller: CaseFormController }) {
+  const {
+    quickCounterparty,
+    addQuickCounterpartySubject,
+    removeQuickCounterpartySubject,
+    updateQuickCounterpartySubject,
+  } = controller;
+  return quickCounterparty.kind === "group" ? (
+    <div className="flex flex-col gap-3 rounded-md border border-border p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-medium">Soggetti della controparte</p>
+        <Button type="button" variant="outline" size="sm" onClick={addQuickCounterpartySubject}>
+          <Plus className="mr-1 size-4" /> Soggetto
+        </Button>
+      </div>
+      {quickCounterparty.subjects.map((subject, index) => (
+        <div key={subject.localId} className="rounded-md border border-border p-3">
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <p className="text-sm font-medium">Soggetto {index + 1}</p>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => removeQuickCounterpartySubject(index)}
+            >
+              <Trash2 className="mr-1 size-4" /> Rimuovi
+            </Button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <SubjectKindField
+              id={`quick_counterparty_subject_kind_${index}`}
+              value={subject.kind}
+              onValueChange={(value) =>
+                updateQuickCounterpartySubject(index, "kind", value as ClientKind)
+              }
+            />
+            {subject.kind === "company" ? (
+              <div className="flex flex-col gap-2">
+                <Label htmlFor={`quick_counterparty_subject_business_${index}`}>
+                  Ragione sociale
+                </Label>
+                <Input
+                  id={`quick_counterparty_subject_business_${index}`}
+                  value={subject.business_name}
+                  onChange={(event) =>
+                    updateQuickCounterpartySubject(index, "business_name", event.target.value)
+                  }
+                  placeholder="Es. Debitore S.r.l."
+                />
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`quick_counterparty_subject_last_${index}`}>Cognome</Label>
+                  <Input
+                    id={`quick_counterparty_subject_last_${index}`}
+                    value={subject.last_name}
+                    onChange={(event) =>
+                      updateQuickCounterpartySubject(index, "last_name", event.target.value)
+                    }
+                    placeholder="Es. Rossi"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <Label htmlFor={`quick_counterparty_subject_first_${index}`}>Nome</Label>
+                  <Input
+                    id={`quick_counterparty_subject_first_${index}`}
+                    value={subject.first_name}
+                    onChange={(event) =>
+                      updateQuickCounterpartySubject(index, "first_name", event.target.value)
+                    }
+                    placeholder="Es. Anna"
+                  />
+                </div>
+              </>
+            )}
+            <div className="flex flex-col gap-2 sm:col-span-2">
+              <Label htmlFor={`quick_counterparty_subject_notes_${index}`}>Note</Label>
+              <Textarea
+                id={`quick_counterparty_subject_notes_${index}`}
+                rows={2}
+                value={subject.notes}
+                onChange={(event) =>
+                  updateQuickCounterpartySubject(index, "notes", event.target.value)
+                }
+                placeholder="Es. ruolo del soggetto nella controparte"
+              />
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  ) : null;
 }

@@ -47,8 +47,8 @@ test("il formatter incrementale lascia il lockfile ai controlli npm", () => {
 });
 
 test("React Doctor resta bloccante nel workflow dedicato e nel gate generale", () => {
-  assert.equal(packageJson.devDependencies["react-doctor"], "0.9.12");
-  assert.equal(packageLock.packages[""].devDependencies["react-doctor"], "0.9.12");
+  assert.equal(packageJson.devDependencies["react-doctor"], "0.9.13");
+  assert.equal(packageLock.packages[""].devDependencies["react-doctor"], "0.9.13");
   assert.equal(packageJson.scripts.doctor, "react-doctor --scope full --blocking warning .");
   assert.match(packageJson.scripts.check, /npm run doctor/);
   assert.match(qualityWorkflow, /run: npm run check/);

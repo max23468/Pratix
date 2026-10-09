@@ -1,88 +1,51 @@
+import {
+  type PraticheView,
+  type PraticheSortKey,
+  type PracticeListRow,
+  type PracticeWorkflowRow,
+} from "@/components/practices/types";
+import {
+  type TableSort,
+  parseTableSortKey,
+  parseTableSortDirection,
+  type SortableColumn,
+  usePersistentTableSort,
+  sortRows,
+} from "@/lib/table-sorting";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { parseTextSearch, normalizeTextSearch } from "@/lib/search-params";
+import { praticheSortKeys, praticheViewKeys } from "@/components/practices/helpers";
 import { AppLayout } from "@/components/app-layout";
-import { ListToolbar } from "@/components/list-toolbar";
-import { mobileListCardLinkClassName } from "@/components/mobile-list-card";
-import { MobileListCardDetails } from "@/components/mobile-list-card-details";
-import { MobileListCardHeader } from "@/components/mobile-list-card-header";
-import { MobileSortSelect } from "@/components/mobile-sort-select";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useMemo } from "react";
+import { clientDisplayName, counterpartyDisplayName, caseStatusLabels } from "@/lib/labels";
 import { PageHeader } from "@/components/page-header";
-import { SearchInput } from "@/components/search-input";
-import { SortableTableHead } from "@/components/sortable-table-head";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { TableEmptyState } from "@/components/table-empty-state";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus } from "lucide-react";
+import { ListToolbar } from "@/components/list-toolbar";
+import { SearchInput } from "@/components/search-input";
 import {
   Select,
-  SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectContent,
+  SelectItem,
 } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { MobileSortSelect } from "@/components/mobile-sort-select";
+import { PracticeResults } from "@/components/practices/practice-results";
 import {
-  caseStatusLabels,
-  caseStatusVariant,
-  clientDisplayName,
-  counterpartyDisplayName,
-} from "@/lib/labels";
-import { formatCurrency, formatDate } from "@/lib/format";
-import { normalizeTextSearch, parseTextSearch } from "@/lib/search-params";
-import {
+  summarizeCaseOperations,
   buildCaseWorkflowQualityChecks,
   buildDebtCollectionWorkflow,
   formatCaseWorkflowPriorityLabel,
-  summarizeCaseOperations,
-  type CaseDebtCollectionWorkflow,
 } from "@/lib/case-workflow";
-import { routeRef } from "@/lib/public-route-code";
-import {
-  handleClickableTableRowClick,
-  handleClickableTableRowKeyDown,
-} from "@/lib/table-row-navigation";
-import {
-  parseTableSortDirection,
-  parseTableSortKey,
-  sortRows,
-  usePersistentTableSort,
-  type SortableColumn,
-  type TableSort,
-} from "@/lib/table-sorting";
 
 type PraticheSearch = {
   q?: string;
   view?: PraticheView;
   sort?: PraticheSortKey;
   dir?: "asc" | "desc";
-};
-
-type PracticeListRow = {
-  id: string;
-  public_code: string;
-  practice_number: number;
-  status: string;
-  opened_at: string;
-  updated_at: string;
-  client_id: string | null;
-  principal_id: string | null;
-  counterparty_id: string | null;
-  principals: { business_name: string } | null;
-  clients: {
-    kind: string;
-    first_name: string | null;
-    last_name: string | null;
-    business_name: string | null;
-  } | null;
-  counterparties: {
-    kind: string;
-    first_name: string | null;
-    last_name: string | null;
-    business_name: string | null;
-  } | null;
 };
 
 type PracticeActivityRow = {
@@ -102,42 +65,7 @@ type PracticeInvoiceRow = {
   total_amount: number;
 };
 
-type PracticeWorkflowRow = {
-  stage: string;
-  action: string;
-  reason: string;
-  priorityLabel: string;
-  priorityVariant: CaseDebtCollectionWorkflow["priorityVariant"];
-};
-
-const praticheSortKeys = [
-  "practice_number",
-  "principal",
-  "client",
-  "counterparty",
-  "status",
-  "billing",
-  "opened_at",
-  "updated_at",
-] as const;
-
-type PraticheSortKey = (typeof praticheSortKeys)[number];
-
 const praticheDefaultSort: TableSort<PraticheSortKey> = { key: "updated_at", direction: "desc" };
-
-const praticheViewKeys = [
-  "all",
-  "open",
-  "without_activities",
-  "to_complete",
-  "to_invoice",
-  "invoiced",
-  "suspended",
-  "closed",
-  "archived",
-] as const;
-
-type PraticheView = (typeof praticheViewKeys)[number];
 
 export const Route = createFileRoute("/pratiche/")({
   validateSearch: (search: Record<string, unknown>): PraticheSearch => ({
@@ -450,244 +378,6 @@ function PraticheList() {
         onSort={setSort}
         onOpen={openCase}
       />
-    </>
-  );
-}
-
-function PracticeResults({
-  isLoading,
-  rows,
-  q,
-  view,
-  activitySummaryByCase,
-  workflowByCase,
-  sort,
-  onSort,
-  onOpen,
-}: {
-  isLoading: boolean;
-  rows: PracticeListRow[];
-  q: string;
-  view: PraticheView;
-  activitySummaryByCase: Record<
-    string,
-    { toInvoice: number; invoiced: number; toInvoiceAmount: number }
-  >;
-  workflowByCase: Record<string, PracticeWorkflowRow>;
-  sort: TableSort<PraticheSortKey>;
-  onSort: (columnKey: PraticheSortKey) => void;
-  onOpen: (caseId: string) => void;
-}) {
-  return (
-    <>
-      <div className="space-y-3 md:hidden">
-        {isLoading ? (
-          <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>
-        ) : rows.length === 0 ? (
-          <Card className="p-4">
-            <TableEmptyState
-              title={q || view !== "open" ? "Nessuna pratica trovata" : "Nessuna pratica aperta"}
-              description={
-                q || view !== "open"
-                  ? "Modifica ricerca, vista o ordinamento per ampliare i risultati."
-                  : "Crea la prima pratica e collega committente, cliente e controparte."
-              }
-              action={
-                !q && view === "open" ? (
-                  <Button size="sm" asChild>
-                    <Link to="/pratiche/nuova">Nuova pratica</Link>
-                  </Button>
-                ) : undefined
-              }
-            />
-          </Card>
-        ) : (
-          rows.map((c) => {
-            const summary = activitySummaryByCase[c.id] ?? {
-              toInvoice: 0,
-              invoiced: 0,
-              toInvoiceAmount: 0,
-            };
-            const workflow = workflowByCase[c.id];
-            return (
-              <Link
-                key={c.id}
-                to="/pratiche/$caseId"
-                params={{ caseId: routeRef(c) }}
-                className={mobileListCardLinkClassName}
-              >
-                <MobileListCardHeader
-                  title={c.practice_number}
-                  badge={
-                    <Badge variant={caseStatusVariant[c.status] ?? "outline"}>
-                      {caseStatusLabels[c.status] ?? c.status}
-                    </Badge>
-                  }
-                />
-                {workflow ? (
-                  <div className="mt-3 rounded-md border border-border/70 p-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge variant={workflow.priorityVariant}>{workflow.priorityLabel}</Badge>
-                      <span className="text-xs text-muted-foreground">{workflow.stage}</span>
-                    </div>
-                    <p className="mt-2 text-sm font-medium text-foreground">{workflow.action}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">{workflow.reason}</p>
-                  </div>
-                ) : null}
-                <MobileListCardDetails
-                  rows={[
-                    { label: "Committente", value: c.principals?.business_name ?? "—" },
-                    { label: "Cliente", value: c.clients ? clientDisplayName(c.clients) : "—" },
-                    {
-                      label: "Controparte",
-                      value: c.counterparties ? counterpartyDisplayName(c.counterparties) : "—",
-                    },
-                    {
-                      label: "Fatturazione",
-                      value:
-                        summary.toInvoice > 0
-                          ? `${summary.toInvoice} da fatturare · ${formatCurrency(summary.toInvoiceAmount)}`
-                          : summary.invoiced > 0
-                            ? `${summary.invoiced} fatturate`
-                            : "—",
-                    },
-                    { label: "Aperta il", value: formatDate(c.opened_at) },
-                  ]}
-                />
-              </Link>
-            );
-          })
-        )}
-      </div>
-
-      <Card className="hidden min-w-0 md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <SortableTableHead
-                columnKey="practice_number"
-                label="Pratica"
-                sort={sort}
-                onSort={onSort}
-              />
-              <SortableTableHead
-                columnKey="principal"
-                label="Committente"
-                sort={sort}
-                onSort={onSort}
-              />
-              <SortableTableHead columnKey="client" label="Cliente" sort={sort} onSort={onSort} />
-              <SortableTableHead
-                columnKey="counterparty"
-                label="Controparte"
-                sort={sort}
-                onSort={onSort}
-              />
-              <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={onSort} />
-              <SortableTableHead
-                columnKey="billing"
-                label="Fatturazione"
-                sort={sort}
-                onSort={onSort}
-              />
-              <SortableTableHead
-                columnKey="opened_at"
-                label="Aperta il"
-                sort={sort}
-                onSort={onSort}
-              />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                  Caricamento…
-                </TableCell>
-              </TableRow>
-            ) : rows.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-                  <TableEmptyState
-                    title={
-                      q || view !== "open" ? "Nessuna pratica trovata" : "Nessuna pratica aperta"
-                    }
-                    description={
-                      q || view !== "open"
-                        ? "Modifica ricerca, vista o ordinamento per ampliare i risultati."
-                        : "Crea la prima pratica e collega committente, cliente e controparte."
-                    }
-                    action={
-                      !q && view === "open" ? (
-                        <Button size="sm" asChild>
-                          <Link to="/pratiche/nuova">Nuova pratica</Link>
-                        </Button>
-                      ) : undefined
-                    }
-                  />
-                </TableCell>
-              </TableRow>
-            ) : (
-              rows.map((c) => {
-                const summary = activitySummaryByCase[c.id] ?? {
-                  toInvoice: 0,
-                  invoiced: 0,
-                  toInvoiceAmount: 0,
-                };
-                return (
-                  <TableRow
-                    key={c.id}
-                    className="cursor-pointer"
-                    role="link"
-                    tabIndex={0}
-                    aria-label={`Apri pratica ${c.practice_number}`}
-                    onClick={(event) =>
-                      handleClickableTableRowClick(event, () => onOpen(routeRef(c)))
-                    }
-                    onKeyDown={(event) =>
-                      handleClickableTableRowKeyDown(event, () => onOpen(routeRef(c)))
-                    }
-                  >
-                    <TableCell>
-                      <Link
-                        to="/pratiche/$caseId"
-                        params={{ caseId: routeRef(c) }}
-                        className="font-medium hover:underline"
-                      >
-                        {c.practice_number}
-                      </Link>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {c.principals?.business_name ?? "—"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {c.clients ? clientDisplayName(c.clients) : "—"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {c.counterparties ? counterpartyDisplayName(c.counterparties) : "—"}
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={caseStatusVariant[c.status] ?? "outline"}>
-                        {caseStatusLabels[c.status] ?? c.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {summary.toInvoice > 0
-                        ? `${summary.toInvoice} da fatturare`
-                        : summary.invoiced > 0
-                          ? `${summary.invoiced} fatturate`
-                          : "—"}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {formatDate(c.opened_at)}
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </Card>
     </>
   );
 }

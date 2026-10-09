@@ -1,18 +1,11 @@
+import { SubjectKindField } from "@/components/subject-kind-field";
 import type { Dispatch, SetStateAction } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { clientKindLabels } from "@/lib/labels";
 import {
   emptySubject,
   type SubjectDraft,
@@ -71,24 +64,11 @@ export function CounterpartySubjectsEditor({
               </Button>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
-              <div className="flex flex-col gap-2">
-                <Label htmlFor={`subject_kind_${index}`}>Tipo</Label>
-                <Select
-                  value={subject.kind}
-                  onValueChange={(value) => onUpdate(index, "kind", value as SubjectKind)}
-                >
-                  <SelectTrigger id={`subject_kind_${index}`}>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(clientKindLabels).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <SubjectKindField
+                id={`subject_kind_${index}`}
+                value={subject.kind}
+                onValueChange={(value) => onUpdate(index, "kind", value as SubjectKind)}
+              />
               {subject.kind === "company" ? (
                 <div className="flex flex-col gap-2">
                   <Label htmlFor={`subject_business_${index}`}>Ragione sociale</Label>

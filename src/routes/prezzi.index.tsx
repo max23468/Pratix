@@ -1,68 +1,38 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
-import { AppLayout } from "@/components/app-layout";
-import { ListToolbar } from "@/components/list-toolbar";
-import { mobileListCardLinkClassName } from "@/components/mobile-list-card";
-import { MobileListCardDetails } from "@/components/mobile-list-card-details";
-import { MobileListCardHeader } from "@/components/mobile-list-card-header";
-import { MobileSortSelect } from "@/components/mobile-sort-select";
-import { PageHeader } from "@/components/page-header";
-import { SearchInput } from "@/components/search-input";
-import { SortableTableHead } from "@/components/sortable-table-head";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { TableEmptyState } from "@/components/table-empty-state";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
-import { supabase } from "@/integrations/supabase/client";
-import { priceBookStatusLabels, priceBookStatusVariant } from "@/lib/labels";
-import { routeRef } from "@/lib/public-route-code";
-import { normalizeTextSearch, parseTextSearch } from "@/lib/search-params";
 import {
-  handleClickableTableRowClick,
-  handleClickableTableRowKeyDown,
-} from "@/lib/table-row-navigation";
+  type PrezziSortKey,
+  type PriceBookListRow,
+  type PriceBookCounts,
+} from "@/components/price-books/types";
 import {
-  parseTableSortDirection,
-  parseTableSortKey,
-  sortRows,
-  usePersistentTableSort,
-  type SortableColumn,
   type TableSort,
+  parseTableSortKey,
+  parseTableSortDirection,
+  type SortableColumn,
+  usePersistentTableSort,
+  sortRows,
 } from "@/lib/table-sorting";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { parseTextSearch, normalizeTextSearch } from "@/lib/search-params";
+import { prezziSortKeys, rulesLabel } from "@/components/price-books/helpers";
+import { AppLayout } from "@/components/app-layout";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useMemo } from "react";
+import { priceBookStatusLabels } from "@/lib/labels";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { ListToolbar } from "@/components/list-toolbar";
+import { SearchInput } from "@/components/search-input";
+import { MobileSortSelect } from "@/components/mobile-sort-select";
+import { PrezziMobileList } from "@/components/price-books/prezzi-mobile-list";
+import { PrezziTable } from "@/components/price-books/prezzi-table";
 
 type PrezziSearch = {
   q?: string;
   sort?: PrezziSortKey;
   dir?: "asc" | "desc";
 };
-
-type PriceBookListRow = {
-  id: string;
-  public_code: string;
-  principal_id: string;
-  year: number;
-  status: string;
-  fees_enabled: boolean;
-  expense_reimbursements_enabled: boolean;
-  valid_from: string;
-  valid_to: string | null;
-  updated_at: string;
-};
-
-const prezziSortKeys = [
-  "principal",
-  "year",
-  "status",
-  "rules",
-  "items",
-  "validity",
-  "updated_at",
-] as const;
-
-type PrezziSortKey = (typeof prezziSortKeys)[number];
 
 const prezziDefaultSort: TableSort<PrezziSortKey> = { key: "year", direction: "desc" };
 
@@ -93,26 +63,8 @@ export const Route = createFileRoute("/prezzi/")({
   ),
 });
 
-function PrezziList() {
-  const navigate = Route.useNavigate();
-  const routeSearch = Route.useSearch();
-  const q = routeSearch.q ?? "";
-  const urlSort =
-    routeSearch.sort && routeSearch.dir
-      ? { key: routeSearch.sort, direction: routeSearch.dir }
-      : undefined;
-
-  const updateSearch = (next: PrezziSearch) =>
-    navigate({
-      search: {
-        q: normalizeTextSearch(next.q ?? q),
-        sort: next.sort ?? routeSearch.sort,
-        dir: next.dir ?? routeSearch.dir,
-      },
-      replace: true,
-    });
-
-  const { data: priceBooks = [], isLoading } = useQuery({
+function usePriceBooksQuery() {
+  return useQuery({
     queryKey: ["price-books"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -126,7 +78,9 @@ function PrezziList() {
       return (data ?? []) as PriceBookListRow[];
     },
   });
+}
 
+function usePrincipalNameById() {
   const { data: principals = [] } = useQuery({
     queryKey: ["principals", "price-list"],
     queryFn: async () => {
@@ -139,6 +93,13 @@ function PrezziList() {
     },
   });
 
+  return useMemo(
+    () => new Map(principals.map((principal) => [principal.id, principal.business_name])),
+    [principals],
+  );
+}
+
+function usePriceItemCounts() {
   const { data: priceItems = [] } = useQuery({
     queryKey: ["price-items", "counts"],
     queryFn: async () => {
@@ -150,26 +111,23 @@ function PrezziList() {
     },
   });
 
-  const principalNameById = useMemo(
-    () => new Map(principals.map((principal) => [principal.id, principal.business_name])),
-    [principals],
-  );
-
-  const countsByBook = useMemo(() => {
-    return priceItems.reduce<Record<string, { fees: number; expenses: number; enabled: number }>>(
-      (acc, item) => {
-        const current = acc[item.price_book_id] ?? { fees: 0, expenses: 0, enabled: 0 };
-        if (item.kind === "fee") current.fees += 1;
-        if (item.kind === "expense_reimbursement") current.expenses += 1;
-        if (item.is_enabled) current.enabled += 1;
-        acc[item.price_book_id] = current;
-        return acc;
-      },
-      {},
-    );
+  return useMemo(() => {
+    return priceItems.reduce<Record<string, PriceBookCounts>>((acc, item) => {
+      const current = acc[item.price_book_id] ?? { fees: 0, expenses: 0, enabled: 0 };
+      if (item.kind === "fee") current.fees += 1;
+      if (item.kind === "expense_reimbursement") current.expenses += 1;
+      if (item.is_enabled) current.enabled += 1;
+      acc[item.price_book_id] = current;
+      return acc;
+    }, {});
   }, [priceItems]);
+}
 
-  const prezziColumns = useMemo<readonly SortableColumn<PriceBookListRow, PrezziSortKey>[]>(
+function usePrezziColumns(
+  principalNameById: Map<string, string>,
+  countsByBook: Record<string, PriceBookCounts>,
+) {
+  return useMemo<readonly SortableColumn<PriceBookListRow, PrezziSortKey>[]>(
     () => [
       {
         key: "principal",
@@ -213,16 +171,14 @@ function PrezziList() {
     ],
     [countsByBook, principalNameById],
   );
+}
 
-  const { sort, setSort } = usePersistentTableSort({
-    section: "prezzi",
-    columns: prezziColumns,
-    defaultSort: prezziDefaultSort,
-    urlSort,
-    onSortChange: (next) => updateSearch({ q, sort: next.key, dir: next.direction }),
-  });
-
-  const filtered = useMemo(() => {
+function useFilteredPriceBooks(
+  priceBooks: PriceBookListRow[],
+  principalNameById: Map<string, string>,
+  q: string,
+) {
+  return useMemo(() => {
     const term = q.trim().toLowerCase();
     if (!term) return priceBooks;
     return priceBooks.filter((book) => {
@@ -234,21 +190,57 @@ function PrezziList() {
       );
     });
   }, [priceBooks, principalNameById, q]);
+}
 
+function comparePriceBooks(a: PriceBookListRow, b: PriceBookListRow) {
+  return b.year - a.year || new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+}
+
+function urlSortFromSearch(search: PrezziSearch) {
+  return search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
+}
+
+function PrezziList() {
+  const navigate = Route.useNavigate();
+  const routeSearch = Route.useSearch();
+  const q = routeSearch.q ?? "";
+  const urlSort = urlSortFromSearch(routeSearch);
+
+  const updateSearch = (next: PrezziSearch) =>
+    navigate({
+      search: {
+        q: normalizeTextSearch(next.q ?? q),
+        sort: next.sort ?? routeSearch.sort,
+        dir: next.dir ?? routeSearch.dir,
+      },
+      replace: true,
+    });
+
+  const { data: priceBooks = [], isLoading } = usePriceBooksQuery();
+  const principalNameById = usePrincipalNameById();
+  const countsByBook = usePriceItemCounts();
+  const prezziColumns = usePrezziColumns(principalNameById, countsByBook);
+
+  const { sort, setSort } = usePersistentTableSort({
+    section: "prezzi",
+    columns: prezziColumns,
+    defaultSort: prezziDefaultSort,
+    urlSort,
+    onSortChange: (next) => updateSearch({ q, sort: next.key, dir: next.direction }),
+  });
+
+  const filtered = useFilteredPriceBooks(priceBooks, principalNameById, q);
   const sorted = useMemo(
-    () =>
-      sortRows(
-        filtered,
-        prezziColumns,
-        sort,
-        (a, b) =>
-          b.year - a.year || new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime(),
-      ),
+    () => sortRows(filtered, prezziColumns, sort, comparePriceBooks),
     [filtered, prezziColumns, sort],
   );
-
-  const openPriceBook = (priceBookId: string) =>
-    navigate({ to: "/prezzi/$priceBookId", params: { priceBookId } });
+  const bodyProps = {
+    isLoading,
+    rows: sorted,
+    hasSearch: !!q,
+    principalNameById,
+    countsByBook,
+  };
 
   return (
     <>
@@ -277,167 +269,15 @@ function PrezziList() {
       </div>
 
       <div className="space-y-3 md:hidden">
-        {isLoading ? (
-          <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>
-        ) : sorted.length === 0 ? (
-          <Card className="p-4">
-            <TableEmptyState
-              title={q ? "Nessun prezzo trovato" : "Nessun prezzo"}
-              description={
-                q
-                  ? "Modifica ricerca o ordinamento per ampliare i risultati."
-                  : "Crea il primo set annuale per un committente."
-              }
-              action={
-                !q ? (
-                  <Button size="sm" asChild>
-                    <Link to="/prezzi/nuovo">Nuovi prezzi</Link>
-                  </Button>
-                ) : undefined
-              }
-            />
-          </Card>
-        ) : (
-          sorted.map((book) => {
-            const counts = countsByBook[book.id] ?? { fees: 0, expenses: 0, enabled: 0 };
-            const principalName = principalNameById.get(book.principal_id) ?? "—";
-            return (
-              <Link
-                key={book.id}
-                to="/prezzi/$priceBookId"
-                params={{ priceBookId: routeRef(book) }}
-                className={mobileListCardLinkClassName}
-              >
-                <MobileListCardHeader
-                  title={principalName}
-                  subtitle={`Anno ${book.year}`}
-                  badge={
-                    <Badge variant={priceBookStatusVariant[book.status]}>
-                      {priceBookStatusLabels[book.status]}
-                    </Badge>
-                  }
-                />
-                <MobileListCardDetails
-                  rows={[
-                    { label: "Regole", value: rulesLabel(book) },
-                    {
-                      label: "Voci",
-                      value: `${counts.fees} compensi, ${counts.expenses} rimborsi`,
-                    },
-                    {
-                      label: "Validità",
-                      value: `${book.valid_from} → ${book.valid_to ?? "senza fine"}`,
-                    },
-                  ]}
-                />
-              </Link>
-            );
-          })
-        )}
+        <PrezziMobileList {...bodyProps} />
       </div>
 
-      <Card className="hidden min-w-0 md:block">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <SortableTableHead
-                columnKey="principal"
-                label="Committente"
-                sort={sort}
-                onSort={setSort}
-              />
-              <SortableTableHead columnKey="year" label="Anno" sort={sort} onSort={setSort} />
-              <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={setSort} />
-              <SortableTableHead columnKey="rules" label="Regole" sort={sort} onSort={setSort} />
-              <SortableTableHead columnKey="items" label="Voci" sort={sort} onSort={setSort} />
-              <SortableTableHead
-                columnKey="validity"
-                label="Validità"
-                sort={sort}
-                onSort={setSort}
-              />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  Caricamento…
-                </TableCell>
-              </TableRow>
-            ) : sorted.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-                  {q ? "Nessun risultato." : "Nessun prezzo. Crea il primo set annuale."}
-                </TableCell>
-              </TableRow>
-            ) : (
-              sorted.map((book) => (
-                <PriceBookTableRow
-                  key={book.id}
-                  book={book}
-                  counts={countsByBook[book.id] ?? { fees: 0, expenses: 0, enabled: 0 }}
-                  principalName={principalNameById.get(book.principal_id) ?? "—"}
-                  onOpen={() => openPriceBook(routeRef(book))}
-                />
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </Card>
+      <PrezziTable
+        {...bodyProps}
+        sort={sort}
+        onSort={setSort}
+        onOpen={(priceBookId) => navigate({ to: "/prezzi/$priceBookId", params: { priceBookId } })}
+      />
     </>
   );
-}
-
-function PriceBookTableRow({
-  book,
-  counts,
-  principalName,
-  onOpen,
-}: {
-  book: PriceBookListRow;
-  counts: { fees: number; expenses: number; enabled: number };
-  principalName: string;
-  onOpen: () => void;
-}) {
-  return (
-    <TableRow
-      className="cursor-pointer"
-      role="link"
-      tabIndex={0}
-      aria-label={`Apri prezzi ${principalName} ${book.year}`}
-      onClick={(event) => handleClickableTableRowClick(event, onOpen)}
-      onKeyDown={(event) => handleClickableTableRowKeyDown(event, onOpen)}
-    >
-      <TableCell>
-        <Link
-          to="/prezzi/$priceBookId"
-          params={{ priceBookId: routeRef(book) }}
-          className="font-medium hover:underline"
-        >
-          {principalName}
-        </Link>
-      </TableCell>
-      <TableCell>{book.year}</TableCell>
-      <TableCell>
-        <Badge variant={priceBookStatusVariant[book.status]}>
-          {priceBookStatusLabels[book.status]}
-        </Badge>
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">{rulesLabel(book)}</TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {counts.fees} compensi, {counts.expenses} rimborsi
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {book.valid_from} → {book.valid_to ?? "senza fine"}
-      </TableCell>
-    </TableRow>
-  );
-}
-
-function rulesLabel(book: { fees_enabled: boolean; expense_reimbursements_enabled: boolean }) {
-  if (book.fees_enabled && book.expense_reimbursements_enabled) return "Compensi e rimborsi";
-  if (book.fees_enabled) return "Solo compensi";
-  if (book.expense_reimbursements_enabled) return "Solo rimborsi";
-  return "Nessuna regola";
 }

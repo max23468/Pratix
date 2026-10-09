@@ -101,38 +101,7 @@ type ActivityRow = {
   } | null;
 };
 
-function useInvoiceForm(draftInvoiceRef?: string) {
-  const { user } = useAuth();
-  const navigate = useNavigate();
-  const createBillingInvoice = useServerFn(createBillingInvoiceFn);
-  const updateDraftBillingInvoice = useServerFn(updateDraftBillingInvoiceFn);
-  const qc = useQueryClient();
-  const initialQuarter = useMemo(() => currentQuarterOption(), []);
-  const quarterOptions = useMemo(() => buildQuarterOptions(), []);
-  const isEditingDraft = Boolean(draftInvoiceRef);
-  const [principalId, setPrincipalId] = useState("");
-  const [periodMode, setPeriodMode] = useState<PeriodMode>("quarter");
-  const [selectedQuarter, setSelectedQuarter] = useState(initialQuarter.key);
-  const [periodStart, setPeriodStart] = useState(initialQuarter.start);
-  const [periodEnd, setPeriodEnd] = useState(initialQuarter.end);
-  const [issueDate, setIssueDate] = useState(() => todayDateInput());
-  const [dueDate, setDueDate] = useState("");
-  const [pendingInvoiceStatus, setPendingInvoiceStatus] = useState<"draft" | "issued" | null>(null);
-  const [includeGeneralExpenses, setIncludeGeneralExpenses] = useState(true);
-  const [generalExpensesRate, setGeneralExpensesRate] = useState(10);
-  const [cassaRate, setCassaRate] = useState(4);
-  const [vatRate, setVatRate] = useState(22);
-  const [withholdingRate, setWithholdingRate] = useState(20);
-  const [applyWithholding, setApplyWithholding] = useState(true);
-  const [paymentMethod, setPaymentMethod] = useState("Bonifico bancario");
-  const [notes, setNotes] = useState("");
-  const [requestId] = useState(() => crypto.randomUUID());
-  const [selection, setSelection] = useState<Record<string, BillingItemStatus>>({});
-  const [loadedDraftId, setLoadedDraftId] = useState<string | null>(null);
-  const [appliedProfileDefaultsKey, setAppliedProfileDefaultsKey] = useState<string | null>(null);
-  const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
-  const createInvoiceLock = useSubmitLock();
-
+function useInvoiceDefaults(user: ReturnType<typeof useAuth>["user"]) {
   const { data: profile } = useQuery({
     queryKey: ["profile", "invoice-form", user?.id],
     enabled: !!user,
@@ -161,26 +130,10 @@ function useInvoiceForm(draftInvoiceRef?: string) {
     },
   });
 
-  const includeStampDuty = Boolean(profile?.include_stamp_duty);
-  const displayedQuarterOptions = useMemo(() => {
-    if (quarterOptions.some((option) => option.key === selectedQuarter)) return quarterOptions;
-    const [yearPart, quarterPart] = selectedQuarter.split("-Q");
-    const year = Number(yearPart);
-    const quarterNumber = Number(quarterPart);
-    if (!year || !quarterNumber) return quarterOptions;
-    return [quarterOption(year, quarterNumber), ...quarterOptions];
-  }, [quarterOptions, selectedQuarter]);
+  return { profile, principals };
+}
 
-  const applyQuarter = (quarterKey: string) => {
-    const option =
-      displayedQuarterOptions.find((item) => item.key === quarterKey) ??
-      quarterOptions.find((item) => item.key === quarterKey);
-    if (!option) return;
-    setSelectedQuarter(option.key);
-    setPeriodStart(option.start);
-    setPeriodEnd(option.end);
-  };
-
+function useInvoiceDraft(user: ReturnType<typeof useAuth>["user"], draftInvoiceRef?: string) {
   const {
     data: draftData,
     error: draftError,
@@ -231,57 +184,28 @@ function useInvoiceForm(draftInvoiceRef?: string) {
     },
   });
 
-  const draftActivityIds = useMemo(
-    () => (draftData?.items ?? []).map((item) => item.activity_id),
-    [draftData?.items],
-  );
+  return { draftData, draftError, draftIsError, draftLoading };
+}
 
-  const draftInvoiceDbId = draftData?.invoice.id ?? null;
-
-  const profileDefaultsKey =
-    profile && !isEditingDraft
-      ? [
-          profile.cassa_rate ?? 4,
-          profile.vat_rate ?? 22,
-          profile.withholding_rate ?? 20,
-          profile.tax_regime ?? "",
-        ].join("|")
-      : null;
-
-  if (profile && profileDefaultsKey && appliedProfileDefaultsKey !== profileDefaultsKey) {
-    setCassaRate(Number(profile.cassa_rate ?? 4));
-    setVatRate(Number(profile.vat_rate ?? 22));
-    setWithholdingRate(Number(profile.withholding_rate ?? 20));
-    setApplyWithholding(profile.tax_regime !== "forfettario");
-    setAppliedProfileDefaultsKey(profileDefaultsKey);
-  }
-
-  if (draftData && loadedDraftId !== draftData.invoice.id) {
-    setPrincipalId(draftData.invoice.principal_id ?? "");
-    setPeriodStart(draftData.billingRun.period_start);
-    setPeriodEnd(draftData.billingRun.period_end);
-    const draftQuarterKey = quarterKeyForPeriod(
-      draftData.billingRun.period_start,
-      draftData.billingRun.period_end,
-    );
-    setPeriodMode(draftQuarterKey ? "quarter" : "custom");
-    if (draftQuarterKey) setSelectedQuarter(draftQuarterKey);
-    setIssueDate(draftData.invoice.issue_date);
-    setDueDate(draftData.invoice.due_date ?? "");
-    setIncludeGeneralExpenses(draftData.invoice.include_general_expenses);
-    setGeneralExpensesRate(Number(draftData.invoice.general_expenses_rate ?? 0));
-    setCassaRate(Number(draftData.invoice.cassa_rate));
-    setVatRate(Number(draftData.invoice.vat_rate));
-    setWithholdingRate(Number(draftData.invoice.withholding_rate));
-    setApplyWithholding(draftData.invoice.apply_withholding);
-    setPaymentMethod(draftData.invoice.payment_method ?? "");
-    setNotes(draftData.invoice.notes ?? "");
-    setSelection(
-      Object.fromEntries(draftData.items.map((item) => [item.activity_id, item.status] as const)),
-    );
-    setLoadedDraftId(draftData.invoice.id);
-  }
-
+function useBillingActivities({
+  user,
+  principalId,
+  periodStart,
+  periodEnd,
+  draftInvoiceDbId,
+  draftActivityIds,
+  isEditingDraft,
+  draftData,
+}: {
+  user: ReturnType<typeof useAuth>["user"];
+  principalId: string;
+  periodStart: string;
+  periodEnd: string;
+  draftInvoiceDbId: string | null;
+  draftActivityIds: string[];
+  isEditingDraft: boolean;
+  draftData: DraftInvoiceData | undefined;
+}) {
   const { data: activities = EMPTY_ACTIVITIES, isLoading: activitiesLoading } = useQuery({
     queryKey: [
       "billing-activities",
@@ -340,48 +264,67 @@ function useInvoiceForm(draftInvoiceRef?: string) {
     },
   });
 
-  const selectionForActivities = useMemo(() => {
-    const next: Record<string, BillingItemStatus> = {};
-    activities.forEach((activity) => {
-      next[activity.id] = selection[activity.id] ?? "included";
-    });
-    return next;
-  }, [activities, selection]);
+  return { activities, activitiesLoading };
+}
 
-  const includedActivities = useMemo(
-    () => activities.filter((activity) => selectionForActivities[activity.id] === "included"),
-    [activities, selectionForActivities],
-  );
-  const isForfettario = profile?.tax_regime === "forfettario";
+type InvoiceSaveContext = {
+  createBillingInvoice: ReturnType<typeof useServerFn<typeof createBillingInvoiceFn>>;
+  updateDraftBillingInvoice: ReturnType<typeof useServerFn<typeof updateDraftBillingInvoiceFn>>;
+  qc: ReturnType<typeof useQueryClient>;
+  navigate: ReturnType<typeof useNavigate>;
+  requestId: string;
+  principalId: string;
+  periodStart: string;
+  periodEnd: string;
+  issueDate: string;
+  dueDate: string;
+  includeGeneralExpenses: boolean;
+  generalExpensesRate: number;
+  cassaRate: number;
+  vatRate: number;
+  withholdingRate: number;
+  applyWithholding: boolean;
+  paymentMethod: string;
+  notes: string;
+  activities: ActivityRow[];
+  selectionForActivities: Record<string, BillingItemStatus>;
+  isEditingDraft: boolean;
+  draftData: DraftInvoiceData | undefined;
+  draftInvoiceRef: string | undefined;
+  finishSave: ReturnType<typeof useUnsavedChangesGuard>["finishSave"];
+  setPendingInvoiceStatus: (status: "draft" | "issued" | null) => void;
+  createInvoiceLock: ReturnType<typeof useSubmitLock>;
+};
 
-  const totals = useMemo(() => {
-    const lines: InvoiceLineInput[] = includedActivities.map((activity) => ({
-      kind: activity.kind === "fee" ? "fee" : "expense_art15",
-      quantity: Number(activity.quantity),
-      unit_price: Number(activity.unit_price),
-    }));
-    return computeInvoice(lines, {
-      cassaRate,
-      vatRate,
-      withholdingRate,
-      applyWithholding,
-      taxRegime: isForfettario ? "forfettario" : "ordinario",
-      includeGeneralExpenses,
-      generalExpensesRate,
-      includeStampDuty,
-    });
-  }, [
-    applyWithholding,
-    cassaRate,
-    generalExpensesRate,
+function useInvoiceSave(context: InvoiceSaveContext) {
+  const {
+    createBillingInvoice,
+    updateDraftBillingInvoice,
+    qc,
+    navigate,
+    requestId,
+    principalId,
+    periodStart,
+    periodEnd,
+    issueDate,
+    dueDate,
     includeGeneralExpenses,
-    includeStampDuty,
-    includedActivities,
-    isForfettario,
+    generalExpensesRate,
+    cassaRate,
     vatRate,
     withholdingRate,
-  ]);
-
+    applyWithholding,
+    paymentMethod,
+    notes,
+    activities,
+    selectionForActivities,
+    isEditingDraft,
+    draftData,
+    draftInvoiceRef,
+    finishSave,
+    setPendingInvoiceStatus,
+    createInvoiceLock,
+  } = context;
   const saveInvoice = useMutation({
     mutationFn: async (status: "draft" | "issued") => {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -443,6 +386,292 @@ function useInvoiceForm(draftInvoiceRef?: string) {
       setPendingInvoiceStatus(null);
       createInvoiceLock.release();
     },
+  });
+
+  return saveInvoice;
+}
+
+type InvoiceHydrationSetters = {
+  setPrincipalId: (value: string) => void;
+  setPeriodStart: (value: string) => void;
+  setPeriodEnd: (value: string) => void;
+  setPeriodMode: (value: PeriodMode) => void;
+  setSelectedQuarter: (value: string) => void;
+  setIssueDate: (value: string) => void;
+  setDueDate: (value: string) => void;
+  setIncludeGeneralExpenses: (value: boolean) => void;
+  setGeneralExpensesRate: (value: number) => void;
+  setCassaRate: (value: number) => void;
+  setVatRate: (value: number) => void;
+  setWithholdingRate: (value: number) => void;
+  setApplyWithholding: (value: boolean) => void;
+  setPaymentMethod: (value: string) => void;
+  setNotes: (value: string) => void;
+  setSelection: (value: Record<string, BillingItemStatus>) => void;
+  setLoadedDraftId: (value: string | null) => void;
+};
+
+function applyInvoiceDraft(draftData: DraftInvoiceData, setters: InvoiceHydrationSetters) {
+  const {
+    setPrincipalId,
+    setPeriodStart,
+    setPeriodEnd,
+    setPeriodMode,
+    setSelectedQuarter,
+    setIssueDate,
+    setDueDate,
+    setIncludeGeneralExpenses,
+    setGeneralExpensesRate,
+    setCassaRate,
+    setVatRate,
+    setWithholdingRate,
+    setApplyWithholding,
+    setPaymentMethod,
+    setNotes,
+    setSelection,
+    setLoadedDraftId,
+  } = setters;
+  setPrincipalId(draftData.invoice.principal_id ?? "");
+  setPeriodStart(draftData.billingRun.period_start);
+  setPeriodEnd(draftData.billingRun.period_end);
+  const draftQuarterKey = quarterKeyForPeriod(
+    draftData.billingRun.period_start,
+    draftData.billingRun.period_end,
+  );
+  setPeriodMode(draftQuarterKey ? "quarter" : "custom");
+  if (draftQuarterKey) setSelectedQuarter(draftQuarterKey);
+  setIssueDate(draftData.invoice.issue_date);
+  setDueDate(draftData.invoice.due_date ?? "");
+  setIncludeGeneralExpenses(draftData.invoice.include_general_expenses);
+  setGeneralExpensesRate(Number(draftData.invoice.general_expenses_rate ?? 0));
+  setCassaRate(Number(draftData.invoice.cassa_rate));
+  setVatRate(Number(draftData.invoice.vat_rate));
+  setWithholdingRate(Number(draftData.invoice.withholding_rate));
+  setApplyWithholding(draftData.invoice.apply_withholding);
+  setPaymentMethod(draftData.invoice.payment_method ?? "");
+  setNotes(draftData.invoice.notes ?? "");
+  setSelection(
+    Object.fromEntries(draftData.items.map((item) => [item.activity_id, item.status] as const)),
+  );
+  setLoadedDraftId(draftData.invoice.id);
+}
+
+function applyInvoiceProfileDefaults({
+  profile,
+  isEditingDraft,
+  appliedProfileDefaultsKey,
+  setCassaRate,
+  setVatRate,
+  setWithholdingRate,
+  setApplyWithholding,
+  setAppliedProfileDefaultsKey,
+}: {
+  profile: ReturnType<typeof useInvoiceDefaults>["profile"];
+  isEditingDraft: boolean;
+  appliedProfileDefaultsKey: string | null;
+  setCassaRate: (value: number) => void;
+  setVatRate: (value: number) => void;
+  setWithholdingRate: (value: number) => void;
+  setApplyWithholding: (value: boolean) => void;
+  setAppliedProfileDefaultsKey: (value: string | null) => void;
+}) {
+  const profileDefaultsKey =
+    profile && !isEditingDraft
+      ? [
+          profile.cassa_rate ?? 4,
+          profile.vat_rate ?? 22,
+          profile.withholding_rate ?? 20,
+          profile.tax_regime ?? "",
+        ].join("|")
+      : null;
+
+  if (profile && profileDefaultsKey && appliedProfileDefaultsKey !== profileDefaultsKey) {
+    setCassaRate(Number(profile.cassa_rate ?? 4));
+    setVatRate(Number(profile.vat_rate ?? 22));
+    setWithholdingRate(Number(profile.withholding_rate ?? 20));
+    setApplyWithholding(profile.tax_regime !== "forfettario");
+    setAppliedProfileDefaultsKey(profileDefaultsKey);
+  }
+}
+
+function useInvoiceForm(draftInvoiceRef?: string) {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const createBillingInvoice = useServerFn(createBillingInvoiceFn);
+  const updateDraftBillingInvoice = useServerFn(updateDraftBillingInvoiceFn);
+  const qc = useQueryClient();
+  const initialQuarter = useMemo(() => currentQuarterOption(), []);
+  const quarterOptions = useMemo(() => buildQuarterOptions(), []);
+  const isEditingDraft = Boolean(draftInvoiceRef);
+  const [principalId, setPrincipalId] = useState("");
+  const [periodMode, setPeriodMode] = useState<PeriodMode>("quarter");
+  const [selectedQuarter, setSelectedQuarter] = useState(initialQuarter.key);
+  const [periodStart, setPeriodStart] = useState(initialQuarter.start);
+  const [periodEnd, setPeriodEnd] = useState(initialQuarter.end);
+  const [issueDate, setIssueDate] = useState(() => todayDateInput());
+  const [dueDate, setDueDate] = useState("");
+  const [pendingInvoiceStatus, setPendingInvoiceStatus] = useState<"draft" | "issued" | null>(null);
+  const [includeGeneralExpenses, setIncludeGeneralExpenses] = useState(true);
+  const [generalExpensesRate, setGeneralExpensesRate] = useState(10);
+  const [cassaRate, setCassaRate] = useState(4);
+  const [vatRate, setVatRate] = useState(22);
+  const [withholdingRate, setWithholdingRate] = useState(20);
+  const [applyWithholding, setApplyWithholding] = useState(true);
+  const [paymentMethod, setPaymentMethod] = useState("Bonifico bancario");
+  const [notes, setNotes] = useState("");
+  const [requestId] = useState(() => crypto.randomUUID());
+  const [selection, setSelection] = useState<Record<string, BillingItemStatus>>({});
+  const [loadedDraftId, setLoadedDraftId] = useState<string | null>(null);
+  const [appliedProfileDefaultsKey, setAppliedProfileDefaultsKey] = useState<string | null>(null);
+  const { finishSave, formRef, guardDialog, markDirty } = useUnsavedChangesGuard();
+  const createInvoiceLock = useSubmitLock();
+
+  const { profile, principals } = useInvoiceDefaults(user);
+
+  const includeStampDuty = Boolean(profile?.include_stamp_duty);
+  const displayedQuarterOptions = useMemo(() => {
+    if (quarterOptions.some((option) => option.key === selectedQuarter)) return quarterOptions;
+    const [yearPart, quarterPart] = selectedQuarter.split("-Q");
+    const year = Number(yearPart);
+    const quarterNumber = Number(quarterPart);
+    if (!year || !quarterNumber) return quarterOptions;
+    return [quarterOption(year, quarterNumber), ...quarterOptions];
+  }, [quarterOptions, selectedQuarter]);
+
+  const applyQuarter = (quarterKey: string) => {
+    const option =
+      displayedQuarterOptions.find((item) => item.key === quarterKey) ??
+      quarterOptions.find((item) => item.key === quarterKey);
+    if (!option) return;
+    setSelectedQuarter(option.key);
+    setPeriodStart(option.start);
+    setPeriodEnd(option.end);
+  };
+
+  const { draftData, draftError, draftIsError, draftLoading } = useInvoiceDraft(
+    user,
+    draftInvoiceRef,
+  );
+
+  const draftActivityIds = useMemo(
+    () => (draftData?.items ?? []).map((item) => item.activity_id),
+    [draftData?.items],
+  );
+
+  const draftInvoiceDbId = draftData?.invoice.id ?? null;
+
+  applyInvoiceProfileDefaults({
+    profile,
+    isEditingDraft,
+    appliedProfileDefaultsKey,
+    setCassaRate,
+    setVatRate,
+    setWithholdingRate,
+    setApplyWithholding,
+    setAppliedProfileDefaultsKey,
+  });
+  if (draftData && loadedDraftId !== draftData.invoice.id) {
+    applyInvoiceDraft(draftData, {
+      setPrincipalId,
+      setPeriodStart,
+      setPeriodEnd,
+      setPeriodMode,
+      setSelectedQuarter,
+      setIssueDate,
+      setDueDate,
+      setIncludeGeneralExpenses,
+      setGeneralExpensesRate,
+      setCassaRate,
+      setVatRate,
+      setWithholdingRate,
+      setApplyWithholding,
+      setPaymentMethod,
+      setNotes,
+      setSelection,
+      setLoadedDraftId,
+    });
+  }
+
+  const { activities, activitiesLoading } = useBillingActivities({
+    user,
+    principalId,
+    periodStart,
+    periodEnd,
+    draftInvoiceDbId,
+    draftActivityIds,
+    isEditingDraft,
+    draftData,
+  });
+
+  const selectionForActivities = useMemo(() => {
+    const next: Record<string, BillingItemStatus> = {};
+    activities.forEach((activity) => {
+      next[activity.id] = selection[activity.id] ?? "included";
+    });
+    return next;
+  }, [activities, selection]);
+
+  const includedActivities = useMemo(
+    () => activities.filter((activity) => selectionForActivities[activity.id] === "included"),
+    [activities, selectionForActivities],
+  );
+  const isForfettario = profile?.tax_regime === "forfettario";
+
+  const totals = useMemo(() => {
+    const lines: InvoiceLineInput[] = includedActivities.map((activity) => ({
+      kind: activity.kind === "fee" ? "fee" : "expense_art15",
+      quantity: Number(activity.quantity),
+      unit_price: Number(activity.unit_price),
+    }));
+    return computeInvoice(lines, {
+      cassaRate,
+      vatRate,
+      withholdingRate,
+      applyWithholding,
+      taxRegime: isForfettario ? "forfettario" : "ordinario",
+      includeGeneralExpenses,
+      generalExpensesRate,
+      includeStampDuty,
+    });
+  }, [
+    applyWithholding,
+    cassaRate,
+    generalExpensesRate,
+    includeGeneralExpenses,
+    includeStampDuty,
+    includedActivities,
+    isForfettario,
+    vatRate,
+    withholdingRate,
+  ]);
+
+  const saveInvoice = useInvoiceSave({
+    createBillingInvoice,
+    updateDraftBillingInvoice,
+    qc,
+    navigate,
+    requestId,
+    principalId,
+    periodStart,
+    periodEnd,
+    issueDate,
+    dueDate,
+    includeGeneralExpenses,
+    generalExpensesRate,
+    cassaRate,
+    vatRate,
+    withholdingRate,
+    applyWithholding,
+    paymentMethod,
+    notes,
+    activities,
+    selectionForActivities,
+    isEditingDraft,
+    draftData,
+    draftInvoiceRef,
+    finishSave,
+    setPendingInvoiceStatus,
+    createInvoiceLock,
   });
 
   const handleSubmit = (event: FormEvent) => {

@@ -1,9 +1,8 @@
+import { FormActions } from "@/components/form-actions";
 import { useRef, useState, type FormEvent } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DuplicateWarningPanel } from "@/components/duplicate-warning-panel";
 import { CounterpartySubjectsEditor } from "@/components/counterparty-subjects-editor";
@@ -22,17 +21,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { useUnsavedChangesGuard } from "@/components/unsaved-changes-guard";
 import { supabase } from "@/integrations/supabase/client";
 import { withTriggerGeneratedCode } from "@/integrations/supabase/insert-helpers";
@@ -316,42 +304,14 @@ export function CounterpartyForm({
         />
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div>
-          {isEdit && (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button type="button" variant="outline" size="sm">
-                  <Trash2 className="mr-1 size-4" /> Elimina
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Eliminare la controparte?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    L'azione non può essere annullata. Le pratiche collegate potrebbero impedire
-                    l'eliminazione.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Annulla</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => deleteMutation.mutate()}>
-                    Elimina
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-        </div>
-        <div className="flex gap-2">
-          <Button type="button" variant="outline" onClick={onCancel}>
-            Annulla
-          </Button>
-          <Button type="submit" disabled={saveMutation.isPending}>
-            {saveMutation.isPending ? "Salvataggio…" : "Salva"}
-          </Button>
-        </div>
-      </div>
+      <FormActions
+        isEdit={isEdit}
+        isPending={saveMutation.isPending}
+        onCancel={onCancel}
+        onDelete={() => deleteMutation.mutate()}
+        deleteTitle="Eliminare la controparte?"
+        deleteDescription="L'azione non pu\u00f2 essere annullata. Le pratiche collegate potrebbero impedire l'eliminazione."
+      />
       {guardDialog}
     </form>
   );
