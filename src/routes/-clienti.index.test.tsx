@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -117,7 +117,7 @@ describe("Clienti list", () => {
     expect(screen.getAllByText("Alfa Spa").length).toBeGreaterThan(0);
     expect(screen.getAllByText("Nessun committente collegato")).toHaveLength(1);
 
-    fireEvent.click(screen.getByRole("link", { name: /Apri cliente .*Rossi/ }));
+    fireEvent.click(within(screen.getByRole("table")).getByRole("link", { name: /Rossi/ }));
     expect(state.navigate).toHaveBeenCalledWith(
       expect.objectContaining({ to: "/clienti/$clientId" }),
     );
@@ -127,7 +127,7 @@ describe("Clienti list", () => {
     state.clients = [client("c1", "Mario", "Rossi"), client("c2", "Anna", "Bianchi")];
     state.search = { principalId: "p1" };
     render(<RouteComponent />);
-    expect(screen.queryByRole("link", { name: /Apri cliente .*Bianchi/ })).toBeNull();
-    expect(screen.getByRole("link", { name: /Apri cliente .*Rossi/ })).toBeTruthy();
+    expect(within(screen.getByRole("table")).queryByRole("link", { name: /Bianchi/ })).toBeNull();
+    expect(within(screen.getByRole("table")).getByRole("link", { name: /Rossi/ })).toBeTruthy();
   });
 });

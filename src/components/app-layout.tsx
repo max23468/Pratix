@@ -54,7 +54,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
             <Link
               to="/dashboard"
               className="flex h-11 min-w-0 items-center truncate rounded-sm text-sm font-medium text-muted-foreground transition-colors hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:h-auto"
-              aria-label="Vai alla dashboard"
+              aria-label={`Vai alla dashboard: ${profile?.business_name || profile?.full_name || "La mia professione"}`}
             >
               {profile?.business_name || profile?.full_name || "La mia professione"}
             </Link>

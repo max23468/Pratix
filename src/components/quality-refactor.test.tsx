@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, fireEvent } from "@testing-library/react";
+import { cleanup, render, screen, fireEvent, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { ComponentProps, ReactNode } from "react";
 vi.mock("@tanstack/react-router", () => ({
@@ -59,7 +59,9 @@ describe("estrazioni di qualità", () => {
     ] as ComponentProps<typeof InvoiceListResults>["rows"];
     render(<InvoiceListResults {...invoiceProps} rows={rows} onOpen={onOpen} onSort={onSort} />);
     expect(screen.getAllByText("Scaduta")).toHaveLength(2);
-    const row = screen.getByRole("link", { name: "Apri fattura 7/2026" });
+    const row = within(screen.getByRole("table")).getByRole("link", {
+      name: /7\/2026.*Scaduta/,
+    });
     fireEvent.keyDown(row, { key: "Enter" });
     expect(onOpen).toHaveBeenCalledWith("FAT-1");
     fireEvent.click(screen.getByRole("button", { name: /Numero/ }));

@@ -15,7 +15,7 @@ export function CreateMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button size="sm" aria-label="Apri menu creazione">
+        <Button size="sm">
           <Plus className="mr-1 size-4" />
           Crea
           <ChevronDown className="ml-1 size-3.5" />

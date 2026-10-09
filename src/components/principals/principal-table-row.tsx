@@ -21,7 +21,6 @@ export function PrincipalTableRow({
       className="cursor-pointer"
       role="link"
       tabIndex={0}
-      aria-label={`Apri committente ${principal.business_name}`}
       onClick={(event) => handleClickableTableRowClick(event, onOpen)}
       onKeyDown={(event) => handleClickableTableRowKeyDown(event, onOpen)}
     >

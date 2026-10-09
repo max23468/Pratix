@@ -8,6 +8,12 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [1.14.20] — 2026-10-09
 
+### Correzioni
+
+- I nomi accessibili dei link della dashboard, delle righe cliccabili e dei
+  pulsanti di attività e creazione includono il testo visibile anche nelle
+  pagine autenticate.
+
 ### Sotto il cofano
 
 - Aggiornati i tipi di Node alla patch 24.19.2, mantenendo la compatibilità

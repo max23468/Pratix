@@ -22,7 +22,7 @@ export function StatCard({
 
   const className =
     "group block h-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
-  const ariaLabel = `Apri ${label.toLowerCase()}`;
+  const ariaLabel = `Apri ${label.toLowerCase()}: ${value}`;
 
   if (to === "/pratiche") {
     return (
