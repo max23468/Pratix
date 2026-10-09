@@ -6,6 +6,8 @@ Il formato segue [Keep a Changelog](https://keepachangelog.com/it/1.1.0/) e il v
 
 ## [Non rilasciato]
 
+## [1.14.19] — 2026-10-09
+
 ### Correzioni
 
 - I link del logo nelle pagine pubbliche usano il nome accessibile del logo,
@@ -1623,6 +1625,7 @@ Prima base condivisa del prodotto: identità di marca, tema, glossario, fatturaz
 - Linter Supabase pulito, scan di sicurezza senza issue critici.
 
 [Non rilasciato]: #non-rilasciato
+[1.14.19]: #11419--2026-10-09
 [1.14.18]: #11418--2026-08-26
 [1.14.17]: #11417--2026-08-26
 [1.14.16]: #11416--2026-08-07
