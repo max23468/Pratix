@@ -1,7 +1,9 @@
-import { useRouter, useRouterState } from "@tanstack/react-router";
+import { type ErrorComponentProps, useRouter, useRouterState } from "@tanstack/react-router";
 import { TriangleAlert } from "lucide-react";
+import { normalizeRouteError } from "@/lib/route-error";
 
-export function DefaultErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+export function DefaultErrorComponent({ error: routeError, reset }: ErrorComponentProps) {
+  const error = normalizeRouteError(routeError);
   const router = useRouter();
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const feedback = getErrorFeedback(error, pathname);
