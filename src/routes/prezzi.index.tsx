@@ -1,68 +1,38 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
-import { AppLayout } from "@/components/app-layout";
-import { ListToolbar } from "@/components/list-toolbar";
-import { mobileListCardLinkClassName } from "@/components/mobile-list-card";
-import { MobileListCardDetails } from "@/components/mobile-list-card-details";
-import { MobileListCardHeader } from "@/components/mobile-list-card-header";
-import { MobileSortSelect } from "@/components/mobile-sort-select";
-import { PageHeader } from "@/components/page-header";
-import { SearchInput } from "@/components/search-input";
-import { SortableTableHead } from "@/components/sortable-table-head";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { TableEmptyState } from "@/components/table-empty-state";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
-import { supabase } from "@/integrations/supabase/client";
-import { priceBookStatusLabels, priceBookStatusVariant } from "@/lib/labels";
-import { routeRef } from "@/lib/public-route-code";
-import { normalizeTextSearch, parseTextSearch } from "@/lib/search-params";
 import {
-  handleClickableTableRowClick,
-  handleClickableTableRowKeyDown,
-} from "@/lib/table-row-navigation";
+  type PrezziSortKey,
+  type PriceBookListRow,
+  type PriceBookCounts,
+} from "@/components/price-books/types";
 import {
-  parseTableSortDirection,
-  parseTableSortKey,
-  sortRows,
-  usePersistentTableSort,
-  type SortableColumn,
   type TableSort,
+  parseTableSortKey,
+  parseTableSortDirection,
+  type SortableColumn,
+  usePersistentTableSort,
+  sortRows,
 } from "@/lib/table-sorting";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { parseTextSearch, normalizeTextSearch } from "@/lib/search-params";
+import { prezziSortKeys, rulesLabel } from "@/components/price-books/helpers";
+import { AppLayout } from "@/components/app-layout";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useMemo } from "react";
+import { priceBookStatusLabels } from "@/lib/labels";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { ListToolbar } from "@/components/list-toolbar";
+import { SearchInput } from "@/components/search-input";
+import { MobileSortSelect } from "@/components/mobile-sort-select";
+import { PrezziMobileList } from "@/components/price-books/prezzi-mobile-list";
+import { PrezziTable } from "@/components/price-books/prezzi-table";
 
 type PrezziSearch = {
   q?: string;
   sort?: PrezziSortKey;
   dir?: "asc" | "desc";
 };
-
-type PriceBookListRow = {
-  id: string;
-  public_code: string;
-  principal_id: string;
-  year: number;
-  status: string;
-  fees_enabled: boolean;
-  expense_reimbursements_enabled: boolean;
-  valid_from: string;
-  valid_to: string | null;
-  updated_at: string;
-};
-
-const prezziSortKeys = [
-  "principal",
-  "year",
-  "status",
-  "rules",
-  "items",
-  "validity",
-  "updated_at",
-] as const;
-
-type PrezziSortKey = (typeof prezziSortKeys)[number];
 
 const prezziDefaultSort: TableSort<PrezziSortKey> = { key: "year", direction: "desc" };
 
@@ -92,10 +62,6 @@ export const Route = createFileRoute("/prezzi/")({
     </AppLayout>
   ),
 });
-
-type PriceBookCounts = { fees: number; expenses: number; enabled: number };
-
-const emptyPriceBookCounts: PriceBookCounts = { fees: 0, expenses: 0, enabled: 0 };
 
 function usePriceBooksQuery() {
   return useQuery({
@@ -234,173 +200,6 @@ function urlSortFromSearch(search: PrezziSearch) {
   return search.sort && search.dir ? { key: search.sort, direction: search.dir } : undefined;
 }
 
-function PriceBookMobileCard({
-  book,
-  counts,
-  principalName,
-}: {
-  book: PriceBookListRow;
-  counts: PriceBookCounts;
-  principalName: string;
-}) {
-  return (
-    <Link
-      to="/prezzi/$priceBookId"
-      params={{ priceBookId: routeRef(book) }}
-      className={mobileListCardLinkClassName}
-    >
-      <MobileListCardHeader
-        title={principalName}
-        subtitle={`Anno ${book.year}`}
-        badge={
-          <Badge variant={priceBookStatusVariant[book.status]}>
-            {priceBookStatusLabels[book.status]}
-          </Badge>
-        }
-      />
-      <MobileListCardDetails
-        rows={[
-          { label: "Regole", value: rulesLabel(book) },
-          {
-            label: "Voci",
-            value: `${counts.fees} compensi, ${counts.expenses} rimborsi`,
-          },
-          {
-            label: "Validità",
-            value: `${book.valid_from} → ${book.valid_to ?? "senza fine"}`,
-          },
-        ]}
-      />
-    </Link>
-  );
-}
-
-function PrezziEmptyState({ hasSearch }: { hasSearch: boolean }) {
-  return (
-    <TableEmptyState
-      title={hasSearch ? "Nessun prezzo trovato" : "Nessun prezzo"}
-      description={
-        hasSearch
-          ? "Modifica ricerca o ordinamento per ampliare i risultati."
-          : "Crea il primo set annuale per un committente."
-      }
-      action={
-        hasSearch ? undefined : (
-          <Button size="sm" asChild>
-            <Link to="/prezzi/nuovo">Nuovi prezzi</Link>
-          </Button>
-        )
-      }
-    />
-  );
-}
-
-type PrezziListBodyProps = {
-  isLoading: boolean;
-  rows: PriceBookListRow[];
-  hasSearch: boolean;
-  principalNameById: Map<string, string>;
-  countsByBook: Record<string, PriceBookCounts>;
-};
-
-function PrezziMobileList({
-  isLoading,
-  rows,
-  hasSearch,
-  principalNameById,
-  countsByBook,
-}: PrezziListBodyProps) {
-  if (isLoading) {
-    return <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>;
-  }
-  if (rows.length === 0) {
-    return (
-      <Card className="p-4">
-        <PrezziEmptyState hasSearch={hasSearch} />
-      </Card>
-    );
-  }
-  return rows.map((book) => (
-    <PriceBookMobileCard
-      key={book.id}
-      book={book}
-      counts={countsByBook[book.id] ?? emptyPriceBookCounts}
-      principalName={principalNameById.get(book.principal_id) ?? "—"}
-    />
-  ));
-}
-
-function PrezziTableMessage({ children }: { children: React.ReactNode }) {
-  return (
-    <TableRow>
-      <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-        {children}
-      </TableCell>
-    </TableRow>
-  );
-}
-
-function PrezziTableBody({
-  isLoading,
-  rows,
-  hasSearch,
-  principalNameById,
-  countsByBook,
-  onOpen,
-}: PrezziListBodyProps & { onOpen: (priceBookId: string) => void }) {
-  if (isLoading) return <PrezziTableMessage>Caricamento…</PrezziTableMessage>;
-  if (rows.length === 0) {
-    return (
-      <PrezziTableMessage>
-        {hasSearch ? "Nessun risultato." : "Nessun prezzo. Crea il primo set annuale."}
-      </PrezziTableMessage>
-    );
-  }
-  return rows.map((book) => (
-    <PriceBookTableRow
-      key={book.id}
-      book={book}
-      counts={countsByBook[book.id] ?? emptyPriceBookCounts}
-      principalName={principalNameById.get(book.principal_id) ?? "—"}
-      onOpen={() => onOpen(routeRef(book))}
-    />
-  ));
-}
-
-function PrezziTable({
-  sort,
-  onSort,
-  ...bodyProps
-}: {
-  sort: TableSort<PrezziSortKey>;
-  onSort: (key: PrezziSortKey) => void;
-} & React.ComponentProps<typeof PrezziTableBody>) {
-  return (
-    <Card className="hidden min-w-0 md:block">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <SortableTableHead
-              columnKey="principal"
-              label="Committente"
-              sort={sort}
-              onSort={onSort}
-            />
-            <SortableTableHead columnKey="year" label="Anno" sort={sort} onSort={onSort} />
-            <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={onSort} />
-            <SortableTableHead columnKey="rules" label="Regole" sort={sort} onSort={onSort} />
-            <SortableTableHead columnKey="items" label="Voci" sort={sort} onSort={onSort} />
-            <SortableTableHead columnKey="validity" label="Validità" sort={sort} onSort={onSort} />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <PrezziTableBody {...bodyProps} />
-        </TableBody>
-      </Table>
-    </Card>
-  );
-}
-
 function PrezziList() {
   const navigate = Route.useNavigate();
   const routeSearch = Route.useSearch();
@@ -481,57 +280,4 @@ function PrezziList() {
       />
     </>
   );
-}
-
-function PriceBookTableRow({
-  book,
-  counts,
-  principalName,
-  onOpen,
-}: {
-  book: PriceBookListRow;
-  counts: { fees: number; expenses: number; enabled: number };
-  principalName: string;
-  onOpen: () => void;
-}) {
-  return (
-    <TableRow
-      className="cursor-pointer"
-      role="link"
-      tabIndex={0}
-      aria-label={`Apri prezzi ${principalName} ${book.year}`}
-      onClick={(event) => handleClickableTableRowClick(event, onOpen)}
-      onKeyDown={(event) => handleClickableTableRowKeyDown(event, onOpen)}
-    >
-      <TableCell>
-        <Link
-          to="/prezzi/$priceBookId"
-          params={{ priceBookId: routeRef(book) }}
-          className="font-medium hover:underline"
-        >
-          {principalName}
-        </Link>
-      </TableCell>
-      <TableCell>{book.year}</TableCell>
-      <TableCell>
-        <Badge variant={priceBookStatusVariant[book.status]}>
-          {priceBookStatusLabels[book.status]}
-        </Badge>
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">{rulesLabel(book)}</TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {counts.fees} compensi, {counts.expenses} rimborsi
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {book.valid_from} → {book.valid_to ?? "senza fine"}
-      </TableCell>
-    </TableRow>
-  );
-}
-
-function rulesLabel(book: { fees_enabled: boolean; expense_reimbursements_enabled: boolean }) {
-  if (book.fees_enabled && book.expense_reimbursements_enabled) return "Compensi e rimborsi";
-  if (book.fees_enabled) return "Solo compensi";
-  if (book.expense_reimbursements_enabled) return "Solo rimborsi";
-  return "Nessuna regola";
 }

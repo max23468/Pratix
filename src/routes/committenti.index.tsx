@@ -1,43 +1,37 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
-import { AppLayout } from "@/components/app-layout";
-import { ListToolbar } from "@/components/list-toolbar";
-import { mobileListCardLinkClassName } from "@/components/mobile-list-card";
-import { MobileListCardDetails } from "@/components/mobile-list-card-details";
-import { MobileListCardHeader } from "@/components/mobile-list-card-header";
-import { MobileSortSelect } from "@/components/mobile-sort-select";
-import { PageHeader } from "@/components/page-header";
-import { SearchInput } from "@/components/search-input";
-import { SortableTableHead } from "@/components/sortable-table-head";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { TableEmptyState } from "@/components/table-empty-state";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
-import { supabase } from "@/integrations/supabase/client";
-import { routeRef } from "@/lib/public-route-code";
-import { normalizeTextSearch, parseSearchValue, parseTextSearch } from "@/lib/search-params";
+  type PrincipalStatusFilter,
+  type PrincipalEconomicsFilter,
+  type CommittentiSortKey,
+  type PrincipalListRow,
+  type CommittentiFilters,
+} from "@/components/principals/types";
 import {
-  handleClickableTableRowClick,
-  handleClickableTableRowKeyDown,
-} from "@/lib/table-row-navigation";
-import {
-  parseTableSortDirection,
-  parseTableSortKey,
-  sortRows,
-  usePersistentTableSort,
-  type SortableColumn,
   type TableSort,
+  type SortableColumn,
+  parseTableSortKey,
+  parseTableSortDirection,
+  usePersistentTableSort,
+  sortRows,
 } from "@/lib/table-sorting";
+import {
+  economicRulesLabel,
+  principalStatusFilters,
+  principalEconomicsFilters,
+  committentiSortKeys,
+} from "@/components/principals/helpers";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { parseTextSearch, parseSearchValue, normalizeTextSearch } from "@/lib/search-params";
+import { AppLayout } from "@/components/app-layout";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useMemo } from "react";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { CommittentiToolbar } from "@/components/principals/committenti-toolbar";
+import { MobileSortSelect } from "@/components/mobile-sort-select";
+import { CommittentiMobileList } from "@/components/principals/committenti-mobile-list";
+import { CommittentiTable } from "@/components/principals/committenti-table";
 
 type CommittentiSearch = {
   q?: string;
@@ -47,48 +41,10 @@ type CommittentiSearch = {
   dir?: "asc" | "desc";
 };
 
-type PrincipalListRow = {
-  id: string;
-  public_code: string;
-  business_name: string;
-  tax_code: string | null;
-  vat_number: string | null;
-  email: string | null;
-  address_city: string | null;
-  fees_enabled: boolean;
-  expense_reimbursements_enabled: boolean;
-  archived_at: string | null;
-  created_at: string;
-};
-
-const committentiSortKeys = [
-  "business_name",
-  "status",
-  "economics",
-  "tax",
-  "email",
-  "city",
-  "created_at",
-] as const;
-
-type CommittentiSortKey = (typeof committentiSortKeys)[number];
-
 const committentiDefaultSort: TableSort<CommittentiSortKey> = {
   key: "created_at",
   direction: "desc",
 };
-
-const principalStatusFilters = ["all", "active", "archived"] as const;
-type PrincipalStatusFilter = (typeof principalStatusFilters)[number];
-
-const principalEconomicsFilters = [
-  "all",
-  "fees",
-  "expenses",
-  "fees_only",
-  "expenses_only",
-] as const;
-type PrincipalEconomicsFilter = (typeof principalEconomicsFilters)[number];
 
 const committentiColumns: readonly SortableColumn<PrincipalListRow, CommittentiSortKey>[] = [
   {
@@ -150,12 +106,6 @@ export const Route = createFileRoute("/committenti/")({
     </AppLayout>
   ),
 });
-
-type CommittentiFilters = {
-  q: string;
-  status: PrincipalStatusFilter;
-  economics: PrincipalEconomicsFilter;
-};
 
 function usePrincipalsQuery() {
   return useQuery({
@@ -224,192 +174,6 @@ function urlSortFromSearch(search: CommittentiSearch) {
 
 function hasActiveFilters({ q, status, economics }: CommittentiFilters) {
   return !!q || status !== "active" || economics !== "all";
-}
-
-function CommittentiToolbar({
-  filters,
-  onChange,
-}: {
-  filters: CommittentiFilters;
-  onChange: (next: CommittentiFilters) => void;
-}) {
-  const { q, status, economics } = filters;
-  return (
-    <ListToolbar>
-      <SearchInput
-        placeholder="Cerca per ragione sociale, CF, P.IVA, email…"
-        value={q}
-        onChange={(value) => onChange({ q: value, status, economics })}
-      />
-      <Select
-        value={status}
-        onValueChange={(value) =>
-          onChange({ q, status: value as PrincipalStatusFilter, economics })
-        }
-      >
-        <SelectTrigger aria-label="Filtra committenti per stato" className="lg:w-44">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Tutti gli stati</SelectItem>
-          <SelectItem value="active">Attivi</SelectItem>
-          <SelectItem value="archived">Archiviati</SelectItem>
-        </SelectContent>
-      </Select>
-      <Select
-        value={economics}
-        onValueChange={(value) =>
-          onChange({ q, status, economics: value as PrincipalEconomicsFilter })
-        }
-      >
-        <SelectTrigger aria-label="Filtra committenti per regole economiche" className="lg:w-56">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Tutte le regole</SelectItem>
-          <SelectItem value="fees">Con compensi</SelectItem>
-          <SelectItem value="expenses">Con rimborsi</SelectItem>
-          <SelectItem value="fees_only">Solo compensi</SelectItem>
-          <SelectItem value="expenses_only">Solo rimborsi</SelectItem>
-        </SelectContent>
-      </Select>
-    </ListToolbar>
-  );
-}
-
-function CommittentiEmptyState({ hasFilters }: { hasFilters: boolean }) {
-  return (
-    <TableEmptyState
-      title={hasFilters ? "Nessun committente trovato" : "Nessun committente"}
-      description={
-        hasFilters
-          ? "Modifica ricerca o filtri per ampliare i risultati."
-          : "Aggiungi il primo committente per configurare prezzi, clienti e pratiche."
-      }
-      action={
-        hasFilters ? undefined : (
-          <Button size="sm" asChild>
-            <Link to="/committenti/nuovo">Nuovo committente</Link>
-          </Button>
-        )
-      }
-    />
-  );
-}
-
-function PrincipalStatusBadge({ archived }: { archived: boolean }) {
-  return (
-    <Badge variant={archived ? "secondary" : "outline"}>{archived ? "Archiviato" : "Attivo"}</Badge>
-  );
-}
-
-function PrincipalMobileCard({ principal }: { principal: PrincipalListRow }) {
-  return (
-    <Link
-      to="/committenti/$principalId"
-      params={{ principalId: routeRef(principal) }}
-      className={mobileListCardLinkClassName}
-    >
-      <MobileListCardHeader
-        title={principal.business_name}
-        subtitle={economicRulesLabel(principal)}
-        badge={<PrincipalStatusBadge archived={!!principal.archived_at} />}
-      />
-      <MobileListCardDetails
-        rows={[
-          {
-            label: "CF / P.IVA",
-            value: principal.vat_number || principal.tax_code || "—",
-          },
-          { label: "Email", value: principal.email ?? "—" },
-          { label: "Città", value: principal.address_city ?? "—" },
-        ]}
-      />
-    </Link>
-  );
-}
-
-type CommittentiListBodyProps = {
-  isLoading: boolean;
-  rows: PrincipalListRow[];
-  hasFilters: boolean;
-};
-
-function CommittentiMobileList({ isLoading, rows, hasFilters }: CommittentiListBodyProps) {
-  if (isLoading) {
-    return <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>;
-  }
-  if (rows.length === 0) {
-    return (
-      <Card className="p-4">
-        <CommittentiEmptyState hasFilters={hasFilters} />
-      </Card>
-    );
-  }
-  return rows.map((principal) => <PrincipalMobileCard key={principal.id} principal={principal} />);
-}
-
-function CommittentiTableBody({
-  isLoading,
-  rows,
-  hasFilters,
-  onOpen,
-}: CommittentiListBodyProps & { onOpen: (principalId: string) => void }) {
-  if (isLoading || rows.length === 0) {
-    return (
-      <TableRow>
-        <TableCell colSpan={6} className="py-10 text-center text-sm text-muted-foreground">
-          {isLoading ? "Caricamento…" : <CommittentiEmptyState hasFilters={hasFilters} />}
-        </TableCell>
-      </TableRow>
-    );
-  }
-  return rows.map((principal) => (
-    <PrincipalTableRow
-      key={principal.id}
-      principal={principal}
-      onOpen={() => onOpen(routeRef(principal))}
-    />
-  ));
-}
-
-function CommittentiTable({
-  sort,
-  onSort,
-  ...bodyProps
-}: {
-  sort: TableSort<CommittentiSortKey>;
-  onSort: (key: CommittentiSortKey) => void;
-} & React.ComponentProps<typeof CommittentiTableBody>) {
-  return (
-    <Card className="hidden min-w-0 md:block">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <SortableTableHead
-              columnKey="business_name"
-              label="Ragione sociale"
-              sort={sort}
-              onSort={onSort}
-            />
-            <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={onSort} />
-            <SortableTableHead
-              columnKey="economics"
-              label="Regole economiche"
-              sort={sort}
-              onSort={onSort}
-            />
-            <SortableTableHead columnKey="tax" label="CF / P.IVA" sort={sort} onSort={onSort} />
-            <SortableTableHead columnKey="email" label="Email" sort={sort} onSort={onSort} />
-            <SortableTableHead columnKey="city" label="Città" sort={sort} onSort={onSort} />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <CommittentiTableBody {...bodyProps} />
-        </TableBody>
-      </Table>
-    </Card>
-  );
 }
 
 function CommittentiList() {
@@ -484,58 +248,4 @@ function CommittentiList() {
       />
     </>
   );
-}
-
-function PrincipalTableRow({
-  principal,
-  onOpen,
-}: {
-  principal: PrincipalListRow;
-  onOpen: () => void;
-}) {
-  return (
-    <TableRow
-      className="cursor-pointer"
-      role="link"
-      tabIndex={0}
-      aria-label={`Apri committente ${principal.business_name}`}
-      onClick={(event) => handleClickableTableRowClick(event, onOpen)}
-      onKeyDown={(event) => handleClickableTableRowKeyDown(event, onOpen)}
-    >
-      <TableCell>
-        <Link
-          to="/committenti/$principalId"
-          params={{ principalId: routeRef(principal) }}
-          className="font-medium hover:underline"
-        >
-          {principal.business_name}
-        </Link>
-      </TableCell>
-      <TableCell>
-        <PrincipalStatusBadge archived={!!principal.archived_at} />
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {economicRulesLabel(principal)}
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {principal.vat_number || principal.tax_code || "—"}
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">{principal.email ?? "—"}</TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {principal.address_city ?? "—"}
-      </TableCell>
-    </TableRow>
-  );
-}
-
-function economicRulesLabel(principal: {
-  fees_enabled: boolean;
-  expense_reimbursements_enabled: boolean;
-}) {
-  if (principal.fees_enabled && principal.expense_reimbursements_enabled) {
-    return "Compensi e rimborsi";
-  }
-  if (principal.fees_enabled) return "Solo compensi";
-  if (principal.expense_reimbursements_enabled) return "Solo rimborsi";
-  return "Nessuna regola";
 }

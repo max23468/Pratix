@@ -1,48 +1,38 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
-import { AppLayout } from "@/components/app-layout";
-import { ListToolbar } from "@/components/list-toolbar";
-import { mobileListCardLinkClassName } from "@/components/mobile-list-card";
-import { MobileListCardHeader } from "@/components/mobile-list-card-header";
-import { MobileSortSelect } from "@/components/mobile-sort-select";
-import { PageHeader } from "@/components/page-header";
-import { SortableTableHead } from "@/components/sortable-table-head";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { SearchInput } from "@/components/search-input";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { TableEmptyState } from "@/components/table-empty-state";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
-import { supabase } from "@/integrations/supabase/client";
-import { clientDisplayName, clientKindLabels } from "@/lib/labels";
-import { routeRef } from "@/lib/public-route-code";
+  type ClientKindFilter,
+  type ClientiSortKey,
+  type ClientListRow,
+  type PrincipalOption,
+  type ClientiFilters,
+} from "@/components/clients/types";
 import {
-  normalizeTextSearch,
-  parseLooseSelectValue,
-  parseSearchValue,
-  parseTextSearch,
-} from "@/lib/search-params";
-import {
-  handleClickableTableRowClick,
-  handleClickableTableRowKeyDown,
-} from "@/lib/table-row-navigation";
-import {
-  parseTableSortDirection,
-  parseTableSortKey,
-  sortRows,
-  usePersistentTableSort,
-  type SortableColumn,
   type TableSort,
+  parseTableSortKey,
+  parseTableSortDirection,
+  type SortableColumn,
+  usePersistentTableSort,
+  sortRows,
 } from "@/lib/table-sorting";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import {
+  parseTextSearch,
+  parseSearchValue,
+  parseLooseSelectValue,
+  normalizeTextSearch,
+} from "@/lib/search-params";
+import { clientKindFilters, clientiSortKeys } from "@/components/clients/helpers";
+import { AppLayout } from "@/components/app-layout";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useMemo } from "react";
+import { clientDisplayName, clientKindLabels } from "@/lib/labels";
+import { PageHeader } from "@/components/page-header";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { ClientiToolbar } from "@/components/clients/clienti-toolbar";
+import { MobileSortSelect } from "@/components/mobile-sort-select";
+import { ClientiMobileList } from "@/components/clients/clienti-mobile-list";
+import { ClientiTable } from "@/components/clients/clienti-table";
 
 type ClientiSearch = {
   q?: string;
@@ -51,23 +41,6 @@ type ClientiSearch = {
   sort?: ClientiSortKey;
   dir?: "asc" | "desc";
 };
-
-type ClientListRow = {
-  id: string;
-  public_code: string;
-  kind: string;
-  first_name: string | null;
-  last_name: string | null;
-  business_name: string | null;
-  created_at: string;
-};
-
-const clientiSortKeys = ["name", "kind", "principals", "created_at"] as const;
-
-type ClientiSortKey = (typeof clientiSortKeys)[number];
-
-const clientKindFilters = ["all", ...Object.keys(clientKindLabels)] as const;
-type ClientKindFilter = (typeof clientKindFilters)[number];
 
 const clientiDefaultSort: TableSort<ClientiSortKey> = { key: "created_at", direction: "desc" };
 
@@ -94,9 +67,7 @@ export const Route = createFileRoute("/clienti/")({
   ),
 });
 
-type PrincipalOption = { id: string; business_name: string; archived_at: string | null };
 type PrincipalLink = { client_id: string; principal_id: string };
-type ClientiFilters = { q: string; kind: ClientKindFilter; principalId: string };
 
 function useClientiData() {
   const clients = useQuery({
@@ -221,195 +192,6 @@ function hasActiveFilters({ q, kind, principalId }: ClientiFilters) {
   return !!q || kind !== "all" || principalId !== "all";
 }
 
-function ClientiToolbar({
-  filters,
-  principals,
-  onChange,
-}: {
-  filters: ClientiFilters;
-  principals: PrincipalOption[];
-  onChange: (next: ClientiFilters) => void;
-}) {
-  const { q, kind, principalId } = filters;
-  return (
-    <ListToolbar>
-      <SearchInput
-        placeholder="Cerca per nome o committente…"
-        value={q}
-        onChange={(value) => onChange({ q: value, kind, principalId })}
-      />
-      <Select
-        value={kind}
-        onValueChange={(value) => onChange({ q, kind: value as ClientKindFilter, principalId })}
-      >
-        <SelectTrigger aria-label="Filtra clienti per tipo" className="lg:w-44">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Tutti i tipi</SelectItem>
-          {Object.entries(clientKindLabels).map(([value, label]) => (
-            <SelectItem key={value} value={value}>
-              {label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Select
-        value={principalId}
-        onValueChange={(value) => onChange({ q, kind, principalId: value })}
-      >
-        <SelectTrigger aria-label="Filtra clienti per committente" className="lg:w-56">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="all">Tutti i committenti</SelectItem>
-          {principals.map((principal) => (
-            <SelectItem key={principal.id} value={principal.id}>
-              {principal.business_name}
-              {principal.archived_at ? " (archiviato)" : ""}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </ListToolbar>
-  );
-}
-
-function ClientiEmptyState({ hasFilters }: { hasFilters: boolean }) {
-  return (
-    <TableEmptyState
-      title={hasFilters ? "Nessun cliente trovato" : "Nessun cliente"}
-      description={
-        hasFilters
-          ? "Modifica ricerca o filtri per ampliare i risultati."
-          : "Aggiungi il primo cliente e collegalo ai committenti interessati."
-      }
-      action={
-        hasFilters ? undefined : (
-          <Button size="sm" asChild>
-            <Link to="/clienti/nuovo">Nuovo cliente</Link>
-          </Button>
-        )
-      }
-    />
-  );
-}
-
-function ClientMobileCard({
-  client,
-  principalNames,
-}: {
-  client: ClientListRow;
-  principalNames?: string[];
-}) {
-  return (
-    <Link
-      to="/clienti/$clientId"
-      params={{ clientId: routeRef(client) }}
-      className={mobileListCardLinkClassName}
-    >
-      <MobileListCardHeader
-        title={clientDisplayName(client)}
-        subtitle={principalNames?.join(", ") || "Nessun committente collegato"}
-        badge={<Badge variant="outline">{clientKindLabels[client.kind] ?? client.kind}</Badge>}
-      />
-    </Link>
-  );
-}
-
-function ClientiMobileList({
-  isLoading,
-  rows,
-  hasFilters,
-  principalNamesByClient,
-}: {
-  isLoading: boolean;
-  rows: ClientListRow[];
-  hasFilters: boolean;
-  principalNamesByClient: Record<string, string[]>;
-}) {
-  if (isLoading) {
-    return <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>;
-  }
-  if (rows.length === 0) {
-    return (
-      <Card className="p-4">
-        <ClientiEmptyState hasFilters={hasFilters} />
-      </Card>
-    );
-  }
-  return rows.map((client) => (
-    <ClientMobileCard
-      key={client.id}
-      client={client}
-      principalNames={principalNamesByClient[client.id]}
-    />
-  ));
-}
-
-function ClientiTableBody({
-  isLoading,
-  rows,
-  hasFilters,
-  principalNamesByClient,
-  onOpen,
-}: {
-  isLoading: boolean;
-  rows: ClientListRow[];
-  hasFilters: boolean;
-  principalNamesByClient: Record<string, string[]>;
-  onOpen: (clientId: string) => void;
-}) {
-  if (isLoading || rows.length === 0) {
-    return (
-      <TableRow>
-        <TableCell colSpan={3} className="py-10 text-center text-sm text-muted-foreground">
-          {isLoading ? "Caricamento…" : <ClientiEmptyState hasFilters={hasFilters} />}
-        </TableCell>
-      </TableRow>
-    );
-  }
-  return rows.map((client) => (
-    <ClientTableRow
-      key={client.id}
-      client={client}
-      principalNames={principalNamesByClient[client.id]}
-      onOpen={() => onOpen(routeRef(client))}
-    />
-  ));
-}
-
-function ClientiTable({
-  sort,
-  onSort,
-  ...bodyProps
-}: {
-  sort: TableSort<ClientiSortKey>;
-  onSort: (key: ClientiSortKey) => void;
-} & React.ComponentProps<typeof ClientiTableBody>) {
-  return (
-    <Card className="hidden min-w-0 md:block">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <SortableTableHead columnKey="name" label="Nome" sort={sort} onSort={onSort} />
-            <SortableTableHead columnKey="kind" label="Tipo" sort={sort} onSort={onSort} />
-            <SortableTableHead
-              columnKey="principals"
-              label="Committenti"
-              sort={sort}
-              onSort={onSort}
-            />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <ClientiTableBody {...bodyProps} />
-        </TableBody>
-      </Table>
-    </Card>
-  );
-}
-
 function ClientiList() {
   const navigate = Route.useNavigate();
   const routeSearch = Route.useSearch();
@@ -490,37 +272,5 @@ function ClientiList() {
         onOpen={(clientId) => navigate({ to: "/clienti/$clientId", params: { clientId } })}
       />
     </>
-  );
-}
-
-function ClientTableRow({
-  client,
-  principalNames,
-  onOpen,
-}: {
-  client: ClientListRow;
-  principalNames?: string[];
-  onOpen: () => void;
-}) {
-  const displayName = clientDisplayName(client);
-  return (
-    <TableRow
-      className="cursor-pointer"
-      role="link"
-      tabIndex={0}
-      aria-label={`Apri cliente ${displayName}`}
-      onClick={(event) => handleClickableTableRowClick(event, onOpen)}
-      onKeyDown={(event) => handleClickableTableRowKeyDown(event, onOpen)}
-    >
-      <TableCell>
-        <span className="font-medium">{displayName}</span>
-      </TableCell>
-      <TableCell>
-        <Badge variant="outline">{clientKindLabels[client.kind] ?? client.kind}</Badge>
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {principalNames?.join(", ") || "—"}
-      </TableCell>
-    </TableRow>
   );
 }

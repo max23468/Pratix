@@ -1,88 +1,51 @@
+import {
+  type PraticheView,
+  type PraticheSortKey,
+  type PracticeListRow,
+  type PracticeWorkflowRow,
+} from "@/components/practices/types";
+import {
+  type TableSort,
+  parseTableSortKey,
+  parseTableSortDirection,
+  type SortableColumn,
+  usePersistentTableSort,
+  sortRows,
+} from "@/lib/table-sorting";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { parseTextSearch, normalizeTextSearch } from "@/lib/search-params";
+import { praticheSortKeys, praticheViewKeys } from "@/components/practices/helpers";
 import { AppLayout } from "@/components/app-layout";
-import { ListToolbar } from "@/components/list-toolbar";
-import { mobileListCardLinkClassName } from "@/components/mobile-list-card";
-import { MobileListCardDetails } from "@/components/mobile-list-card-details";
-import { MobileListCardHeader } from "@/components/mobile-list-card-header";
-import { MobileSortSelect } from "@/components/mobile-sort-select";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useMemo } from "react";
+import { clientDisplayName, counterpartyDisplayName, caseStatusLabels } from "@/lib/labels";
 import { PageHeader } from "@/components/page-header";
-import { SearchInput } from "@/components/search-input";
-import { SortableTableHead } from "@/components/sortable-table-head";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card } from "@/components/ui/card";
-import { TableEmptyState } from "@/components/table-empty-state";
-import { Table, TableBody, TableCell, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus } from "lucide-react";
+import { ListToolbar } from "@/components/list-toolbar";
+import { SearchInput } from "@/components/search-input";
 import {
   Select,
-  SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectContent,
+  SelectItem,
 } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
+import { MobileSortSelect } from "@/components/mobile-sort-select";
+import { PracticeResults } from "@/components/practices/practice-results";
 import {
-  caseStatusLabels,
-  caseStatusVariant,
-  clientDisplayName,
-  counterpartyDisplayName,
-} from "@/lib/labels";
-import { formatCurrency, formatDate } from "@/lib/format";
-import { normalizeTextSearch, parseTextSearch } from "@/lib/search-params";
-import {
+  summarizeCaseOperations,
   buildCaseWorkflowQualityChecks,
   buildDebtCollectionWorkflow,
   formatCaseWorkflowPriorityLabel,
-  summarizeCaseOperations,
-  type CaseDebtCollectionWorkflow,
 } from "@/lib/case-workflow";
-import { routeRef } from "@/lib/public-route-code";
-import {
-  handleClickableTableRowClick,
-  handleClickableTableRowKeyDown,
-} from "@/lib/table-row-navigation";
-import {
-  parseTableSortDirection,
-  parseTableSortKey,
-  sortRows,
-  usePersistentTableSort,
-  type SortableColumn,
-  type TableSort,
-} from "@/lib/table-sorting";
 
 type PraticheSearch = {
   q?: string;
   view?: PraticheView;
   sort?: PraticheSortKey;
   dir?: "asc" | "desc";
-};
-
-type PracticeListRow = {
-  id: string;
-  public_code: string;
-  practice_number: number;
-  status: string;
-  opened_at: string;
-  updated_at: string;
-  client_id: string | null;
-  principal_id: string | null;
-  counterparty_id: string | null;
-  principals: { business_name: string } | null;
-  clients: {
-    kind: string;
-    first_name: string | null;
-    last_name: string | null;
-    business_name: string | null;
-  } | null;
-  counterparties: {
-    kind: string;
-    first_name: string | null;
-    last_name: string | null;
-    business_name: string | null;
-  } | null;
 };
 
 type PracticeActivityRow = {
@@ -102,42 +65,7 @@ type PracticeInvoiceRow = {
   total_amount: number;
 };
 
-type PracticeWorkflowRow = {
-  stage: string;
-  action: string;
-  reason: string;
-  priorityLabel: string;
-  priorityVariant: CaseDebtCollectionWorkflow["priorityVariant"];
-};
-
-const praticheSortKeys = [
-  "practice_number",
-  "principal",
-  "client",
-  "counterparty",
-  "status",
-  "billing",
-  "opened_at",
-  "updated_at",
-] as const;
-
-type PraticheSortKey = (typeof praticheSortKeys)[number];
-
 const praticheDefaultSort: TableSort<PraticheSortKey> = { key: "updated_at", direction: "desc" };
-
-const praticheViewKeys = [
-  "all",
-  "open",
-  "without_activities",
-  "to_complete",
-  "to_invoice",
-  "invoiced",
-  "suspended",
-  "closed",
-  "archived",
-] as const;
-
-type PraticheView = (typeof praticheViewKeys)[number];
 
 export const Route = createFileRoute("/pratiche/")({
   validateSearch: (search: Record<string, unknown>): PraticheSearch => ({
@@ -450,303 +378,6 @@ function PraticheList() {
         onSort={setSort}
         onOpen={openCase}
       />
-    </>
-  );
-}
-
-type PracticeActivitySummary = { toInvoice: number; invoiced: number; toInvoiceAmount: number };
-
-const emptyPracticeActivitySummary: PracticeActivitySummary = {
-  toInvoice: 0,
-  invoiced: 0,
-  toInvoiceAmount: 0,
-};
-
-function practiceBillingLabel(summary: PracticeActivitySummary, withAmount: boolean) {
-  if (summary.toInvoice > 0) {
-    const base = `${summary.toInvoice} da fatturare`;
-    return withAmount ? `${base} · ${formatCurrency(summary.toInvoiceAmount)}` : base;
-  }
-  return summary.invoiced > 0 ? `${summary.invoiced} fatturate` : "—";
-}
-
-function PracticeStatusBadge({ status }: { status: string }) {
-  return (
-    <Badge variant={caseStatusVariant[status] ?? "outline"}>
-      {caseStatusLabels[status] ?? status}
-    </Badge>
-  );
-}
-
-function PracticeEmptyState({ hasFilters }: { hasFilters: boolean }) {
-  return (
-    <TableEmptyState
-      title={hasFilters ? "Nessuna pratica trovata" : "Nessuna pratica aperta"}
-      description={
-        hasFilters
-          ? "Modifica ricerca, vista o ordinamento per ampliare i risultati."
-          : "Crea la prima pratica e collega committente, cliente e controparte."
-      }
-      action={
-        hasFilters ? undefined : (
-          <Button size="sm" asChild>
-            <Link to="/pratiche/nuova">Nuova pratica</Link>
-          </Button>
-        )
-      }
-    />
-  );
-}
-
-function PracticeWorkflowSummary({ workflow }: { workflow: PracticeWorkflowRow }) {
-  return (
-    <div className="mt-3 rounded-md border border-border/70 p-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <Badge variant={workflow.priorityVariant}>{workflow.priorityLabel}</Badge>
-        <span className="text-xs text-muted-foreground">{workflow.stage}</span>
-      </div>
-      <p className="mt-2 text-sm font-medium text-foreground">{workflow.action}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{workflow.reason}</p>
-    </div>
-  );
-}
-
-function PracticeMobileCard({
-  practice,
-  summary,
-  workflow,
-}: {
-  practice: PracticeListRow;
-  summary: PracticeActivitySummary;
-  workflow?: PracticeWorkflowRow;
-}) {
-  return (
-    <Link
-      to="/pratiche/$caseId"
-      params={{ caseId: routeRef(practice) }}
-      className={mobileListCardLinkClassName}
-    >
-      <MobileListCardHeader
-        title={practice.practice_number}
-        badge={<PracticeStatusBadge status={practice.status} />}
-      />
-      {workflow ? <PracticeWorkflowSummary workflow={workflow} /> : null}
-      <MobileListCardDetails
-        rows={[
-          { label: "Committente", value: practice.principals?.business_name ?? "—" },
-          {
-            label: "Cliente",
-            value: practice.clients ? clientDisplayName(practice.clients) : "—",
-          },
-          {
-            label: "Controparte",
-            value: practice.counterparties ? counterpartyDisplayName(practice.counterparties) : "—",
-          },
-          { label: "Fatturazione", value: practiceBillingLabel(summary, true) },
-          { label: "Aperta il", value: formatDate(practice.opened_at) },
-        ]}
-      />
-    </Link>
-  );
-}
-
-function PracticeTableRow({
-  practice,
-  summary,
-  onOpen,
-}: {
-  practice: PracticeListRow;
-  summary: PracticeActivitySummary;
-  onOpen: () => void;
-}) {
-  return (
-    <TableRow
-      className="cursor-pointer"
-      role="link"
-      tabIndex={0}
-      aria-label={`Apri pratica ${practice.practice_number}`}
-      onClick={(event) => handleClickableTableRowClick(event, onOpen)}
-      onKeyDown={(event) => handleClickableTableRowKeyDown(event, onOpen)}
-    >
-      <TableCell>
-        <Link
-          to="/pratiche/$caseId"
-          params={{ caseId: routeRef(practice) }}
-          className="font-medium hover:underline"
-        >
-          {practice.practice_number}
-        </Link>
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {practice.principals?.business_name ?? "—"}
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {practice.clients ? clientDisplayName(practice.clients) : "—"}
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {practice.counterparties ? counterpartyDisplayName(practice.counterparties) : "—"}
-      </TableCell>
-      <TableCell>
-        <PracticeStatusBadge status={practice.status} />
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {practiceBillingLabel(summary, false)}
-      </TableCell>
-      <TableCell className="text-sm text-muted-foreground">
-        {formatDate(practice.opened_at)}
-      </TableCell>
-    </TableRow>
-  );
-}
-
-type PracticeListBodyProps = {
-  isLoading: boolean;
-  rows: PracticeListRow[];
-  hasFilters: boolean;
-  activitySummaryByCase: Record<string, PracticeActivitySummary>;
-};
-
-function PracticeMobileList({
-  isLoading,
-  rows,
-  hasFilters,
-  activitySummaryByCase,
-  workflowByCase,
-}: PracticeListBodyProps & { workflowByCase: Record<string, PracticeWorkflowRow> }) {
-  if (isLoading) {
-    return <Card className="p-4 text-center text-sm text-muted-foreground">Caricamento…</Card>;
-  }
-  if (rows.length === 0) {
-    return (
-      <Card className="p-4">
-        <PracticeEmptyState hasFilters={hasFilters} />
-      </Card>
-    );
-  }
-  return rows.map((practice) => (
-    <PracticeMobileCard
-      key={practice.id}
-      practice={practice}
-      summary={activitySummaryByCase[practice.id] ?? emptyPracticeActivitySummary}
-      workflow={workflowByCase[practice.id]}
-    />
-  ));
-}
-
-function PracticeTableBody({
-  isLoading,
-  rows,
-  hasFilters,
-  activitySummaryByCase,
-  onOpen,
-}: PracticeListBodyProps & { onOpen: (caseId: string) => void }) {
-  if (isLoading || rows.length === 0) {
-    return (
-      <TableRow>
-        <TableCell colSpan={7} className="py-10 text-center text-sm text-muted-foreground">
-          {isLoading ? "Caricamento…" : <PracticeEmptyState hasFilters={hasFilters} />}
-        </TableCell>
-      </TableRow>
-    );
-  }
-  return rows.map((practice) => (
-    <PracticeTableRow
-      key={practice.id}
-      practice={practice}
-      summary={activitySummaryByCase[practice.id] ?? emptyPracticeActivitySummary}
-      onOpen={() => onOpen(routeRef(practice))}
-    />
-  ));
-}
-
-function PracticeTable({
-  sort,
-  onSort,
-  ...bodyProps
-}: {
-  sort: TableSort<PraticheSortKey>;
-  onSort: (columnKey: PraticheSortKey) => void;
-} & React.ComponentProps<typeof PracticeTableBody>) {
-  return (
-    <Card className="hidden min-w-0 md:block">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <SortableTableHead
-              columnKey="practice_number"
-              label="Pratica"
-              sort={sort}
-              onSort={onSort}
-            />
-            <SortableTableHead
-              columnKey="principal"
-              label="Committente"
-              sort={sort}
-              onSort={onSort}
-            />
-            <SortableTableHead columnKey="client" label="Cliente" sort={sort} onSort={onSort} />
-            <SortableTableHead
-              columnKey="counterparty"
-              label="Controparte"
-              sort={sort}
-              onSort={onSort}
-            />
-            <SortableTableHead columnKey="status" label="Stato" sort={sort} onSort={onSort} />
-            <SortableTableHead
-              columnKey="billing"
-              label="Fatturazione"
-              sort={sort}
-              onSort={onSort}
-            />
-            <SortableTableHead
-              columnKey="opened_at"
-              label="Aperta il"
-              sort={sort}
-              onSort={onSort}
-            />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          <PracticeTableBody {...bodyProps} />
-        </TableBody>
-      </Table>
-    </Card>
-  );
-}
-
-function PracticeResults({
-  isLoading,
-  rows,
-  q,
-  view,
-  activitySummaryByCase,
-  workflowByCase,
-  sort,
-  onSort,
-  onOpen,
-}: {
-  isLoading: boolean;
-  rows: PracticeListRow[];
-  q: string;
-  view: PraticheView;
-  activitySummaryByCase: Record<string, PracticeActivitySummary>;
-  workflowByCase: Record<string, PracticeWorkflowRow>;
-  sort: TableSort<PraticheSortKey>;
-  onSort: (columnKey: PraticheSortKey) => void;
-  onOpen: (caseId: string) => void;
-}) {
-  const bodyProps = {
-    isLoading,
-    rows,
-    hasFilters: !!q || view !== "open",
-    activitySummaryByCase,
-  };
-  return (
-    <>
-      <div className="space-y-3 md:hidden">
-        <PracticeMobileList {...bodyProps} workflowByCase={workflowByCase} />
-      </div>
-      <PracticeTable {...bodyProps} sort={sort} onSort={onSort} onOpen={onOpen} />
     </>
   );
 }

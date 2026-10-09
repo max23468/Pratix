@@ -1,40 +1,40 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
-import { AlertTriangle, Briefcase, FileWarning, ListChecks, Receipt } from "lucide-react";
 import { AppLayout } from "@/components/app-layout";
-import { CreateMenu } from "@/components/dashboard/create-menu";
-import { DuplicateSummaryBox } from "@/components/dashboard/duplicate-summary-box";
-import { StatCard } from "@/components/dashboard/stat-card";
-import type { DuplicateSummary, WorkQueueItem } from "@/components/dashboard/types";
-import { WorkQueueCard } from "@/components/dashboard/work-queue-card";
-import { PageHeader } from "@/components/page-header";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { TableEmptyState } from "@/components/table-empty-state";
-import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
+import { useServerFn } from "@tanstack/react-start";
+import { getDuplicateSummaryFn } from "@/server/duplicates.functions";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { type DuplicateSummary, type WorkQueueItem } from "@/components/dashboard/types";
+import { readServerResult, getAuthHeaders } from "@/lib/server-functions";
+import { PageHeader } from "@/components/page-header";
+import { CreateMenu } from "@/components/dashboard/create-menu";
+import { DashboardStats } from "@/components/dashboard/dashboard-stats";
+import { WorkQueueCard } from "@/components/dashboard/work-queue-card";
+import { DuplicateSummaryBox } from "@/components/dashboard/duplicate-summary-box";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { routeRef } from "@/lib/public-route-code";
+import {
+  practiceDisplayName,
+  clientDisplayName,
+  type ClientDisplayData,
+  counterpartyDisplayName,
+  type CounterpartyDisplayData,
+  caseStatusVariant,
+  caseStatusLabels,
+} from "@/lib/labels";
+import { Badge } from "@/components/ui/badge";
+import { TableEmptyState } from "@/components/table-empty-state";
+import { Briefcase, Receipt } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
 import {
-  caseStatusLabels,
-  caseStatusVariant,
-  clientDisplayName,
-  counterpartyDisplayName,
-  practiceDisplayName,
-  type ClientDisplayData,
-  type CounterpartyDisplayData,
-} from "@/lib/labels";
-import { routeRef } from "@/lib/public-route-code";
-import { getAuthHeaders, readServerResult } from "@/lib/server-functions";
-import {
+  summarizeCaseOperations,
   buildCaseWorkflowQualityChecks,
   buildDebtCollectionWorkflow,
   formatCaseWorkflowPriorityLabel,
-  summarizeCaseOperations,
   type CaseDebtCollectionWorkflow,
 } from "@/lib/case-workflow";
-import { getDuplicateSummaryFn } from "@/server/duplicates.functions";
 
 type DashboardCaseRow = {
   id: string;
@@ -336,132 +336,6 @@ function DashboardContent() {
         </Card>
       </div>
     </>
-  );
-}
-
-type DashboardStatsData = {
-  casesWithoutActivities: number;
-  casesToComplete: number;
-  toInvoiceCount: number;
-  toInvoiceAmount: number;
-  draftInvoiceCount: number;
-  invoicesToCollectAmount: number;
-  overdueInvoiceCount: number;
-  expenseWithoutAttachmentCount: number;
-};
-
-type StatsGroupProps = {
-  data?: DashboardStatsData;
-  isLoading: boolean;
-};
-
-function countValue(isLoading: boolean, count: number | undefined) {
-  return isLoading ? "—" : String(count ?? 0);
-}
-
-function currencyValue(isLoading: boolean, amount: number | undefined) {
-  return isLoading ? "—" : formatCurrency(amount ?? 0);
-}
-
-function alertTone(count: number | undefined) {
-  return count !== undefined && count > 0 ? "danger" : "default";
-}
-
-function CaseStats({ data, isLoading }: StatsGroupProps) {
-  return (
-    <>
-      <StatCard
-        icon={Briefcase}
-        label="Pratiche senza attività"
-        value={countValue(isLoading, data?.casesWithoutActivities)}
-        to="/pratiche"
-        search={{ view: "without_activities" }}
-      />
-      <StatCard
-        icon={AlertTriangle}
-        label="Pratiche da completare"
-        value={countValue(isLoading, data?.casesToComplete)}
-        tone={alertTone(data?.casesToComplete)}
-        to="/pratiche"
-        search={{ view: "to_complete" }}
-      />
-    </>
-  );
-}
-
-function ActivityStats({ data, isLoading }: StatsGroupProps) {
-  return (
-    <>
-      <StatCard
-        icon={ListChecks}
-        label="Attività da fatturare"
-        value={countValue(isLoading, data?.toInvoiceCount)}
-        to="/attivita"
-        search={{ status: "to_invoice" }}
-      />
-      <StatCard
-        icon={Receipt}
-        label="Maturato da fatturare"
-        value={currencyValue(isLoading, data?.toInvoiceAmount)}
-        tone="gold"
-        to="/attivita"
-        search={{ status: "to_invoice", sort: "amount", dir: "desc" }}
-      />
-    </>
-  );
-}
-
-function InvoiceStats({ data, isLoading }: StatsGroupProps) {
-  return (
-    <>
-      <StatCard
-        icon={Receipt}
-        label="Fatture in bozza"
-        value={countValue(isLoading, data?.draftInvoiceCount)}
-        to="/fatture"
-        search={{ status: "draft" }}
-      />
-      <StatCard
-        icon={Receipt}
-        label="Fatture da incassare"
-        value={currencyValue(isLoading, data?.invoicesToCollectAmount)}
-        tone="gold"
-        to="/fatture"
-        search={{ status: "to_collect" }}
-      />
-      <StatCard
-        icon={AlertTriangle}
-        label="Fatture scadute"
-        value={countValue(isLoading, data?.overdueInvoiceCount)}
-        tone={alertTone(data?.overdueInvoiceCount)}
-        to="/fatture"
-        search={{ status: "expired" }}
-      />
-    </>
-  );
-}
-
-function ExpenseAttachmentStat({ data, isLoading }: StatsGroupProps) {
-  return (
-    <StatCard
-      icon={FileWarning}
-      label="Rimborsi senza allegato"
-      value={countValue(isLoading, data?.expenseWithoutAttachmentCount)}
-      tone={alertTone(data?.expenseWithoutAttachmentCount)}
-      to="/attivita"
-      search={{ status: "to_invoice", kind: "expense_reimbursement", attachments: "missing" }}
-    />
-  );
-}
-
-function DashboardStats({ data, isLoading }: StatsGroupProps) {
-  return (
-    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-      <CaseStats data={data} isLoading={isLoading} />
-      <ActivityStats data={data} isLoading={isLoading} />
-      <InvoiceStats data={data} isLoading={isLoading} />
-      <ExpenseAttachmentStat data={data} isLoading={isLoading} />
-    </div>
   );
 }
 
