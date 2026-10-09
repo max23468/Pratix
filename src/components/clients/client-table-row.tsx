@@ -22,7 +22,6 @@ export function ClientTableRow({
       className="cursor-pointer"
       role="link"
       tabIndex={0}
-      aria-label={`Apri cliente ${displayName}`}
       onClick={(event) => handleClickableTableRowClick(event, onOpen)}
       onKeyDown={(event) => handleClickableTableRowKeyDown(event, onOpen)}
     >

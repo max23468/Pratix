@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -122,7 +122,9 @@ describe("Prezzi list", () => {
     expect(screen.getAllByText(/2 compensi, 1 rimborsi/).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/senza fine/).length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole("link", { name: "Apri prezzi Alfa Spa 2026" }));
+    fireEvent.click(
+      within(screen.getByRole("table")).getByRole("link", { name: /Alfa Spa.*2026/ }),
+    );
     expect(state.navigate).toHaveBeenCalledWith(
       expect.objectContaining({ to: "/prezzi/$priceBookId" }),
     );
@@ -132,7 +134,11 @@ describe("Prezzi list", () => {
     state.books = [book("b1", 2026), book("b2", 2025)];
     state.search = { q: "2025" };
     render(<RouteComponent />);
-    expect(screen.queryByRole("link", { name: "Apri prezzi Alfa Spa 2026" })).toBeNull();
-    expect(screen.getByRole("link", { name: "Apri prezzi Alfa Spa 2025" })).toBeTruthy();
+    expect(
+      within(screen.getByRole("table")).queryByRole("link", { name: /Alfa Spa.*2026/ }),
+    ).toBeNull();
+    expect(
+      within(screen.getByRole("table")).getByRole("link", { name: /Alfa Spa.*2025/ }),
+    ).toBeTruthy();
   });
 });

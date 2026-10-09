@@ -26,7 +26,6 @@ export function PriceBookTableRow({
       className="cursor-pointer"
       role="link"
       tabIndex={0}
-      aria-label={`Apri prezzi ${principalName} ${book.year}`}
       onClick={(event) => handleClickableTableRowClick(event, onOpen)}
       onKeyDown={(event) => handleClickableTableRowKeyDown(event, onOpen)}
     >

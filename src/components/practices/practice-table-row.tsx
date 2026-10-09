@@ -25,7 +25,6 @@ export function PracticeTableRow({
       className="cursor-pointer"
       role="link"
       tabIndex={0}
-      aria-label={`Apri pratica ${practice.practice_number}`}
       onClick={(event) => handleClickableTableRowClick(event, onOpen)}
       onKeyDown={(event) => handleClickableTableRowKeyDown(event, onOpen)}
     >

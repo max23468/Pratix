@@ -24,7 +24,6 @@ export function CounterpartyTableRow({
       className="cursor-pointer"
       role="link"
       tabIndex={0}
-      aria-label={`Apri controparte ${displayName}`}
       onClick={(event) => handleClickableTableRowClick(event, onOpen)}
       onKeyDown={(event) => handleClickableTableRowKeyDown(event, onOpen)}
     >

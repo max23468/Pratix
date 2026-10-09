@@ -110,7 +110,10 @@ describe("Dashboard", () => {
     ];
 
     expectedLinks.forEach(([name, href]) => {
-      expect(screen.getByRole("link", { name }).getAttribute("href")).toBe(href);
+      const link = screen.getByRole("link", {
+        name: new RegExp(`^${name.replace(/^Apri /, "")} `, "i"),
+      });
+      expect(link.getAttribute("href")).toBe(href);
     });
   });
 });

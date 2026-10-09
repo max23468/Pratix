@@ -22,11 +22,10 @@ export function StatCard({
 
   const className =
     "group block h-full rounded-xl outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background";
-  const ariaLabel = `Apri ${label.toLowerCase()}`;
 
   if (to === "/pratiche") {
     return (
-      <Link to="/pratiche" search={search} aria-label={ariaLabel} className={className}>
+      <Link to="/pratiche" search={search} className={className}>
         {content}
       </Link>
     );
@@ -34,14 +33,14 @@ export function StatCard({
 
   if (to === "/attivita") {
     return (
-      <Link to="/attivita" search={search} aria-label={ariaLabel} className={className}>
+      <Link to="/attivita" search={search} className={className}>
         {content}
       </Link>
     );
   }
 
   return (
-    <Link to="/fatture" search={search} aria-label={ariaLabel} className={className}>
+    <Link to="/fatture" search={search} className={className}>
       {content}
     </Link>
   );

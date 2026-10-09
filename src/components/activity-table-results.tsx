@@ -119,9 +119,6 @@ export function ActivityTableResults({
                   className={caseRef ? "cursor-pointer" : undefined}
                   role={caseRef ? "link" : undefined}
                   tabIndex={caseRef ? 0 : undefined}
-                  aria-label={
-                    caseRef ? `Apri pratica ${activity.cases?.practice_number}` : undefined
-                  }
                   onClick={
                     caseRef
                       ? (event) => handleClickableTableRowClick(event, () => onOpen(caseRef))
@@ -160,7 +157,6 @@ export function ActivityTableResults({
                           variant="ghost"
                           className="h-auto max-w-full justify-start p-0 text-left hover:bg-transparent"
                           disabled={Boolean(activity.invoice_id)}
-                          aria-label={`Modifica ${activity.description}`}
                           title={editTitle}
                         >
                           <div className="flex min-w-0 flex-col gap-1">

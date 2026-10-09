@@ -178,7 +178,6 @@ function DesktopInvoiceResults({
                 className="cursor-pointer"
                 role="link"
                 tabIndex={0}
-                aria-label={`Apri fattura ${i.number}/${i.year}`}
                 onClick={(event) => handleClickableTableRowClick(event, () => onOpen(routeRef(i)))}
                 onKeyDown={(event) =>
                   handleClickableTableRowKeyDown(event, () => onOpen(routeRef(i)))
